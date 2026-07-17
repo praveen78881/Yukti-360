@@ -4,6 +4,14 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Netlify secret scanning:
+  # These are CLIENT-SIDE (VITE_*) values that are public by design — Vite inlines
+  # them into the browser bundle, so the scanner sees them and (wrongly) fails the
+  # build. They are not secrets: the Supabase URL + anon key are meant to be public
+  # (protected by RLS), and the Gemini model name is not sensitive. Exclude them.
+  # The ONLY real secret, GEMINI_API_KEY, is server-side (used by the Netlify
+  # function) and is NOT omitted here, so it stays protected and never bundled.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_MODEL,VITE_GEMINI_API_KEY"
 
 # Netlify serverless functions
 [functions]
