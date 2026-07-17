@@ -18,141 +18,114 @@ interface PurchasePaymentProps {
 
 type PaymentSectionProps = SalesPaymentProps | PurchasePaymentProps;
 
+const MODES: Array<{ v: 'CASH' | 'ONLINE' | 'CREDIT' | 'PARTIAL'; label: string }> = [
+  { v: 'CASH', label: 'Cash' },
+  { v: 'ONLINE', label: 'Online' },
+  { v: 'CREDIT', label: 'Credit' },
+  { v: 'PARTIAL', label: 'Partial' },
+];
+
+/**
+ * Left column of the "Payment & routing" paygrid (the SummarySection renders the
+ * right column). Purely presentational — every setter below is the exact same
+ * handler as before, so the pending/paid mapping that feeds debtors, creditors
+ * and bills payable/receivable is unchanged. Partial stays a SINGLE payment.
+ */
 export function PaymentSection(props: PaymentSectionProps) {
-  // Extract common payment properties
   const isSales = props.kind === 'sales';
-  const mode = props.mode;
   const paymentMode = isSales ? (props.invoice.payment_mode || 'CREDIT') : props.fields.paymentMode;
   const receivedMedium = isSales ? (props.invoice.received_medium || 'BANK_TRANSFER') : props.fields.paidMedium;
   const amountReceived = isSales ? (props.invoice.amount_received || 0) : Number(props.fields.amountPaid || 0);
   const amountPending = isSales ? (props.invoice.amount_pending || 0) : Number(props.fields.amountPending || 0);
   const dueDate = isSales ? (props.invoice.due_date || '') : props.fields.dueDate;
 
-  const totalAmount = isSales ? props.invoice.total_amount : (Number(props.fields.taxable || 0) * (1 + Number(props.fields.gstRate || 0)/100)); // Rough estimate for display only if needed, state manages the actual pending
-
   const setPaymentMode = (val: 'CASH' | 'ONLINE' | 'CREDIT' | 'PARTIAL') => {
-    if (isSales) {
-      props.updateInvoice({ payment_mode: val });
-    } else {
-      props.updateField('paymentMode', val);
-    }
+    if (isSales) props.updateInvoice({ payment_mode: val });
+    else props.updateField('paymentMode', val);
   };
-
   const setMedium = (val: 'UPI' | 'CARD' | 'CASH' | 'BANK_TRANSFER') => {
-    if (isSales) {
-      props.updateInvoice({ received_medium: val });
-    } else {
-      props.updateField('paidMedium', val);
-    }
+    if (isSales) props.updateInvoice({ received_medium: val });
+    else props.updateField('paidMedium', val);
   };
-
   const setReceived = (val: number) => {
-    if (isSales) {
-      props.updateInvoice({ amount_received: val });
-    } else {
-      props.updateField('amountPaid', String(val));
-    }
+    if (isSales) props.updateInvoice({ amount_received: val });
+    else props.updateField('amountPaid', String(val));
   };
-
   const setDueDate = (val: string) => {
-    if (isSales) {
-      props.updateInvoice({ due_date: val });
-    } else {
-      props.updateField('dueDate', val);
-    }
+    if (isSales) props.updateInvoice({ due_date: val });
+    else props.updateField('dueDate', val);
   };
 
   const isPartial = paymentMode === 'PARTIAL';
   const isCredit = paymentMode === 'CREDIT';
+  const showMedium = paymentMode === 'ONLINE' || paymentMode === 'PARTIAL';
+  const inrFmt = (n: number) => n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <fieldset className="rounded-lg border border-indigo-200 bg-indigo-50/30 p-4">
-      <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Payment & Routing</legend>
-      
-      <div className="flex flex-col gap-4">
-        {/* Payment Mode Pill Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-gray-600 mr-2">Mode:</span>
-          {(['CASH', 'ONLINE', 'CREDIT', 'PARTIAL'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setPaymentMode(m)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                paymentMode === m 
-                  ? 'bg-indigo-600 text-white shadow-sm' 
-                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {m}
-            </button>
+    <div>
+      <div className="f" style={{ marginBottom: 14 }}>
+        <label>Mode <b>*</b></label>
+        <div className="opts">
+          {MODES.map((m) => (
+            <label key={m.v}>
+              <input
+                type="radio"
+                name="dw-mode"
+                checked={paymentMode === m.v}
+                onChange={() => setPaymentMode(m.v)}
+              />
+              {m.label}
+            </label>
           ))}
         </div>
-
-        {/* Conditional Rows based on Mode */}
-        {(isPartial || isCredit || paymentMode === 'ONLINE' || paymentMode === 'CASH') && (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4 mt-2">
-            
-            {/* Medium Selection (If Paid anything and not strictly CASH mode) */}
-            {(paymentMode === 'ONLINE' || paymentMode === 'PARTIAL') && (
-              <label>
-                <span className="mb-1 block text-[11px] font-semibold text-gray-600">
-                  {isSales ? 'Received via' : 'Paid via'}
-                </span>
-                <select
-                  value={receivedMedium}
-                  onChange={(e) => setMedium(e.target.value as any)}
-                  className="h-8 w-full rounded-lg border border-gray-300 px-3 text-xs font-semibold"
-                >
-                  <option value="BANK_TRANSFER">Bank Transfer</option>
-                  <option value="UPI">UPI</option>
-                  <option value="CARD">Credit/Debit Card</option>
-                  {paymentMode === 'PARTIAL' && <option value="CASH">Cash</option>}
-                </select>
-              </label>
-            )}
-
-            {/* Partial Payment Amount Input */}
-            {isPartial && (
-              <label>
-                <span className="mb-1 block text-[11px] font-semibold text-gray-600">
-                  {isSales ? 'Amount Received' : 'Amount Paid'}
-                </span>
-                <input
-                  type="number"
-                  value={amountReceived || ''}
-                  onChange={(e) => setReceived(Number(e.target.value))}
-                  className="h-8 w-full rounded-lg border border-gray-300 px-3 text-xs font-semibold"
-                  placeholder="0.00"
-                />
-              </label>
-            )}
-
-            {/* Pending Amount Read-only */}
-            {(isPartial || isCredit) && (
-              <div className="flex flex-col justify-end">
-                <span className="mb-1 block text-[11px] font-semibold text-gray-500">Pending Amount</span>
-                <div className="flex h-8 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-700">
-                  ₹ {amountPending.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            )}
-
-            {/* Due Date */}
-            {(isPartial || isCredit) && (
-              <label>
-                <span className="mb-1 block text-[11px] font-semibold text-gray-500">Due Date *</span>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="h-8 w-full rounded-lg border border-gray-300 px-3 text-xs font-semibold focus:border-blue-400 focus:ring-blue-100"
-                />
-              </label>
-            )}
-          </div>
-        )}
       </div>
-    </fieldset>
+
+      {(showMedium || isPartial) && (
+        <div className="payrow">
+          {showMedium && (
+            <div className="f">
+              <label>{isSales ? 'Received via' : 'Paid via'} <b>*</b></label>
+              <select value={receivedMedium} onChange={(e) => setMedium(e.target.value as any)}>
+                <option value="BANK_TRANSFER">Bank Transfer</option>
+                <option value="UPI">UPI</option>
+                <option value="CARD">Credit/Debit Card</option>
+                {paymentMode === 'PARTIAL' && <option value="CASH">Cash</option>}
+              </select>
+            </div>
+          )}
+          {isPartial && (
+            <div className="f">
+              <label>{isSales ? 'Amount received' : 'Amount paid'} <b>*</b></label>
+              <input
+                type="number"
+                className="num"
+                value={amountReceived || ''}
+                onChange={(e) => setReceived(Number(e.target.value))}
+                placeholder="0.00"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {(isPartial || isCredit) && (
+        <div className="row">
+          <div className="f c6">
+            <label>Pending amount</label>
+            <input className="num" readOnly value={`₹ ${inrFmt(amountPending)}`} />
+          </div>
+          <div className="f c6">
+            <label>Due date <b>*</b></label>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+        </div>
+      )}
+
+      {isCredit && (
+        <div className="note">
+          Nothing {isSales ? 'received' : 'paid'} now. The full invoice total is pending against the due date.
+        </div>
+      )}
+    </div>
   );
 }

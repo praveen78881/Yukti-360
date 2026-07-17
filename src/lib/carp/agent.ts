@@ -236,7 +236,7 @@ async function callGemini(
 
   if (!apiKey) {
     // Use Netlify serverless function as proxy (API key stays server-side)
-    const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash';
+    const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
     const response = await fetch('/.netlify/functions/gemini-plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -262,7 +262,7 @@ async function callGemini(
   }
 
   // Direct API call
-  const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash';
+  const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {

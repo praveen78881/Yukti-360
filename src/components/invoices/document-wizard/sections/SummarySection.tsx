@@ -18,89 +18,47 @@ function inr(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** Right column of the "Payment & routing" paygrid — the summary box. */
 export function SummarySection(props: SummarySectionProps) {
   if (props.kind === 'sales') {
     const { totals } = props;
     return (
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Summary</legend>
-        <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-          <div>
-            <span className="text-[10px] text-gray-500">Taxable</span>
-            <p className="font-mono text-xs font-semibold">{inr(totals.taxable)}</p>
-          </div>
-          {totals.isIntra ? (
-            <>
-              <div>
-                <span className="text-[10px] text-gray-500">CGST</span>
-                <p className="font-mono text-xs font-semibold">{inr(totals.cgst)}</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-gray-500">SGST</span>
-                <p className="font-mono text-xs font-semibold">{inr(totals.sgst)}</p>
-              </div>
-            </>
-          ) : (
-            <div>
-              <span className="text-[10px] text-gray-500">IGST</span>
-              <p className="font-mono text-xs font-semibold">{inr(totals.igst)}</p>
-            </div>
-          )}
-          {totals.cess > 0 && (
-            <div>
-              <span className="text-[10px] text-gray-500">Cess</span>
-              <p className="font-mono text-xs font-semibold">{inr(totals.cess)}</p>
-            </div>
-          )}
-          <div>
-            <span className="text-[10px] text-gray-500">Round-off</span>
-            <p className="font-mono text-[10px]">{inr(totals.roundOff)}</p>
-          </div>
-          <div className="col-span-2 rounded-lg bg-blue-50 p-2 md:col-span-1">
-            <span className="text-[10px] font-semibold text-blue-700">Total</span>
-            <p className="font-mono text-sm font-bold text-blue-900">{inr(totals.total)}</p>
-          </div>
-        </div>
-        {totals.amountInWords && (
-          <p className="mt-2 text-[10px] italic text-gray-500">{totals.amountInWords}</p>
+      <div className="sumbox">
+        <div className="hd">Summary</div>
+        <div className="sr"><span>Taxable</span><span>{inr(totals.taxable)}</span></div>
+        {totals.isIntra ? (
+          <>
+            <div className="sr"><span>CGST</span><span>{inr(totals.cgst)}</span></div>
+            <div className="sr"><span>SGST</span><span>{inr(totals.sgst)}</span></div>
+          </>
+        ) : (
+          <div className="sr"><span>IGST</span><span>{inr(totals.igst)}</span></div>
         )}
-      </fieldset>
+        {totals.cess > 0 && (
+          <div className="sr"><span>Cess</span><span>{inr(totals.cess)}</span></div>
+        )}
+        <div className="sr off"><span>Round-off</span><span>{inr(totals.roundOff)}</span></div>
+        <div className="sr tot"><span>Total</span><span>₹ {inr(totals.total)}</span></div>
+        {totals.amountInWords && <div className="swords">{totals.amountInWords}</div>}
+      </div>
     );
   }
 
   // Purchase summary
   const { totals } = props;
-  const gstTotal = totals.cgst + totals.sgst + totals.igst;
   return (
-    <fieldset className="rounded-lg border border-gray-200 p-4">
-      <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Summary</legend>
-      <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-        <div>
-          <span className="text-[10px] text-gray-500">Taxable</span>
-          <p className="font-mono text-xs font-semibold">{inr(totals.taxable)}</p>
-        </div>
-        {totals.isIntra ? (
-          <>
-            <div>
-              <span className="text-[10px] text-gray-500">CGST</span>
-              <p className="font-mono text-xs font-semibold">{inr(totals.cgst)}</p>
-            </div>
-            <div>
-              <span className="text-[10px] text-gray-500">SGST</span>
-              <p className="font-mono text-xs font-semibold">{inr(totals.sgst)}</p>
-            </div>
-          </>
-        ) : (
-          <div>
-            <span className="text-[10px] text-gray-500">IGST</span>
-            <p className="font-mono text-xs font-semibold">{inr(totals.igst)}</p>
-          </div>
-        )}
-        <div className="col-span-2 rounded-lg bg-blue-50 p-2 md:col-span-1">
-          <span className="text-[10px] font-semibold text-blue-700">Total</span>
-          <p className="font-mono text-sm font-bold text-blue-900">{inr(totals.total)}</p>
-        </div>
-      </div>
-    </fieldset>
+    <div className="sumbox">
+      <div className="hd">Summary</div>
+      <div className="sr"><span>Taxable</span><span>{inr(totals.taxable)}</span></div>
+      {totals.isIntra ? (
+        <>
+          <div className="sr"><span>CGST</span><span>{inr(totals.cgst)}</span></div>
+          <div className="sr"><span>SGST</span><span>{inr(totals.sgst)}</span></div>
+        </>
+      ) : (
+        <div className="sr"><span>IGST</span><span>{inr(totals.igst)}</span></div>
+      )}
+      <div className="sr tot"><span>Total</span><span>₹ {inr(totals.total)}</span></div>
+    </div>
   );
 }

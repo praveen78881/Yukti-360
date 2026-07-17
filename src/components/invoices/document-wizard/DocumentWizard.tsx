@@ -13,6 +13,7 @@ import { OptionsSection } from './sections/OptionsSection';
 import { PaymentSection } from './sections/PaymentSection';
 import { SummarySection } from './sections/SummarySection';
 import { InvoicePreview } from './preview/InvoicePreview';
+import './wizard-skin.css';
 
 export function DocumentWizard({
   mode,
@@ -88,7 +89,7 @@ export function DocumentWizard({
             </button>
             <button
               onClick={handleSave}
-              className={`h-8 rounded-lg px-5 text-xs font-semibold text-white ${config.accentBg} ${config.accentHover}`}
+              className="h-8 rounded-md bg-[#17457a] px-5 text-xs font-semibold text-white hover:bg-[#0f3059]"
             >
               {isEditing ? 'Update' : 'Save'}
             </button>
@@ -106,8 +107,9 @@ export function DocumentWizard({
         )}
 
         {/* ── Form Layout ── */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50/30">
-          <div className="mx-auto max-w-4xl space-y-5">
+        <div className="flex-1 overflow-y-auto bg-[#f3f4f6] p-4 sm:p-6">
+          <div className="dw-skin mx-auto max-w-4xl">
+            <div className="overflow-hidden rounded-md border border-[#d1d5db] bg-white">
             {/* Header */}
             {state.kind === 'sales' ? (
               <HeaderSection kind="sales" invoice={state.invoice} updateInvoice={state.updateInvoice} mode={mode} invalidFields={invalidFields} />
@@ -145,23 +147,28 @@ export function DocumentWizard({
               <OptionsSection kind="purchase" fields={state.fields} updateField={state.updateField} mode={mode} />
             )}
 
-            {/* Payment & Routing */}
-            {state.kind === 'sales' ? (
-              <PaymentSection kind="sales" invoice={state.invoice} updateInvoice={state.updateInvoice} mode={mode} />
-            ) : (
-              <PaymentSection kind="purchase" fields={state.fields} updateField={state.updateField} mode={mode} />
-            )}
+            {/* Payment & Routing + Summary (side-by-side paygrid) */}
+            <section className="dw-section">
+              <div className="shead"><h2 className="dw-h">Payment &amp; routing</h2></div>
+              <div className="paygrid">
+                {state.kind === 'sales' ? (
+                  <PaymentSection kind="sales" invoice={state.invoice} updateInvoice={state.updateInvoice} mode={mode} />
+                ) : (
+                  <PaymentSection kind="purchase" fields={state.fields} updateField={state.updateField} mode={mode} />
+                )}
+                {state.kind === 'sales' ? (
+                  <SummarySection kind="sales" totals={state.totals} mode={mode} />
+                ) : (
+                  <SummarySection kind="purchase" totals={state.totals} mode={mode} />
+                )}
+              </div>
+            </section>
 
-            {/* Summary */}
-            {state.kind === 'sales' ? (
-              <SummarySection kind="sales" totals={state.totals} mode={mode} />
-            ) : (
-              <SummarySection kind="purchase" totals={state.totals} mode={mode} />
-            )}
+            </div>
 
             {/* Non-field errors (e.g. "original invoice not found") */}
             {state.error && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm">
+              <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm">
                 {state.error}
               </div>
             )}

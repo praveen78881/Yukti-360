@@ -96,8 +96,17 @@ const PageLoader = () => (
 );
 
 export const router = createBrowserRouter([
-  { index: true, element: <Navigate to="/auth" replace /> },
-  { path: '/auth', element: <Suspense fallback={<PageLoader />}><AuthPage /></Suspense> },
+  // ── LOGIN SUSPENDED (temporarily hidden, NOT deleted) ─────────────────────────
+  // The auth/login + profile-picker screens are turned off for now. The app opens
+  // straight on /companies, and any navigation to /auth (e.g. the sidebar "Sign Out"
+  // button) is bounced into the app instead of showing the login screen.
+  //
+  // TO RESTORE LOGIN: change the index redirect below back to "/auth", and swap the
+  // /auth route back to the original line kept commented right under it.
+  { index: true, element: <Navigate to="/companies" replace /> },
+  { path: '/auth', element: <Navigate to="/companies" replace /> },
+  // Original login route — uncomment to bring the login page back:
+  // { path: '/auth', element: <Suspense fallback={<PageLoader />}><AuthPage /></Suspense> },
   { path: '/companies', element: <Suspense fallback={<PageLoader />}><CompaniesPage /></Suspense> },
   { path: '/companies/create', element: <Suspense fallback={<PageLoader />}><CreateCompanyPage /></Suspense> },
   { path: '/dev/migrate-ledger-names', element: <Suspense fallback={<PageLoader />}><MigrateLedgerNamesPage /></Suspense> },

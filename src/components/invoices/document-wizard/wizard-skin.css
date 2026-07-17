@@ -1,0 +1,192 @@
+/* ============================================================================
+   Document-wizard skin — faithful port of the Purchase/Sales entry mockups.
+   EVERYTHING is scoped under `.dw-skin` so none of these rules leak into the
+   rest of the app (Tailwind utilities elsewhere are untouched). This file is
+   PRESENTATION ONLY — no mapping, no data flow. Safe to delete to revert.
+   ============================================================================ */
+
+.dw-skin{
+  --ink:#111827;
+  --grey:#6b7280;
+  --mute:#9ca3af;
+  --rule:#e5e7eb;
+  --line:#d1d5db;
+  --soft:#f9fafb;
+  --brand:#17457a;
+  --brand-d:#0f3059;
+  --ring:rgba(23,69,122,.14);
+  --red:#c0392b;
+  --red-bg:#fdf2f1;
+  --ok:#0f6b45;
+  --ok-bg:#eefaf4;
+  color:var(--ink);
+  font-size:13px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+.dw-skin .num,
+.dw-skin input.num,
+.dw-skin td.calc{font-variant-numeric:tabular-nums}
+
+/* ── sections ── */
+.dw-skin .dw-section{padding:18px 22px;border-bottom:1px solid var(--rule)}
+.dw-skin .dw-section:last-child{border-bottom:none}
+.dw-skin .shead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.dw-skin h2.dw-h{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);margin:0}
+.dw-skin .count{font-size:11px;color:var(--mute)}
+
+/* ── field grid ── */
+.dw-skin .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px 14px}
+.dw-skin .c2{grid-column:span 2}
+.dw-skin .c3{grid-column:span 3}
+.dw-skin .c4{grid-column:span 4}
+.dw-skin .c5{grid-column:span 5}
+.dw-skin .c6{grid-column:span 6}
+.dw-skin .c7{grid-column:span 7}
+.dw-skin .c8{grid-column:span 8}
+.dw-skin .c9{grid-column:span 9}
+.dw-skin .c10{grid-column:span 10}
+.dw-skin .c12{grid-column:span 12}
+.dw-skin .f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dw-skin label{font-size:11px;font-weight:500;color:var(--grey)}
+.dw-skin label b{color:var(--red);font-weight:600}
+.dw-skin .lbl-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+/* ── inputs ── */
+.dw-skin input,
+.dw-skin select{
+  font-family:inherit;font-size:13px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:3px;padding:0 8px;
+  width:100%;height:32px;transition:border-color .1s,box-shadow .1s;
+}
+.dw-skin select{
+  padding-right:24px;appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--grey) 50%),linear-gradient(135deg,var(--grey) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 14px,calc(100% - 9px) 14px;
+  background-size:4px 4px;background-repeat:no-repeat;
+}
+.dw-skin input:hover,
+.dw-skin select:hover{border-color:var(--mute)}
+.dw-skin input:focus,
+.dw-skin select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--ring)}
+.dw-skin input[readonly]{background:var(--soft);color:var(--grey)}
+.dw-skin input[disabled],
+.dw-skin select[disabled]{background:var(--soft);color:var(--mute);cursor:not-allowed}
+.dw-skin input.num{text-align:right}
+.dw-skin input[type=number]::-webkit-outer-spin-button,
+.dw-skin input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.dw-skin input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.dw-skin .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dw-skin textarea{
+  font-family:inherit;font-size:13px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:3px;padding:6px 8px;width:100%;
+  transition:border-color .1s,box-shadow .1s;
+}
+.dw-skin textarea:hover{border-color:var(--mute)}
+.dw-skin textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--ring)}
+
+/* ── validation ── */
+.dw-skin .err input,
+.dw-skin .err select{border-color:var(--red);background:var(--red-bg)}
+.dw-skin .msg{font-size:10.5px;color:var(--red);display:none}
+.dw-skin .err .msg{display:block}
+.dw-skin .hint{font-size:10.5px;color:var(--mute)}
+
+/* ── radios / checks ── */
+.dw-skin .opts{display:flex;gap:16px;align-items:center;flex-wrap:wrap;min-height:32px}
+.dw-skin .opts label{display:flex;align-items:center;gap:6px;color:var(--ink);font-weight:400;cursor:pointer;font-size:12px}
+.dw-skin .opts input{width:auto;height:auto;margin:0;accent-color:var(--brand);cursor:pointer}
+
+.dw-skin .toggle{
+  font-size:11px;color:var(--brand);background:none;border:none;cursor:pointer;
+  padding:4px 0;font-weight:500;font-family:inherit;
+}
+.dw-skin .toggle:hover{text-decoration:underline}
+
+/* ── line table ── */
+.dw-skin .tw{border:1px solid var(--line);border-radius:3px;overflow-x:auto}
+.dw-skin table.lines{width:100%;border-collapse:collapse}
+.dw-skin table.lines th{
+  font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--grey);
+  background:var(--soft);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+.dw-skin table.lines th.r{text-align:right}
+.dw-skin table.lines th.c,
+.dw-skin table.lines td.c{text-align:center}
+.dw-skin table.lines td{padding:5px 6px;border-bottom:1px solid var(--rule);vertical-align:middle}
+.dw-skin table.lines tr:last-child td{border-bottom:none}
+.dw-skin table.lines td input,
+.dw-skin table.lines td select{height:30px;font-size:12.5px;border-color:transparent;background:transparent}
+.dw-skin table.lines td input:hover,
+.dw-skin table.lines td select:hover{border-color:var(--line);background:#fff}
+.dw-skin table.lines td input:focus,
+.dw-skin table.lines td select:focus{background:#fff}
+.dw-skin td.idx{color:var(--mute);font-size:11px;text-align:center;width:28px}
+.dw-skin td.calc{text-align:right;color:var(--grey);font-size:12.5px;padding-right:10px;white-space:nowrap}
+.dw-skin td.calc.strong{color:var(--ink);font-weight:500}
+.dw-skin .x{
+  border:none;background:none;color:var(--mute);cursor:pointer;font-size:15px;
+  line-height:1;padding:4px 6px;border-radius:3px;font-family:inherit;
+}
+.dw-skin .x:hover{color:var(--red);background:var(--red-bg)}
+.dw-skin .addln{
+  margin-top:10px;font-size:12px;color:var(--brand);background:none;border:1px dashed var(--line);
+  border-radius:3px;padding:7px 12px;cursor:pointer;font-weight:500;font-family:inherit;
+}
+.dw-skin .addln:hover{border-color:var(--brand);background:#f7fafd}
+
+.dw-skin .optbar{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)}
+.dw-skin .optbar .f{gap:2px}
+
+/* ── payment ── */
+.dw-skin .paygrid{display:grid;grid-template-columns:1fr 300px;gap:26px;align-items:start}
+.dw-skin .payrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.dw-skin .payrow .tag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);grid-column:1/-1;margin-bottom:-6px}
+.dw-skin .note{font-size:12px;color:var(--grey);background:var(--soft);border:1px solid var(--rule);border-radius:3px;padding:9px 11px;margin-bottom:12px}
+
+.dw-skin .sumbox{border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.dw-skin .sumbox .hd{background:var(--soft);border-bottom:1px solid var(--line);padding:7px 12px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+.dw-skin .sumbox .sr{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;font-size:12.5px;color:var(--grey);border-bottom:1px solid var(--rule)}
+.dw-skin .sumbox .sr span:last-child{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dw-skin .sumbox .sr.off span{color:var(--mute)}
+.dw-skin .sumbox .sr.tot{border-bottom:none;border-top:1px solid var(--line);background:var(--soft);padding:10px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+.dw-skin .sumbox .sr.tot span:last-child{font-size:16px;font-weight:600}
+.dw-skin .sumbox .sr.due span:last-child{color:var(--red)}
+.dw-skin .sumbox .swords{padding:9px 12px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--grey);line-height:1.6;background:#fff}
+
+/* ── badges ── */
+.dw-skin .badge{
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--grey);border:1px solid var(--line);background:#fff;padding:4px 9px;border-radius:3px;
+}
+.dw-skin .badge.b2b{color:var(--ok);border-color:#bfe6d3;background:var(--ok-bg)}
+.dw-skin .badge.b2c{color:var(--brand);border-color:#c6d7e8;background:#f4f8fc}
+
+/* ── buttons ── */
+.dw-skin .btn{
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:8px 16px;
+  border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--grey);cursor:pointer;
+}
+.dw-skin .btn:hover{border-color:var(--mute);color:var(--ink)}
+.dw-skin .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.dw-skin .btn.primary:hover{background:var(--brand-d);border-color:var(--brand-d)}
+
+/* segmented tax toggle */
+.dw-skin .seg{display:flex;overflow:hidden;border:1px solid var(--line);border-radius:3px}
+.dw-skin .seg button{
+  font-family:inherit;font-size:11px;font-weight:600;padding:6px 12px;border:none;background:#fff;color:var(--grey);cursor:pointer;
+}
+.dw-skin .seg button + button{border-left:1px solid var(--line)}
+.dw-skin .seg button.on{background:var(--brand);color:#fff}
+.dw-skin .seg button:disabled{opacity:.5;cursor:not-allowed}
+
+/* responsive */
+@media (max-width:900px){
+  .dw-skin .paygrid{grid-template-columns:1fr}
+  .dw-skin .c2,.dw-skin .c3,.dw-skin .c4,.dw-skin .c5{grid-column:span 6}
+}
+@media (max-width:640px){
+  .dw-skin .c2,.dw-skin .c3,.dw-skin .c4,.dw-skin .c5,.dw-skin .c6{grid-column:span 12}
+  .dw-skin .payrow{grid-template-columns:1fr}
+}

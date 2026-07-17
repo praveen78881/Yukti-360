@@ -10,7 +10,14 @@ import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
-const LOCKED_ENTITY_TYPES = new Set(['huf', 'trust', 'society', 'section8', 'aop_boi', 'cooperative']);
+// Entity types temporarily DEACTIVATED in the picker. They are NOT deleted — their
+// definitions & configs stay in the backend (ENTITY_TYPES / entityConfig), so they can
+// be re-activated at any time by simply removing the key from this set.
+// Kept active: Individual → Trust (Individual, Sole Prop, Partnership, LLP, OPC,
+// Pvt Ltd, Public Ltd, HUF, Trust). Deactivated: Society, Section 8, AOP/BOI, Co-op.
+const HIDDEN_ENTITY_TYPES = new Set(['society', 'section8', 'aop_boi', 'cooperative']);
+// Every entity type still shown in the picker is selectable (nothing is locked).
+const LOCKED_ENTITY_TYPES = new Set<string>();
 
 type WizardData = {
   entity_type: string;
@@ -403,7 +410,7 @@ export default function CreateCompanyPage() {
           {currentKey === 'entity' && (
             <>
               <div className="space-y-2">
-                {Object.entries(ENTITY_TYPES).map(([key, config]) => {
+                {Object.entries(ENTITY_TYPES).filter(([key]) => !HIDDEN_ENTITY_TYPES.has(key)).map(([key, config]) => {
                   const Icon = (LucideIcons as any)[config.icon] || LucideIcons.Building2;
                   const active = data.entity_type === key;
                   const isLocked = LOCKED_ENTITY_TYPES.has(key);

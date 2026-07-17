@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TDS / TCS Register — FY 2026-27</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1A1A1A; --ink-2:#4A4A4A; --ink-3:#767676;
+  --line:#E3E3E3; --line-2:#CFCFCF;
+  --paper:#FFFFFF; --band:#FAFAFA; --head:#F4F4F4;
+  --accent:#1F3A5F;          /* single navy — used sparingly */
+  --input-bg:#FFFFFF; --input-ink:#1F3A5F; --focus:#1F3A5F;
+  --calc:#FAFAFA; --calc-ink:#4A4A4A;
+  --ok:#1D6B45; --warn:#8A6100; --bad:#A32B1C;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:13px;-webkit-font-smoothing:antialiased}
+
+/* ---------- Masthead ---------- */
+header{background:var(--paper);color:var(--ink);padding:15px 22px;display:flex;align-items:baseline;gap:16px;
+  flex-wrap:wrap;position:sticky;top:0;z-index:60;border-bottom:1px solid var(--line-2)}
+h1{font-size:14px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink)}
+.sub{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.spacer{flex:1}
+header button{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-2);
+  background:var(--paper);border:1px solid var(--line-2);padding:6px 13px;border-radius:3px;cursor:pointer}
+header button:hover{border-color:var(--accent);color:var(--accent)}
+header button:focus-visible,nav button:focus-visible,.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- Compliance strip ---------- */
+.strip{display:flex;background:var(--paper);border-bottom:1px solid var(--line);
+  overflow-x:auto;position:sticky;top:49px;z-index:55}
+.stat{padding:10px 20px;border-right:1px solid var(--line);white-space:nowrap;min-width:max-content}
+.stat .k{font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:3px}
+.stat .v{font-family:var(--mono);font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat .v.flag-ok{color:var(--ok)} .stat .v.flag-warn{color:var(--warn)} .stat .v.flag-bad{color:var(--bad)}
+
+/* ---------- Tabs ---------- */
+nav{display:flex;background:var(--paper);border-bottom:1px solid var(--line-2);overflow-x:auto;
+  position:sticky;top:92px;z-index:50}
+nav button{font-family:var(--sans);font-size:11.5px;font-weight:500;background:none;border:none;
+  border-bottom:2px solid transparent;padding:11px 16px;cursor:pointer;color:var(--ink-3);white-space:nowrap}
+nav button:hover{color:var(--ink)}
+nav button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+main{padding:22px;max-width:100%}
+.pane{display:none} .pane.on{display:block}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:3px;margin-bottom:18px;overflow:hidden}
+.panel > h2{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--paper);color:var(--ink-2);padding:11px 16px;border-bottom:1px solid var(--line)}
+.panel .body{padding:16px}
+
+/* ---------- Grid ---------- */
+.scroll{overflow:auto;max-height:66vh;border:1px solid var(--line);border-radius:3px;background:var(--paper)}
+table{border-collapse:separate;border-spacing:0;font-size:12px;width:max-content;min-width:100%;background:var(--paper)}
+thead .grp th{font-size:8.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  background:var(--paper);padding:8px 6px;text-align:center;border-right:1px solid var(--line-2);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;overflow:hidden;text-overflow:ellipsis}
+thead .col th{background:var(--head);color:var(--ink-2);font-size:9.5px;font-weight:500;line-height:1.35;
+  padding:7px;text-align:left;vertical-align:bottom;border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line-2);position:sticky;top:26px;z-index:30;min-width:88px}
+thead .num th{background:var(--paper);color:#B0B0B0;font-family:var(--mono);font-size:8px;text-align:center;
+  padding:2px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:73px;z-index:30}
+tbody td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;height:28px;background:var(--paper)}
+tbody td.gend,thead .col th.gend{border-right:1px solid var(--line-2)}
+tbody tr:nth-child(even) td{background:var(--band)}
+tbody tr:hover td{background:#F2F5F9}
+td.sr{font-family:var(--mono);font-size:10px;color:var(--ink-3);text-align:center;padding:0 6px;min-width:34px}
+tfoot td{background:var(--head);color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:600;
+  padding:7px;text-align:right;position:sticky;bottom:0;font-variant-numeric:tabular-nums;
+  border-top:2px solid var(--line-2);border-right:1px solid var(--line)}
+tfoot td.lbl{text-align:left;font-family:var(--sans);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ---------- Cells: inputs are white; a left rule marks them as yours ---------- */
+input,select{font-family:var(--sans);font-size:12px;border:none;background:transparent;width:100%;height:28px;
+  padding:0 7px;color:var(--input-ink);outline:none}
+input:focus,select:focus{background:#F2F5F9;box-shadow:inset 2px 0 0 var(--focus)}
+td.in{background:var(--paper)!important;box-shadow:inset 2px 0 0 #C7D4E4}
+tbody tr:nth-child(even) td.in{background:var(--band)!important}
+td.in:focus-within{box-shadow:inset 2px 0 0 var(--focus)}
+input[type=number]{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+input[type=date]{font-family:var(--mono);font-size:10.5px}
+select{cursor:pointer}
+td.calc{background:#F5F6F7;font-family:var(--mono);font-size:11px;text-align:right;padding:0 8px;
+  color:var(--calc-ink);font-variant-numeric:tabular-nums;line-height:28px}
+tbody tr:nth-child(even) td.calc{background:#F0F1F3}
+td.calc.txt{text-align:left;font-family:var(--sans);font-size:10.5px}
+td.calc.mid{text-align:center;font-family:var(--sans);font-size:10px}
+.pill{display:inline-block;font-size:8.5px;font-weight:500;letter-spacing:.05em;
+  padding:2px 7px;border-radius:2px;background:var(--paper);color:var(--ink-2);border:1px solid var(--line-2)}
+.pill.ok{color:var(--ok);border-color:#BFDCCB} .pill.warn{color:var(--warn);border-color:#E5D3A8}
+.pill.bad{color:var(--bad);border-color:#E8C0BA}
+.neg{color:var(--bad)} .pos{color:var(--ok)}
+
+/* ---------- Master form ---------- */
+.master{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.fld label{display:block;font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.fld input,.fld select{border:1px solid var(--line-2);background:var(--paper);border-radius:3px;height:32px;padding:0 9px;color:var(--input-ink)}
+.fld input:focus,.fld select:focus{border-color:var(--accent);background:var(--paper);box-shadow:0 0 0 2px rgba(31,58,95,.09)}
+
+/* ---------- Legend / notes ---------- */
+.legend{display:flex;gap:20px;flex-wrap:wrap;padding:10px 16px;background:var(--paper);
+  border:1px solid var(--line);border-radius:3px;margin-bottom:14px;font-size:10.5px;color:var(--ink-3)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:6px;border:1px solid var(--line-2)}
+.note{font-size:11.5px;line-height:1.7;color:var(--ink-2);background:var(--paper);
+  border:1px solid var(--line);border-left:2px solid var(--accent);padding:13px 16px;border-radius:0 3px 3px 0}
+.note b{color:var(--ink);font-weight:600}
+.warnbox{border-left-color:var(--bad)}
+.toolbar{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap;align-items:center}
+.toolbar button{font-family:var(--sans);font-size:11.5px;font-weight:500;background:var(--paper);color:var(--ink-2);
+  border:1px solid var(--line-2);padding:7px 14px;border-radius:3px;cursor:pointer}
+.toolbar button:hover{border-color:var(--accent);color:var(--accent)}
+.toolbar button.ghost{background:var(--paper)}
+.toolbar .hint{font-size:10.5px;color:var(--ink-3);margin-left:auto}
+
+/* ---------- Static tables ---------- */
+table.plain{width:100%;font-size:11.5px;border:1px solid var(--line);border-radius:3px;background:var(--paper)}
+table.plain th{background:var(--head);color:var(--ink-2);font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  padding:8px 10px;text-align:left;border-bottom:1px solid var(--line-2);position:sticky;top:0;z-index:5}
+table.plain td{padding:7px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:var(--paper)}
+table.plain tr:nth-child(even) td{background:var(--band)}
+table.plain td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+table.plain tr.sum td{background:var(--head);color:var(--ink);font-weight:600;border-top:2px solid var(--line-2)}
+table.plain tr.rule td{background:#F2F5F9;font-weight:600}
+code{font-family:var(--mono);font-size:10.5px;background:var(--band);border:1px solid var(--line);padding:1px 5px;border-radius:2px;color:var(--ink-2)}
+
+@media print{
+  header,nav,.toolbar,.strip{position:static}
+  .scroll{max-height:none;overflow:visible;border:none}
+  body{font-size:9pt} thead .col th{background:#F4F4F4!important;-webkit-print-color-adjust:exact}
+  .pane{display:block!important;page-break-after:always}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){.stat{padding:8px 14px}.stat .v{font-size:13px}main{padding:12px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TDS / TCS Register</h1>
+  <span class="sub" id="fyTag">FY 2026-27 · AY 2027-28</span>
+  <span class="spacer"></span>
+  <button onclick="saveJSON()">Save file</button>
+  <button onclick="document.getElementById('loadf').click()">Open file</button>
+  <button onclick="window.print()">Print</button>
+  <input type="file" id="loadf" accept=".json" hidden onchange="loadJSON(event)">
+</header>
+
+<!-- Signature: live statutory exposure, always visible -->
+<div class="strip" id="strip"></div>
+
+<nav id="tabs"></nav>
+
+<main>
+  <!-- ===== SETUP ===== -->
+  <section class="pane on" id="p-setup">
+    <div class="panel"><h2>Deductor / Collector master</h2>
+      <div class="body"><div class="master" id="master"></div></div>
+    </div>
+    <div class="panel"><h2>How this works</h2><div class="body">
+      <div class="legend">
+        <span><i style="background:var(--paper);box-shadow:inset 2px 0 0 var(--accent)"></i>You type here</span>
+        <span><i style="background:var(--calc)"></i>Calculated — read only</span>
+        <span><i style="background:var(--paper);border-color:#BFDCCB"></i>Compliant</span>
+        <span><i style="background:var(--paper);border-color:#E8C0BA"></i>Needs attention</span>
+      </div>
+      <p class="note">Fill the master above, then open <b>TDS Register</b> or <b>TCS Register</b> and start typing in the first row. Per row you enter about fifteen things — dates, party, PAN, section, amounts, challan. Everything else computes: rate, taxable base, tax deductible, short/excess, due date, delay, interest, quarter, form, status.<br><br>
+      The strip at the top is live. It counts your rows, totals the tax, and adds up interest and short-deduction exposure as you type — so a late challan or a wrong rate shows up immediately, not at filing.<br><br>
+      <b>Nothing leaves this page.</b> There's no server and no autosave — use <b>Save file</b> to write a .json you can reopen later with <b>Open file</b>.</p>
+    </div></div>
+  </section>
+
+  <!-- ===== TDS ===== -->
+  <section class="pane" id="p-tds">
+    <div class="toolbar">
+      <button onclick="addRow('tds')">Add row</button>
+      <button class="ghost" onclick="addRow('tds',10)">Add 10 rows</button>
+      <button class="ghost" onclick="clearRows('tds')">Clear all rows</button>
+      <span class="hint">Pick Section first — rate and thresholds fill themselves</span>
+    </div>
+    <div class="scroll"><table id="t-tds"></table></div>
+  </section>
+
+  <!-- ===== TCS ===== -->
+  <section class="pane" id="p-tcs">
+    <div class="toolbar">
+      <button onclick="addRow('tcs')">Add row</button>
+      <button class="ghost" onclick="addRow('tcs',10)">Add 10 rows</button>
+      <button class="ghost" onclick="clearRows('tcs')">Clear all rows</button>
+      <span class="hint">206C(1H) and (1G) charge only on receipts above the annual threshold</span>
+    </div>
+    <div class="scroll"><table id="t-tcs"></table></div>
+  </section>
+
+  <!-- ===== SECTION MASTER ===== -->
+  <section class="pane" id="p-sec">
+    <div class="panel"><h2>Section master — rates, thresholds, RPU codes</h2><div class="body">
+      <p class="note warnbox" style="margin-bottom:12px"><b>Verify before you deduct.</b> These are basic statutory rates for FY 2026-27, no surcharge or cess loaded — that applies to non-residents under s.195 only. Rates change with every Finance Act and CBDT notification. Check incometaxindia.gov.in against the current Act.</p>
+      <div class="scroll" style="max-height:60vh"><table class="plain" id="t-sec"></table></div>
+    </div></div>
+  </section>
+
+  <!-- ===== QUARTERLY ===== -->
+  <section class="pane" id="p-qtr">
+    <div class="panel"><h2>Quarterly summary — section-wise</h2><div class="body">
+      <p class="note" style="margin-bottom:12px">Tie this to Form 26Q / 27EQ before filing. <b>Difference</b> is tax deducted less tax deposited — it must read zero.</p>
+      <div class="scroll" style="max-height:60vh"><table class="plain" id="t-qtr"></table></div>
+    </div></div>
+  </section>
+
+  <!-- ===== RECONCILIATION ===== -->
+  <section class="pane" id="p-rec">
+    <div class="panel"><h2>Reconciliation — books to challan to return to 26AS</h2><div class="body">
+      <p class="note" style="margin-bottom:12px">Rows F and H are yours to fill — take them from the filed return and the TRACES download. Every difference row must read zero before you certify the quarter.</p>
+      <div class="scroll" style="max-height:60vh"><table class="plain" id="t-rec"></table></div>
+    </div></div>
+  </section>
+
+  <!-- ===== RPU EXPORT ===== -->
+  <section class="pane" id="p-rpu">
+    <div class="toolbar">
+      <label style="font-size:11px;font-weight:600">Form
+        <select id="rpuForm" onchange="renderRPU()" style="border:1px solid var(--line-2);background:var(--paper);border-radius:3px;height:30px;width:auto;padding:0 9px;margin-left:6px;color:var(--ink)">
+          <option value="tds">140 / 26Q — TDS</option>
+          <option value="tcs">143 / 27EQ — TCS</option>
+        </select></label>
+      <label style="font-size:11px;font-weight:600;margin-left:10px">Quarter
+        <select id="rpuQ" onchange="renderRPU()" style="border:1px solid var(--line-2);background:var(--paper);border-radius:3px;height:30px;width:auto;padding:0 9px;margin-left:6px;color:var(--ink)">
+          <option value="">All</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
+        </select></label>
+      <button onclick="copyRPU()">Copy for RPU</button>
+      <button class="ghost" onclick="downloadCSV()">Download CSV</button>
+      <span class="hint" id="rpuMsg"></span>
+    </div>
+    <div class="scroll" style="max-height:52vh"><table class="plain" id="t-rpu"></table></div>
+    <div class="panel" style="margin-top:14px"><h2>Getting to the .fvu file</h2><div class="body">
+      <p class="note warnbox"><b>This page can't make a .fvu — nothing can, except NSDL's own utility.</b> The .fvu is what the File Validation Utility <i>outputs</i>. It checks every challan against OLTAS live and applies several hundred version-specific rules, so a hand-built file is rejected at upload. What this page does is get you to the paste-ready stage, which is where the actual work is.</p>
+      <table class="plain" style="margin-top:12px">
+        <tr><th style="width:34px">#</th><th>Step</th></tr>
+        <tr><td class="n">1</td><td>Download <b>RPU v1.1</b> and <b>FVU v1.1</b> from tinpan.proteantech.in → Downloads → e-TDS/e-TCS → Quarterly Returns → Regular. Java required.</td></tr>
+        <tr><td class="n">2</td><td>Open RPU, pick the form, type <b>Regular</b>, key in the deductor details from Setup.</td></tr>
+        <tr><td class="n">3</td><td>Enter challans in RPU's challan sheet. Note each challan's RPU serial and put it in the register's Challan Serial column.</td></tr>
+        <tr><td class="n">4</td><td>Filter to one quarter above, hit <b>Copy for RPU</b>, paste into RPU's Annexure I grid.</td></tr>
+        <tr><td class="n">5</td><td>RPU → Save → Create File. Then run the FVU — <b>this is what generates the .fvu and Form 27A</b>.</td></tr>
+        <tr><td class="n">6</td><td>Zip the .fvu, upload at incometax.gov.in → e-File → Income Tax Forms → File TDS Return.</td></tr>
+      </table>
+      <p class="note" style="margin-top:12px"><b>Forms were renumbered for TY 2026-27.</b> 24Q→138, 26Q→140, 27Q→144, 27EQ→143. This year runs a separate utility track — <b>RPU v1.1 / FVU v1.1</b>, not the 6.0 / 9.5 versions used up to FY 2025-26. Wrong version, rejected file.</p>
+    </div></div>
+  </section>
+
+  <!-- ===== DUE DATES ===== -->
+  <section class="pane" id="p-due">
+    <div class="panel"><h2>Statutory due dates</h2><div class="body">
+      <div class="scroll" style="max-height:60vh"><table class="plain" id="t-due"></table></div>
+    </div></div>
+  </section>
+</main>
+
+<script>
+/* ==================== SECTION MASTER ==================== */
+const SEC=[
+["192","Salary","Individual",0,0,0,.20,"TDS","24Q","92B"],
+["192A","Premature withdrawal from EPF","Individual",50000,0,.10,.20,"TDS","26Q","92D"],
+["193","Interest on securities","Resident",10000,0,.10,.20,"TDS","26Q","193"],
+["194","Dividend","Resident",10000,0,.10,.20,"TDS","26Q","194"],
+["194A","Interest other than securities — Bank / Co-op / Post Office","Resident",50000,0,.10,.20,"TDS","26Q","94A"],
+["194A","Interest other than securities — Others","Resident",10000,0,.10,.20,"TDS","26Q","94A"],
+["194A","Interest — Senior citizen (bank)","Resident Sr. Citizen",100000,0,.10,.20,"TDS","26Q","94A"],
+["194B","Winnings — lottery / crossword / card games","Any",10000,0,.30,.30,"TDS","26Q","94B"],
+["194BA","Winnings from online games","Any",0,0,.30,.30,"TDS","26Q","4BA"],
+["194BB","Winnings from horse race","Any",10000,0,.30,.30,"TDS","26Q","4BB"],
+["194C","Contractor — Individual / HUF","Individual/HUF",30000,100000,.01,.20,"TDS","26Q","94C"],
+["194C","Contractor — other than Individual / HUF","Company/Firm/Other",30000,100000,.02,.20,"TDS","26Q","94C"],
+["194C","Transporter — valid PAN + declaration (<10 carriages)","Transporter",30000,100000,0,.20,"TDS","26Q","94C"],
+["194D","Insurance commission — resident individual","Individual",20000,0,.02,.20,"TDS","26Q","94D"],
+["194D","Insurance commission — company","Company",20000,0,.10,.20,"TDS","26Q","94D"],
+["194DA","Payment under life insurance policy","Resident",100000,0,.02,.20,"TDS","26Q","4DA"],
+["194E","Non-resident sportsmen / sports association","Non-Resident",0,0,.20,.20,"TDS","27Q","94E"],
+["194EE","Deposit under NSS","Resident",2500,0,.10,.20,"TDS","26Q","4EE"],
+["194F","Repurchase of units by MF / UTI","Resident",0,0,.20,.20,"TDS","26Q","94F"],
+["194G","Commission on sale of lottery tickets","Any",20000,0,.02,.20,"TDS","26Q","94G"],
+["194H","Commission or brokerage","Resident",20000,0,.02,.20,"TDS","26Q","94H"],
+["194I(a)","Rent — plant, machinery, equipment","Resident",0,600000,.02,.20,"TDS","26Q","4IA"],
+["194I(b)","Rent — land, building, furniture, fittings","Resident",0,600000,.10,.20,"TDS","26Q","4IB"],
+["194IA","Transfer of immovable property (non-agri)","Resident",5000000,0,.01,.20,"TDS","26QB","26QB"],
+["194IB","Rent by Individual / HUF not under tax audit","Resident",0,600000,.02,.20,"TDS","26QC","26QC"],
+["194IC","Payment under Joint Development Agreement","Resident",0,0,.10,.20,"TDS","26Q","4IC"],
+["194J(a)","Technical services / call centre / royalty (films)","Resident",50000,0,.02,.20,"TDS","26Q","9JA"],
+["194J(b)","Professional services / royalty / non-compete","Resident",50000,0,.10,.20,"TDS","26Q","9JB"],
+["194K","Income from units of mutual fund","Resident",10000,0,.10,.20,"TDS","26Q","94K"],
+["194LA","Compensation on compulsory acquisition","Resident",500000,0,.10,.20,"TDS","26Q","4LA"],
+["194M","Contractor / professional paid by Individual / HUF (no audit)","Resident",0,5000000,.02,.20,"TDS","26QD","26QD"],
+["194N","Cash withdrawal above limit","Any",0,10000000,.02,.20,"TDS","26Q","94N"],
+["194N","Cash withdrawal — ITR non-filer (₹20L–1Cr)","Non-filer",0,2000000,.02,.20,"TDS","26Q","94N"],
+["194N","Cash withdrawal — ITR non-filer (above ₹1Cr)","Non-filer",0,10000000,.05,.20,"TDS","26Q","94N"],
+["194O","E-commerce operator to participant","Resident",0,500000,.001,.05,"TDS","26Q","94O"],
+["194Q","Purchase of goods","Resident",0,5000000,.001,.05,"TDS","26Q","94Q"],
+["194R","Benefit or perquisite of business / profession","Resident",0,20000,.10,.20,"TDS","26Q","94R"],
+["194S","Transfer of virtual digital asset","Resident",0,10000,.01,.20,"TDS","26Q","94S"],
+["194T","Salary / remuneration / interest paid to partner by firm","Partner",0,20000,.10,.20,"TDS","26Q","94T"],
+["195","Payment to non-resident — per DTAA / Act","Non-Resident",0,0,.20,.20,"TDS","27Q","195"],
+["196D","Income of FII from securities","Non-Resident",0,0,.20,.20,"TDS","27Q","96D"],
+["206C(1)","Alcoholic liquor for human consumption","Buyer",0,0,.01,.05,"TCS","27EQ","6CA"],
+["206C(1)","Timber under forest lease","Buyer",0,0,.025,.05,"TCS","27EQ","6CA"],
+["206C(1)","Timber other than forest lease","Buyer",0,0,.025,.05,"TCS","27EQ","6CA"],
+["206C(1)","Tendu leaves","Buyer",0,0,.05,.05,"TCS","27EQ","6CA"],
+["206C(1)","Scrap","Buyer",0,0,.01,.05,"TCS","27EQ","6CA"],
+["206C(1)","Minerals — coal, lignite, iron ore","Buyer",0,0,.01,.05,"TCS","27EQ","6CA"],
+["206C(1C)","Lease / licence — parking lot, toll plaza, mine, quarry","Licensee",0,0,.02,.05,"TCS","27EQ","6CC"],
+["206C(1F)","Sale of motor vehicle above ₹10 lakh","Buyer",1000000,0,.01,.01,"TCS","27EQ","6CF"],
+["206C(1G)","LRS remittance — education loan funded","Remitter",0,1000000,.005,.05,"TCS","27EQ","6CG"],
+["206C(1G)","LRS remittance — other purposes","Remitter",0,1000000,.20,.20,"TCS","27EQ","6CG"],
+["206C(1G)","Overseas tour package — up to ₹10L","Buyer",0,0,.05,.05,"TCS","27EQ","6CG"],
+["206C(1G)","Overseas tour package — above ₹10L","Buyer",0,1000000,.20,.20,"TCS","27EQ","6CG"],
+["206C(1H)","Sale of goods","Buyer",0,5000000,.001,.01,"TCS","27EQ","6CH"]
+];
+const S={SEC:0,NAT:1,PTY:2,THS:3,THA:4,RP:5,RN:6,TYP:7,FRM:8,RPU:9};
+
+const DUE=[
+["TDS deposit — April to February","7th of following month","Interest 1.5% p.m. u/s 201(1A)","Rule 30"],
+["TDS deposit — March","30th April","Interest 1.5% p.m.","Rule 30"],
+["TCS deposit","7th of following month","Interest 1% p.m. u/s 206C(7)","Rule 37CA"],
+["Form 26Q / 24Q — Q1","31st July","Late fee ₹200/day u/s 234E","Rule 31A"],
+["Form 26Q / 24Q — Q2","31st October","Late fee ₹200/day u/s 234E","Rule 31A"],
+["Form 26Q / 24Q — Q3","31st January","Late fee ₹200/day u/s 234E","Rule 31A"],
+["Form 26Q / 24Q — Q4","31st May","Late fee ₹200/day u/s 234E","Rule 31A"],
+["Form 27EQ — Q1 / Q2 / Q3","15th Jul / 15th Oct / 15th Jan","Late fee ₹200/day u/s 234E","Rule 31AA"],
+["Form 27EQ — Q4","15th May","Late fee ₹200/day u/s 234E","Rule 31AA"],
+["Form 16A — TDS certificate","15 days from return due date","Penalty ₹100/day u/s 272A(2)(g)","Rule 31"],
+["Form 27D — TCS certificate","15 days from return due date","Penalty ₹100/day","Rule 37D"],
+["Form 27C / 15G / 15H upload","7th of following month","Exemption disallowed","Rule 37C / 29C"]
+];
+
+const MASTER=[
+["name","Name of deductor / collector","text"],["pan","PAN of deductor","text"],
+["tan","TAN","text"],["cat","Category","sel:Company — other than Government|Company — Government|Firm|Individual / HUF|AOP / BOI|Trust|Local Authority"],
+["addr","Address","text"],["fy","Financial year","sel:2026-27|2025-26|2027-28"],
+["ay","Assessment year","text"],["rp","Responsible person","text"],
+["desg","Designation","text"],["rppan","PAN of responsible person","text"],
+["phone","Contact number","text"],["email","Email","text"],
+["traces","TRACES login ID","text"],["close","Books closing date","date"]
+];
+
+/* ==================== COLUMNS ==================== */
+function cols(kind){
+  const tcs=kind==='tcs', P=tcs?'buyer':'deductee', Pc=tcs?'Buyer':'Deductee';
+  const act=tcs?'collected':'deducted', Act=tcs?'Collected':'Deducted';
+  return [
+  {g:"Identification",c:[
+    {k:"vno",t:"in",lbl:"Voucher / invoice no."},
+    {k:"dinv",t:"in",lbl:"Date of invoice / bill",ty:"date"},
+    {k:"dpay",t:"in",lbl:tcs?"Date of receipt / debit":"Date of payment / credit",ty:"date"},
+    {k:"ddedn",t:"calc",lbl:"Deduction date (earlier of the two)",f:"mid"}]},
+  {g:Pc+" particulars",c:[
+    {k:"pname",t:"in",lbl:"Name of "+P,w:170},
+    {k:"ppan",t:"in",lbl:"PAN",w:105},
+    {k:"pstat",t:"in",lbl:"PAN status",ty:"sel",o:["","Valid","Invalid","Not Furnished","Inoperative"]},
+    {k:"pcat",t:"in",lbl:"Category",ty:"sel",o:["","Company","Firm","LLP","Individual","HUF","AOP","BOI","Trust","Govt","Non-Resident"]},
+    {k:"paddr",t:"in",lbl:"Address",w:150},
+    {k:"pres",t:"in",lbl:"Residency",ty:"sel",o:["","Resident","Non-Resident"]},
+    {k:"pref",t:"in",lbl:"Ledger code"}]},
+  {g:"Nature & section",c:[
+    {k:"sec",t:"in",lbl:"Section",ty:"secsel",w:105},
+    {k:"nat",t:"calc",lbl:tcs?"Nature of goods":"Nature of payment",f:"txt",w:190},
+    {k:"ths",t:"calc",lbl:"Threshold — single"},
+    {k:"tha",t:"calc",lbl:"Threshold — annual"},
+    {k:"rate",t:"calc",lbl:"Rate applied",f:"mid"}]},
+  {g:"Amount & "+(tcs?"TCS":"TDS")+" computation",c:[
+    {k:"gross",t:"in",lbl:tcs?"Gross sale value":"Gross invoice amount",ty:"num"},
+    {k:"gst",t:"in",lbl:"GST component",ty:"num"},
+    {k:"base",t:"calc",lbl:"Taxable base"},
+    {k:"cum",t:"calc",lbl:"Cumulative YTD — party + section"},
+    {k:"due",t:"calc",lbl:tcs?"TCS collectible":"TDS deductible"},
+    {k:"act",t:"in",lbl:tcs?"TCS actually collected":"TDS actually deducted",ty:"num"},
+    {k:"shrt",t:"calc",lbl:"Short / (excess)"}]},
+  {g:tcs?"Form 27C / lower collection":"Lower or nil deduction u/s 197",c:[
+    {k:"cert",t:"in",lbl:tcs?"Form 27C held":"Certificate held",ty:"sel",o:["","N","Y"]},
+    {k:"certno",t:"in",lbl:"Certificate no."},
+    {k:"certrt",t:"in",lbl:"Certificate rate %",ty:"num"},
+    {k:"certval",t:"in",lbl:tcs?"Date furnished to CIT":"Valid from — to"}]},
+  {g:"Payment, due date & interest",c:[
+    {k:"net",t:"calc",lbl:tcs?"Invoice total incl. TCS":"Net payable to "+P},
+    {k:"ddue",t:"calc",lbl:"Due date of deposit",f:"mid"},
+    {k:"ddep",t:"in",lbl:"Actual date of deposit",ty:"date"},
+    {k:"delay",t:"calc",lbl:"Days delay",f:"mid"},
+    {k:"int",t:"calc",lbl:tcs?"Interest u/s 206C(7) @1%":"Interest u/s 201(1A) @1.5%"},
+    {k:"fee",t:"in",lbl:"Late fee u/s 234E",ty:"num"}]},
+  {g:"Challan particulars",c:[
+    {k:"bsr",t:"in",lbl:"BSR code"},
+    {k:"chser",t:"in",lbl:"Challan serial no."},
+    {k:"cin",t:"in",lbl:"Challan / CIN no.",w:140},
+    {k:"cdate",t:"in",lbl:"Challan date",ty:"date"},
+    {k:"camt",t:"in",lbl:"Challan amount",ty:"num"},
+    {k:"cmode",t:"in",lbl:"Mode",ty:"sel",o:["","Online","Cheque","NEFT","Book Entry"]}]},
+  {g:"Return & certificate",c:[
+    {k:"qtr",t:"calc",lbl:"Quarter",f:"mid"},
+    {k:"form",t:"calc",lbl:"Return form",f:"mid"},
+    {k:"filed",t:"in",lbl:"Return filed",ty:"sel",o:["","N","Y"]},
+    {k:"dfiled",t:"in",lbl:"Date of filing",ty:"date"},
+    {k:"certno2",t:"in",lbl:tcs?"Form 27D no.":"Form 16A no."},
+    {k:"dcert",t:"in",lbl:"Date issued",ty:"date"}]},
+  {g:"Control",c:[
+    {k:"in26as",t:"in",lbl:"In Form 26AS",ty:"sel",o:["","N","Y"]},
+    {k:"recon",t:"in",lbl:"Reconciled",ty:"sel",o:["","N","Y"]},
+    {k:"status",t:"calc",lbl:"Status",f:"mid",w:105},
+    {k:"rem",t:"in",lbl:"Remarks",w:150}]}
+  ];
+}
+const flat=k=>cols(k).flatMap(g=>g.c);
+
+/* ==================== STATE ==================== */
+const D={master:{},tds:[],tcs:[],rec:{}};
+const blank=()=>({});
+const N=v=>{const x=parseFloat(v);return isNaN(x)?0:x;};
+const fmt=v=>(v===''||v==null||isNaN(v))?'':Number(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0=v=>(v===''||v==null||isNaN(v))?'':Number(v).toLocaleString('en-IN');
+const dt=s=>{if(!s)return null;const d=new Date(s+'T00:00:00');return isNaN(d)?null:d;};
+const dstr=d=>d?String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear():'';
+const ddmmyyyy=s=>{const d=dt(s);return d?String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear():'';};
+const secRow=(sec,nat)=>SEC.find(r=>r[S.SEC]===sec&&(!nat||r[S.NAT]===nat))||SEC.find(r=>r[S.SEC]===sec);
+
+/* ==================== COMPUTE ====================
+   Mirrors the workbook exactly: threshold-aware tax, cumulative YTD per
+   party+section, 7th-of-next-month deposit (30 Apr for March), interest
+   per month-or-part from deduction month to deposit month.              */
+function compute(kind){
+  const rows=D[kind], tcs=kind==='tcs', cum={};
+  rows.forEach(r=>{
+    const sr=r.sec?secRow(r.sec,r.nat):null;
+    r._nat = sr?sr[S.NAT]:'';
+    r._ths = sr?sr[S.THS]:'';
+    r._tha = sr?sr[S.THA]:'';
+    r._form= sr?sr[S.FRM]:'';
+    r._rpu = sr?sr[S.RPU]:'';
+
+    // Rate: s.197 / 27C certificate overrides; else PAN-status drives 206AA / 206CC
+    let rate='';
+    if(r.cert==='Y'&&r.certrt!=='' &&r.certrt!=null) rate=N(r.certrt)/100;
+    else if(sr) rate=['Not Furnished','Invalid','Inoperative'].includes(r.pstat)?sr[S.RN]:sr[S.RP];
+    r._rate=rate;
+
+    // Deduction date = earlier of bill / payment
+    const di=dt(r.dinv), dp=dt(r.dpay);
+    const dd=(di&&dp)?(di<dp?di:dp):(di||dp||null);
+    r._dd=dd;
+
+    // Taxable base excludes GST
+    r._base=(r.gross===''||r.gross==null)?'':N(r.gross)-N(r.gst);
+
+    // Cumulative YTD for this party + section
+    const key=(r.ppan||r.pname||'?')+'|'+(r.sec||'?');
+    if(r._base!==''){cum[key]=(cum[key]||0)+r._base;r._cum=cum[key];}else r._cum='';
+
+    // Tax due — threshold logic differs TDS vs TCS
+    if(r._base===''||rate===''||!sr) r._due='';
+    else{
+      const b=r._base,c=r._cum,ths=N(sr[S.THS]),tha=N(sr[S.THA]);
+      if(tcs){
+        // 206C(1H)/(1G): charge only the EXCESS over the annual threshold
+        if(tha>0&&c<=tha) r._due=0;
+        else if(tha>0&&c>tha&&(c-b)<tha) r._due=Math.round((c-tha)*rate);
+        else if(ths>0&&b<ths) r._due=0;
+        else r._due=Math.round(b*rate);
+      }else{
+        // TDS: nil only while BOTH thresholds un-breached; then full amount
+        if(ths>0&&b<ths&&tha>0&&c<tha) r._due=0;
+        else if(ths>0&&b<ths&&tha===0) r._due=0;
+        else if(tha>0&&c<tha&&ths===0) r._due=0;
+        else r._due=Math.round(b*rate);
+      }
+    }
+    r._shrt=(r._due==='')?'':r._due-N(r.act);
+    r._net=(r.gross===''||r.gross==null)?'':(tcs?N(r.gross)+N(r.act):N(r.gross)-N(r.act));
+
+    // Due date: March deducts pay by 30 Apr, else 7th of the next month
+    r._ddue=dd?(dd.getMonth()===2?new Date(dd.getFullYear(),3,30):new Date(dd.getFullYear(),dd.getMonth()+1,7)):null;
+
+    const dep=dt(r.ddep);
+    r._delay=(r._ddue&&dep)?Math.max(0,Math.round((dep-r._ddue)/864e5)):'';
+
+    // Interest: month-or-part, deduction month to deposit month inclusive
+    if(r._delay&&r._delay>0&&dep&&dd&&N(r.act)>0){
+      const m=(dep.getFullYear()-dd.getFullYear())*12+dep.getMonth()-dd.getMonth()+1;
+      r._int=Math.round(N(r.act)*(tcs?.01:.015)*m);
+    } else r._int=(r.act!==''&&r.act!=null)?0:'';
+
+    r._qtr=dd?(['Q4','Q4','Q4','Q1','Q1','Q1','Q2','Q2','Q2','Q3','Q3','Q3'][dd.getMonth()]):'';
+    r._status=!r.pname?'':(r.dcert?'Certificate issued':(r.filed==='Y'?'Return filed':(r.ddep?'Deposited':(r.act!==''&&r.act!=null?(tcs?'Collected':'Deducted'):'Pending'))));
+  });
+}
+
+/* ==================== RENDER GRID ==================== */
+function grid(kind){
+  const gs=cols(kind), cs=flat(kind), rows=D[kind];
+  let h='<thead><tr class="grp"><th style="position:sticky;left:0;z-index:32;background:var(--paper)"></th>';
+  gs.forEach(g=>h+=`<th colspan="${g.c.length}">${g.g}</th>`);
+  h+='</tr><tr class="col"><th style="position:sticky;left:0;z-index:32;min-width:34px">#</th>';
+  const ends=new Set(); {let n=-1; gs.forEach(g=>{n+=g.c.length; ends.add(n);});}
+  cs.forEach((c,i)=>h+=`<th class="${ends.has(i)?'gend':''}" style="${c.w?`min-width:${c.w}px`:''}">${c.lbl}</th>`);
+  h+='</tr><tr class="num"><th style="position:sticky;left:0;z-index:32"></th>';
+  cs.forEach((c,i)=>h+=`<th>${i+1}</th>`);
+  h+='</tr></thead><tbody>';
+
+  rows.forEach((r,ri)=>{
+    h+=`<tr><td class="sr" style="position:sticky;left:0;z-index:10;background:var(--head)">${r.pname?ri+1:''}</td>`;
+    cs.forEach((c,ci)=>{
+      const ge=ends.has(ci)?' gend':'';
+      if(c.t==='in'){
+        h+=`<td class="in${ge}">`;
+        if(c.ty==='sel') h+=`<select onchange="set('${kind}',${ri},'${c.k}',this.value)">`+c.o.map(o=>`<option${r[c.k]===o?' selected':''}>${o}</option>`).join('')+`</select>`;
+        else if(c.ty==='secsel'){
+          h+=`<select onchange="setSec('${kind}',${ri},this.value)"><option value=""></option>`;
+          SEC.filter(s=>kind==='tcs'?s[S.TYP]==='TCS':s[S.TYP]==='TDS').forEach((s,i)=>{
+            const v=s[S.SEC]+'||'+s[S.NAT], cur=(r.sec||'')+'||'+(r.nat||'');
+            h+=`<option value="${v}"${cur===v?' selected':''}>${s[S.SEC]} — ${s[S.NAT].slice(0,44)}</option>`;});
+          h+=`</select>`;
+        }
+        else h+=`<input type="${c.ty==='num'?'number':c.ty==='date'?'date':'text'}" value="${r[c.k]??''}" oninput="set('${kind}',${ri},'${c.k}',this.value)">`;
+        h+=`</td>`;
+      } else {
+        let v='',cl='calc '+(c.f||'');
+        switch(c.k){
+          case 'ddedn': v=dstr(r._dd); break;
+          case 'nat':   v=r._nat||''; break;
+          case 'ths':   v=r._ths?fmt0(r._ths):(r.sec?'—':''); break;
+          case 'tha':   v=r._tha?fmt0(r._tha):(r.sec?'—':''); break;
+          case 'rate':  v=r._rate===''?'':(r._rate*100).toFixed(2)+'%'; break;
+          case 'base':  v=fmt(r._base); break;
+          case 'cum':   v=fmt(r._cum); break;
+          case 'due':   v=fmt(r._due); break;
+          case 'shrt':  v=r._shrt===''?'':fmt(r._shrt); if(r._shrt>0)cl+=' neg'; else if(r._shrt<0)cl+=' pos'; break;
+          case 'net':   v=fmt(r._net); break;
+          case 'ddue':  v=dstr(r._ddue); break;
+          case 'delay': v=r._delay===''?'':r._delay; if(r._delay>0)cl+=' neg'; break;
+          case 'int':   v=r._int===''?'':fmt(r._int); if(r._int>0)cl+=' neg'; break;
+          case 'qtr':   v=r._qtr||''; break;
+          case 'form':  v=r._form||''; break;
+          case 'status':{const s=r._status;const p=s==='Certificate issued'||s==='Return filed'?'ok':s==='Pending'?'bad':s?'warn':'';
+                         v=s?`<span class="pill ${p}">${s}</span>`:'';break;}
+        }
+        h+=`<td class="${cl}${ge}"${c.w?` style="min-width:${c.w}px"`:''}>${v}</td>`;
+      }
+    });
+    h+='</tr>';
+  });
+  h+='</tbody><tfoot><tr><td class="lbl" style="position:sticky;left:0;z-index:11;background:var(--head)">Total</td>';
+  const T=k=>rows.reduce((a,r)=>a+N(r[k]===undefined?r['_'+k]:r[k]),0);
+  cs.forEach(c=>{
+    const sums={gross:1,gst:1,base:1,due:1,act:1,shrt:1,net:1,int:1,fee:1,camt:1};
+    h+=sums[c.k]?`<td>${fmt(T(c.k))}</td>`:'<td></td>';
+  });
+  h+='</tr></tfoot>';
+  document.getElementById('t-'+kind).innerHTML=h;
+}
+
+/* ==================== EDIT ==================== */
+function set(kind,i,k,v){D[kind][i][k]=v;refresh(kind);}
+function setSec(kind,i,v){const[s,n]=v.split('||');D[kind][i].sec=s||'';D[kind][i].nat=n||'';refresh(kind);}
+function refresh(kind){compute(kind);grid(kind);strip();qtrTable();recTable();
+  if(document.getElementById('p-rpu').classList.contains('on'))renderRPU();}
+function addRow(kind,n=1){for(let i=0;i<n;i++)D[kind].push(blank());refresh(kind);}
+function clearRows(kind){
+  if(!D[kind].some(r=>r.pname)){D[kind]=[];addRow(kind,12);return;}
+  if(confirm('Clear every row in this register? This cannot be undone.')){D[kind]=[];addRow(kind,12);}
+}
+
+/* ==================== COMPLIANCE STRIP ==================== */
+function strip(){
+  const all=[...D.tds,...D.tcs].filter(r=>r.pname);
+  const rows=all.length;
+  const tax=[...D.tds,...D.tcs].reduce((a,r)=>a+N(r.act),0);
+  const dep=[...D.tds,...D.tcs].reduce((a,r)=>a+(r.ddep?N(r.act):0),0);
+  const undep=tax-dep;
+  const intr=[...D.tds,...D.tcs].reduce((a,r)=>a+N(r._int),0);
+  const short=[...D.tds,...D.tcs].reduce((a,r)=>a+Math.max(0,N(r._shrt)),0);
+  const late=[...D.tds,...D.tcs].filter(r=>r._delay>0).length;
+  const nopan=all.filter(r=>['Not Furnished','Invalid','Inoperative'].includes(r.pstat)).length;
+  const exposure=intr+short;
+  const st=(v,g)=>v>0?(g?'flag-warn':'flag-bad'):'flag-ok';
+  document.getElementById('strip').innerHTML=[
+    ['Rows',rows,''],
+    ['Tax deducted / collected','₹'+fmt0(Math.round(tax)),''],
+    ['Not yet deposited','₹'+fmt0(Math.round(undep)),st(undep)],
+    ['Interest accrued','₹'+fmt0(Math.round(intr)),st(intr)],
+    ['Short deduction','₹'+fmt0(Math.round(short)),st(short)],
+    ['Late challans',late,st(late,1)],
+    ['PAN issues',nopan,st(nopan,1)],
+    ['Total exposure','₹'+fmt0(Math.round(exposure)),st(exposure)]
+  ].map(([k,v,c])=>`<div class="stat"><span class="k">${k}</span><span class="v ${c}">${v}</span></div>`).join('');
+}
+
+/* ==================== QUARTERLY ==================== */
+function qtrTable(){
+  const map={};
+  [['tds',D.tds],['tcs',D.tcs]].forEach(([kind,rows])=>rows.forEach(r=>{
+    if(!r.pname||!r._qtr||!r.sec)return;
+    const k=r._qtr+'|'+r.sec;
+    map[k]=map[k]||{q:r._qtr,sec:r.sec,nat:r._nat,n:0,amt:0,due:0,act:0,dep:0};
+    const m=map[k];m.n++;m.amt+=N(r._base);m.due+=N(r._due);m.act+=N(r.act);m.dep+=r.ddep?N(r.act):0;
+  }));
+  const list=Object.values(map).sort((a,b)=>a.q.localeCompare(b.q)||a.sec.localeCompare(b.sec));
+  let h='<thead><tr><th>Qtr</th><th>Section</th><th>Nature</th><th>Parties</th><th>Amount paid / received</th><th>Tax due</th><th>Tax deducted</th><th>Deposited</th><th>Difference</th></tr></thead><tbody>';
+  if(!list.length) h+='<tr><td colspan="9" style="padding:22px;text-align:center;color:var(--muted)">Nothing to summarise yet — add rows in the registers and they group here by quarter and section.</td></tr>';
+  list.forEach(m=>{const d=m.act-m.dep;
+    h+=`<tr><td><b>${m.q}</b></td><td><b>${m.sec}</b></td><td style="font-size:10.5px">${m.nat}</td><td class="n">${m.n}</td><td class="n">${fmt(m.amt)}</td><td class="n">${fmt(m.due)}</td><td class="n">${fmt(m.act)}</td><td class="n">${fmt(m.dep)}</td><td class="n ${d?'neg':'pos'}">${fmt(d)}</td></tr>`;});
+  if(list.length){const t=list.reduce((a,m)=>({n:a.n+m.n,amt:a.amt+m.amt,due:a.due+m.due,act:a.act+m.act,dep:a.dep+m.dep}),{n:0,amt:0,due:0,act:0,dep:0});
+    h+=`<tr class="sum"><td colspan="3">Grand total</td><td class="n">${t.n}</td><td class="n">${fmt(t.amt)}</td><td class="n">${fmt(t.due)}</td><td class="n">${fmt(t.act)}</td><td class="n">${fmt(t.dep)}</td><td class="n">${fmt(t.act-t.dep)}</td></tr>`;}
+  document.getElementById('t-qtr').innerHTML=h+'</tbody>';
+}
+
+/* ==================== RECONCILIATION ==================== */
+const RECROWS=[
+["A","TDS deductible per register (books)","due"],
+["B","TDS actually deducted per register","act"],
+["C","Short / (excess) deduction  (A − B)","f:A-B"],
+["D","TDS deposited per challans","dep"],
+["E","Deducted but not deposited  (B − D)","f:B-D"],
+["F","TDS per return filed","input"],
+["G","Difference — challan vs return  (D − F)","f:D-F"],
+["H","TDS per Form 26AS / TRACES","input"],
+["I","Difference — return vs 26AS  (F − H)","f:F-H"],
+["J","Interest u/s 201(1A) payable","int"],
+["K","Late fee u/s 234E payable","fee"],
+["L","Total dues outstanding  (E + J + K)","f:E+J+K"]
+];
+function recTable(){
+  const Q=['Q1','Q2','Q3','Q4'], v={};
+  RECROWS.forEach(([id,,src])=>{v[id]={};Q.forEach(q=>{
+    const rs=D.tds.filter(r=>r._qtr===q);
+    if(src==='due')v[id][q]=rs.reduce((a,r)=>a+N(r._due),0);
+    else if(src==='act')v[id][q]=rs.reduce((a,r)=>a+N(r.act),0);
+    else if(src==='dep')v[id][q]=rs.reduce((a,r)=>a+(r.ddep?N(r.act):0),0);
+    else if(src==='int')v[id][q]=rs.reduce((a,r)=>a+N(r._int),0);
+    else if(src==='fee')v[id][q]=rs.reduce((a,r)=>a+N(r.fee),0);
+    else if(src==='input')v[id][q]=N(D.rec[id+q]);
+    else v[id][q]=0;});});
+  Q.forEach(q=>{
+    v.C[q]=v.A[q]-v.B[q]; v.E[q]=v.B[q]-v.D[q];
+    v.G[q]=v.D[q]-v.F[q]; v.I[q]=v.F[q]-v.H[q];
+    v.L[q]=v.E[q]+v.J[q]+v.K[q];
+  });
+  let h='<thead><tr><th style="width:38%">Particulars</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Total</th></tr></thead><tbody>';
+  RECROWS.forEach(([id,lbl,src])=>{
+    const isRule=['C','E','G','I','L'].includes(id);
+    h+=`<tr class="${isRule?'rule':''}"><td><b>${id}.</b> ${lbl}</td>`;
+    let t=0;
+    Q.forEach(q=>{const val=v[id][q];t+=val;
+      if(src==='input') h+=`<td style="padding:0"><input type="number" value="${D.rec[id+q]??''}" oninput="D.rec['${id+q}']=this.value;recTable()" style="background:var(--paper);text-align:right;height:30px;color:var(--input-ink);box-shadow:inset 2px 0 0 #E8EDF3"></td>`;
+      else h+=`<td class="n ${isRule&&Math.round(val)!==0?'neg':''}">${val?fmt(val):'—'}</td>`;});
+    h+=`<td class="n"><b>${t?fmt(t):'—'}</b></td></tr>`;});
+  document.getElementById('t-rec').innerHTML=h+'</tbody>';
+}
+
+/* ==================== RPU EXPORT ==================== */
+const RPU_H=["Sr","Challan serial","Deductee sr","Code","PAN","Name","Section code","Date paid (DDMMYYYY)","Amount paid","Tax","Surcharge","Cess","Total deducted","Total deposited","Date of deduction","Rate %"];
+function rpuRows(){
+  const kind=document.getElementById('rpuForm').value, q=document.getElementById('rpuQ').value;
+  return D[kind].filter(r=>r.pname&&(!q||r._qtr===q)).map((r,i)=>[
+    i+1, r.chser||'', i+1,
+    ['Company','Govt'].includes(r.pcat)?'01':'02',
+    r.ppan||'', r.pname||'', r._rpu||'CHECK',
+    ddmmyyyy(r.dpay), N(r._base).toFixed(2), N(r.act).toFixed(2),
+    '0.00','0.00', N(r.act).toFixed(2), N(r.act).toFixed(2),
+    r._dd?ddmmyyyy(r._dd.toISOString().slice(0,10)):'',
+    r._rate===''?'':(r._rate*100).toFixed(4)
+  ]);
+}
+function renderRPU(){
+  const rows=rpuRows();
+  let h='<thead><tr>'+RPU_H.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>';
+  if(!rows.length) h+=`<tr><td colspan="16" style="padding:22px;text-align:center;color:var(--muted)">No rows for this form and quarter. Add entries in the register — they map to RPU fields here automatically.</td></tr>`;
+  rows.forEach(r=>h+='<tr>'+r.map((c,i)=>`<td class="${i>7&&i<16?'n':''}">${c}</td>`).join('')+'</tr>');
+  if(rows.length){
+    const s=(i)=>rows.reduce((a,r)=>a+N(r[i]),0);
+    h+=`<tr class="sum"><td colspan="8">Control totals — must match Form 27A</td><td class="n">${fmt(s(8))}</td><td class="n">${fmt(s(9))}</td><td class="n">—</td><td class="n">—</td><td class="n">${fmt(s(12))}</td><td class="n">${fmt(s(13))}</td><td colspan="2"></td></tr>`;}
+  document.getElementById('t-rpu').innerHTML=h+'</tbody>';
+  document.getElementById('rpuMsg').textContent=rows.length?rows.length+' row'+(rows.length>1?'s':'')+' ready':'';
+}
+function copyRPU(){
+  const rows=rpuRows();
+  if(!rows.length){document.getElementById('rpuMsg').textContent='Nothing to copy';return;}
+  const txt=rows.map(r=>r.slice(2).join('\t')).join('\n');
+  navigator.clipboard.writeText(txt).then(
+    ()=>document.getElementById('rpuMsg').textContent='Copied — paste into RPU Annexure I',
+    ()=>document.getElementById('rpuMsg').textContent='Copy blocked — use Download CSV');
+}
+function downloadCSV(){
+  const rows=rpuRows();
+  if(!rows.length){document.getElementById('rpuMsg').textContent='Nothing to download';return;}
+  const csv=[RPU_H.join(','),...rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','))].join('\n');
+  dl(new Blob([csv],{type:'text/csv'}),'rpu-'+document.getElementById('rpuForm').value+'-'+(document.getElementById('rpuQ').value||'all')+'.csv');
+  document.getElementById('rpuMsg').textContent='Downloaded';
+}
+
+/* ==================== STATIC TABLES ==================== */
+function secTable(){
+  let h='<thead><tr><th>Section</th><th>Nature</th><th>Payee type</th><th>Threshold — single</th><th>Threshold — annual</th><th>Rate — PAN</th><th>Rate — no PAN</th><th>Type</th><th>Form</th><th>RPU code</th></tr></thead><tbody>';
+  SEC.forEach(s=>h+=`<tr${s[S.TYP]==='TCS'?' style="background:#F2F5F9"':''}><td><b>${s[S.SEC]}</b></td><td style="font-size:10.5px">${s[S.NAT]}</td><td style="font-size:10.5px">${s[S.PTY]}</td><td class="n">${s[S.THS]?fmt0(s[S.THS]):'—'}</td><td class="n">${s[S.THA]?fmt0(s[S.THA]):'—'}</td><td class="n">${(s[S.RP]*100).toFixed(2)}%</td><td class="n">${(s[S.RN]*100).toFixed(2)}%</td><td>${s[S.TYP]}</td><td>${s[S.FRM]}</td><td><code>${s[S.RPU]}</code></td></tr>`);
+  document.getElementById('t-sec').innerHTML=h+'</tbody>';
+}
+function dueTable(){
+  let h='<thead><tr><th>Event</th><th>Due date</th><th>If you miss it</th><th>Reference</th></tr></thead><tbody>';
+  DUE.forEach(d=>h+=`<tr><td>${d[0]}</td><td><b>${d[1]}</b></td><td>${d[2]}</td><td><code>${d[3]}</code></td></tr>`);
+  document.getElementById('t-due').innerHTML=h+'</tbody>';
+}
+function masterForm(){
+  document.getElementById('master').innerHTML=MASTER.map(([k,l,t])=>{
+    if(t.startsWith('sel:')) return `<div class="fld"><label>${l}</label><select onchange="D.master['${k}']=this.value;fyTag()">`+['',...t.slice(4).split('|')].map(o=>`<option${D.master[k]===o?' selected':''}>${o}</option>`).join('')+`</select></div>`;
+    return `<div class="fld"><label>${l}</label><input type="${t}" value="${D.master[k]??''}" oninput="D.master['${k}']=this.value;fyTag()"></div>`;
+  }).join('');
+}
+function fyTag(){const fy=D.master.fy||'2026-27';const y=parseInt(fy.slice(0,4));
+  document.getElementById('fyTag').textContent=`FY ${fy} · AY ${y+1}-${String(y+2).slice(2)}`+(D.master.tan?' · TAN '+D.master.tan:'');}
+
+/* ==================== SAVE / OPEN ==================== */
+function dl(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+function saveJSON(){
+  const clean=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
+  dl(new Blob([JSON.stringify(clean(D),null,1)],{type:'application/json'}),
+     'tds-tcs-register-'+(D.master.fy||'2026-27')+'.json');
+}
+function loadJSON(e){
+  const f=e.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);
+    D.master=o.master||{}; D.tds=o.tds||[]; D.tcs=o.tcs||[]; D.rec=o.rec||{};
+    if(!D.tds.length)D.tds=Array.from({length:12},blank);
+    if(!D.tcs.length)D.tcs=Array.from({length:12},blank);
+    masterForm();fyTag();refresh('tds');refresh('tcs');renderRPU();
+  }catch(err){alert('That file could not be read. Open a .json saved from this register.');}};
+  rd.readAsText(f); e.target.value='';
+}
+
+/* ==================== TABS ==================== */
+const TABS=[['setup','Setup'],['tds','TDS Register'],['tcs','TCS Register'],['sec','Section Master'],['qtr','Quarterly Summary'],['rec','Reconciliation'],['rpu','RPU Export'],['due','Due Dates']];
+document.getElementById('tabs').innerHTML=TABS.map(([id,l],i)=>`<button role="tab" aria-selected="${i===0}" onclick="tab('${id}')">${l}</button>`).join('');
+function tab(id){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+id));
+  document.querySelectorAll('#tabs button').forEach((b,i)=>b.setAttribute('aria-selected',TABS[i][0]===id));
+  if(id==='rpu')renderRPU();
+}
+
+/* ==================== BOOT ==================== */
+D.master.fy='2026-27'; D.master.ay='2027-28';
+addRow('tds',12); addRow('tcs',12);
+masterForm(); fyTag(); secTable(); dueTable(); recTable(); qtrTable(); strip();
+</script>
+</body>
+</html>

@@ -33,8 +33,8 @@ export default async function handler(request) {
     return jsonError('Invalid JSON body', 400);
   }
 
-  // Extract model from body (defaults to gemini-2.0-flash), pass everything else straight to Google
-  const { model = 'gemini-2.0-flash', ...geminiPayload } = body;
+  // Extract model from body (defaults to the configured Flash-Lite model), pass everything else straight to Google
+  const { model = 'gemini-flash-lite-latest', ...geminiPayload } = body;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 

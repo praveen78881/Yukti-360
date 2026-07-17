@@ -149,27 +149,18 @@ const configs: Record<string, EntityConfig> = {
   cooperative: cooperativeConfig,
 };
 
-/**
- * Return a copy of the config with every gated nav feature unlocked:
- * booleans → true, tri-state 'never' → 'always'. Format selectors
- * (profitLossFormat, balanceSheetFormat, auditForm) and other non-gate values
- * are left untouched. (Requested: unlock all locked features for every entity.)
- */
-function unlockAllFeatures(config: EntityConfig): EntityConfig {
-  const nav = { ...config.nav } as Record<string, unknown>;
-  for (const key of Object.keys(nav)) {
-    if (nav[key] === false) nav[key] = true;
-    else if (nav[key] === 'never') nav[key] = 'always';
-  }
-  return { ...config, nav: nav as EntityConfig['nav'] };
-}
-
 export function getEntityConfig(entityType: EntityType | string): EntityConfig {
   const config = configs[entityType];
   if (!config) {
     throw new Error(`Unknown entity type: ${entityType}`);
   }
-  return unlockAllFeatures(config);
+  // Return a defensive copy so callers can't mutate the shared config singleton.
+  // Features are intentionally NOT force-unlocked: each entity type exposes ONLY
+  // the accounts/statements relevant to it, driven by that entity's own nav
+  // flags (e.g. a Pvt Ltd never shows Partners' Capital, Karta's Capital,
+  // Realisation, Incomplete Records, etc.). This is what keeps the sidebar
+  // entity-appropriate.
+  return { ...config, nav: { ...config.nav } };
 }
 
 export function getAllEntityConfigs(): Record<string, EntityConfig> {

@@ -19,6 +19,25 @@ interface CashBookFormatProps {
   totalDiscountReceived?: number;
 }
 
+// One logical cell (a Date/Particulars/LF/Disc/Cash/Bank group) on one side of the
+// unified cash-book table. Both sides share the same <tr>, which is what guarantees
+// the monthly Total row lands on the same horizontal line no matter how many entries
+// each side has.
+type CellModel = {
+  empty?: boolean;
+  balance?: boolean;
+  total?: boolean;
+  bold?: boolean;
+  date?: string;
+  entryCode?: string;
+  particulars?: string;
+  lf?: string;
+  disc?: number;
+  cash?: number;
+  bank?: number;
+  tint?: string;
+};
+
 export function CashBookFormat({
   type,
   companyName,
@@ -29,16 +48,42 @@ export function CashBookFormat({
   payments,
   openingCash,
   openingBank,
-  closingCash,
-  closingBank,
-  totalDiscountAllowed,
-  totalDiscountReceived,
+  closingCash: _closingCash,
+  closingBank: _closingBank,
+  totalDiscountAllowed: _totalDiscountAllowed,
+  totalDiscountReceived: _totalDiscountReceived,
 }: CashBookFormatProps) {
   // colType retains the full union type so the column-width ternaries can compare
   // against 'single' even inside JSX blocks that only render for 'double' | 'triple'
   // (where TypeScript would otherwise narrow `type` and reject the comparison).
   const colType: 'single' | 'double' | 'triple' = type;
   const typeLabel = colType === 'single' ? 'Single Column' : type === 'double' ? 'Double Column' : 'Triple Column';
+
+  // ---- Column geometry (shared by header + body so both sides line up exactly) ----
+  // Amount columns must support at least 9 digits + 2 paise cleanly.
+  const dateWidth = type === 'triple' ? 'w-[72px]' : 'w-[78px]';
+  const lfWidth = type === 'triple' ? 'w-[34px]' : 'w-[36px]';
+  // Triple column: discount is relatively smaller; free space goes to Cash/Bank.
+  const discountWidth = type === 'triple' ? 'w-[64px]' : '';
+  const particularsWidth = 'min-w-[220px]';
+  const amountWidth = type === 'double' ? 'w-[106px]' : type === 'triple' ? 'w-[96px]' : 'w-[132px]';
+
+  const cellPad = type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5';
+  const smallText = type === 'triple' ? 'text-[10px]' : 'text-xs';
+  const amountText = type === 'triple' ? 'text-[10px]' : colType === 'single' ? '' : 'text-[11px]';
+  const amountThPad =
+    colType === 'single' ? 'px-2 py-1.5 text-xs' : type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-1 py-1 text-[11px]';
+  const thPad = colType === 'single' ? 'px-2 py-1.5 text-xs' : 'px-1 py-1 text-[10px]';
+
+  // Number of physical columns rendered per side (used for the Dr/Cr title colSpan).
+  const perSideCols = type === 'triple' ? 6 : type === 'double' ? 5 : 4;
+
+  const tableClass = `w-full table-fixed ${
+    colType === 'single' ? 'text-[13px]' : 'text-[11px]'
+  } [&_th]:border-r [&_th]:border-gray-200 [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-gray-200 [&_td:last-child]:border-r-0`;
+
+  const titleThClass =
+    'bg-gray-50 px-3 py-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider text-center';
 
   const toMonthKey = (isoDate: string) => isoDate.slice(0, 7); // YYYY-MM
 
@@ -65,243 +110,123 @@ export function CashBookFormat({
 
   const months = listMonthsInRange(fromDate, toDate);
 
-  const renderSide = (
-    label: string,
-    rows: CashBookRow[],
-    openingBalance: { cash: number; bank: number },
-    closingBalance?: { cash: number; bank: number },
-    discountTotal?: number,
-    options?: {
-      openingDate?: string;
-      closingDate?: string;
-      padRows?: number;
-      forceClosingRow?: boolean;
-      showTitle?: boolean;
-    }
-  ) => {
-    const rowsCashTotal = rows.reduce((sum, r) => sum + (r.cashAmount || 0), 0);
-    const rowsBankTotal = rows.reduce((sum, r) => sum + (r.bankAmount || 0), 0);
-    // Receipts side total includes opening; Payments side total includes closing
-    const cashTotal =
-      (openingBalance.cash || 0) +
-      rowsCashTotal +
-      (closingBalance?.cash || 0);
-    const bankTotal =
-      (openingBalance.bank || 0) +
-      rowsBankTotal +
-      (closingBalance?.bank || 0);
+  // ---- Cell renderers ------------------------------------------------------------
+  // `isPayment` decides whether this group sits on the credit (right) side, which
+  // gets a heavier divider so the T-account split reads clearly.
+  const sideCells = (m: CellModel, isPayment: boolean) => {
+    const divider = isPayment ? 'border-l-2 border-gray-300' : '';
+    const tint = m.tint || '';
 
-    // Amount columns must support at least 9 digits + 2 paise cleanly.
-    // Keep widths mode-specific so double column gets larger amount slots.
-    const dateWidth = type === 'triple' ? 'w-[72px]' : 'w-[78px]';
-    const lfWidth = type === 'triple' ? 'w-[34px]' : 'w-[36px]';
-    // Triple column: discount is relatively smaller; free space goes to Cash/Bank.
-    const discountWidth = type === 'triple' ? 'w-[64px]' : '';
-    // Give Particulars more breathing room by slimming/redistributing amount columns.
-    const particularsWidth =
-      type === 'triple'
-        ? 'min-w-[220px]'
-        : type === 'double'
-        ? 'min-w-[220px]'
-        : 'min-w-[220px]';
-    const amountWidth =
-      type === 'double'
-        ? 'w-[106px]'
-        : type === 'triple'
-        ? 'w-[96px]'
-        : 'w-[132px]';
+    if (m.empty) {
+      return (
+        <>
+          <td className={`${dateWidth} ${cellPad} ${tint} ${divider}`}>&nbsp;</td>
+          <td className={`${particularsWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          <td className={`${lfWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          {type === 'triple' && <td className={`${discountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
+          <td className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          {(type === 'double' || type === 'triple') && <td className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
+        </>
+      );
+    }
+
+    // Balances and totals show a signed magnitude (abs); entry lines show the raw
+    // positive amount only when non-zero so the opposite column stays blank.
+    const fmtAmount = (value: number | undefined) => {
+      const v = value || 0;
+      if (m.balance || m.total) return v !== 0 ? formatIndianCurrency(Math.abs(v)) : '';
+      return v > 0 ? formatIndianCurrency(v) : '';
+    };
+    const cashStr = fmtAmount(m.cash);
+    const bankStr = fmtAmount(m.bank);
+    const discStr = m.total
+      ? m.disc != null
+        ? formatIndianCurrency(m.disc)
+        : ''
+      : m.disc
+      ? formatIndianCurrency(m.disc)
+      : '';
 
     return (
-    <div className="flex-1">
-      {options?.showTitle && (
-        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">
-          {label}
-        </div>
-      )}
-      <table
-        className={`w-full table-fixed ${
-          colType === 'single' ? 'text-[13px]' : 'text-[11px]'
-        } [&_th]:border-r [&_th]:border-gray-200 [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-gray-200 [&_td:last-child]:border-r-0`}
-      >
-        <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            <th className={`text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${dateWidth} ${colType === 'single' ? 'px-2 py-1.5 text-xs' : 'px-1 py-1 text-[10px]'}`}>Date</th>
-            <th className={`text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${particularsWidth} ${colType === 'single' ? 'px-2 py-1.5 text-xs' : 'px-1 py-1 text-[10px]'}`}>Particulars</th>
-            <th className={`text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${lfWidth} ${colType === 'single' ? 'px-2 py-1.5 text-xs' : 'px-1 py-1 text-[10px]'}`}>LF</th>
-            {type === 'triple' && (
-              <th className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${discountWidth} px-1 py-1 text-[10px]`}>Disc.</th>
-            )}
-            <th
-              className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${amountWidth} ${
-                colType === 'single'
-                  ? 'px-2 py-1.5 text-xs'
-                  : type === 'triple'
-                  ? 'px-1 py-1 text-[10px]'
-                  : 'px-1 py-1 text-[11px]'
-              }`}
-            >
-              Cash
-            </th>
-            {(type === 'double' || type === 'triple') && (
-              <th
-                className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${amountWidth} ${
-                  colType === 'single'
-                    ? 'px-2 py-1.5 text-xs'
-                    : type === 'triple'
-                    ? 'px-1 py-1 text-[10px]'
-                    : 'px-1 py-1 text-[11px]'
-                }`}
-              >
-                Bank
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {/* Opening Balance (only on receipts side) */}
-          {label === 'Receipts (Dr)' && (
-            <tr className="border-b border-gray-100 bg-blue-50/30">
-              <td className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-gray-500 whitespace-nowrap`}>
-                {options?.openingDate ?? ''}
-              </td>
-              <td className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'} font-medium align-top break-words`}>To Balance b/d</td>
-              <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>
-              {type === 'triple' && <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>}
-              <td
-                className={`${amountWidth} ${
-                  type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                } text-right font-mono tabular-nums whitespace-nowrap`}
-              >
-                {openingBalance.cash !== 0 ? formatIndianCurrency(Math.abs(openingBalance.cash)) : ''}
-              </td>
-              {(type === 'double' || type === 'triple') && (
-                <td
-                  className={`${amountWidth} ${
-                    type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                  } text-right font-mono tabular-nums whitespace-nowrap`}
-                >
-                  {openingBalance.bank !== 0 ? formatIndianCurrency(Math.abs(openingBalance.bank)) : ''}
-                </td>
-              )}
-            </tr>
-          )}
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b border-gray-100">
-              <td
-                className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-gray-500 whitespace-nowrap align-top`}
-              >
-                <div>{row.date}</div>
-                <div className="mt-1 text-[10px] font-mono font-semibold text-blue-600">{row.entry_code}</div>
-              </td>
-              <td
-                className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'} align-top break-words`}
-                title={row.particulars}
-              >
-                {row.particulars}
-              </td>
-              <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-center text-gray-400`}>{row.lf || ''}</td>
-              {type === 'triple' && (
-                <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-right font-mono tabular-nums whitespace-nowrap`}>
-                  {row.discountAmount ? formatIndianCurrency(row.discountAmount) : ''}
-                </td>
-              )}
-              <td
-                className={`${amountWidth} ${
-                  type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                } text-right font-mono tabular-nums whitespace-nowrap`}
-              >
-                {row.cashAmount > 0 ? formatIndianCurrency(row.cashAmount) : ''}
-              </td>
-              {(type === 'double' || type === 'triple') && (
-                <td
-                  className={`${amountWidth} ${
-                    type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                  } text-right font-mono tabular-nums whitespace-nowrap`}
-                >
-                  {row.bankAmount > 0 ? formatIndianCurrency(row.bankAmount) : ''}
-                </td>
-              )}
-            </tr>
-          ))}
-          {/* Padding rows so that both sides align and totals sit on same horizontal line */}
-          {Array.from({ length: options?.padRows ?? 0 }).map((_, i) => (
-            <tr key={`pad-${i}`} className="border-b border-gray-100">
-              <td className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>
-              <td className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>
-              <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>
-              {type === 'triple' && <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>}
-              <td className={`${amountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>
-              {(type === 'double' || type === 'triple') && <td className={`${amountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>}
-            </tr>
-          ))}
-          {/* Closing Balance (only on payments side) */}
-          {closingBalance && (
-            <tr className="border-b border-gray-100 bg-blue-50/30">
-              <td className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-gray-500 whitespace-nowrap`}>
-                {options?.closingDate ?? ''}
-              </td>
-              <td className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'} font-medium align-top break-words`}>By Balance c/d</td>
-              <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>
-              {type === 'triple' && <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>}
-              <td
-                className={`${amountWidth} ${
-                  type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                } text-right font-mono tabular-nums whitespace-nowrap`}
-              >
-                {closingBalance.cash !== 0 ? formatIndianCurrency(Math.abs(closingBalance.cash)) : ''}
-              </td>
-              {(type === 'double' || type === 'triple') && (
-                <td
-                  className={`${amountWidth} ${
-                    type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                  } text-right font-mono tabular-nums whitespace-nowrap`}
-                >
-                  {closingBalance.bank !== 0 ? formatIndianCurrency(Math.abs(closingBalance.bank)) : ''}
-                </td>
-              )}
-            </tr>
-          )}
-          {!closingBalance && options?.forceClosingRow && (
-            <tr className="border-b border-gray-100 bg-blue-50/30">
-              <td className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'}`}></td>
-              <td className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}>&nbsp;</td>
-              <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>
-              {type === 'triple' && <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>}
-              <td className={`${amountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>
-              {(type === 'double' || type === 'triple') && <td className={`${amountWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>}
-            </tr>
-          )}
-          {/* Totals row */}
-          <tr className="bg-gray-100 font-semibold border-t border-gray-300">
-            <td className={`${dateWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'}`}></td>
-            <td className={`${particularsWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'} align-top`}>Total</td>
-            <td className={`${lfWidth} ${type === 'triple' ? 'px-1 py-1' : 'px-2 py-1.5'}`}></td>
-            {type === 'triple' && (
-              <td className={`${discountWidth} ${type === 'triple' ? 'px-1 py-1 text-[10px]' : 'px-2 py-1.5 text-xs'} text-right font-mono tabular-nums whitespace-nowrap`}>
-                {discountTotal != null ? formatIndianCurrency(discountTotal) : ''}
-              </td>
-            )}
-            <td
-              className={`${amountWidth} ${
-                type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-              } text-right font-mono tabular-nums whitespace-nowrap`}
-            >
-              {cashTotal !== 0 ? formatIndianCurrency(Math.abs(cashTotal)) : ''}
-            </td>
-            {(type === 'double' || type === 'triple') && (
-              <td
-                className={`${amountWidth} ${
-                  type === 'triple' ? 'px-1 py-1 text-[10px]' : colType === 'single' ? 'px-2 py-1.5' : 'px-2 py-1.5 text-[11px]'
-                } text-right font-mono tabular-nums whitespace-nowrap`}
-              >
-                {bankTotal !== 0 ? formatIndianCurrency(Math.abs(bankTotal)) : ''}
-              </td>
-            )}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
+      <>
+        <td
+          className={`${dateWidth} ${cellPad} ${smallText} text-gray-500 whitespace-nowrap align-top ${tint} ${divider}`}
+        >
+          {m.date ? <div>{m.date}</div> : null}
+          {m.entryCode ? (
+            <div className="mt-1 text-[10px] font-mono font-semibold text-blue-600">{m.entryCode}</div>
+          ) : null}
+        </td>
+        <td
+          className={`${particularsWidth} ${cellPad} align-top break-words ${m.bold ? 'font-medium' : ''} ${tint}`}
+          title={m.particulars}
+        >
+          {m.particulars ?? ''}
+        </td>
+        <td className={`${lfWidth} ${cellPad} ${smallText} text-center text-gray-400 ${tint}`}>{m.lf || ''}</td>
+        {type === 'triple' && (
+          <td
+            className={`${discountWidth} ${cellPad} ${smallText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+          >
+            {discStr}
+          </td>
+        )}
+        <td
+          className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+        >
+          {cashStr}
+        </td>
+        {(type === 'double' || type === 'triple') && (
+          <td
+            className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+          >
+            {bankStr}
+          </td>
+        )}
+      </>
+    );
+  };
+
+  const headerCells = (isPayment: boolean) => {
+    const divider = isPayment ? 'border-l-2 border-gray-300' : '';
+    return (
+      <>
+        <th
+          className={`text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${dateWidth} ${thPad} ${divider}`}
+        >
+          Date
+        </th>
+        <th
+          className={`text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${particularsWidth} ${thPad}`}
+        >
+          Particulars
+        </th>
+        <th
+          className={`text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${lfWidth} ${thPad}`}
+        >
+          LF
+        </th>
+        {type === 'triple' && (
+          <th
+            className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${discountWidth} px-1 py-1 text-[10px]`}
+          >
+            Disc.
+          </th>
+        )}
+        <th
+          className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${amountWidth} ${amountThPad}`}
+        >
+          Cash
+        </th>
+        {(type === 'double' || type === 'triple') && (
+          <th
+            className={`text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider ${amountWidth} ${amountThPad}`}
+          >
+            Bank
+          </th>
+        )}
+      </>
+    );
   };
 
   return (
@@ -316,95 +241,177 @@ export function CashBookFormat({
       <div className="overflow-x-auto">
         <div className="divide-y divide-[#E5E7EB] min-w-[1000px]">
           {(() => {
-          let monthOpeningCash = openingCash;
-          let monthOpeningBank = openingBank;
+            let monthOpeningCash = openingCash;
+            let monthOpeningBank = openingBank;
 
-          const isSingleMonthRange = months.length === 1;
+            const isSingleMonthRange = months.length === 1;
 
-          return months.map((ym, monthIndex) => {
-            const [yy, mm] = ym.split('-').map((x) => parseInt(x, 10));
-            const openingDate = `${ym}-01`;
-            const lastDay =
-              yy && mm ? new Date(yy, mm, 0).getDate() : 28;
-            const closingDate = `${ym}-${String(lastDay).padStart(2, '0')}`;
+            return months.map((ym, monthIndex) => {
+              const [yy, mm] = ym.split('-').map((x) => parseInt(x, 10));
+              const openingDate = `${ym}-01`;
+              const lastDay = yy && mm ? new Date(yy, mm, 0).getDate() : 28;
+              const closingDate = `${ym}-${String(lastDay).padStart(2, '0')}`;
 
-            const monthReceipts = receipts.filter((r) => toMonthKey(r.date) === ym);
-            const monthPayments = payments.filter((p) => toMonthKey(p.date) === ym);
+              const monthReceipts = receipts.filter((r) => toMonthKey(r.date) === ym);
+              const monthPayments = payments.filter((p) => toMonthKey(p.date) === ym);
 
-            const receiptsCash = monthReceipts.reduce((s, r) => s + (r.cashAmount || 0), 0);
-            const receiptsBank = monthReceipts.reduce((s, r) => s + (r.bankAmount || 0), 0);
-            const paymentsCash = monthPayments.reduce((s, r) => s + (r.cashAmount || 0), 0);
-            const paymentsBank = monthPayments.reduce((s, r) => s + (r.bankAmount || 0), 0);
+              const receiptsCash = monthReceipts.reduce((s, r) => s + (r.cashAmount || 0), 0);
+              const receiptsBank = monthReceipts.reduce((s, r) => s + (r.bankAmount || 0), 0);
+              const paymentsCash = monthPayments.reduce((s, r) => s + (r.cashAmount || 0), 0);
+              const paymentsBank = monthPayments.reduce((s, r) => s + (r.bankAmount || 0), 0);
 
-            const monthClosingCash = monthOpeningCash + receiptsCash - paymentsCash;
-            const monthClosingBank = monthOpeningBank + receiptsBank - paymentsBank;
+              const monthClosingCash = monthOpeningCash + receiptsCash - paymentsCash;
+              const monthClosingBank = monthOpeningBank + receiptsBank - paymentsBank;
 
-            // Skip visually empty months (no receipts/payments and unchanged opening/closing)
-            // when viewing a multi-month range. For a single-month filter, still show the
-            // month with b/d and c/d.
-            const hasActivity =
-              receiptsCash !== 0 ||
-              receiptsBank !== 0 ||
-              paymentsCash !== 0 ||
-              paymentsBank !== 0;
-            if (
-              !isSingleMonthRange &&
-              !hasActivity &&
-              monthOpeningCash === monthClosingCash &&
-              monthOpeningBank === monthClosingBank
-            ) {
-              // Carry forward balances but do not render this month.
+              // Skip visually empty months (no receipts/payments and unchanged opening/closing)
+              // when viewing a multi-month range. For a single-month filter, still show the
+              // month with b/d and c/d.
+              const hasActivity =
+                receiptsCash !== 0 || receiptsBank !== 0 || paymentsCash !== 0 || paymentsBank !== 0;
+              if (
+                !isSingleMonthRange &&
+                !hasActivity &&
+                monthOpeningCash === monthClosingCash &&
+                monthOpeningBank === monthClosingBank
+              ) {
+                // Carry forward balances but do not render this month.
+                monthOpeningCash = monthClosingCash;
+                monthOpeningBank = monthClosingBank;
+                return null;
+              }
+
+              const monthDiscountReceived =
+                type === 'triple' ? monthReceipts.reduce((s, r) => s + (r.discountAmount || 0), 0) : undefined;
+              const monthDiscountAllowed =
+                type === 'triple' ? monthPayments.reduce((s, r) => s + (r.discountAmount || 0), 0) : undefined;
+
+              // Receipts side total includes the opening balance; payments side total
+              // includes the closing balance. In a balanced book these two match.
+              const receiptsCashTotal = monthOpeningCash + receiptsCash;
+              const receiptsBankTotal = monthOpeningBank + receiptsBank;
+              const paymentsCashTotal = paymentsCash + monthClosingCash;
+              const paymentsBankTotal = paymentsBank + monthClosingBank;
+
+              // Build per-side row models. Receipts lead with the opening b/d line.
+              const receiptModels: CellModel[] = [
+                {
+                  balance: true,
+                  bold: true,
+                  date: openingDate,
+                  particulars: 'To Balance b/d',
+                  cash: monthOpeningCash,
+                  bank: monthOpeningBank,
+                  tint: 'bg-blue-50/30',
+                },
+                ...monthReceipts.map<CellModel>((r) => ({
+                  date: r.date,
+                  entryCode: r.entry_code,
+                  particulars: r.particulars,
+                  lf: r.lf,
+                  disc: r.discountAmount,
+                  cash: r.cashAmount,
+                  bank: r.bankAmount,
+                })),
+              ];
+              const paymentModels: CellModel[] = monthPayments.map<CellModel>((p) => ({
+                date: p.date,
+                entryCode: p.entry_code,
+                particulars: p.particulars,
+                lf: p.lf,
+                disc: p.discountAmount,
+                cash: p.cashAmount,
+                bank: p.bankAmount,
+              }));
+
+              // Both sides share the same rows; pad the shorter side with blanks so the
+              // closing (c/d) and Total rows always sit on the same horizontal line,
+              // regardless of how many entries each side has.
+              const bodyLen = Math.max(receiptModels.length, paymentModels.length);
+
+              const bodyRows = Array.from({ length: bodyLen }, (_, r) => {
+                const rm = receiptModels[r] ?? { empty: true };
+                const pm = paymentModels[r] ?? { empty: true };
+                return (
+                  <tr key={`b-${r}`} className="border-b border-gray-100">
+                    {sideCells(rm, false)}
+                    {sideCells(pm, true)}
+                  </tr>
+                );
+              });
+
+              const block = (
+                <div key={ym}>
+                  <table className={tableClass}>
+                    <thead>
+                      {monthIndex === 0 && (
+                        <tr>
+                          <th colSpan={perSideCols} className={titleThClass}>
+                            Receipts (Dr)
+                          </th>
+                          <th colSpan={perSideCols} className={`${titleThClass} border-l-2 border-gray-300`}>
+                            Payments (Cr)
+                          </th>
+                        </tr>
+                      )}
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        {headerCells(false)}
+                        {headerCells(true)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bodyRows}
+                      {/* Closing balance: only the payments (Cr) side carries By Balance c/d;
+                          the receipts side is blank but tinted to mirror it. */}
+                      <tr className="border-b border-gray-100">
+                        {sideCells({ empty: true, tint: 'bg-blue-50/30' }, false)}
+                        {sideCells(
+                          {
+                            balance: true,
+                            bold: true,
+                            date: closingDate,
+                            particulars: 'By Balance c/d',
+                            cash: monthClosingCash,
+                            bank: monthClosingBank,
+                            tint: 'bg-blue-50/30',
+                          },
+                          true
+                        )}
+                      </tr>
+                      {/* Total row — one <tr> spanning both sides, so Dr/Cr totals align. */}
+                      <tr className="bg-gray-100 font-semibold border-t border-gray-300">
+                        {sideCells(
+                          {
+                            total: true,
+                            particulars: 'Total',
+                            disc: monthDiscountReceived,
+                            cash: receiptsCashTotal,
+                            bank: receiptsBankTotal,
+                          },
+                          false
+                        )}
+                        {sideCells(
+                          {
+                            total: true,
+                            particulars: 'Total',
+                            disc: monthDiscountAllowed,
+                            cash: paymentsCashTotal,
+                            bank: paymentsBankTotal,
+                          },
+                          true
+                        )}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+
+              // carry forward
               monthOpeningCash = monthClosingCash;
               monthOpeningBank = monthClosingBank;
-              return null;
-            }
 
-            const monthDiscountReceived =
-              type === 'triple'
-                ? monthReceipts.reduce((s, r) => s + (r.discountAmount || 0), 0)
-                : undefined;
-            const monthDiscountAllowed =
-              type === 'triple'
-                ? monthPayments.reduce((s, r) => s + (r.discountAmount || 0), 0)
-                : undefined;
-
-            // Keep both sides aligned so month-end total is always in the same row.
-            const receiptsCount = 1 + monthReceipts.length; // opening b/d + entries
-            const paymentsCount = monthPayments.length; // entries (closing handled separately on both sides)
-            const maxBodyRows = Math.max(receiptsCount, paymentsCount);
-            const receiptsPad = maxBodyRows - receiptsCount;
-            const paymentsPad = maxBodyRows - paymentsCount;
-
-            const block = (
-              <div key={ym}>
-                <div className="grid grid-cols-2 divide-x divide-[#E5E7EB]">
-                  {renderSide(
-                    'Receipts (Dr)',
-                    monthReceipts,
-                    { cash: monthOpeningCash, bank: monthOpeningBank },
-                    undefined,
-                    monthDiscountReceived,
-                    { openingDate, padRows: receiptsPad, forceClosingRow: true, showTitle: monthIndex === 0 }
-                  )}
-                  {renderSide(
-                    'Payments (Cr)',
-                    monthPayments,
-                    { cash: 0, bank: 0 },
-                    { cash: monthClosingCash, bank: monthClosingBank },
-                    monthDiscountAllowed,
-                    { closingDate, padRows: paymentsPad, forceClosingRow: true, showTitle: monthIndex === 0 }
-                  )}
-                </div>
-              </div>
-            );
-
-            // carry forward
-            monthOpeningCash = monthClosingCash;
-            monthOpeningBank = monthClosingBank;
-
-            return block;
-          });
-        })()}
+              return block;
+            });
+          })()}
         </div>
       </div>
     </div>

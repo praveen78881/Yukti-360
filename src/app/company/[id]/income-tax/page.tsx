@@ -33,11 +33,14 @@ const AY_LIST = [
   { ay: '2025-26', fy: '2024-25', module: 'itr_ay2526' },
 ] as const;
 
-type ItrKey = 'itr1' | 'itr2' | 'itr3' | 'itr4';
+type ItrKey = 'itr1' | 'itr2' | 'itr3' | 'itr4' | 'itr5' | 'itr6' | 'itr7';
 
 /** Served form path for a given assessment year. AY 2026-27 keeps the original flat
- *  filenames; other years use a year-suffixed copy in the same /tax-utilities folder. */
+ *  filenames; other years use a year-suffixed copy in the same /tax-utilities folder.
+ *  The statutory forms (ITR-5 / ITR-6 / ITR-7) ship for A.Y. 2026-27 only, so they
+ *  always resolve to the flat filename regardless of the requested year. */
 function itrSrc(ay: string, key: ItrKey): string {
+  if (key === 'itr5' || key === 'itr6' || key === 'itr7') return `/tax-utilities/${key}.html`;
   return ay === '2026-27' ? `/tax-utilities/${key}.html` : `/tax-utilities/${key}-${ay}.html`;
 }
 
@@ -46,9 +49,13 @@ const ITR_META: Record<ItrKey, { label: string; short: string; note: string }> =
   itr2: { label: 'ITR-2', short: 'ITR-2', note: 'Capital gains, multiple properties & foreign assets — no business income' },
   itr3: { label: 'ITR-3', short: 'ITR-3', note: 'Income from business or profession (regular books)' },
   itr4: { label: 'ITR-4 Sugam', short: 'ITR-4', note: 'Presumptive business/profession u/s 44AD / 44ADA / 44AE' },
+  itr5: { label: 'ITR-5', short: 'ITR-5', note: 'Firms, LLPs, AOP/BOI & co-operative societies' },
+  itr6: { label: 'ITR-6', short: 'ITR-6', note: 'Companies (other than those claiming exemption u/s 11)' },
+  itr7: { label: 'ITR-7', short: 'ITR-7', note: 'Trusts, societies & institutions filing u/s 139(4A)–(4D)' },
 };
 
-/** Applicable ITR forms per entity type for A.Y. 2026-27. */
+/** Applicable ITR forms per entity type for A.Y. 2026-27. Individual-style entities
+ *  get the multi-year, multi-form workspace (ITR-1..4). */
 const ENTITY_FORMS: Partial<Record<EntityType, ItrKey[]>> = {
   individual: ['itr1', 'itr2'],
   sole_proprietorship: ['itr3', 'itr4'],
@@ -56,18 +63,32 @@ const ENTITY_FORMS: Partial<Record<EntityType, ItrKey[]>> = {
   huf: ['itr2', 'itr3', 'itr4'],
 };
 
-/** Company entity types keep the existing ITR-6 experience (unchanged). */
-const COMPANY_ENTITY_TYPES = ['pvt_ltd', 'bulk_pvt_ltd', 'opc', 'public_ltd'];
+/** Statutory single-form entities → the one A.Y. 2026-27 form they file.
+ *  Firms/LLP/AOP/Co-op → ITR-5, companies → ITR-6, non-profits → ITR-7.
+ *  Keyed by EntityType so an invalid key is a compile error and a newly-added
+ *  entity type surfaces a missing mapping. */
+const STATUTORY_ITR: Partial<Record<EntityType, ItrKey>> = {
+  partnership: 'itr5',
+  llp: 'itr5',
+  aop_boi: 'itr5',
+  cooperative: 'itr5',
+  pvt_ltd: 'itr6',
+  opc: 'itr6',
+  public_ltd: 'itr6',
+  trust: 'itr7',
+  society: 'itr7',
+  section8: 'itr7',
+};
 
-/** Locked-screen label for entity types whose forms aren't shipped yet. */
-const ENTITY_ITR_MAP: Record<string, string> = {
+/** Locked-screen fallback label for any entity type without a shipped form. */
+const ENTITY_ITR_MAP: Partial<Record<EntityType, string>> = {
   partnership: 'ITR-5',
   llp: 'ITR-5',
   aop_boi: 'ITR-5',
   cooperative: 'ITR-5',
   trust: 'ITR-7',
   society: 'ITR-7',
-  section8: 'ITR-6 / ITR-7',
+  section8: 'ITR-7',
 };
 
 /* ── DOM bridge helpers (run against the same-origin iframe window) ──────────── */
@@ -128,6 +149,9 @@ function prefillFromCompany(win: Window, company: Company) {
   setIfEmpty(win, 'cl_name', company.name);
   setIfEmpty(win, 'cl_pan', pan);
   setIfEmpty(win, 'cl_dob', dob);
+  // Statutory forms (ITR-5/7) call the formation-date field `cl_dof`; harmless no-op
+  // on the individual forms (which use cl_dob). setIfEmpty skips absent ids.
+  setIfEmpty(win, 'cl_dof', dob);
   setIfEmpty(win, 'cl_status', status);
 
   // Full assessee master (ITR-1 / ITR-2 / ITR-3)
@@ -599,6 +623,40 @@ function LockedItrView({ entityLabel, applicableItr }: { entityLabel: string; ap
    Router — pick the right view for the company's entity type
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ════════════════════════════════════════════════════════════════════════════
+   Statutory single-form view — ITR-5 / ITR-6 / ITR-7 (A.Y. 2026-27)
+   Reuses the same iframe workspace as the individual forms (ItrYearForms), which
+   restores the saved snapshot, prefills master fields from the company record and
+   debounce-autosaves every edit back to entity_data (cloud-synced). Because these
+   forms only ship for A.Y. 2026-27 there is no year selector.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function StatutoryItrView({ company, form }: { company: Company; form: ItrKey }) {
+  const meta = AY_LIST[0]; // statutory forms ship for A.Y. 2026-27
+  const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label ?? company.entity_type;
+
+  return (
+    <div className="flex h-[calc(100vh-60px)] flex-col">
+      <div className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-1.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileText className="h-4 w-4 shrink-0 text-blue-600" />
+          <span className="text-sm font-semibold text-gray-800">Income Tax</span>
+          <span className="truncate text-xs text-gray-400">· FY {meta.fy} · {entityLabel}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">A.Y. {meta.ay}</span>
+          <span className="rounded border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">{ITR_META[form].short}</span>
+        </div>
+      </div>
+      <ItrYearForms key={form} company={company} forms={[form]} ay={meta.ay} moduleKey={meta.module} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Router — pick the right view for the company's entity type
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 export default function IncomeTaxDashboard() {
   const { company, loading } = useCompany();
 
@@ -612,18 +670,20 @@ export default function IncomeTaxDashboard() {
 
   const entityType = company.entity_type as EntityType;
 
-  // 1) Companies → ITR-6 (unchanged)
-  if (COMPANY_ENTITY_TYPES.includes(company.entity_type)) {
-    return <CompanyItr6View company={company} />;
-  }
-
-  // 2) Individual / Sole proprietor / HUF → new A.Y. 2026-27 forms
+  // 1) Individual / Sole proprietor / HUF → multi-year workspace (ITR-1..4)
   const forms = ENTITY_FORMS[entityType];
   if (forms && forms.length > 0) {
     return <IndividualItrView key={company.id} company={company} forms={forms} />;
   }
 
-  // 3) Everything else → locked "coming soon"
+  // 2) Statutory single-form entities → ITR-5 (firms/LLP/AOP/co-op),
+  //    ITR-6 (companies) or ITR-7 (trusts/societies/sec-8), A.Y. 2026-27
+  const statForm = STATUTORY_ITR[entityType];
+  if (statForm) {
+    return <StatutoryItrView key={company.id} company={company} form={statForm} />;
+  }
+
+  // 3) Fallback → locked "coming soon"
   const entityLabel = ENTITY_TYPES[entityType]?.label || entityType;
   const applicableItr = ENTITY_ITR_MAP[entityType] || 'ITR-5 / ITR-7';
   return <LockedItrView entityLabel={entityLabel} applicableItr={applicableItr} />;
