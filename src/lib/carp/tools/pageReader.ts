@@ -8,6 +8,23 @@
 
 import { listJournalEntries, getCompany, getEntityData, listEntityData, countJournalEntries, getJournalDateRange } from '@/lib/offlineDb';
 import { computeTrialBalance } from '@/lib/accounting/trialBalanceCompute';
+
+/** The entity_data module a company's module-pages live under (its entity type),
+ *  falling back to the legacy 'pvt_ltd' store. */
+function entityModule(companyId: string): string {
+  return getCompany(companyId)?.entity_type || 'pvt_ltd';
+}
+/** Read an entity_data section trying the entity's module, then legacy 'pvt_ltd',
+ *  then 'settings' — so any page resolves for any entity type. */
+function readEntitySection(companyId: string, section: string): unknown {
+  const mod = entityModule(companyId);
+  return (
+    getEntityData(companyId, mod, section)?.data ??
+    getEntityData(companyId, 'pvt_ltd', section)?.data ??
+    getEntityData(companyId, 'settings', section)?.data ??
+    null
+  );
+}
 import { computeTradingAccount } from '@/lib/accounting/tradingAccountCompute';
 import { computeProfitLoss } from '@/lib/accounting/profitLossCompute';
 import { computeBalanceSheet } from '@/lib/accounting/balanceSheetCompute';
@@ -114,12 +131,13 @@ export const pageReaderExecutors: Record<string, ToolExecutor> = {
       }
 
       case 'compliance': {
-        const cal = getEntityData(companyId, 'pvt_ltd', 'compliance_calendar');
-        return { success: true, data: cal?.data || { message: 'No compliance calendar' }, displayType: 'json' };
+        const cal = readEntitySection(companyId, 'compliance_calendar');
+        return { success: true, data: cal || { message: 'No compliance calendar' }, displayType: 'json' };
       }
 
       case 'audit': {
-        const auditData = listEntityData(companyId, 'pvt_ltd')
+        const mod = entityModule(companyId);
+        const auditData = [...listEntityData(companyId, mod), ...listEntityData(companyId, 'pvt_ltd')]
           .filter((d) => ['audit', 'drs', 'caro'].includes(d.section));
         const result: Record<string, unknown> = {};
         for (const d of auditData) result[d.section] = d.data;
@@ -127,15 +145,15 @@ export const pageReaderExecutors: Record<string, ToolExecutor> = {
       }
 
       case 'registers': {
-        const reg = getEntityData(companyId, 'pvt_ltd', 'registers');
-        return { success: true, data: reg?.data || { message: 'No register data' }, displayType: 'json' };
+        const reg = readEntitySection(companyId, 'registers');
+        return { success: true, data: reg || { message: 'No register data' }, displayType: 'json' };
       }
 
       default: {
-        // Generic: try to find it in entity_data
-        const record = getEntityData(companyId, 'pvt_ltd', page);
-        if (record) return { success: true, data: record.data, displayType: 'json' };
-        return { success: true, data: { message: `Page "${page}" data not available via this tool. Try using a specific compute tool instead.` }, displayType: 'text' };
+        // Generic: resolve the section across the entity's module / legacy / settings stores.
+        const data = readEntitySection(companyId, page);
+        if (data !== null) return { success: true, data, displayType: 'json' };
+        return { success: true, data: { message: `Page "${page}" has no stored data yet. Use list_entity_modules to see what exists, or a compute tool for derived data.` }, displayType: 'text' };
       }
     }
   },

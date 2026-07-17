@@ -499,3 +499,17 @@ export function deleteEntityData(companyId: string, module: string, section?: st
   saveDb(db);
   if (removedIds.length) mirrorDelete('entity_data', removedIds);
 }
+
+/**
+ * List every entity_data record for a company across ALL modules — used by the AI
+ * agent to discover where each page's data lives (module + section keys) so it can
+ * read/write any page without guessing the module.
+ */
+export function listAllEntityData(
+  companyId: string,
+): Array<{ module: string; section: string; updated_at?: string }> {
+  const db = loadDb();
+  return db.entity_data
+    .filter((d) => d.company_id === companyId)
+    .map((d) => ({ module: d.module, section: d.section, updated_at: (d as { updated_at?: string }).updated_at }));
+}

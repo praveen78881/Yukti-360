@@ -178,10 +178,6 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setIsLoading(true);
-
     const loadingMsg: CarpMessage = {
       id: 'loading',
       role: 'assistant',
@@ -189,12 +185,15 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
       timestamp: Date.now(),
       isLoading: true,
     };
-    setMessages((prev) => [...prev, loadingMsg]);
+    // Add the user message + a persistent working indicator at the bottom.
+    setMessages((prev) => [...prev, userMsg, loadingMsg]);
+    setInput('');
+    setIsLoading(true);
 
     try {
       const entityLabel =
         ENTITY_TYPES[company.entity_type as EntityType]?.label ?? company.entity_type;
-      const newMessages = await runAgent(
+      await runAgent(
         text,
         messages,
         companyId,
@@ -202,11 +201,16 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
         entityLabel,
         (path) => navigate(path),
         handleConfirm,
+        // Stream each step in live (thinking → tool activity → text), keeping the
+        // working indicator pinned to the bottom until the run finishes.
+        (step) => {
+          setMessages((prev) => {
+            const withoutLoading = prev.filter((m) => m.id !== 'loading');
+            return [...withoutLoading, step, loadingMsg];
+          });
+        },
       );
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== 'loading'),
-        ...newMessages,
-      ]);
+      setMessages((prev) => prev.filter((m) => m.id !== 'loading'));
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message.toLowerCase() : '';
       const friendlyError = raw.includes('quota') || raw.includes('rate') || raw.includes('limit') || raw.includes('429')
@@ -496,6 +500,31 @@ function ThinkingBubble() {
 }
 
 /* ═══════════════════════════════════════════════════════
+   Thinking Disclosure — collapsible model reasoning
+   ═══════════════════════════════════════════════════════ */
+
+function ThinkingDisclosure({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-600 transition-colors"
+      >
+        <Bot className="h-2.5 w-2.5" />
+        <span>{open ? 'Hide thinking' : 'Show thinking'}</span>
+        <ChevronDown className={`h-2.5 w-2.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="mt-1 rounded-lg border border-violet-100 bg-violet-50/40 px-2.5 py-1.5">
+          <p className="text-[10.5px] text-violet-800/80 whitespace-pre-wrap leading-relaxed italic">{text}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
    Message Bubble
    ═══════════════════════════════════════════════════════ */
 
@@ -523,6 +552,9 @@ function MessageBubble({ message }: { message: CarpMessage }) {
         <Bot className="h-3 w-3 text-slate-400" />
       </div>
       <div className="max-w-[90%] space-y-1.5">
+        {/* Thinking (model reasoning summary) */}
+        {message.thinking && <ThinkingDisclosure text={message.thinking} />}
+
         {/* Tool calls */}
         {message.toolCalls && message.toolCalls.length > 0 && (
           <div>

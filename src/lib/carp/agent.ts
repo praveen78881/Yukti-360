@@ -22,6 +22,8 @@ export interface CarpMessage {
   role: 'user' | 'assistant' | 'tool_result';
   content: string;
   timestamp: number;
+  /** The model's reasoning summary for this turn (shown collapsibly in the UI) */
+  thinking?: string;
   /** Tool calls the assistant wants to make */
   toolCalls?: ToolCall[];
   /** Results from tool execution */
@@ -45,12 +47,14 @@ export interface ConfirmAction {
    Write-tool confirmation
    ═══════════════════════════════════════════════════════ */
 
+// Full-access posture: the AI performs reads/creates/edits with NO friction.
+// Only DESTRUCTIVE actions (irreversible deletes) show a one-tap confirm card, plus
+// bulk_move_to_ledger which the bulk-classifier flow deliberately confirms before it
+// posts many rows. Everything else executes immediately.
 const WRITE_TOOLS = new Set([
-  'create_journal_entry', 'bulk_create_entries',
-  'update_journal_entry', 'bulk_update_entries',
   'delete_journal_entry', 'bulk_delete_entries',
-  'bulk_move_to_ledger', 'bulk_create_ledger', 'bulk_add_other_side',
-  'workspace_manage', 'update_entity_data', 'update_settings',
+  'delete_entity_data',
+  'bulk_move_to_ledger',
 ]);
 
 function describeAction(name: string, args: Record<string, unknown>): string {
@@ -75,6 +79,8 @@ function describeAction(name: string, args: Record<string, unknown>): string {
       const u = args.updates as unknown[] | undefined;
       return `Update ${u?.length ?? 0} journal entries`;
     }
+    case 'delete_entity_data':
+      return `Delete page data — ${String(args.section ?? '(entire module)')}${args.module ? ` in ${String(args.module)}` : ''}`;
     case 'bulk_move_to_ledger':
       return `Move suspense rows matching "${String(args.keyword ?? '')}" to ledger`;
     case 'bulk_create_ledger':
@@ -97,49 +103,64 @@ function describeAction(name: string, args: Record<string, unknown>): string {
    ═══════════════════════════════════════════════════════ */
 
 function buildSystemPrompt(companyName: string, entityType: string, companyId: string, aiRules?: string | null): string {
-  let prompt = `You are CARP (CA Resource Planner) — an AI accounting agent built for Indian Chartered Accountants.
+  let prompt = `You are Aleza — a highly skilled, fully autonomous AI accounting agent built for Indian Chartered Accountants, operating INSIDE this software with the same powers as a human user of the app.
 
 You are currently working on: "${companyName}" (${entityType})
 
-YOUR CAPABILITIES (46 tools):
-- Create, read, update, delete, search, bulk-create, bulk-delete, bulk-update journal entries
-- Compute ANY financial statement: trial balance, P&L, balance sheet, trading account, cash flow, funds flow, ratio analysis, P&L appropriation, cash book, COGS working
-- Compute GST data: GST register, GSTR-1, GSTR-3B, ITC register
-- Compute tax data: TDS register, taxable income
-- Compute ageing analysis: debtors and creditors ageing
-- Compute ledger for any account
-- Read data from ANY page in the software (67+ pages)
-- Access and update company settings, entity data, registers, audit data
-- Draft 16 types of CA/legal documents (board resolutions, minutes, audit reports, tax computations, etc.)
-- Create files: text, CSV, markdown, spreadsheets, formatted reports
-- Manage workspace: list, read, delete, rename files
-- Navigate the user to any page
-- Look up Indian statutes (Companies Act, IT Act, GST Act, ICAI standards)
-- Validate journal entries, compute depreciation schedules
-- Access AI rules set by the CA
+═══════════════════════════════════════════
+FULL ACCESS — YOU CAN DO ANYTHING A USER CAN DO MANUALLY
+═══════════════════════════════════════════
+You have COMPLETE read, write, edit and delete access to every page, every dataset and every file in this software. Anything the user can do by clicking through the app, you can do by using your tools. You are not limited to a workspace — you operate on the real data behind every navigation page.
+
+- JOURNAL / LEDGERS: create, read, update, delete, search, and bulk-create/update/delete journal entries; compute the ledger of any account and any balance.
+- FINANCIAL STATEMENTS & TAX: compute trial balance, trading, P&L, balance sheet, cash flow, funds flow, ratios, P&L appropriation, cash book, COGS, GST (register/GSTR-1/GSTR-3B/ITC), TDS, taxable income, debtor/creditor ageing.
+- ANY PAGE'S DATA (partners' capital, share capital, karta capital, debentures, fixed assets, depreciation, investments, loans, audit/CARO/directors' report, deferred/advance tax, contingent liabilities, related party, schedule III, income-tax/ITR, compliance calendar, registers, settings, and every other module page):
+    • read_page_data — see what the user sees on a page.
+    • list_entity_modules — DISCOVER exactly where a page's data is stored (its module + section keys). Use this whenever you're unsure where a page lives.
+    • get_entity_data({ section, module? }) — read any page's stored data. Omit module to use this entity's default automatically; pass module (e.g. "settings", "itr_ay2627") to target a specific store.
+    • update_entity_data({ section, data, module?, merge? }) — CREATE or EDIT any page's data. merge=true (default) patches your fields into the existing data (keeps everything else) — perfect for editing one value or filling part of a page. merge=false REPLACES the whole section.
+    • delete_entity_data({ section?, module? }) — delete a page's data (or a whole module). Destructive → the platform shows a confirm card.
+- FILES: create, read, EDIT (update_file), rename and delete workspace files (text, CSV, markdown, reports, spreadsheets).
+- SETTINGS: edit company settings/config (name, PAN, GSTIN, entity type, GST status, accounting method, FY, TDS/TCS, inventory).
+- Draft CA/legal documents, look up Indian statutes, validate entries, compute depreciation, navigate the user to any page.
+
+═══════════════════════════════════════════
+CROSS-PAGE WORK
+═══════════════════════════════════════════
+You can read data from one page and use it to fill another. Pattern: (1) read the SOURCE with read_page_data / get_entity_data / a compute tool, (2) transform it, (3) WRITE the TARGET with update_entity_data / create entries / update_company_settings, (4) optionally read it back to verify. If you don't know which module a page uses, call list_entity_modules first, then act. Chain as many steps as needed in one go.
+
+═══════════════════════════════════════════
+CHART OF ACCOUNTS — REUSE FIRST, CREATE ONLY IF MISSING
+═══════════════════════════════════════════
+Before creating or editing ANY journal entry, call get_chart_of_accounts. You MUST reuse an account that already exists (in this company's books or its custom accounts) with its EXACT name, group and nature — never invent a near-duplicate (don't add "Sales Revenue" if "Sales" already exists; don't add "Bank A/c" if "Bank" exists). Only when nothing suitable exists, call create_account with the correct Schedule III sub-group and nature from the master palette, THEN use that account. Names must be clean (no "A/c" suffix). Every entry MUST balance (Dr = Cr).
+
+═══════════════════════════════════════════
+FILLING A PAGE OR A SPECIFIC FIELD
+═══════════════════════════════════════════
+When the CA asks you to fill / enter / update something on a page or a specific field:
+1. FIRST read the current state of that page/section (read_page_data, or get_entity_data; use list_entity_modules if you're unsure where the page's data lives) so you can see what fields exist and what is already filled.
+2. Work out exactly which fields the request needs, and gather the values — from the source page/data the CA points you to, or by computing them.
+3. WRITE only those fields (update_entity_data with merge=true so you never disturb the rest of the page; create_journal_entry / update_company_settings for those domains).
+4. Read it back to confirm it landed.
+You are editing the REAL data behind the page — the on-screen form/fields re-render from it, so filling the data fills the field.
+
+═══════════════════════════════════════════
+POSTURE — DO IT, DON'T DEFER
+═══════════════════════════════════════════
+- When the CA asks for something, DO IT with your tools immediately. You are an agent, not a chatbot. Never reply "I can't do that" or "please do it manually" for anything the app supports — you have a tool for it; if you're missing a detail, ask a brief question, otherwise act.
+- You do NOT need to create a new file to make a change — edit the existing data/file in place (update_entity_data with merge, update_journal_entry, workspace update_file).
+- The ONLY gate is a one-tap confirm card the platform shows for irreversible/destructive actions (deletes, full-section replace, bulk reclassify). That is a safety confirmation, not a refusal — proceed and let the card appear. If the CA cancels it (error "Action cancelled by CA."), acknowledge and ask what to change; never retry automatically.
 
 RULES:
-1. Always use Indian accounting terminology (Dr./Cr., ₹ format). Do NOT append "A/c" or "a/c" to account names (e.g. use "Sales" or "Customer" instead of "Sales A/c" or "Customer A/c"), as the system automatically appends "A/c" during display.
-2. Journal entries MUST balance — total debits = total credits
-3. Use proper account groups (Current Assets, Fixed Assets, Current Liabilities, Revenue, etc.)
-4. Follow Indian GAAP / Ind AS as applicable
-5. All dates in YYYY-MM-DD format
-6. Financial year is April to March
-7. When creating journal entries, use standard voucher types: JRN (Journal), SLS (Sales), PUR (Purchase), RCT (Receipt), PMT (Payment), CNT (Contra)
-8. Be concise but thorough. When the CA asks for something, do it directly — don't just explain.
-9. For compliance queries, reference specific sections (e.g., "Sec 135 of Companies Act 2013")
-10. You have FULL control of the software — use tools to take action, don't just describe what to do.
-11. When asked to create a document, use draft_document first, then create_formatted_report to save it.
-12. When asked for any financial data, use compute_financial_statement or the appropriate compute tool.
-13. Use read_page_data to see what the user sees on any page.
-14. SPEED RULE — When operating on multiple journal entries, ALWAYS use bulk tools in a SINGLE call:
-    - Delete 2+ entries → bulk_delete_entries([id1, id2, ...]) — NEVER loop with delete_journal_entry
-    - Update 2+ entries → bulk_update_entries([...]) — NEVER loop with update_journal_entry
-    - Create 2+ entries → bulk_create_entries([...]) — NEVER loop with create_journal_entry
-    Single-entry tools (create/update/delete_journal_entry) are only for truly single operations.
-15. CONFIRMATION RULE — When a write action is cancelled by the CA (error: "Action cancelled by CA"), acknowledge it and ask what they'd like to change. Never retry automatically.
-
-When the user asks you to do something, USE YOUR TOOLS to actually do it. You are an agent, not a chatbot.`;
+1. Indian accounting terminology (Dr./Cr., ₹). Do NOT append "A/c"/"a/c" to account names (use "Sales", "Customer") — the system appends "A/c" on display.
+2. Journal entries MUST balance — total debits = total credits.
+3. Use proper account groups (Current Assets, Fixed Assets, Current Liabilities, Revenue, etc.). Follow Indian GAAP / Ind AS as applicable.
+4. All dates YYYY-MM-DD. Financial year is April–March.
+5. Voucher types: JRN, SLS, PUR, RCT, PMT, CNT.
+6. For compliance queries cite specific sections (e.g. "Sec 135 of Companies Act 2013").
+7. SPEED RULE — for 2+ journal entries ALWAYS use bulk tools in a SINGLE call (bulk_create_entries / bulk_update_entries / bulk_delete_entries); never loop the single-entry tools.
+8. Prefer merge=true when editing entity data so you never clobber unrelated fields; use merge=false only when the CA wants to replace an entire section.
+9. Be concise. Report what you actually did (which pages/sections/entries you changed).`;
 
   // Bulk mode — inject specialised bulk system prompt when company has bulk data
   const hasBulkData = getSuspenseTransactions(companyId).length > 0;
@@ -229,6 +250,7 @@ async function callGemini(
   systemPrompt: string,
 ): Promise<{
   text?: string;
+  thinking?: string;
   functionCalls?: Array<{ name: string; args: Record<string, unknown> }>;
   rawParts: GeminiPart[];
 }> {
@@ -248,6 +270,8 @@ async function callGemini(
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 4096,
+          // Surface the model's thinking summary so the UI can show its reasoning.
+          thinkingConfig: { includeThoughts: true },
         },
       }),
     });
@@ -290,6 +314,7 @@ async function callGemini(
 
 function parseGeminiResponse(data: Record<string, unknown>): {
   text?: string;
+  thinking?: string;
   functionCalls?: Array<{ name: string; args: Record<string, unknown> }>;
   /** Raw parts from the model — must be sent back verbatim for thought_signature support */
   rawParts: GeminiPart[];
@@ -300,10 +325,13 @@ function parseGeminiResponse(data: Record<string, unknown>): {
 
   const parts: GeminiPart[] = candidate.content?.parts || [];
   let text = '';
+  let thinking = '';
   const functionCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
 
   for (const part of parts) {
-    if (part.text && !part.thought) text += part.text;
+    // `thought: true` parts are the model's reasoning summary — capture separately.
+    if (part.text && part.thought) thinking += part.text;
+    else if (part.text) text += part.text;
     if (part.functionCall) {
       functionCalls.push({
         name: part.functionCall.name,
@@ -314,6 +342,7 @@ function parseGeminiResponse(data: Record<string, unknown>): {
 
   return {
     text: text || undefined,
+    thinking: thinking || undefined,
     functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
     rawParts: parts,
   };
@@ -331,6 +360,9 @@ export async function runAgent(
   entityType: string,
   onNavigate?: (path: string) => void,
   onConfirm?: (action: ConfirmAction) => Promise<boolean>,
+  /** Called as each assistant step completes so the UI can stream progress live
+   *  (thinking, tool activity, text) instead of waiting for the whole run. */
+  onStep?: (msg: CarpMessage) => void,
 ): Promise<CarpMessage[]> {
   // Load AI rules for this company
   let aiRules: string | null = null;
@@ -369,8 +401,10 @@ export async function runAgent(
   // Add the new user message
   geminiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
 
-  // Multi-turn loop: keep calling until no more function calls
-  let maxTurns = 8;
+  // Multi-turn loop: keep calling until no more function calls. A generous budget so
+  // the agent can chain many steps — read one page, transform, write another, verify —
+  // in a single request without stopping short on complex cross-page tasks.
+  let maxTurns = 30;
   while (maxTurns-- > 0) {
     const response = await callGemini(geminiHistory, systemPrompt);
 
@@ -400,10 +434,12 @@ export async function runAgent(
         role: 'assistant',
         content: response.text || '',
         timestamp: Date.now(),
+        thinking: response.thinking,
         toolCalls: response.functionCalls.map((fc) => ({ name: fc.name, args: fc.args })),
         toolResults,
       };
       newMessages.push(assistantMsg);
+      onStep?.(assistantMsg); // stream this step to the UI immediately
 
       // Add model turn verbatim (preserves thought_signature for thinking models)
       geminiHistory.push({ role: 'model', parts: response.rawParts });
@@ -422,13 +458,16 @@ export async function runAgent(
     }
 
     // No function calls — final text response
-    if (response.text) {
-      newMessages.push({
+    if (response.text || response.thinking) {
+      const finalMsg: CarpMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: response.text,
+        content: response.text || '',
         timestamp: Date.now(),
-      });
+        thinking: response.thinking,
+      };
+      newMessages.push(finalMsg);
+      onStep?.(finalMsg);
     }
 
     break;
