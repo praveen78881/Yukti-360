@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { CompanyProvider } from '@/contexts/CompanyContext';
+import { GstSessionProvider } from '@/components/gst/GstSessionProvider';
 import { CarpPanel } from '@/components/carp/CarpPanel';
 
 const SIDEBAR_MIN = 160;
@@ -46,6 +47,7 @@ export default function CompanyLayout() {
 
   return (
     <CompanyProvider>
+      <GstSessionProvider>
       <div className="h-screen flex flex-col app-surface overflow-hidden">
         <Header
           onMenuToggle={() => setSidebarOpen((o) => !o)}
@@ -93,6 +95,7 @@ export default function CompanyLayout() {
           />
         </div>
       </div>
+      </GstSessionProvider>
     </CompanyProvider>
   );
 }

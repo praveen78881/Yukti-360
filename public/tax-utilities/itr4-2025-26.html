@@ -329,6 +329,7 @@ textarea{resize:vertical;min-height:30px}
           <option value="139(5)">139(5) — Revised return</option>
           <option value="139(9)">139(9) — Response to defective</option>
           <option value="142(1)">142(1) — In response to notice</option>
+          <option value="139(8A)">139(8A) — Updated return (ITR-U)</option>
         </select></div><div class="schtag"></div></div>
       <div class="itr"><div class="lbl">Return Type</div>
         <div class="drillcol"></div>
@@ -389,6 +390,18 @@ textarea{resize:vertical;min-height:30px}
       <div class="itr"><div class="lbl">Other Forms filed</div>
         <div class="drillcol sf-open" data-sf="sf-otherforms">⋯</div>
         <div class="st" id="st_otherforms"></div><div class="schtag"></div></div>
+      <div class="itr"><div class="lbl">Chapter VI-A — deduction details</div>
+        <div class="drillcol sf-open" data-sf="sf-via-hub">⋯</div>
+        <div class="st" id="st_viahub"></div><div class="schtag">80C-80G</div></div>
+      <div class="itr"><div class="lbl">House Property — detail (interest u/s 24b)</div>
+        <div class="drillcol sf-open" data-sf="sf-hp">⋯</div>
+        <div class="st" id="st_hp"></div><div class="schtag">24B</div></div>
+      <div class="itr"><div class="lbl">Taxes paid — challans / TCS / TDS3</div>
+        <div class="drillcol sf-open" data-sf="sf-taxpaid">⋯</div>
+        <div class="st" id="st_taxpaid"></div><div class="schtag">IT/TCS/TDS3</div></div>
+      <div class="itr"><div class="lbl">Updated return u/s 139(8A) — ITR-U <small>Part A 139(8A) + Part B-ATI · only when filing an updated return</small></div>
+        <div class="drillcol sf-open" data-sf="sf-itru">⋯</div>
+        <div class="st" id="st_itru"></div><div class="schtag">139(8A)</div></div>
     </div>
 
     <!-- ============================================================
@@ -535,6 +548,14 @@ textarea{resize:vertical;min-height:30px}
   <div class="sf-body">
     <div class="sf-note">Secondary address &amp; contact auto-fill from the Permanent Info table (Tools → Settings → ITR/e-filing → Auto-fill).</div>
     <div class="sf-fields" style="max-width:820px">
+      <div class="sechdr">Primary residential address</div>
+      <div class="f"><label>Flat / Door / Building</label><input type="text" id="asr_flat" placeholder="Flat / Door No."></div>
+      <div class="f"><label>Road / Street / Post office</label><input type="text" id="asr_road" placeholder="Road / Street"></div>
+      <div class="f"><label>Area / Locality</label><input type="text" id="asr_area" placeholder="Area / Locality"></div>
+      <div class="f"><label>Town / City</label><input type="text" id="asr_city" placeholder="City"></div>
+      <div class="f"><label>State</label><select id="asr_state"><option value="">— state —</option><option value="01">01 Andaman &amp; Nicobar</option><option value="02">02 Andhra Pradesh</option><option value="03">03 Arunachal Pradesh</option><option value="04">04 Assam</option><option value="05">05 Bihar</option><option value="06">06 Chandigarh</option><option value="07">07 Dadra &amp; Nagar Haveli</option><option value="08">08 Daman &amp; Diu</option><option value="09">09 Delhi</option><option value="10">10 Goa</option><option value="11">11 Gujarat</option><option value="12">12 Haryana</option><option value="13">13 Himachal Pradesh</option><option value="14">14 Jammu &amp; Kashmir</option><option value="15">15 Karnataka</option><option value="16">16 Kerala</option><option value="17">17 Lakshadweep</option><option value="18">18 Madhya Pradesh</option><option value="19">19 Maharashtra</option><option value="20">20 Manipur</option><option value="21">21 Meghalaya</option><option value="22">22 Mizoram</option><option value="23">23 Nagaland</option><option value="24">24 Odisha</option><option value="25">25 Puducherry</option><option value="26">26 Punjab</option><option value="27">27 Rajasthan</option><option value="28">28 Sikkim</option><option value="29">29 Tamil Nadu</option><option value="30">30 Tripura</option><option value="31">31 Uttar Pradesh</option><option value="32">32 West Bengal</option><option value="33">33 Chhattisgarh</option><option value="34">34 Uttarakhand</option><option value="35">35 Jharkhand</option><option value="36">36 Telangana</option><option value="37">37 Ladakh</option><option value="38">38 Other</option></select></div>
+      <div class="f"><label>PIN code</label><input type="text" id="asr_pin" placeholder="XXXXXX" maxlength="6"></div>
+      <div class="sechdr">Contact</div>
       <div class="f"><label>STD code</label><input type="text" id="asr_std" placeholder="080"></div>
       <div class="f"><label>Landline No.</label><input type="text" id="asr_landline" placeholder="Optional"></div>
       <div class="f"><label>Country code (for Assessee's Mobile No.)</label><input type="text" id="asr_cc" value="91"></div>
@@ -624,6 +645,43 @@ textarea{resize:vertical;min-height:30px}
   </div>
 </div>
 
+<!-- ===== DEFERRED DRILL-IN (Action D9, AY2025-26 only): ITR-U — Updated return u/s 139(8A) ===== -->
+<div class="subform sf-wide" id="sf-itru">
+  <div class="sf-top"><div><h2>Updated Return u/s 139(8A) — ITR-U</h2><div class="sf-meta">A.Y. 2025-26 · Part A 139(8A) + Part B-ATI (140B recomputation)</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Fill only when filing an <b>updated return</b> u/s 139(8A). PAN, Name and PartB income figures flow from the main computation; enter the original-return details, reasons and the 140B recomputation here. Exported to <b>PartA_139_8A</b> + <b>PartB-ATI</b> only when an acknowledgment no. or updated total income is present.</div>
+    <div class="sf-sectit">Part A — 139(8A)</div>
+    <table class="sf-tbl sf-simple" style="max-width:680px"><tbody>
+      <tr><td class="l" style="width:340px">Previously filed a return for this A.Y.?</td><td><select id="itru_prevFiled" style="text-align:left"><option value="Y">Yes</option><option value="N">No</option></select></td></tr>
+      <tr><td class="l">Acknowledgment no. of original return</td><td><input type="text" id="itru_ackNo" style="text-align:left"></td></tr>
+      <tr><td class="l">Date original return filed</td><td><input type="text" id="itru_origDate" placeholder="DD/MM/YYYY" style="text-align:left"></td></tr>
+      <tr><td class="l">Eligible to file u/s 139(8A) as laid out in</td><td><select id="itru_laidOut" style="text-align:left"><option value="A">Return furnished earlier</option><option value="B">Return not furnished earlier</option></select></td></tr>
+      <tr><td class="l">Filing updated return during period</td><td><select id="itru_duringPeriod" style="text-align:left"><option value="1">1 — up to 12 months from end of relevant AY</option><option value="2">2 — 12 to 24 months</option><option value="3">3 — 24 to 36 months</option><option value="4">4 — 36 to 48 months</option></select></td></tr>
+      <tr><td class="l">Are you filing to reduce carried-forward loss / unabsorbed depreciation / tax credit?</td><td><select id="itru_unabsDep" style="text-align:left"><option value="N">No</option><option value="Y">Yes</option></select></td></tr>
+    </tbody></table>
+    <div class="sf-sectit">Reasons for updating income <button class="addbtn" id="addrep_itru_reasonsBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th class="l">Reason</th><th></th></tr></thead><tbody id="rep_itru_reasons-rows"></tbody></table>
+    <div class="sf-sectit">Part B-ATI — computation of tax on updated income (u/s 140B)</div>
+    <table class="sf-tbl sf-simple" style="max-width:680px"><tbody>
+      <tr><td class="l" style="width:340px">Updated total income</td><td><input type="text" id="itru_updatedTotInc" class="num"></td></tr>
+      <tr><td class="l">Amount payable (as per Part B-TTI of updated ITR)</td><td><input type="text" id="itru_amtPayable" class="num"></td></tr>
+      <tr><td class="l">Late-filing fee u/s 234F</td><td><input type="text" id="itru_fee234f" class="num"></td></tr>
+      <tr><td class="l">Aggregate liability on additional income (if refund in last valid return)</td><td><input type="text" id="itru_aggrRefund" class="num"></td></tr>
+      <tr><td class="l">Aggregate liability on additional income (if no refund)</td><td><input type="text" id="itru_aggrNoRefund" class="num"></td></tr>
+      <tr><td class="l">Additional income-tax u/s 140B (25%/50%)</td><td><input type="text" id="itru_addtnlIncTax" class="num"></td></tr>
+      <tr><td class="l">Relief u/s 89</td><td><input type="text" id="itru_relief89" class="num"></td></tr>
+      <tr><td class="l">Tax due (10-11) on updated income</td><td><input type="text" id="itru_taxDue" class="num"></td></tr>
+      <tr><td class="l">Tax paid u/s 140B</td><td><input type="text" id="itru_taxUS140B" class="num"></td></tr>
+      <tr><td class="l">Net amount payable</td><td><input type="text" id="itru_netPayable" class="num"></td></tr>
+    </tbody></table>
+    <div class="sf-sectit">Schedule IT-1 — tax paid u/s 140B / advance-SA tax challans <button class="addbtn" id="addrep_itru_it1Btn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:640px"><thead><tr><th class="l">BSR code</th><th class="l">Date of deposit</th><th>Serial no.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_itru_it1-rows"></tbody></table>
+    <div class="sf-sectit">Schedule IT-2 — tax paid in original return challans <button class="addbtn" id="addrep_itru_it2Btn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:640px"><thead><tr><th class="l">BSR code</th><th class="l">Date of deposit</th><th>Serial no.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_itru_it2-rows"></tbody></table>
+  </div>
+</div>
+
 <!-- Bank Accounts (repeater) -->
 <div class="subform sf-wide" id="sf-bank">
   <div class="sf-top"><div><h2>Bank Accounts</h2><div class="sf-meta">A.Y. 2025-26 · all accounts held in India</div></div>
@@ -684,6 +742,103 @@ textarea{resize:vertical;min-height:30px}
       <button class="addbtn" id="addNatAeBtn" style="margin:0">+ Add 44AE activity</button>
     </div>
     <div class="sf-grand">Activities entered <b id="nature_count">0</b></div>
+  </div>
+</div>
+
+<!-- ===== DEFERRED DRILL-INS (Action D): Chapter VI-A detail hub ===== -->
+<div class="subform sf-wide" id="sf-via-hub">
+  <div class="sf-top"><div><h2>Chapter VI-A — deduction details</h2><div class="sf-meta">Itemisation mandated by the schema (amounts flow from the Computation VI-A drill-ins)</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Enter the underlying line-items each 80-section schedule requires. Section totals and eligible amounts are computed at export.</div>
+    <div class="sf-sectit">80C — investments / payments <button class="addbtn" id="addrep_d80cBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th>Amount</th><th class="l">Identification No.</th><th></th></tr></thead><tbody id="rep_d80c-rows"></tbody></table>
+    <div class="sf-sectit">80D — Health insurance</div>
+    <table class="sf-tbl sf-simple" style="max-width:560px"><tbody>
+      <tr><td class="l" style="width:280px">Self &amp; Family — Senior citizen?</td><td><select id="d80dflag_self" style="text-align:left"><option value="N">No</option><option value="Y">Yes</option></select></td></tr></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">Self &amp; Family policies <button class="addbtn" id="addrep_d80dselfBtn" style="margin-left:10px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th class="l">Insurer</th><th class="l">Policy No.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_d80dself-rows"></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">Self &amp; Family (Senior citizen) policies <button class="addbtn" id="addrep_d80dselfsrBtn" style="margin-left:10px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th class="l">Insurer</th><th class="l">Policy No.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_d80dselfsr-rows"></tbody></table>
+    <table class="sf-tbl sf-simple" style="max-width:560px"><tbody>
+      <tr><td class="l" style="width:280px">Parents — Senior citizen?</td><td><select id="d80dflag_par" style="text-align:left"><option value="N">No</option><option value="Y">Yes</option></select></td></tr></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">Parents policies <button class="addbtn" id="addrep_d80dparBtn" style="margin-left:10px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th class="l">Insurer</th><th class="l">Policy No.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_d80dpar-rows"></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">Parents (Senior citizen) policies <button class="addbtn" id="addrep_d80dparsrBtn" style="margin-left:10px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:560px"><thead><tr><th class="l">Insurer</th><th class="l">Policy No.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_d80dparsr-rows"></tbody></table>
+    <div class="sf-sectit">80DD — maintenance of disabled dependent</div>
+    <table class="sf-tbl sf-simple" style="max-width:620px"><tbody>
+      <tr><td class="l" style="width:280px">Nature of disability</td><td><select id="d80dd_nature" style="text-align:left"><option value="">—</option><option value="1">1 — 40%+ disability</option><option value="2">2 — 80%+ severe</option></select></td></tr>
+      <tr><td class="l">Type of disability</td><td><select id="d80dd_type" style="text-align:left"><option value="">—</option><option value="1">1</option><option value="2">2</option></select></td></tr>
+      <tr><td class="l">Deduction amount</td><td><input type="text" id="d80dd_amount" class="num"></td></tr>
+      <tr><td class="l">Dependent type</td><td><select id="d80dd_deptype" style="text-align:left"><option value="">—</option><option value="1">1 — Spouse</option><option value="2">2 — Son</option><option value="3">3 — Daughter</option><option value="4">4 — Father</option><option value="5">5 — Mother</option><option value="6">6 — Brother/Sister</option></select></td></tr>
+      <tr><td class="l">Dependent PAN</td><td><input type="text" id="d80dd_pan" class="up" maxlength="10" style="text-align:left"></td></tr>
+      <tr><td class="l">Dependent Aadhaar</td><td><input type="text" id="d80dd_aadhaar" style="text-align:left"></td></tr>
+      <tr><td class="l">Form 10-IA acknowledgment No.</td><td><input type="text" id="d80dd_form10ia" style="text-align:left"></td></tr>
+      <tr><td class="l">UDID No.</td><td><input type="text" id="d80dd_udid" style="text-align:left"></td></tr>
+    </tbody></table>
+    <div class="sf-sectit">80U — person with disability (self)</div>
+    <table class="sf-tbl sf-simple" style="max-width:620px"><tbody>
+      <tr><td class="l" style="width:280px">Nature of disability</td><td><select id="d80u_nature" style="text-align:left"><option value="">—</option><option value="1">1 — 40%+</option><option value="2">2 — 80%+ severe</option></select></td></tr>
+      <tr><td class="l">Type of disability</td><td><select id="d80u_type" style="text-align:left"><option value="">—</option><option value="1">1</option><option value="2">2</option></select></td></tr>
+      <tr><td class="l">Deduction amount</td><td><input type="text" id="d80u_amount" class="num"></td></tr>
+      <tr><td class="l">Form 10-IA acknowledgment No.</td><td><input type="text" id="d80u_form10ia" style="text-align:left"></td></tr>
+      <tr><td class="l">UDID No.</td><td><input type="text" id="d80u_udid" style="text-align:left"></td></tr>
+    </tbody></table>
+    <div class="sf-sectit">80E — interest on education loan <button class="addbtn" id="addrep_d80eBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">From</th><th class="l">Bank / Institution</th><th class="l">Loan A/c No.</th><th class="l">Date of loan</th><th>Total loan</th><th>Outstanding</th><th>Interest</th><th></th></tr></thead><tbody id="rep_d80e-rows"></tbody></table>
+    <div class="sf-sectit">80EE — interest on housing loan <button class="addbtn" id="addrep_d80eeBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">From</th><th class="l">Bank / Institution</th><th class="l">Loan A/c No.</th><th class="l">Date of loan</th><th>Total loan</th><th>Outstanding</th><th>Interest</th><th></th></tr></thead><tbody id="rep_d80ee-rows"></tbody></table>
+    <div class="sf-sectit">80EEA — affordable housing loan</div>
+    <table class="sf-tbl sf-simple" style="max-width:420px"><tbody><tr><td class="l" style="width:260px">Stamp-duty value of property</td><td><input type="text" id="d80eea_stampduty" class="num"></td></tr></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">Loan rows <button class="addbtn" id="addrep_d80eeaBtn" style="margin-left:10px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">From</th><th class="l">Bank / Institution</th><th class="l">Loan A/c No.</th><th class="l">Date of loan</th><th>Total loan</th><th>Outstanding</th><th>Interest</th><th></th></tr></thead><tbody id="rep_d80eea-rows"></tbody></table>
+    <div class="sf-sectit">80EEB — electric-vehicle loan <button class="addbtn" id="addrep_d80eebBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">From</th><th class="l">Bank / Institution</th><th class="l">Loan A/c No.</th><th class="l">Date of loan</th><th>Total loan</th><th>Outstanding</th><th>Interest</th><th class="l">Vehicle reg. no.</th><th></th></tr></thead><tbody id="rep_d80eeb-rows"></tbody></table>
+    <div class="sf-sectit">80G — donations</div>
+    <div class="sf-sectit" style="font-size:12px">100% deduction (no limit) <button class="addbtn" id="addrep_g100Btn" style="margin-left:10px">+ Add donee</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">Name</th><th class="l">PAN</th><th class="l">ARN</th><th class="l">Address</th><th class="l">City</th><th class="l">State</th><th>PIN</th><th>Cash</th><th>Other mode</th><th></th></tr></thead><tbody id="rep_g100-rows"></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">50% deduction (no approval reqd) <button class="addbtn" id="addrep_g50naBtn" style="margin-left:10px">+ Add donee</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">Name</th><th class="l">PAN</th><th class="l">ARN</th><th class="l">Address</th><th class="l">City</th><th class="l">State</th><th>PIN</th><th>Cash</th><th>Other mode</th><th></th></tr></thead><tbody id="rep_g50na-rows"></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">100% deduction (approval reqd) <button class="addbtn" id="addrep_g100aBtn" style="margin-left:10px">+ Add donee</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">Name</th><th class="l">PAN</th><th class="l">ARN</th><th class="l">Address</th><th class="l">City</th><th class="l">State</th><th>PIN</th><th>Cash</th><th>Other mode</th><th></th></tr></thead><tbody id="rep_g100a-rows"></tbody></table>
+    <div class="sf-sectit" style="font-size:12px">50% deduction (approval reqd) <button class="addbtn" id="addrep_g50aBtn" style="margin-left:10px">+ Add donee</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">Name</th><th class="l">PAN</th><th class="l">ARN</th><th class="l">Address</th><th class="l">City</th><th class="l">State</th><th>PIN</th><th>Cash</th><th>Other mode</th><th></th></tr></thead><tbody id="rep_g50a-rows"></tbody></table>
+    <div class="sf-sectit">80GGC — donation to political party <button class="addbtn" id="addrep_d80ggcBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">Date</th><th>Cash</th><th>Other mode</th><th class="l">Party name</th><th class="l">Party PAN</th><th></th></tr></thead><tbody id="rep_d80ggc-rows"></tbody></table>
+  </div>
+</div>
+
+<!-- ===== DEFERRED DRILL-INS (Action D): House Property (ScheduleUs24B arm) ===== -->
+<div class="subform sf-wide" id="sf-hp">
+  <div class="sf-top"><div><h2>House Property — detail</h2><div class="sf-meta">Annual value · local taxes · interest u/s 24(b) → ScheduleUs24B</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">AY2025-26 exports <b>ScheduleUs24B</b> (interest rows) + flat annual-value leaves. The 30% standard deduction is computed at export.</div>
+    <table class="sf-tbl sf-simple" style="max-width:640px"><tbody>
+      <tr><td class="l" style="width:260px">Address</td><td><input type="text" id="hp_addr" style="text-align:left"></td></tr>
+      <tr><td class="l">City / Town / District</td><td><input type="text" id="hp_city" style="text-align:left"></td></tr>
+      <tr><td class="l">Annual letable value</td><td><input type="text" id="hp_alv" class="num"></td></tr>
+      <tr><td class="l">Rent not realized</td><td><input type="text" id="hp_rentnotreal" class="num"></td></tr>
+      <tr><td class="l">Local taxes paid</td><td><input type="text" id="hp_localtax" class="num"></td></tr>
+      <tr><td class="l">Arrears / unrealized rent received</td><td><input type="text" id="hp_arrears" class="num"></td></tr>
+    </tbody></table>
+    <div class="sf-sectit">Interest on borrowed capital u/s 24(b) <button class="addbtn" id="addrep_hp24bBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">From</th><th class="l">Bank / Institution</th><th class="l">Loan A/c No.</th><th class="l">Date of loan</th><th>Total loan</th><th>Outstanding</th><th>Interest 24(b)</th><th></th></tr></thead><tbody id="rep_hp24b-rows"></tbody></table>
+  </div>
+</div>
+
+<!-- ===== DEFERRED DRILL-INS (Action D): Taxes-paid detail ===== -->
+<div class="subform sf-wide" id="sf-taxpaid">
+  <div class="sf-top"><div><h2>Taxes paid — detail</h2><div class="sf-meta">Self-assessment/advance-tax challans · TCS · TDS on rent/property (26QC/26QB)</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-sectit">Schedule IT — advance / self-assessment tax challans <button class="addbtn" id="addrep_itBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl" style="max-width:640px"><thead><tr><th class="l">BSR code</th><th class="l">Date of deposit</th><th>Serial no.</th><th>Amount</th><th></th></tr></thead><tbody id="rep_it-rows"></tbody></table>
+    <div class="sf-sectit">Schedule TCS — tax collected at source <button class="addbtn" id="addrep_tcsBtn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">TAN</th><th class="l">Collector</th><th>Amt in 26AS</th><th>Total TCS</th><th>Claimed this yr</th><th></th></tr></thead><tbody id="rep_tcs-rows"></tbody></table>
+    <div class="sf-sectit">Schedule TDS3 — TDS on rent / property (Form 26QC / 26QB) <button class="addbtn" id="addrep_tds3Btn" style="margin-left:14px">+ Add</button></div>
+    <table class="sf-tbl"><thead><tr><th class="l">PAN of tenant</th><th class="l">Section</th><th>Claimed</th><th>Carried fwd</th><th></th></tr></thead><tbody id="rep_tds3-rows"></tbody></table>
   </div>
 </div>
 
@@ -964,6 +1119,54 @@ const data={
 };
 FA_KEYS.forEach(k=>data[k]=[newFaRow(k)]);
 
+/* ============================================================
+   DEFERRED DRILL-INS (Action D) — Chapter VI-A / House Property / Taxes-paid detail.
+   Spec-driven generic repeater. Rows live in data.rep[key][]; input ids = rep_<key>_<i>_<Col>.
+   Only nodes with a real captured row are emitted (see buildItr4Json).
+   ============================================================ */
+const STATE_OPTS4=[['01','01 A&N'],['02','02 Andhra Pradesh'],['03','03 Arunachal'],['04','04 Assam'],['05','05 Bihar'],['06','06 Chandigarh'],['07','07 D&N Haveli'],['08','08 Daman&Diu'],['09','09 Delhi'],['10','10 Goa'],['11','11 Gujarat'],['12','12 Haryana'],['13','13 HP'],['14','14 J&K'],['15','15 Karnataka'],['16','16 Kerala'],['17','17 Lakshadweep'],['18','18 MP'],['19','19 Maharashtra'],['20','20 Manipur'],['21','21 Meghalaya'],['22','22 Mizoram'],['23','23 Nagaland'],['24','24 Odisha'],['25','25 Puducherry'],['26','26 Punjab'],['27','27 Rajasthan'],['28','28 Sikkim'],['29','29 Tamil Nadu'],['30','30 Tripura'],['31','31 UP'],['32','32 West Bengal'],['33','33 Chhattisgarh'],['34','34 Uttarakhand'],['35','35 Jharkhand'],['36','36 Telangana'],['37','37 Ladakh'],['38','38 Other']];
+const LOAN_COLS=[{k:'LoanTknFrom',t:'sel',opts:[['B','Bank'],['I','Institution']]},{k:'BankOrInstnName',t:'txt',ph:'Bank / Institution'},{k:'LoanAccNoOfBankOrInstnRefNo',t:'txt',ph:'Loan A/c No.'},{k:'DateofLoan',t:'date',ph:'DD/MM/YYYY'},{k:'TotalLoanAmt',t:'num'},{k:'LoanOutstndngAmt',t:'num'},{k:'Interest',t:'num'}];
+const DONEE_COLS=[{k:'DoneeWithPanName',t:'txt',ph:'Donee name'},{k:'DoneePAN',t:'up',ph:'ABCDE1234F'},{k:'ArnNbr',t:'txt',ph:'ARN (if any)'},{k:'AddrDetail',t:'txt',ph:'Address'},{k:'CityOrTownOrDistrict',t:'txt',ph:'City'},{k:'StateCode',t:'sel',opts:STATE_OPTS4},{k:'PinCode',t:'num'},{k:'DonationAmtCash',t:'num'},{k:'DonationAmtOtherMode',t:'num'}];
+const INS_COLS=[{k:'InsurerName',t:'txt',ph:'Insurer'},{k:'PolicyNo',t:'txt',ph:'Policy no.'},{k:'HealthInsAmt',t:'num'}];
+const REP_SPEC={
+  it:{cols:[{k:'BSRCode',t:'txt',ph:'BSR code'},{k:'DateDep',t:'date',ph:'DD/MM/YYYY'},{k:'SrlNoOfChaln',t:'num'},{k:'Amt',t:'num'}]},
+  tcs:{cols:[{k:'TAN',t:'up',ph:'TAN'},{k:'CollectorName',t:'txt',ph:'Collector'},{k:'Amtfrom26AS',t:'num'},{k:'TotalTCS',t:'num'},{k:'AmtTCSClaimedThisYear',t:'num'}]},
+  tds3:{cols:[{k:'PANofTenant',t:'up',ph:'PAN of tenant'},{k:'TDSSection',t:'sel',opts:[['92A','92A'],['92B','92B'],['92C','92C'],['192A','192A'],['193','193'],['194','194'],['194I','194I'],['194IB','194IB']]},{k:'TDSClaimed',t:'num'},{k:'TDSCreditCarriedFwd',t:'num'}]},
+  d80c:{cols:[{k:'Amount',t:'num'},{k:'IdentificationNo',t:'txt',ph:'Identification no.'}]},
+  d80ggc:{cols:[{k:'DonationDate',t:'date',ph:'DD/MM/YYYY'},{k:'DonationAmtCash',t:'num'},{k:'DonationAmtOtherMode',t:'num'},{k:'PartyName',t:'txt',ph:'Party name'},{k:'PartyPAN',t:'up',ph:'PAN'}]},
+  d80e:{cols:LOAN_COLS},d80ee:{cols:LOAN_COLS},d80eea:{cols:LOAN_COLS},
+  d80eeb:{cols:LOAN_COLS.concat([{k:'VehicleRegNo',t:'txt',ph:'Vehicle reg. no.'}])},
+  g100:{cols:DONEE_COLS},g50na:{cols:DONEE_COLS},g100a:{cols:DONEE_COLS},g50a:{cols:DONEE_COLS},
+  d80dself:{cols:INS_COLS},d80dselfsr:{cols:INS_COLS},d80dpar:{cols:INS_COLS},d80dparsr:{cols:INS_COLS},
+  hp24b:{cols:[{k:'LoanTknFrom',t:'sel',opts:[['B','Bank'],['I','Institution']]},{k:'BankOrInstnName',t:'txt',ph:'Bank / Institution'},{k:'LoanAccNoOfBankOrInstnRefNo',t:'txt',ph:'Loan A/c No.'},{k:'DateofLoan',t:'date',ph:'DD/MM/YYYY'},{k:'TotalLoanAmt',t:'num'},{k:'LoanOutstndngAmt',t:'num'},{k:'InterestUs24B',t:'num'}]},
+};
+// D9 (AY2025-26 only) — ITR-U repeaters: reasons for updating + IT1/IT2 challans
+Object.assign(REP_SPEC,{
+  itru_reasons:{cols:[{k:'ReasonsForUpdatingIncome',t:'sel',opts:[['1','1 — Return previously not filed'],['2','2 — Income not reported correctly'],['3','3 — Wrong heads of income'],['4','4 — Reduction of c/f loss'],['5','5 — Reduction of unabsorbed depreciation'],['6','6 — Reduction of tax credit u/s 115JB/115JC']]}]},
+  itru_it1:{cols:[{k:'BSRCode',t:'txt',ph:'BSR code'},{k:'DateDep',t:'date',ph:'DD/MM/YYYY'},{k:'SrlNoOfChaln',t:'num'},{k:'Amt',t:'num'}]},
+  itru_it2:{cols:[{k:'BSRCode',t:'txt',ph:'BSR code'},{k:'DateDep',t:'date',ph:'DD/MM/YYYY'},{k:'SrlNoOfChaln',t:'num'},{k:'Amt',t:'num'}]}
+});
+const REP_KEYS=Object.keys(REP_SPEC);
+data.rep={}; REP_KEYS.forEach(k=>data.rep[k]=[]);
+const newRepRow=key=>{const o={};REP_SPEC[key].cols.forEach(c=>o[c.k]='');return o;};
+data.d80dd={}; data.d80u={}; data.d80eeaX={}; data.d80dflags={}; data.hp={}; data.itru={};
+function repColType(key,col){const c=REP_SPEC[key].cols.find(x=>x.k===col);return c?c.t:'txt';}
+function renderRep(key){
+  const tb=$('rep_'+key+'-rows'); if(!tb) return; tb.innerHTML='';
+  const spec=REP_SPEC[key];
+  (data.rep[key]||[]).forEach((r,i)=>{
+    const tr=document.createElement('tr'); let html='';
+    spec.cols.forEach(c=>{
+      const id=`rep_${key}_${i}_${c.k}`;
+      if(c.t==='sel'){ html+=`<td class="l"><select id="${id}"><option value="">—</option>${c.opts.map(([v,l])=>`<option value="${v}" ${r[c.k]===v?'selected':''}>${l}</option>`).join('')}</select></td>`; }
+      else { const cls=(c.t==='up')?' class="up"':''; const align=(c.t==='num')?'':' style="text-align:left"'; html+=`<td class="${c.t==='num'?'':'l'}"><input type="text" id="${id}"${cls} value="${(r[c.k]??'').toString().replace(/"/g,'&quot;')}"${align} placeholder="${c.ph||''}"></td>`; }
+    });
+    html+=`<td class="rm"><button class="bp-rm-tbl" data-rm="rep_${key}_${i}">✕</button></td>`;
+    tr.innerHTML=html; tb.appendChild(tr);
+  });
+  bindRm(tb);
+}
+
 
 /* ============================================================
    REPEATER RENDERERS (§7.4) — array → tbody, ✕ removes from state
@@ -1218,6 +1421,7 @@ function bindRm(tb){
     else if(arrKey==='nat'){ data.nature.splice(idx,1); if(data.nature.length===0) data.nature.push(newNatRow('ad')); renderNature(); }
     else if(arrKey==='director'){ if(data.director.length>1) data.director.splice(idx,1); renderDirector(); }
     else if(arrKey==='unlisted'){ if(data.unlisted.length>1) data.unlisted.splice(idx,1); renderUnlisted(); }
+    else if(arrKey.indexOf('rep_')===0){ const k=arrKey.slice(4); if(data.rep[k]){ data.rep[k].splice(idx,1); renderRep(k); } }
     else if(FA_COLS[arrKey]){ if(data[arrKey].length>1) data[arrKey].splice(idx,1); renderFa(arrKey); }
     computeAll();
   }));
@@ -1229,6 +1433,7 @@ function bindRm(tb){
 const setv=(id,v)=>{const e=$(id); if(e) e.value=(v==null?'':v);};
 function populate(sfId){
   if(sfId==='sf-assessee'){const a=data.assessee;
+    setv('asr_flat',a.flat);setv('asr_road',a.road);setv('asr_area',a.area);setv('asr_city',a.city);setv('asr_state',a.stateCode);setv('asr_pin',a.pin);
     setv('asr_std',a.std);setv('asr_landline',a.landline);setv('asr_cc',a.cc||'91');setv('asr_email',a.email);
     setv('asr_district',a.district);setv('asr_secsame',a.secsame||'Yes');setv('asr_secmobile',a.secmobile);setv('asr_secemail',a.secemail);setv('asr_aadhaar',a.aadhaar);}
   else if(sfId==='sf-verifier'){const v=data.verifier;
@@ -1247,6 +1452,27 @@ function populate(sfId){
   else if(sfId.startsWith('sf-fa_')) renderFa(sfId.slice(3));
   else if(sfId==='sf-directorship') renderDirector();
   else if(sfId==='sf-unlisted') renderUnlisted();
+  else if(sfId==='sf-via-hub') populateViaHub();
+  else if(sfId==='sf-hp') populateHp();
+  else if(sfId==='sf-taxpaid'){ renderRep('it'); renderRep('tcs'); renderRep('tds3'); }
+  else if(sfId==='sf-itru') populateItru();
+}
+/* Deferred drill-ins (Action D) — populate/copy state → inputs */
+function populateViaHub(){
+  ['d80c','d80e','d80ee','d80eea','d80eeb','d80ggc','d80dself','d80dselfsr','d80dpar','d80dparsr','g100','g50na','g100a','g50a'].forEach(renderRep);
+  const dd=data.d80dd; setv('d80dd_nature',dd.nature);setv('d80dd_type',dd.type);setv('d80dd_amount',dd.amount);setv('d80dd_deptype',dd.deptype);setv('d80dd_pan',dd.pan);setv('d80dd_aadhaar',dd.aadhaar);setv('d80dd_form10ia',dd.form10ia);setv('d80dd_udid',dd.udid);
+  const u=data.d80u; setv('d80u_nature',u.nature);setv('d80u_type',u.type);setv('d80u_amount',u.amount);setv('d80u_form10ia',u.form10ia);setv('d80u_udid',u.udid);
+  setv('d80eea_stampduty',data.d80eeaX.PropStmpDtyVal);
+  const df=data.d80dflags; ['self','par'].forEach(b=>setv('d80dflag_'+b,df[b]||'N'));
+}
+function populateHp(){
+  const h=data.hp; ['addr','city','alv','rentnotreal','localtax','arrears'].forEach(k=>setv('hp_'+k,h[k]));
+  renderRep('hp24b');
+}
+function populateItru(){
+  const it=data.itru;
+  ['prevFiled','ackNo','origDate','laidOut','duringPeriod','unabsDep','updatedTotInc','amtPayable','fee234f','aggrRefund','aggrNoRefund','addtnlIncTax','relief89','taxDue','taxUS140B','netPayable'].forEach(k=>setv('itru_'+k,it[k]));
+  renderRep('itru_reasons'); renderRep('itru_it1'); renderRep('itru_it2');
 }
 
 /* ============================================================
@@ -1255,7 +1481,7 @@ function populate(sfId){
 function saveSubFormField(sfId, inp){
   const id=inp.id, v=inp.value; let m;
   // single-record popups
-  if(sfId==='sf-assessee'){ const map={asr_std:'std',asr_landline:'landline',asr_cc:'cc',asr_email:'email',asr_district:'district',asr_secsame:'secsame',asr_secmobile:'secmobile',asr_secemail:'secemail',asr_aadhaar:'aadhaar'}; if(map[id])data.assessee[map[id]]=v; return; }
+  if(sfId==='sf-assessee'){ const map={asr_flat:'flat',asr_road:'road',asr_area:'area',asr_city:'city',asr_state:'stateCode',asr_pin:'pin',asr_std:'std',asr_landline:'landline',asr_cc:'cc',asr_email:'email',asr_district:'district',asr_secsame:'secsame',asr_secmobile:'secmobile',asr_secemail:'secemail',asr_aadhaar:'aadhaar'}; if(map[id])data.assessee[map[id]]=v; return; }
   if(sfId==='sf-verifier'){ const map={vfr_name:'name',vfr_pan:'pan',vfr_father:'father',vfr_place:'place'}; if(map[id]){data.verifier[map[id]]=(id==='vfr_pan'?v.toUpperCase():v); if(id==='vfr_pan'){const ok=/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v.toUpperCase()); $('vfr_panwarn').style.display=(v&&!ok)?'block':'none';}} return; }
   if(sfId==='sf-repassessee'){ const map={rep_name:'name',rep_email:'email',rep_contact:'contact',rep_cc:'cc',rep_pan:'pan'}; if(map[id])data.repassessee[map[id]]=(id==='rep_pan'?v.toUpperCase():v); return; }
   if(sfId==='sf-esop'){
@@ -1273,6 +1499,14 @@ function saveSubFormField(sfId, inp){
   if(m=id.match(/^fadet_([a-zA-Z]+)$/)){ if(faDetailKey!=null && data[faDetailKey][faDetailIdx]) data[faDetailKey][faDetailIdx][m[1]]=v; return; }
   if(m=id.match(/^dirdet_([a-zA-Z]+)$/)){ if(dirDetailIdx!=null && data.director[dirDetailIdx]) data.director[dirDetailIdx][m[1]]=(m[1]==='pan'?v.toUpperCase():v); return; }
   if(m=id.match(/^unldet_([a-zA-Z]+)$/)){ if(unlDetailIdx!=null && data.unlisted[unlDetailIdx]) data.unlisted[unlDetailIdx][m[1]]=(m[1]==='pan'?v.toUpperCase():v); return; }
+  // Deferred drill-ins (Action D): generic rep repeaters — id = rep_<key>_<i>_<Col>
+  if(m=id.match(/^rep_([a-z0-9]+)_(\d+)_([A-Za-z0-9_]+)$/)){ const k=m[1]; if(data.rep[k]&&data.rep[k][+m[2]]){ const c=repColType(k,m[3]); data.rep[k][+m[2]][m[3]]=(c==='up'?v.toUpperCase():v); } return; }
+  if(m=id.match(/^d80dd_(\w+)$/)){ data.d80dd[m[1]]=(/pan|udid/i.test(m[1])?v.toUpperCase():v); return; }
+  if(m=id.match(/^d80u_(\w+)$/)){ data.d80u[m[1]]=(/udid/i.test(m[1])?v.toUpperCase():v); return; }
+  if(id==='d80eea_stampduty'){ data.d80eeaX.PropStmpDtyVal=v; return; }
+  if(m=id.match(/^d80dflag_(\w+)$/)){ data.d80dflags[m[1]]=v; return; }
+  if(m=id.match(/^hp_(\w+)$/)){ data.hp[m[1]]=v; return; }
+  if(m=id.match(/^itru_(\w+)$/)){ data.itru[m[1]]=(/ackNo/i.test(m[1])?v.toUpperCase():v); return; }
 }
 
 /* ============================================================
@@ -1327,6 +1561,7 @@ function computeAll(){
   stEntered('st_repassessee', !!data.repassessee.name);
   stEntered('st_esop', !!(data.esop.pan||Object.keys(data.esop.years).some(y=>{const r=data.esop.years[y];return r&&(r.bf||r.cy);})));
   stEntered('st_otherforms', !!(data.otherforms.optearlier&&data.otherforms.optearlier!=='NA (without business)'||data.otherforms.trpId||data.otherforms.ieaAck));
+  stEntered('st_itru', !!(data.itru&&(data.itru.ackNo||num(data.itru.updatedTotInc)||num(data.itru.taxUS140B))));
   stCount('st_bank', bankN, 'account');
   stCount('st_pti', data.pti.filter(r=>r.name||r.income).length, 'entry');
   stCount('st_gstr', data.gstr.filter(r=>r.gstin||r.outward).length, 'GSTIN');
@@ -1474,6 +1709,10 @@ $('addNatAeBtn').addEventListener('click',()=>{data.nature.push(newNatRow('ae'))
 FA_KEYS.forEach(k=>{ const btn=$('add_'+k+'_Btn'); if(btn) btn.addEventListener('click',()=>{data[k].push(newFaRow(k));renderFa(k);computeAll();}); });
 $('add_director_Btn').addEventListener('click',()=>{data.director.push(newDirectorRow());renderDirector();computeAll();});
 $('add_unlisted_Btn').addEventListener('click',()=>{data.unlisted.push(newUnlistedRow());renderUnlisted();computeAll();});
+// Deferred drill-ins (Action D): generic rep add-row buttons
+['d80c','d80dself','d80dselfsr','d80dpar','d80dparsr','d80e','d80ee','d80eea','d80eeb','g100','g50na','g100a','g50a','d80ggc','hp24b','it','tcs','tds3','itru_reasons','itru_it1','itru_it2'].forEach(k=>{
+  const btn=$('addrep_'+k+'Btn'); if(btn) btn.addEventListener('click',()=>{ data.rep[k].push(newRepRow(k)); renderRep(k); computeAll(); });
+});
 
 /* client-bar edits refresh the live banner */
 ['cl_name','cl_status','cl_res'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',computeAll);});
@@ -1797,9 +2036,17 @@ function trySetCalcInput(d,ids,val){ for(const id of ids){ const el=d.getElement
 /* ---------- JSON EXPORT + VALIDATION (ITR-4 SUGAM) ---------- */
 $('exportJsonBtn').addEventListener('click',()=>{
   switchMainTab('summary');
-  const {errors,warnings}=validateItr4();
-  renderValidation(errors,warnings);
-  if(errors.length===0){ doExportItr4(); }
+  // MANDATORY BACKGROUND VALIDATION — build first, validate the wire JSON, gate the export.
+  let json;
+  try{ json=buildItr4Json(); }
+  catch(e){
+    const m='Could not assemble the return JSON: '+((e&&e.message)||e)+' — open the Computation tab once, then retry.';
+    renderValidation([m],[]); showValidationPopup([{slno:'—',message:m}],[]); return;
+  }
+  const {errors,warnings}=validateItr4(json);
+  renderValidation(errors.map(e=>'[Rule '+e.slno+'] '+e.message), warnings.map(w=>'[Rule '+w.slno+'] '+w.message));
+  if(errors.length){ showValidationPopup(errors,warnings); return; }   // HARD REJECT — export does NOT proceed
+  doExportItr4(json);
 });
 function renderValidation(errors,warnings){
   const p=$('validationPanel'); let html='';
@@ -1809,29 +2056,135 @@ function renderValidation(errors,warnings){
   html+=`<div class="val-summary">${errors.length} error(s), ${warnings.length} warning(s)</div>`;
   p.innerHTML=html;
 }
-function validateItr4(){
+function valEsc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+// Failure popup — the ONLY surfaced UI; it appears solely when Category-A errors are found.
+function showValidationPopup(errors,warnings){
+  const old=document.getElementById('itr4ValPopup'); if(old) old.remove();
+  const wrap=document.createElement('div'); wrap.id='itr4ValPopup';
+  wrap.setAttribute('style','position:fixed;inset:0;z-index:400;background:rgba(15,23,35,.55);display:flex;align-items:center;justify-content:center;padding:20px;');
+  const card=document.createElement('div');
+  card.setAttribute('style','background:#fff;color:#1a2233;max-width:660px;width:100%;max-height:84vh;overflow:auto;border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:13px;line-height:1.45;');
+  let h='<div style="background:#b23838;color:#fff;padding:12px 18px;font-weight:600;font-size:14px;border-radius:8px 8px 0 0;">Export blocked — '+errors.length+' validation error'+(errors.length===1?'':'s')+' must be fixed</div>';
+  h+='<div style="padding:14px 18px;">';
+  h+='<div style="margin-bottom:10px;color:#444;">The return JSON did not pass the mandatory ITR-4 validation. Correct each item in the relevant schedule, then click <b>Export ITR JSON</b> again.</div>';
+  h+='<ol style="margin:0 0 4px 20px;padding:0;">';
+  errors.forEach(e=>{ h+='<li style="margin-bottom:9px;"><b>[Rule '+valEsc(e.slno)+']</b> '+valEsc(e.message)+'</li>'; });
+  h+='</ol>';
+  if(warnings.length){ h+='<div style="margin:14px 0 6px;font-weight:600;color:#8a6d00;">Warnings (do not block export):</div><ul style="margin:0 0 4px 20px;padding:0;color:#6b5600;">'; warnings.forEach(w=>{ h+='<li style="margin-bottom:7px;">[Rule '+valEsc(w.slno)+'] '+valEsc(w.message)+'</li>'; }); h+='</ul>'; }
+  h+='</div>';
+  h+='<div style="padding:12px 18px;text-align:right;border-top:1px solid #eee;"><button type="button" id="itr4ValClose" style="background:var(--blue,#1f4e79);color:#fff;border:0;padding:8px 20px;border-radius:5px;cursor:pointer;font-size:13px;">Close &amp; fix</button></div>';
+  card.innerHTML=h; wrap.appendChild(card); document.body.appendChild(wrap);
+  const close=()=>{ wrap.remove(); };
+  card.querySelector('#itr4ValClose').addEventListener('click',close);
+  wrap.addEventListener('click',ev=>{ if(ev.target===wrap) close(); });
+}
+/* ================= MANDATORY BACKGROUND VALIDATION ENGINE — ITR-4 (Sugam), AY 2025-26 =================
+   Runs on the built wire JSON before every export. Category-A rules HARD-REJECT (block download);
+   Category-B/D surface as warnings. Rule text/Sl.No. taken from
+   docs/itd-validation-rules/ITR-4_ValidationRules_AY2025-26_V1.1.md (352 Category-A rules total).
+   COVERAGE (honest): 37 Category-A rules + 3 Category-B/D warnings encoded, across these classes —
+     • presence/format ...... PAN, name, Aadhaar (12-digit), mobile (10-digit)(48), bank IFSC(123)
+     • ITR-4 eligibility .... 50L total-income ceiling(295), 44AD >3cr(9), LTCG112A >1.25L, HUF+44ADA(212)
+     • presumptive .......... 44AD 6% floor(5-7) / income≤turnover(8) / code↔income(11,12);
+                              44ADA 50% floor(14) / ≤receipts(13) / code↔income(16,17);
+                              44AE schedule presence(135) / sum match(136) / code↔income(137,138) /
+                              holding≤120m(141) / per-vehicle floor(144) / unique reg-no(213); BP presence(140) / biz==BP(2)
+     • Chapter VI-A ......... total==breakup(18), ≤GTI(19), old-regime 80C/CCC/CCD1 ≤1.5L(21)
+     • regime bars .......... new-regime 80C+CCC+CCD1==0(189), only 80CCD(2)/80CCH allowed(183)
+     • arithmetic ........... total income = GTI(incl 112A) − deductions(45), tax-with-GTI-nil(124),
+                              taxes-paid reconciliation(127), refund(128)/payable(129) reconciliation
+     • rebate 87A ........... HUF bar(50), old-regime >5L(51), new-regime >7L(237)
+     • representative ....... rep details mandatory when flag=Y(44)
+     • warnings ............. nil-return AIS check(B5), 44AB audit threshold(237/238), refund w/o bank(D2)
+   The remaining ~315 Category-A rules require schedules ITR-4 (Sugam) does not capture in this tool
+   (Sch-80G per-donee rows, 89A per-country nesting, exempt-allowance dropdown uniqueness, per-section
+   user-vs-system deduction caps, etc.) and are therefore NOT encodable here.
+   Rules are kept in a flat array so new checks can be appended without touching the runner.        */
+function validateItr4(json){
   const errors=[],warnings=[];
-  const pan=($('cl_pan').value||'').toUpperCase().trim();
-  const name=($('cl_name').value||'').trim();
-  const dob=($('cl_dob').value||'').trim();
-  if(!/^[A-Z]{5}\d{4}[A-Z]$/.test(pan)) errors.push('PAN is missing or invalid (format ABCDE1234F).');
-  if(!name) errors.push('Name of Assessee is required.');
-  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dob)) warnings.push('Date of Birth should be DD/MM/YYYY (needed for correct age-based slab).');
-  // ITR-4 (Sugam) is for presumptive income only, with a total-income ceiling of Rs.50 lakh.
-  const ti=calcVal('it_totalIncome');
-  if(ti>5000000) errors.push('Total Income exceeds ₹50 lakh — ITR-4 (Sugam) cannot be used; use ITR-3.');
-  const ltcg=calcVal('it_cg_112a');
-  if(ltcg>125000) errors.push('LTCG u/s 112A exceeds ₹1.25 lakh — not allowed in ITR-4; use ITR-2 or ITR-3.');
-  // non-presumptive business income cannot be filed in Sugam
-  const nonPres=calcVal('it_bp_35ad')+calcVal('it_bp_comm')+calcVal('it_bp_fno')+calcVal('it_bp_firm')+calcVal('it_bp_nonspec')+calcVal('it_bp_spec');
-  if(nonPres>0) errors.push('Non-presumptive business income detected (F&O / speculation / firm / commission / 35AD) — Sugam allows only 44AD/44ADA/44AE; use ITR-3.');
-  const bal=calcVal('it_balancePayable');
-  if(bal<0){ const hasBank=(data.bank||[]).some(b=>b.acc&&b.ifsc); if(!hasBank) warnings.push('Refund due but no bank account with IFSC entered — add one for the refund to be credited.'); }
-  if(!calcReady) warnings.push('Open the Computation tab at least once so tax figures are available.');
+  const T=(json&&json.ITR&&json.ITR.ITR4)||{};
+  const PI=T.PersonalInfo||{}, FS=T.FilingStatus||{}, ID=T.IncomeDeductions||{}, TC=T.TaxComputation||{}, BP=T.ScheduleBP||{};
+  const TP=(T.TaxPaid&&T.TaxPaid.TaxesPaid)||{}, RF=T.Refund||{};
+  const via=ID.DeductUndChapVIA||{};
+  const nz=v=>(typeof v==='number'?v:parseFloat(String(v==null?'':v).replace(/[^\d.-]/g,''))||0);
+  const near=(a,b,tol)=>Math.abs(nz(a)-nz(b))<=(tol==null?1:tol);
+  const isNew=(()=>{const d=(typeof calcDoc==='function')?calcDoc():null;if(!d)return true;const r=d.getElementById('it_regime');return r?r.value==='New':true;})();
+  const isHUF=(PI.Status==='H');
+  const adTO=nz((BP.PersumptiveInc44AD||{}).GrsTotalTrnOver), adInc=nz((BP.PersumptiveInc44AD||{}).TotPersumptiveInc44AD);
+  const adaTO=nz((BP.PersumptiveInc44ADA||{}).GrsReceipt), adaInc=nz((BP.PersumptiveInc44ADA||{}).TotPersumptiveInc44ADA);
+  const aeInc=nz((BP.PersumptiveInc44AE||{}).TotPersumInc44AE);
+  const hasAD=!!(BP.NatOfBus44AD&&BP.NatOfBus44AD.length), hasADA=!!(BP.NatOfBus44ADA&&BP.NatOfBus44ADA.length), hasAE=!!(BP.NatOfBus44AE&&BP.NatOfBus44AE.length);
+  const goods=BP.GoodsDtlsUs44AE||[];
+  const biz=nz(ID.IncomeFromBusinessProf);
+  const gti=nz(ID.GrossTotIncome), gtiL=nz(ID.GrossTotIncomeIncLTCG112A), ti=nz(ID.TotalIncome), ded=nz(via.TotalChapVIADeductions);
+  const ltcg=Math.max(0,gtiL-gti);
+  const reb=nz(TC.Rebate87A);
+  const bankRows=((RF.BankAccountDtls||{}).AddtnlBankDetails)||[];
+  const via80=k=>nz(via[k]);
+  // AY-specific Sl.No. labels & thresholds (AY 2025-26)
+  const S={ totIncEq:'45', mobile:'48', aadhaar:'272', repMand:'44', ceil50:'295', ltcg:'—', reb87old:'51', reb87new:'237' };
+  const NEW87A=700000;
+  const RULES=[
+    // ---- presence / format ----
+    {slno:'PAN',cat:'A',bad:()=>!/^[A-Z]{5}\d{4}[A-Z]$/.test(String(PI.PAN||'')),msg:'PAN is missing or invalid — enter a valid 10-character PAN (format ABCDE1234F).'},
+    {slno:'NAME',cat:'A',bad:()=>!String((PI.AssesseeName||{}).FirstName||'').trim(),msg:'Name of assessee is required — enter the name exactly as per the PAN database.'},
+    {slno:S.aadhaar,cat:'A',bad:()=>{const a=String(PI.AadhaarCardNo||'').replace(/\s/g,'');return !!a&&!/^\d{12}$/.test(a);},msg:'Aadhaar number, if provided, must be a valid 12-digit number.'},
+    {slno:S.mobile,cat:'A',bad:()=>!/^\d{10}$/.test(String((PI.Address||{}).MobileNo||'')),msg:'Assessee must enter a valid 10-digit mobile number.'},
+    {slno:'123',cat:'A',bad:()=>bankRows.some(b=>b.IFSCCode&&!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(String(b.IFSCCode).toUpperCase())),msg:'A bank IFSC code is invalid — it must match the RBI format (e.g. HDFC0001234).'},
+    // ---- ITR-4 eligibility ----
+    {slno:S.ceil50,cat:'A',bad:()=>ti>5000000,msg:'Total income (excluding LTCG u/s 112A) shall not exceed ₹50 lakh — ITR-4 (Sugam) cannot be used; file ITR-3.'},
+    {slno:'9',cat:'A',bad:()=>adTO>30000000,msg:'Gross receipts/turnover u/s 44AD exceed ₹3 crore — ITR-4 cannot be used; file ITR-3/ITR-5.'},
+    {slno:S.ltcg,cat:'A',bad:()=>ltcg>125000,msg:'LTCG u/s 112A exceeds ₹1.25 lakh — not permitted in ITR-4 (Sugam); file ITR-2/ITR-3.'},
+    {slno:'212',cat:'A',bad:()=>isHUF&&adaInc>0,msg:'HUF is not eligible to claim presumptive income u/s 44ADA — remove the 44ADA income or file the correct form.'},
+    // ---- Schedule BP presence & consistency ----
+    {slno:'140',cat:'A',bad:()=>biz>0&&(adInc+adaInc+aeInc)<=0,msg:'Business income is present in Gross Total Income but no presumptive income (44AD/44ADA/44AE) is disclosed in Schedule BP.'},
+    {slno:'2',cat:'A',bad:()=>!near(biz,adInc+adaInc+aeInc,1),msg:'Business income in Part B-GTI is not consistent with the total presumptive income in Schedule BP.'},
+    // ---- 44AD ----
+    {slno:'8',cat:'A',bad:()=>adInc>adTO+1,msg:'Presumptive income u/s 44AD cannot be more than the gross turnover/receipts u/s 44AD.'},
+    {slno:'5',cat:'A',bad:()=>adTO>0&&adInc<Math.round(adTO*0.06)-1,msg:'Presumptive income u/s 44AD must be at least 6% of gross turnover/receipts (8% for non-digital receipts).'},
+    {slno:'11',cat:'A',bad:()=>adInc>0&&!hasAD,msg:'Income is declared u/s 44AD but no business code u/s 44AD is selected — select a 44AD business code.'},
+    {slno:'12',cat:'A',bad:()=>hasAD&&adInc<=0,msg:'A business code u/s 44AD is selected but no income is declared u/s 44AD — declare the 44AD income.'},
+    // ---- 44ADA ----
+    {slno:'13',cat:'A',bad:()=>adaInc>adaTO+1,msg:'Presumptive income u/s 44ADA cannot be more than the corresponding gross receipts.'},
+    {slno:'14',cat:'A',bad:()=>adaTO>0&&adaInc<Math.round(adaTO*0.5)-1,msg:'Presumptive income u/s 44ADA must be at least 50% of gross receipts.'},
+    {slno:'16',cat:'A',bad:()=>adaInc>0&&!hasADA,msg:'Income is declared u/s 44ADA but no business code u/s 44ADA is selected — select a 44ADA business code.'},
+    {slno:'17',cat:'A',bad:()=>hasADA&&adaInc<=0,msg:'A business code u/s 44ADA is selected but no income is declared u/s 44ADA — declare the 44ADA income.'},
+    // ---- 44AE ----
+    {slno:'135',cat:'A',bad:()=>aeInc>0&&goods.length===0,msg:'Presumptive income u/s 44AE is present but the per-vehicle Schedule 44AE (goods carriage details) is not filled.'},
+    {slno:'136',cat:'A',bad:()=>goods.length>0&&!near(aeInc,goods.reduce((s,v)=>s+nz(v.PresumptiveIncome),0),1),msg:'Total presumptive income u/s 44AE is not equal to the sum of per-vehicle income in Schedule 44AE.'},
+    {slno:'137',cat:'A',bad:()=>aeInc>0&&!hasAE,msg:'Income is declared u/s 44AE but no business code u/s 44AE is selected — select a 44AE business code.'},
+    {slno:'138',cat:'A',bad:()=>hasAE&&aeInc<=0,msg:'A business code u/s 44AE is selected but no income is declared u/s 44AE — declare the 44AE income.'},
+    {slno:'141',cat:'A',bad:()=>goods.some(v=>nz(v.HoldingPeriod)>120),msg:'Goods-carriage total holding period cannot exceed 120 months — check the vehicle rows.'},
+    {slno:'144',cat:'A',bad:()=>goods.some(v=>{const t=nz(v.TonnageCapacity),m=nz(v.HoldingPeriod),inc=nz(v.PresumptiveIncome);if(m<=0)return false;const floor=t>12?1000*t*m:7500*m;return inc<floor-1;}),msg:'Per-vehicle presumptive income u/s 44AE is below the statutory floor (₹1,000/tonne/month above 12 MT, else ₹7,500/month).'},
+    {slno:'213',cat:'A',bad:()=>{const r=goods.map(v=>String(v.RegNumberGoodsCarriage||'').trim().toUpperCase()).filter(x=>x&&x!=='NA');return new Set(r).size!==r.length;},msg:'A goods-carriage registration number is repeated in Schedule 44AE — each vehicle must be unique.'},
+    // ---- Chapter VI-A ----
+    {slno:'19',cat:'A',bad:()=>ded>gtiL+1,msg:'Deductions claimed under Chapter VI-A cannot exceed Gross Total Income.'},
+    {slno:'18',cat:'A',bad:()=>{const k=['Section80C','Section80CCC','Section80CCDEmployeeOrSE','Section80CCD1B','Section80CCDEmployer','Section80D','Section80DD','Section80DDB','Section80E','Section80G','Section80GG','Section80GGC','Section80U','Section80TTA','Section80TTB','AnyOthSec80CCH'];return !near(k.reduce((a,x)=>a+via80(x),0),ded,1);},msg:'Total of Chapter VI-A deductions is not consistent with the break-up of the individual 80-series deductions.'},
+    {slno:'21',cat:'A',bad:()=>!isNew&&(via80('Section80C')+via80('Section80CCC')+via80('Section80CCDEmployeeOrSE'))>150001,msg:'Under the old regime, 80C + 80CCC + 80CCD(1) together cannot exceed ₹1,50,000.'},
+    {slno:'189',cat:'A',bad:()=>isNew&&(via80('Section80C')+via80('Section80CCC')+via80('Section80CCDEmployeeOrSE'))>0,msg:'Under the new regime, 80C + 80CCC + 80CCD(1) deductions must be zero.'},
+    {slno:'183',cat:'A',bad:()=>isNew&&['Section80C','Section80CCC','Section80CCDEmployeeOrSE','Section80CCD1B','Section80D','Section80DD','Section80DDB','Section80E','Section80G','Section80GG','Section80GGC','Section80U','Section80TTA','Section80TTB'].some(k=>via80(k)>0),msg:'Under the new regime, no Chapter VI-A deduction is allowed except 80CCD(2) and 80CCH.'},
+    // ---- arithmetic ----
+    {slno:S.totIncEq,cat:'A',bad:()=>!near(ti,gtiL-ded,1)&&!near(ti,gti-ded,1),msg:'Total income must equal Gross Total Income (including LTCG u/s 112A) minus total Chapter VI-A deductions.'},
+    {slno:'124',cat:'A',bad:()=>nz(TC.GrossTaxLiability)>0&&gti<=0,msg:'Tax has been computed but Gross Total Income is nil — check the income entries.'},
+    {slno:'127',cat:'A',bad:()=>{const s=nz(TP.AdvanceTax)+nz(TP.TDS)+nz(TP.TCS)+nz(TP.SelfAssessmentTax),tot=nz(TP.TotalTaxesPaid);return !near(s,tot,1)&&!near(s,tot+nz(TP.TCS),1);},msg:'Total Taxes Paid must equal the sum of Advance Tax, TDS, TCS and Self-Assessment Tax.'},
+    {slno:'128',cat:'A',bad:()=>!near(nz(RF.RefundDue),Math.max(0,nz(TP.TotalTaxesPaid)-nz(TC.TotTaxPlusIntrstPay)),1),msg:'Refund claimed is inconsistent with (Total Taxes Paid − Total Tax, Fee & Interest).'},
+    {slno:'129',cat:'A',bad:()=>!near(nz((T.TaxPaid||{}).BalTaxPayable),Math.max(0,nz(TC.TotTaxPlusIntrstPay)-nz(TP.TotalTaxesPaid)),1),msg:'Balance tax payable is inconsistent with (Total Tax, Fee & Interest − Total Taxes Paid).'},
+    // ---- rebate 87A ----
+    {slno:'50',cat:'A',bad:()=>isHUF&&reb>0,msg:'Rebate u/s 87A cannot be claimed by an HUF.'},
+    {slno:S.reb87old,cat:'A',bad:()=>!isNew&&reb>0&&ti>500000,msg:'Under the old regime, rebate u/s 87A is not available where total income exceeds ₹5,00,000.'},
+    {slno:S.reb87new,cat:'A',bad:()=>isNew&&reb>0&&ti>NEW87A,msg:'Under the new regime, rebate u/s 87A is not available where total income exceeds ₹7,00,000 (subject to marginal relief).'},
+    // ---- representative ----
+    {slno:S.repMand,cat:'A',bad:()=>FS.AsseseeRepFlg==='Y'&&!((FS.AssesseeRep||{}).RepName),msg:'Representative-assessee details (name/PAN/email/mobile) are mandatory when the return is filed by a representative.'},
+    // ---- Category-B / D warnings (allowed, but surfaced) ----
+    {slno:'B5',cat:'B',bad:()=>gti<=0&&nz(TP.TotalTaxesPaid)>0,msg:'Nil-income return with taxes paid — verify AIS / 26AS before filing.'},
+    {slno:'237',cat:'B',bad:()=>adTO>20000000||adaTO>5000000,msg:'Turnover u/s 44AD above ₹2 crore (or 44ADA receipts above ₹50 lakh) may require a tax audit u/s 44AB (then ITR-3/ITR-5 applies).'},
+    {slno:'D2',cat:'D',bad:()=>nz(RF.RefundDue)>0&&!bankRows.some(b=>b.IFSCCode),msg:'A refund is due but no bank account with a valid IFSC is provided — add one so the refund can be credited.'}
+  ];
+  RULES.forEach(r=>{ let hit=false; try{ hit=!!r.bad(); }catch(e){ hit=false; } if(hit){ (r.cat==='A'?errors:warnings).push({slno:r.slno,message:r.msg}); } });
   return {errors,warnings};
 }
-function doExportItr4(){
-  const json=buildItr4Json();
+function doExportItr4(json){
+  json=json||buildItr4Json();
   const blob=new Blob([JSON.stringify(json,null,1)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const pan=($('cl_pan').value||'PAN').toUpperCase().trim();
@@ -1854,6 +2207,10 @@ function chapVIA4(total){
 // Build the schema-shaped ITR-4 (Sugam) JSON.
 function buildItr4Json(){
   const R=n=>Math.round(n||0);
+  const N=v=>(typeof num==='function'?num(v):(parseFloat(String(v||'').replace(/[,\s₹]/g,''))||0));
+  const CW=(typeof calcWin==='function')?calcWin():null;
+  const TB=(CW&&CW.__taxBreakup)?CW.__taxBreakup:{};        // PREREQ B6 — real rebate/cess/surcharge
+  const BPD=(CW&&CW.bpData)?CW.bpData:{};                    // C2 44AE vehicle grid + C7 LTCG112A rows
   const pan=($('cl_pan').value||'').toUpperCase().trim();
   const name=($('cl_name').value||'').trim();
   const dob=($('cl_dob').value||'').trim();
@@ -1873,22 +2230,36 @@ function buildItr4Json(){
   const satTax=window.__aisData?R(window.__aisData.selfAssessmentTax):0;
   const tdsTax=Math.max(0,prepaid-advTax-satTax);
   const isNew=(()=>{const d=calcDoc();if(!d)return true;const r=d.getElementById('it_regime');return r?r.value==='New':true;})();
+  // B6 — tax-computation breakup, un-hardcoded from calc cells / __taxBreakup
+  const rebate87A=R(TB.rebate87A||0), cess=R(TB.cess||0), surchg=R(TB.surcharge||0);
+  const i234a=R(calcVal('it_int_234a')), i234b=R(calcVal('it_int_234b')), i234c=R(calcVal('it_int_234c')), fee234f=R(calcVal('it_fee_234f'));
+  const intFeeTot=i234a+i234b+i234c+fee234f;
   const today=new Date().toISOString().slice(0,10);
-  const A=data.assessee||{}; const V=data.verifier||{};
+  const A=data.assessee||{}; const V=data.verifier||{}; const RP=data.repassessee||{}; const OF=data.otherforms||{};
   const hasBank=(data.bank||[]).some(b=>b.acc);
-  const bankRows=(data.bank||[]).filter(b=>b.acc).map(b=>({IFSCCode:b.ifsc||'',BankName:b.name||'',BankAccountNo:b.acc||'',AccountType:b.type||'SB'}));
+  // A3 — carry UseForRefund from the captured "For refund?" checkbox; force ≥1 true when a refund is due
+  const refundDue=bal<0;
+  let bankRows=(data.bank||[]).filter(b=>b.acc).map(b=>({IFSCCode:b.ifsc||'',BankName:b.name||'',BankAccountNo:b.acc||'',AccountType:b.type||'SB',UseForRefund:!!b.refund}));
+  if(refundDue && bankRows.length && !bankRows.some(b=>b.UseForRefund)) bankRows[0].UseForRefund=true;
   const mob=parseInt((A.mobile||V.contact||'0').toString().replace(/\D/g,''))||0;
+  // A4 — ReturnFileSec derived from an (optional) filing-section select, no longer a bare literal
+  const secMap={'139(1)':'11','139(4)':'12','139(5)':'13','142(1)':'14','139(9)':'17'};
+  const fsEl=$('f_section'); const returnFileSec=(fsEl&&secMap[fsEl.value])?secMap[fsEl.value]:11;
+  // D1 — full primary address + phone; A5 — StateCode from the enum select (falls back to Karnataka)
+  const stateCode=(A.stateCode&&/^\d{2}$/.test(A.stateCode))?A.stateCode:'15';
+  const cityTown=A.city||A.district||'NA';
   const addr={
-    ResidenceNo:A.flat||A.premises||'NA', ResidenceName:A.premises||'', RoadOrStreet:A.road||'',
-    LocalityOrArea:A.area||A.locality||'NA', CityOrTownOrDistrict:A.city||'NA',
-    StateCode:A.stateCode||'99', CountryCode:'91', PinCode:A.pin||A.pincode||'',
+    ResidenceNo:A.flat||'NA', RoadOrStreet:A.road||'', LocalityOrArea:A.area||'NA',
+    CityOrTownOrDistrict:cityTown, StateCode:stateCode, CountryCode:'91', PinCode:N(A.pin)||A.pin||'',
+    Phone:{ STDcode:N(A.std)||0, PhoneNo:N(A.landline)||0 },
     CountryCodeMobile:91, MobileNo:mob, EmailAddress:A.email||V.email||''
   };
+  const altAddr={ ResidenceNo:A.flat||'NA', LocalityOrArea:A.area||'NA', CityOrTownOrDistrict:cityTown, StateCode:stateCode };
   const j={ ITR:{ ITR4:{
     CreationInfo:{ SWVersionNo:'1.0', SWCreatedBy:'SW20000000', JSONCreatedBy:'SW20000000', JSONCreationDate:today, IntermediaryCity:'NA', Digest:'-' },
     Form_ITR4:{ FormName:'ITR-4', Description:'Sugam - Presumptive income from Business & Profession', AssessmentYear:'2025', SchemaVer:'Ver1.0', FormVer:'Ver1.0' },
-    PersonalInfo:{ AssesseeName:{ FirstName:name.split(' ')[0]||name, MiddleName:'', SurNameOrOrgName:name.split(' ').slice(1).join(' ')||name }, PAN:pan, Address:addr, SecondaryAdd:'', DOB:dobIso, EmployerCategory:A.employerCategory||'OTH', Status:($('cl_status').value==='HUF'?'H':'I'), AadhaarCardNo:A.aadhaar||'' },
-    FilingStatus:{ ReturnFileSec:11, Form10IEAEarlierAYOldRegime:isNew?'N':'NA', SeventhProvisio139:'N', AsseseeRepFlg:'N', ItrFilingDueDate:'2025-09-15' },
+    PersonalInfo:{ AssesseeName:{ FirstName:name.split(' ')[0]||name, MiddleName:'', SurNameOrOrgName:name.split(' ').slice(1).join(' ')||name }, PAN:pan, Address:addr, AlternateAddress:altAddr, SecondaryAdd:'', DOB:dobIso, EmployerCategory:A.employerCategory||'OTH', Status:($('cl_status').value==='HUF'?'H':'I'), AadhaarCardNo:A.aadhaar||'' },
+    FilingStatus:{ ReturnFileSec:returnFileSec, Form10IEAEarlierAYOldRegime:isNew?'N':'NA', SeventhProvisio139:'N', AsseseeRepFlg:(RP.name?'Y':'N'), ItrFilingDueDate:'2025-09-15' },
     IncomeDeductions:{
       IncomeFromBusinessProf:biz,
       GrossSalary:salary, Salary:salary, NetSalary:salary, DeductionUs16:0, IncomeFromSal:salary,
@@ -1897,22 +2268,207 @@ function buildItr4Json(){
       UsrDeductUndChapVIA:chapVIA4(ded), DeductUndChapVIA:chapVIA4(ded), TotalIncome:ti
     },
     TaxComputation:{
-      TotalTaxPayable:tax, Rebate87A:0, TaxPayableOnRebate:tax, EducationCess:0, GrossTaxLiability:tax,
+      TotalTaxPayable:tax, Rebate87A:rebate87A, TaxPayableOnRebate:tax, Surcharge:surchg, EducationCess:cess, GrossTaxLiability:tax,
       NetTaxLiability:tax,
-      IntrstPay:{ IntrstPayUs234A:0, IntrstPayUs234B:0, IntrstPayUs234C:0, LateFilingFee234F:0 },
-      TotTaxPlusIntrstPay:tax
+      IntrstPay:{ IntrstPayUs234A:i234a, IntrstPayUs234B:i234b, IntrstPayUs234C:i234c, LateFilingFee234F:fee234f },
+      TotTaxPlusIntrstPay:tax+intFeeTot
     },
     TaxPaid:{ TaxesPaid:{ AdvanceTax:advTax, TDS:tdsTax, TCS:0, SelfAssessmentTax:satTax, TotalTaxesPaid:prepaid }, BalTaxPayable:Math.max(0,bal) },
     Refund:{ RefundDue:Math.max(0,-bal), BankAccountDtls:{ BankDtlsFlag:hasBank?'Y':'N', AddtnlBankDetails:bankRows } },
-    Verification:{ Declaration:{ AssesseeVerName:name, FatherName:V.father||'', AssesseeVerPAN:pan }, Capacity:'S', Place:A.city||'', Date:today }
+    Verification:{ Declaration:{ AssesseeVerName:name, FatherName:V.father||'', AssesseeVerPAN:pan }, Capacity:'S', Place:cityTown, Date:today }
   }}};
-  // Note: LTCG 112A (if any, ≤₹1.25L) is carried only inside GrossTotIncomeIncLTCG112A for Sugam.
+  const T=j.ITR.ITR4;
+
+  /* ================= ScheduleBP — the schedule that defines ITR-4 (C1-C3, B2-B4, A6) ================= */
+  const ADA_MAP={'16019':'16019_1','14005':'14006'};
+  const AE_MAP={'20016':'11008'};
+  const OWN_MAP={'Owned':'OWN','Leased':'LEASE','Hired':'HIRED'};
+  const natBy=sec=>(data.nature||[]).filter(r=>r.sec===sec && (r.code||r.trade||r.subsector));
+  const natRow=(r,codeKey,code)=>{const o={NameOfBusiness:(r.trade||r.subsector||'NA'),Description:(r.desc||r.subsector||r.trade||'NA')}; o[codeKey]=code; return o;};
+  const ad=natBy('ad'), ada=natBy('ada'), ae=natBy('ae');
+  const bp={};
+  if(ad.length) bp.NatOfBus44AD=ad.map(r=>natRow(r,'CodeAD',(r.code||'09027')));
+  bp.PersumptiveInc44AD={ GrsTotalTrnOver:R(calcVal('it_bp_44ad_to')), TotPersumptiveInc44AD:R(calcVal('it_bp_44ad_pr')) };
+  if(ada.length) bp.NatOfBus44ADA=ada.map(r=>natRow(r,'CodeADA',(ADA_MAP[r.code]||r.code||'16021')));
+  bp.PersumptiveInc44ADA={ GrsReceipt:R(calcVal('it_bp_44ada_to')), TotPersumptiveInc44ADA:R(calcVal('it_bp_44ada_pr')) };
+  if(ae.length) bp.NatOfBus44AE=ae.map(r=>natRow(r,'CodeAE',(AE_MAP[r.code]||'11008')));
+  const ae44=(BPD.ae44||[]).filter(v=>v&&(v.regNo||v.months||v.weight));
+  if(ae44.length) bp.GoodsDtlsUs44AE=ae44.map(v=>({ RegNumberGoodsCarriage:v.regNo||'NA', OwnedLeasedHiredFlag:(OWN_MAP[v.ownership]||'OWN'), TonnageCapacity:N(v.weight), HoldingPeriod:N(v.months), PresumptiveIncome:R(v._inc||0) }));
+  const ae44Tot=R(calcVal('it_bp_44ae'));
+  bp.PersumptiveInc44AE={ TotPersumInc44AE:ae44Tot, TotalPersumptiveInc:ae44Tot, IncChargeableUnderBus:ae44Tot };
+  const gstrRows=(data.gstr||[]).filter(g=>g.gstin||N(g.outward));
+  if(gstrRows.length){ bp.TurnoverGrsRcptForGSTIN=gstrRows.map(g=>({GSTINNo:(g.gstin||''),AmtTurnGrossRcptGSTIN:R(N(g.outward))})); bp.TotalTurnoverGrsRcptGSTIN=R(gstrRows.reduce((s,g)=>s+N(g.outward),0)); }
+  const fp=data.fp||{};
+  bp.FinanclPartclrOfBusiness={ SundryCreditors:R(fp.cap_creditors), Inventories:R(fp.ast_inventory), SundryDebtors:R(fp.ast_debtors), BalWithBanks:R(fp.ast_bank), CashInHand:R(fp.ast_cash) };
+  T.ScheduleBP=bp;
+
+  /* ================= C5 — Representative Assessee (2025 shape superset) ================= */
+  if(RP.name){ T.FilingStatus.AssesseeRep={ RepName:RP.name, RepCapacity:'Self', RepAddress:(A.flat||'NA')+' '+cityTown, RepPAN:RP.pan||'', RepEmailID:RP.email||'', CountryCodeRepMobileNo:N(RP.cc)||91, RepMobileNo:N(RP.contact)||0 }; }
+
+  /* ================= C6 — Tax Return Preparer ================= */
+  if(OF.trpId||OF.trpName){ T.TaxReturnPreparer={ IdentificationNoOfTRP:OF.trpId||'', NameOfTRP:OF.trpName||'', ReImbFrmGov:R(N(OF.trpAmt)) }; }
+
+  /* ================= C7 — LTCG u/s 112A (3 leaves from the drill-in) ================= */
+  const l112=(BPD.cg&&BPD.cg.ltcg112a&&BPD.cg.ltcg112a.rows)||[];
+  if(ltcg>0 || l112.some(r=>N(r.sale)||N(r.actualCost))){
+    const totSale=R(l112.reduce((s,r)=>s+N(r.sale),0));
+    const totCost=R(l112.reduce((s,r)=>s+N(r.actualCost),0));
+    T.LTCG112A={ TotSaleCnsdrn:totSale, TotCstAcqisn:totCost, LongCap112A:ltcg };
+  }
+
+  /* ================= C8 — Exempt-income disclosure (2025 needs NatureDesc) ================= */
+  const exemptTot=R(calcVal('it_exempt'));
+  if(exemptTot>0){ T.TaxExmpIntIncDtls={ OthersInc:{ OthersIncDtls:[{ NatureDesc:'Others', OthAmount:exemptTot }], OthersTotalTaxExe:exemptTot } }; }
+
+  /* ================= A1/A2 — TDS reshape (…Dtls + totals) ================= */
   if(window.__aisData && window.__aisData.tdsEntries && window.__aisData.tdsEntries.length){
     const sal=window.__aisData.tdsEntries.filter(t=>t.section==='192');
     const oth=window.__aisData.tdsEntries.filter(t=>t.section!=='192');
-    if(sal.length) j.ITR.ITR4.TDSonSalaries={ TDSonSalary:sal.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},IncChrgSal:R(t.amountPaid),TotalTDSSal:R(t.tds)})) };
-    if(oth.length) j.ITR.ITR4.TDSonOthThanSals={ TDSonOthThanSal:oth.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},AmtForTaxDeduct:R(t.amountPaid),TotTDSOnAmtPaid:R(t.tds)})) };
+    if(sal.length) T.TDSonSalaries={ TDSonSalary:sal.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},IncChrgSal:R(t.amountPaid),TotalTDSSal:R(t.tds)})), TotalTDSonSalaries:R(sal.reduce((s,t)=>s+N(t.tds),0)) };
+    if(oth.length) T.TDSonOthThanSals={ TDSonOthThanSalDtls:oth.map(t=>({TANOfDeductor:t.tan,TDSSection:(t.section||'194'),TDSClaimed:R(t.tds),TDSCreditCarriedFwd:0})), TotalTDSonOthThanSals:R(oth.reduce((s,t)=>s+N(t.tds),0)) };
   }
+
+  /* ================= D3/D2/D7 — Deferred detail schedules from the drill-ins (emit only when a real row exists) ================= */
+  const AY=T.Form_ITR4.AssessmentYear, is2026=(AY==='2026');
+  const RR=k=>((data.rep&&data.rep[k])||[]);
+  const dISO=s=>{const m=String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(s||'');};
+
+  // ---- Schedule80C ----
+  const c80=RR('d80c').filter(r=>N(r.Amount)||r.IdentificationNo);
+  if(c80.length) T.Schedule80C={ Schedule80CDtls:c80.map(r=>({Amount:R(N(r.Amount)),IdentificationNo:r.IdentificationNo||'NA'})), TotalAmt:R(c80.reduce((s,r)=>s+N(r.Amount),0)) };
+
+  // ---- Schedule80D ----
+  const dfl=data.d80dflags||{}, g80d=k=>RR(k).filter(r=>r.InsurerName||N(r.HealthInsAmt));
+  const insMap=rows=>rows.map(r=>({InsurerName:r.InsurerName||'NA',PolicyNo:r.PolicyNo||'NA',HealthInsAmt:R(N(r.HealthInsAmt))}));
+  const sumP=rows=>R(rows.reduce((s,r)=>s+N(r.HealthInsAmt),0));
+  const dSelf=g80d('d80dself'),dSelfsr=g80d('d80dselfsr'),dPar=g80d('d80dpar'),dParsr=g80d('d80dparsr');
+  if(dSelf.length||dSelfsr.length||dPar.length||dParsr.length){
+    const D8={};
+    if(dSelf.length) D8.Sec80DSelfFamHIDtls={Sch80DInsDtls:insMap(dSelf),TotalPayments:sumP(dSelf)};
+    if(dSelfsr.length) D8.Sec80DSelfFamSrCtznHIDtls={Sch80DInsDtls:insMap(dSelfsr),TotalPayments:sumP(dSelfsr)};
+    if(dPar.length) D8.Sec80DParentsHIDtls={Sch80DInsDtls:insMap(dPar),TotalPayments:sumP(dPar)};
+    if(dParsr.length) D8.Sec80DParentsSrCtznHIDtls={Sch80DInsDtls:insMap(dParsr),TotalPayments:sumP(dParsr)};
+    D8.SeniorCitizenFlag=dfl.self||'N'; D8.ParentsSeniorCitizenFlag=dfl.par||'N';
+    const selfCap=(dfl.self==='Y')?50000:25000, parCap=(dfl.par==='Y')?50000:25000;
+    D8.EligibleAmountOfDedn=Math.min(sumP(dSelf)+sumP(dSelfsr),selfCap)+Math.min(sumP(dPar)+sumP(dParsr),parCap);
+    T.Schedule80D={ Sec80DSelfFamSrCtznHealth:D8 };
+  }
+
+  // ---- Schedule80DD / 80U ----
+  const dd=data.d80dd||{};
+  if(dd.nature||N(dd.amount)){ const o={NatureOfDisability:dd.nature||'1',TypeOfDisability:dd.type||'1',DeductionAmount:R(N(dd.amount)),DependentType:dd.deptype||'1'};
+    if(dd.pan)o.DependentPan=dd.pan; if(dd.aadhaar)o.DependentAadhaar=dd.aadhaar; if(dd.form10ia)o.Form10IAAckNum=dd.form10ia; if(dd.udid)o.UDIDNum=dd.udid; T.Schedule80DD=o; }
+  const u80=data.d80u||{};
+  if(u80.nature||N(u80.amount)){ const o={NatureOfDisability:u80.nature||'1',TypeOfDisability:u80.type||'1',DeductionAmount:R(N(u80.amount))};
+    if(u80.form10ia)o.Form10IAAckNum=u80.form10ia; if(u80.udid)o.UDIDNum=u80.udid; T.Schedule80U=o; }
+
+  // ---- Schedule80E / 80EE / 80EEA / 80EEB (loan-row schedules) ----
+  const loanRows=k=>RR(k).filter(r=>r.BankOrInstnName||N(r.TotalLoanAmt)||N(r.Interest));
+  const loanMap=(rows,intKey,extra)=>rows.map(r=>{const o={LoanTknFrom:r.LoanTknFrom||'B',BankOrInstnName:r.BankOrInstnName||'NA',LoanAccNoOfBankOrInstnRefNo:r.LoanAccNoOfBankOrInstnRefNo||'NA',DateofLoan:dISO(r.DateofLoan),TotalLoanAmt:R(N(r.TotalLoanAmt)),LoanOutstndngAmt:R(N(r.LoanOutstndngAmt))};o[intKey]=R(N(r.Interest));if(extra)extra(o,r);return o;});
+  const loanTot=rows=>R(rows.reduce((s,r)=>s+N(r.Interest),0));
+  const e80=loanRows('d80e'); if(e80.length) T.Schedule80E={Schedule80EDtls:loanMap(e80,'Interest80E'),TotalInterest80E:loanTot(e80)};
+  const ee80=loanRows('d80ee'); if(ee80.length) T.Schedule80EE={Schedule80EEDtls:loanMap(ee80,'Interest80EE'),TotalInterest80EE:loanTot(ee80)};
+  const eea80=loanRows('d80eea'); if(eea80.length) T.Schedule80EEA={PropStmpDtyVal:R(N((data.d80eeaX||{}).PropStmpDtyVal)),Schedule80EEADtls:loanMap(eea80,'Interest80EEA'),TotalInterest80EEA:loanTot(eea80)};
+  const eeb80=loanRows('d80eeb'); if(eeb80.length) T.Schedule80EEB={Schedule80EEBDtls:loanMap(eeb80,'Interest80EEB',(o,r)=>{o.VehicleRegNo=r.VehicleRegNo||'NA';}),TotalInterest80EEB:loanTot(eeb80)};
+
+  // ---- Schedule80G (4 approval buckets) ----
+  const g80bucket=(key,pct,names)=>{
+    const rows=RR(key).filter(r=>r.DoneeWithPanName||N(r.DonationAmtCash)||N(r.DonationAmtOtherMode));
+    if(!rows.length) return null;
+    let tc=0,to=0,td=0,te=0;
+    const arr=rows.map(r=>{const cash=R(N(r.DonationAmtCash)),oth=R(N(r.DonationAmtOtherMode)),amt=cash+oth,elig=Math.round(amt*pct);tc+=cash;to+=oth;td+=amt;te+=elig;
+      return {DoneeWithPanName:r.DoneeWithPanName||'NA',ArnNbr:r.ArnNbr||'',DoneePAN:r.DoneePAN||'',AddressDetail:{AddrDetail:r.AddrDetail||'NA',CityOrTownOrDistrict:r.CityOrTownOrDistrict||'NA',StateCode:r.StateCode||stateCode,PinCode:N(r.PinCode)||0},DonationAmtCash:cash,DonationAmtOtherMode:oth,DonationAmt:amt,EligibleDonationAmt:elig};});
+    const o={DoneeWithPan:arr};o[names[0]]=tc;o[names[1]]=to;o[names[2]]=td;o[names[3]]=te;
+    return {o,tc,to,td,te};
+  };
+  const gB=[
+    g80bucket('g100',1,['TotDon100PercentCash','TotDon100PercentOtherMode','TotDon100Percent','TotEligibleDon100Percent']),
+    g80bucket('g50na',0.5,['TotDon50PercentNoApprReqdCash','TotDon50PercentNoApprReqdOtherMode','TotDon50PercentNoApprReqd','TotEligibleDon50Percent']),
+    g80bucket('g100a',1,['TotDon100PercentApprReqdCash','TotDon100PercentApprReqdOtherMode','TotDon100PercentApprReqd','TotEligibleDon100PercentApprReqd']),
+    g80bucket('g50a',0.5,['TotDon50PercentApprReqdCash','TotDon50PercentApprReqdOtherMode','TotDon50PercentApprReqd','TotEligibleDon50PercentApprReqd'])
+  ];
+  if(gB.some(Boolean)){
+    const S=[['Don100Percent',gB[0]],['Don50PercentNoApprReqd',gB[1]],['Don100PercentApprReqd',gB[2]],['Don50PercentApprReqd',gB[3]]];
+    const g80={}; let TC=0,TO=0,TD=0,TE=0;
+    S.forEach(([nm,b])=>{ if(b){ g80[nm]=b.o; TC+=b.tc;TO+=b.to;TD+=b.td;TE+=b.te; } });
+    g80.TotalDonationsUs80GCash=TC; g80.TotalDonationsUs80GOtherMode=TO; g80.TotalDonationsUs80G=TD; g80.TotalEligibleDonationsUs80G=TE;
+    T.Schedule80G=g80;
+  }
+
+  // ---- Schedule80GGC ----
+  const ggc=RR('d80ggc').filter(r=>r.PartyName||N(r.DonationAmtCash)||N(r.DonationAmtOtherMode));
+  if(ggc.length){ let tc=0,to=0,td=0; const arr=ggc.map(r=>{const cash=R(N(r.DonationAmtCash)),oth=R(N(r.DonationAmtOtherMode)),amt=cash+oth;tc+=cash;to+=oth;td+=amt;
+      return {DonationDate:dISO(r.DonationDate),DonationAmtCash:cash,DonationAmtOtherMode:oth,DonationAmt:amt,EligibleDonationAmt:amt,PoliticalPartyName:r.PartyName||'NA',PoliticalPartyPAN:r.PartyPAN||''};});
+    T.Schedule80GGC={Schedule80GGCDetails:arr,TotalDonationAmtCash80GGC:tc,TotalDonationAmtOtherMode80GGC:to,TotalDonationsUs80GGC:td,TotalEligibleDonationAmt80GGC:td}; }
+
+  // ---- D2 House Property: PropertyDetails[] (2026) / ScheduleUs24B (2025) ----
+  const HP=data.hp||{};
+  const hp24b=RR('hp24b').filter(r=>r.BankOrInstnName||N(r.InterestUs24B));
+  if(HP.addr||N(HP.alv)||hp24b.length||hp>0){
+    const alv=R(N(HP.alv)), rnr=R(N(HP.rentnotreal)), ltax=R(N(HP.localtax)), arr=R(N(HP.arrears));
+    const totUnreal=rnr+ltax, balALV=Math.max(0,alv-totUnreal), thirty=Math.round(balALV*0.3);
+    const int24=R(hp24b.reduce((s,r)=>s+N(r.InterestUs24B),0));
+    const dtls24=hp24b.map(r=>({LoanTknFrom:r.LoanTknFrom||'B',BankOrInstnName:r.BankOrInstnName||'NA',LoanAccNoOfBankOrInstnRefNo:r.LoanAccNoOfBankOrInstnRefNo||'NA',DateofLoan:dISO(r.DateofLoan),TotalLoanAmt:R(N(r.TotalLoanAmt)),LoanOutstndngAmt:R(N(r.LoanOutstndngAmt)),InterestUs24B:R(N(r.InterestUs24B))}));
+    if(is2026){
+      const rentd={AnnualLetableValue:alv,RentNotRealized:rnr,LocalTaxes:ltax,TotalUnrealizedAndTax:totUnreal,BalanceALV:balALV,AnnualOfPropOwned:balALV,ThirtyPercentOfBalance:thirty,IntOnBorwCap:int24,TotalDeduct:thirty+int24,ArrearsUnrealizedRentRcvd:arr,IncomeOfHP:R(balALV-thirty-int24+Math.round(arr*0.7))};
+      if(dtls24.length) rentd.Section24B={Section24BDtls:dtls24,TotalInterestUs24B:int24};
+      const co=RR('hpco').filter(r=>r.NameCoOwner).map((r,i)=>({CoOwnersSNo:i+1,NameCoOwner:r.NameCoOwner,PAN_CoOwner:r.PAN_CoOwner||'',PercentShareProperty:N(r.PercentShareProperty)||0}));
+      const ten=RR('hpten').filter(r=>r.NameofTenant).map((r,i)=>({TenantSNo:i+1,NameofTenant:r.NameofTenant,PANofTenant:r.PANofTenant||''}));
+      const prop={HPSNo:1,AddressDetailWithZipCode:{AddrDetail:HP.addr||'NA',CityOrTownOrDistrict:HP.city||'NA',StateCode:HP.state||stateCode,CountryCode:'91',PinCode:N(HP.pin)||0},PropertyOwner:HP.owner||'SE',PropCoOwnedFlg:HP.coowned||'NO',ifLetOut:HP.letout||'S',Rentdetails:rentd};
+      if(co.length) prop.CoOwners=co; if(ten.length) prop.TenantDetails=ten;
+      T.IncomeDeductions.PropertyDetails=[prop];
+    } else {
+      if(dtls24.length) T.ScheduleUs24B={ScheduleUs24BDtls:dtls24,TotalInterestUs24B:int24};
+      T.IncomeDeductions.AnnualValue=balALV; T.IncomeDeductions.AnnualValue30Percent=thirty; T.IncomeDeductions.TotalIncomeOfHP=hp;
+    }
+  }
+
+  // ---- D7 Taxes-paid: ScheduleIT / ScheduleTCS / ScheduleTDS3Dtls ----
+  const itR=RR('it').filter(r=>r.BSRCode||N(r.Amt));
+  if(itR.length) T.ScheduleIT={TaxPayment:itR.map(r=>({BSRCode:r.BSRCode||'',DateDep:dISO(r.DateDep),SrlNoOfChaln:N(r.SrlNoOfChaln)||0,Amt:R(N(r.Amt))})),TotalTaxPayments:R(itR.reduce((s,r)=>s+N(r.Amt),0))};
+  const tcsR=RR('tcs').filter(r=>r.TAN||N(r.TotalTCS));
+  if(tcsR.length){ const tot=R(tcsR.reduce((s,r)=>s+N(r.AmtTCSClaimedThisYear),0));
+    T.ScheduleTCS={TCS:tcsR.map(r=>({EmployerOrDeductorOrCollectDetl:{TAN:r.TAN||'',EmployerOrDeductorOrCollecterName:r.CollectorName||''},Amtfrom26AS:R(N(r.Amtfrom26AS)),TotalTCS:R(N(r.TotalTCS)),AmtTCSClaimedThisYear:R(N(r.AmtTCSClaimedThisYear))})),TotalSchTCS:tot};
+    T.TaxPaid.TaxesPaid.TCS=tot; }
+  const T3SEC=['92A','92B','92C','192A','193','194'];
+  const tds3R=RR('tds3').filter(r=>r.PANofTenant||N(r.TDSClaimed));
+  if(tds3R.length) T.ScheduleTDS3Dtls={TDS3Details:tds3R.map(r=>({PANofTenant:r.PANofTenant||'',TDSSection:T3SEC.includes(r.TDSSection)?r.TDSSection:'194',TDSClaimed:R(N(r.TDSClaimed)),TDSCreditCarriedFwd:R(N(r.TDSCreditCarriedFwd))})),TotalTDS3Details:R(tds3R.reduce((s,r)=>s+N(r.TDSClaimed),0))};
+
+  /* ================= D11 (AY2025-26) — 10-IEA opt-out from captured otherforms ================= */
+  { const optE=(OF.optearlier||''); T.FilingStatus.OptOutNewTaxRegime_Form10IEA_AY24_25 = (optE==='Yes'?'Y':(optE==='No'?'N':'NA')); }
+
+  /* ================= D10 (AY2025-26) — Section 89A retirement-account income (from calc bpData.os.s89A) ================= */
+  const s89=(BPD.os&&BPD.os.s89A)?BPD.os.s89A:null;
+  if(s89){
+    const rows89=[['canada','CA'],['uk','UK'],['usa','US']].filter(([k])=>N(s89[k])>0).map(([k,c])=>({NOT89ACountrycode:c,NOT89AAmount:R(N(s89[k]))}));
+    const oth89=R(N(s89.others)); const tot89=rows89.reduce((s,r)=>s+r.NOT89AAmount,0)+oth89;
+    if(tot89>0){ T.IncomeDeductions.IncomeNotified89A=tot89; if(rows89.length) T.IncomeDeductions.IncomeNotified89AType=rows89; if(oth89>0) T.IncomeDeductions.IncomeNotifiedOther89A=oth89; }
+  }
+
+  /* ================= D9 (AY2025-26) — ITR-U machinery: PartA_139_8A + PartB-ATI (gated: emit only when filing an updated return) ================= */
+  const IU=data.itru||{}; const fsVal=(fsEl&&fsEl.value)||'';
+  if(IU.ackNo||N(IU.updatedTotInc)||fsVal==='139(8A)'){
+    const reasons=RR('itru_reasons').filter(r=>r.ReasonsForUpdatingIncome).map(r=>({ReasonsForUpdatingIncome:r.ReasonsForUpdatingIncome}));
+    T.PartA_139_8A={
+      PAN:pan, Name:name, AssessmentYear:'2025-26',
+      PreviouslyFiledForThisAY:IU.prevFiled||'Y',
+      Applicable_139_8A:{ ITRForm:'ITR4', AcknowledgementNo:IU.ackNo||'', OrigRetFiledDate:dISO(IU.origDate) },
+      LaidOutIn_139_8A:IU.laidOut||'A', ITRFormUpdatingInc:'ITR4',
+      UpdatingInc:{ ReasonsForUpdatingIncDtls: reasons.length?reasons:[{ReasonsForUpdatingIncome:'2'}] },
+      UpdatedReturnDuringPeriod:IU.duringPeriod||'1',
+      RetrntoRedCarriedFL:{ UnabsorbedDepreciation:IU.unabsDep||'N' }
+    };
+    const mapIT=k=>RR(k).filter(r=>r.BSRCode||N(r.Amt)).map((r,i)=>({slno:i+1,BSRCode:r.BSRCode||'',DateDep:dISO(r.DateDep),SrlNoOfChaln:N(r.SrlNoOfChaln)||0,Amt:R(N(r.Amt))}));
+    const it1=mapIT('itru_it1'), it2=mapIT('itru_it2');
+    T['PartB-ATI']={
+      UpdatedTotInc:R(N(IU.updatedTotInc)), AmtPayable:R(N(IU.amtPayable)), FeeIncUS234F:R(N(IU.fee234f)),
+      AggrLiabilityRefund:R(N(IU.aggrRefund)), AggrLiabilityNoRefund:R(N(IU.aggrNoRefund)), AddtnlIncTax:R(N(IU.addtnlIncTax)),
+      NetPayable:R(N(IU.netPayable)), TaxUS140B:R(N(IU.taxUS140B)), TaxDue10_11:R(N(IU.taxDue)), ReleifUS89:R(N(IU.relief89)),
+      ScheduleIT1:{ TaxPayment1:{ ITTaxPayments:it1 }, Total:R(it1.reduce((s,r)=>s+r.Amt,0)) },
+      ScheduleIT2:{ TaxPayment2:{ ITTaxPayments:it2 }, Total:R(it2.reduce((s,r)=>s+r.Amt,0)) }
+    };
+  }
+
   return j;
 }
 
@@ -12091,6 +12647,7 @@ function computeAll(){
               ? computeBP()
               : {normal:0, speculation:0, specified:0, total:0};
   const bp = bpRes.total;  // backward-compat alias for downstream code
+  setTxt('it_bp_income', bp);  // PREREQ B1: write the BP income cell so the emitter reads a real value
   const osRes = (typeof computeOS==='function') ? computeOS(isNew) : {osSlabIncome:0, osSpecialIncome:0, osSpecialTax:0, osGrossForTI:0};
   const os = osRes.osGrossForTI;
   // ---- Capital Gains: compute net totals + special-rate income/tax ----
@@ -12172,7 +12729,8 @@ function computeAll(){
               ? baseTaxWithAgri(slabBase, agriNet, isNew, currentAge)
               : baseTaxOnly(slabBase, isNew, currentAge);
   // 87A rebate: eligibility based on TI; cap by slab tax. NOT available against any special-rate tax.
-  slabTax = Math.max(0, slabTax - rebate87A(isNew, ti, slabTax));
+  const __reb87 = rebate87A(isNew, ti, slabTax);   // PREREQ B6: capture rebate before subtracting
+  slabTax = Math.max(0, slabTax - __reb87);
   const taxBeforeSC = slabTax + cgRes.specialTax + osRes.osSpecialTax;
   // Surcharge: 15% cap on CG special tax only; full rate on slab + OS winnings tax
   let sc = (typeof surchargeWithCgCap==='function')
@@ -12220,6 +12778,11 @@ function computeAll(){
   $('r_bal').textContent=inr(Math.abs(balance));
   $('r_balPill').childNodes[0].nodeValue=balance>=0?'Balance Tax Payable ':'Refund Due ';
   $('r_regime').textContent='Regime: '+(isNew?'New (default)':'Old');
+  // PREREQ B6: publish the tax breakup on this (calc-iframe) window so the parent emitter
+  // can read real rebate/cess/surcharge instead of hard-coded zeros. Read via calcWin().__taxBreakup.
+  try{ window.__taxBreakup={ isNew:isNew, slabTax:slabTax, rebate87A:__reb87, surcharge:sc, cess:cess,
+        taxBeforeSC:taxBeforeSC, taxOnTI:taxOnTI, reliefTotal:reliefTotal, taxAfterRelief:taxAfterRelief,
+        intFeeTotal:intFeeTotal, balance:balance }; }catch(e){}
 }
 
 fillSel('emp_state',STATES,'(Select)');

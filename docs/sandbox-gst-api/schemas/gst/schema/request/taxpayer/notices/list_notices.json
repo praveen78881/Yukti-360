@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "notices": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "refId": {
+              "type": "string"
+            },
+            "arn": {
+              "type": "string"
+            },
+            "moduleCd": {
+              "type": "string"
+            },
+            "alertCd": {
+              "type": "string"
+            },
+            "dateOfIssue": {
+              "type": "string"
+            },
+            "dateOfRespond": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "refId",
+            "arn",
+            "moduleCd",
+            "alertCd",
+            "dateOfIssue",
+            "dateOfRespond"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "refId": {
+              "type": "string"
+            },
+            "arn": {
+              "type": "string"
+            },
+            "moduleCd": {
+              "type": "string"
+            },
+            "alertCd": {
+              "type": "string"
+            },
+            "dateOfIssue": {
+              "type": "string"
+            },
+            "dateOfRespond": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "refId",
+            "arn",
+            "moduleCd",
+            "alertCd",
+            "dateOfIssue",
+            "dateOfRespond"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "notices"
+  ]
+}

@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
-import { getCurrentFY } from '@/lib/utils/dateUtils';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { computeITCFromPurchases } from '@/lib/accounting/gstComputeFromInvoices';
@@ -50,14 +48,30 @@ function toEditForm(p: PurchaseInvoice): EditForm {
   };
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function monthRange(y: number, m0: number) {
+  const mm = String(m0 + 1).padStart(2, '0');
+  const last = new Date(y, m0 + 1, 0).getDate();
+  return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(last).padStart(2, '0')}` };
+}
+
 export default function ITCRegisterPage() {
   const { company, companyId, loading: companyLoading } = useCompany();
-  const fy = getCurrentFY();
-  const [fromDate, setFromDate] = useState(fy.start);
-  const [toDate, setToDate] = useState(fy.end);
+  const now = new Date();
+  const [selYear, setSelYear] = useState(now.getFullYear());
+  const [selMonth, setSelMonth] = useState(now.getMonth()); // 0-11
+  const { from: fromDate, to: toDate } = monthRange(selYear, selMonth);
   const [tick, setTick] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [ctx, setCtx] = useState<{ x: number; y: number; p: PurchaseInvoice } | null>(null);
+
+  useEffect(() => {
+    if (!ctx) return;
+    const close = () => setCtx(null);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [ctx]);
 
   const purchases = useMemo(() => {
     if (!companyId) return [];
@@ -135,30 +149,33 @@ export default function ITCRegisterPage() {
   return (
     <div>
       <PageHeader title="ITC Register" description="Input Tax Credit register — all GST credits from purchases">
-        <div className="flex flex-col gap-2 items-end">
-          <DateRangeFilter fromDate={fromDate} toDate={toDate} onDateChange={(f, t) => { setFromDate(f); setToDate(t); }} />
-          <ExportButtons title="ITC Register" companyName={company.name} entityType={entityLabel} dateRange={`${fromDate} to ${toDate}`} columns={columns} data={data} />
+        <div className="flex items-center gap-2">
+          <select value={selMonth} onChange={(e) => setSelMonth(Number(e.target.value))}
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm focus:border-blue-400 focus:outline-none">
+            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+          </select>
+          <select value={selYear} onChange={(e) => setSelYear(Number(e.target.value))}
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm focus:border-blue-400 focus:outline-none">
+            {Array.from({ length: 6 }, (_, i) => now.getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <ExportButtons title="ITC Register" companyName={company.name} entityType={entityLabel} dateRange={`${MONTHS[selMonth]} ${selYear}`} columns={columns} data={data} />
         </div>
       </PageHeader>
 
       {itcRows.length > 0 && (
-        <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">CGST ITC</p>
-            <p className="text-lg font-bold font-mono text-blue-700">{formatIndianCurrency(totalCGST)}</p>
-          </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">SGST ITC</p>
-            <p className="text-lg font-bold font-mono text-blue-700">{formatIndianCurrency(totalSGST)}</p>
-          </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">IGST ITC</p>
-            <p className="text-lg font-bold font-mono text-blue-700">{formatIndianCurrency(totalIGST)}</p>
-          </div>
-          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">Total ITC Available</p>
-            <p className="text-lg font-bold font-mono text-green-700">{formatIndianCurrency(totalITC)}</p>
-          </div>
+        <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-gray-200 bg-white px-4 py-2">
+          {[
+            { l: 'CGST', v: totalCGST }, { l: 'SGST', v: totalSGST }, { l: 'IGST', v: totalIGST },
+          ].map((c) => (
+            <span key={c.l} className="inline-flex items-baseline gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{c.l}</span>
+              <span className="font-mono text-sm text-gray-700">{formatIndianCurrency(c.v)}</span>
+            </span>
+          ))}
+          <span className="ml-auto inline-flex items-baseline gap-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Total ITC</span>
+            <span className="font-mono text-sm font-bold text-gray-900">{formatIndianCurrency(totalITC)}</span>
+          </span>
         </div>
       )}
 
@@ -171,7 +188,7 @@ export default function ITCRegisterPage() {
           <div className="text-center py-3 border-b border-gray-200 bg-gray-50/50">
             <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">{company.name} | GSTIN: {company.gst_details?.gstin || '—'}</p>
             <h3 className="text-sm font-bold text-gray-900">Input Tax Credit (ITC) Register</h3>
-            <p className="text-xs text-gray-400 mt-0.5">{fromDate} to {toDate}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{MONTHS[selMonth]} {selYear}</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -180,7 +197,6 @@ export default function ITCRegisterPage() {
                   {columns.map((col) => (
                     <th key={col.key} className={`px-3 py-2.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${col.align === 'right' ? 'text-right' : 'text-left'}`}>{col.header}</th>
                   ))}
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -194,7 +210,7 @@ export default function ITCRegisterPage() {
                   const isEditing = editingId === p.id;
                   return (
                     <>
-                      <tr key={p.id} className={`border-b border-gray-100 ${isEditing ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
+                      <tr key={p.id} onContextMenu={(e) => { e.preventDefault(); setCtx({ x: e.clientX, y: e.clientY, p }); }} className={`cursor-context-menu border-b border-gray-100 ${isEditing ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
                         <td className="px-3 py-2 text-xs text-gray-400">{i + 1}</td>
                         <td className="px-3 py-1.5 whitespace-nowrap text-sm">{p.invoice_date}</td>
                         <td className="px-3 py-2 font-medium text-gray-900 text-sm">{p.vendor_name || '—'}</td>
@@ -213,28 +229,10 @@ export default function ITCRegisterPage() {
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => isEditing ? (setEditingId(null), setEditForm(null)) : handleEdit(p)}
-                              className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${isEditing ? 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-                            >
-                              {isEditing ? 'Cancel' : '✎ Edit'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(p)}
-                              className="px-2 py-0.5 rounded text-[11px] font-medium border bg-white text-red-500 border-red-200 hover:bg-red-50 transition-colors"
-                            >
-                              × Del
-                            </button>
-                          </div>
-                        </td>
                       </tr>
                       {isEditing && editForm && (
                         <tr key={`${p.id}-edit`} className="bg-green-50 border-b border-green-200">
-                          <td colSpan={11} className="px-4 py-4">
+                          <td colSpan={10} className="px-4 py-4">
                             <div className="border border-dashed border-green-300 rounded-xl p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs font-semibold text-green-700">Edit Purchase Invoice</span>
@@ -329,15 +327,17 @@ export default function ITCRegisterPage() {
                   <td className="px-3 py-2 text-right font-mono">{formatIndianCurrency(totalIGST)}</td>
                   <td className="px-3 py-2 text-right font-mono">{formatIndianCurrency(totalITC)}</td>
                   <td className="px-3 py-2" />
-                  <td className="px-3 py-2" />
                 </tr>
               </tfoot>
             </table>
           </div>
-          <div className="px-4 py-3 border-t border-gray-200 bg-yellow-50 text-xs text-yellow-700">
-            <p className="font-medium">Blocked Credits u/s 17(5):</p>
-            <p>Motor vehicles (personal use), Food &amp; beverages, Club membership, Health insurance, Beauty treatment, Personal consumption, Works contract (immovable property), Free samples.</p>
-          </div>
+        </div>
+      )}
+
+      {ctx && (
+        <div className="fixed z-50 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg" style={{ left: ctx.x, top: ctx.y }} onClick={(e) => e.stopPropagation()}>
+          <button type="button" onClick={() => { handleEdit(ctx.p); setCtx(null); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-gray-50">✎ Edit</button>
+          <button type="button" onClick={() => { handleDelete(ctx.p); setCtx(null); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-red-600 hover:bg-red-50">× Delete</button>
         </div>
       )}
     </div>

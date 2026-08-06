@@ -1,0 +1,33 @@
+---
+title: 'Search Transporter ID'
+description: "Fetch transporter details by Transporter ID."
+openapi: '/api-reference/gst/compliance/openapi.json POST /gst/compliance/e-way-bill/tax-payer/transin/search'
+---
+
+#### Request body schema
+
+<Card
+    title="View request body schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-way-bill/search_transporter.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+
+#### Response schema
+
+For successful responses, this reference describes the NIC E-Way Bill payload at `data.data`.
+
+<Card
+  title="View JSON schema"
+  icon="code"
+  href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-way-bill/search_transporter_response.json"
+  arrow="true"
+  horizontal
+>
+</Card>
+
+<Note>
+  The E-Way Bill portal provides a Transporter Identification Number to transporters who do not have a GSTIN.
+</Note>

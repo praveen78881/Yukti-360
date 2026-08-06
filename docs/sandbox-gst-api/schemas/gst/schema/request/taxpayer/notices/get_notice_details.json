@@ -1,0 +1,76 @@
+{
+
+  "$schema": "http://json-schema.org/draft-04/schema#",
+
+  "type": "object",
+
+  "properties": {
+
+    "arn": {
+
+      "type": "string"
+
+    },
+
+    "dateOfIssue": {
+
+      "type": "string"
+
+    },
+
+    "noticeType": {
+
+      "type": "string"
+
+    },
+
+    "dueDateOfReply": {
+
+      "type": "string"
+
+    },
+
+    "taxPeriod": {
+
+      "type": "object"
+
+    },
+
+    "maindocs": {
+
+      "type": "array",
+
+      "items": {}
+
+    },
+
+    "suppdocs": {
+
+      "type": "array",
+
+      "items": {}
+
+    }
+
+  },
+
+  "required": [
+
+    "arn",
+
+    "dateOfIssue",
+
+    "noticeType",
+
+    "dueDateOfReply",
+
+    "taxPeriod",
+
+    "maindocs",
+
+    "suppdocs"
+
+  ]
+
+}
+ 

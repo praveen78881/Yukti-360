@@ -1,0 +1,3889 @@
+{
+  "form": "ITR-6",
+  "ay": "2025-26",
+  "sheets": [
+    {
+      "id": null,
+      "tab": null,
+      "title": null,
+      "items": []
+    },
+    {
+      "id": "gen1",
+      "tab": "Part A - General",
+      "title": "PART A — GENERAL",
+      "items": [
+        {
+          "type": "sec",
+          "code": "A",
+          "title": "PERSONAL INFORMATION"
+        },
+        {
+          "type": "field",
+          "id": "name",
+          "label": "Name (as per PAN)",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "nameChanged",
+          "label": "Is there any change in the company’s name?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oldName",
+          "label": "If yes, please furnish the old name",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "pan",
+          "label": "PAN",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "cin",
+          "label": "Corporate Identity Number (CIN) issued by MCA",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "status",
+          "label": "Status",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "opts",
+            "choices": []
+          }
+        },
+        {
+          "type": "field",
+          "id": "domestic",
+          "label": "Domestic company?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "doi",
+          "label": "Date of incorporation (DD/MM/YYYY)",
+          "kind": "date",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "docb",
+          "label": "Date of Commencement of Business (DD/MM/YYYY)",
+          "kind": "date"
+        },
+        {
+          "type": "sub",
+          "title": "Registered Address"
+        },
+        {
+          "type": "field",
+          "id": "resNo",
+          "label": "Flat / Door / Block No",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "resName",
+          "label": "Name of Premises / Building / Village",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "road",
+          "label": "Road / Street / Post Office",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "locality",
+          "label": "Area / Locality",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "city",
+          "label": "Town / City / District",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "state",
+          "label": "State",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "STATES",
+            "key": "StateCode",
+            "choices": [
+              {
+                "v": "01",
+                "t": "Andaman and Nicobar islands"
+              },
+              {
+                "v": "02",
+                "t": "Andhra Pradesh"
+              },
+              {
+                "v": "03",
+                "t": "Arunachal Pradesh"
+              },
+              {
+                "v": "04",
+                "t": "Assam"
+              },
+              {
+                "v": "05",
+                "t": "Bihar"
+              },
+              {
+                "v": "06",
+                "t": "Chandigarh"
+              },
+              {
+                "v": "07",
+                "t": "Dadra Nagar and Haveli"
+              },
+              {
+                "v": "08",
+                "t": "Daman and Diu"
+              },
+              {
+                "v": "09",
+                "t": "Delhi"
+              },
+              {
+                "v": "10",
+                "t": "Goa"
+              },
+              {
+                "v": "11",
+                "t": "Gujarat"
+              },
+              {
+                "v": "12",
+                "t": "Haryana"
+              },
+              {
+                "v": "13",
+                "t": "Himachal Pradesh"
+              },
+              {
+                "v": "14",
+                "t": "Jammu and Kashmir"
+              },
+              {
+                "v": "15",
+                "t": "Karnataka"
+              },
+              {
+                "v": "16",
+                "t": "Kerala"
+              },
+              {
+                "v": "17",
+                "t": "Lakshadweep"
+              },
+              {
+                "v": "18",
+                "t": "Madhya Pradesh"
+              },
+              {
+                "v": "19",
+                "t": "Maharashtra"
+              },
+              {
+                "v": "20",
+                "t": "Manipur"
+              },
+              {
+                "v": "21",
+                "t": "Meghalaya"
+              },
+              {
+                "v": "22",
+                "t": "Mizoram"
+              },
+              {
+                "v": "23",
+                "t": "Nagaland"
+              },
+              {
+                "v": "24",
+                "t": "Odisha"
+              },
+              {
+                "v": "25",
+                "t": "Puducherry"
+              },
+              {
+                "v": "26",
+                "t": "Punjab"
+              },
+              {
+                "v": "27",
+                "t": "Rajasthan"
+              },
+              {
+                "v": "28",
+                "t": "Sikkim"
+              },
+              {
+                "v": "29",
+                "t": "Tamil Nadu"
+              },
+              {
+                "v": "30",
+                "t": "Tripura"
+              },
+              {
+                "v": "31",
+                "t": "Uttar Pradesh"
+              },
+              {
+                "v": "32",
+                "t": "West Bengal"
+              },
+              {
+                "v": "33",
+                "t": "Chhattisgarh"
+              },
+              {
+                "v": "34",
+                "t": "Uttarakhand"
+              },
+              {
+                "v": "35",
+                "t": "Jharkhand"
+              },
+              {
+                "v": "36",
+                "t": "Telangana"
+              },
+              {
+                "v": "37",
+                "t": "Ladakh"
+              },
+              {
+                "v": "99",
+                "t": "Foreign"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "country",
+          "label": "Country / Region",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "CTY",
+            "key": "CountryCode",
+            "choices": [
+              {
+                "v": "93",
+                "t": "AFGHANISTAN"
+              },
+              {
+                "v": "1001",
+                "t": "ALAND ISLANDS"
+              },
+              {
+                "v": "355",
+                "t": "ALBANIA"
+              },
+              {
+                "v": "213",
+                "t": "ALGERIA"
+              },
+              {
+                "v": "684",
+                "t": "AMERICAN SAMOA"
+              },
+              {
+                "v": "376",
+                "t": "ANDORRA"
+              },
+              {
+                "v": "244",
+                "t": "ANGOLA"
+              },
+              {
+                "v": "1264",
+                "t": "ANGUILLA"
+              },
+              {
+                "v": "1010",
+                "t": "ANTARCTICA"
+              },
+              {
+                "v": "1268",
+                "t": "ANTIGUA AND BARBUDA"
+              },
+              {
+                "v": "54",
+                "t": "ARGENTINA"
+              },
+              {
+                "v": "374",
+                "t": "ARMENIA"
+              },
+              {
+                "v": "297",
+                "t": "ARUBA"
+              },
+              {
+                "v": "61",
+                "t": "AUSTRALIA"
+              },
+              {
+                "v": "43",
+                "t": "AUSTRIA"
+              },
+              {
+                "v": "994",
+                "t": "AZERBAIJAN"
+              },
+              {
+                "v": "1242",
+                "t": "BAHAMAS"
+              },
+              {
+                "v": "973",
+                "t": "BAHRAIN"
+              },
+              {
+                "v": "880",
+                "t": "BANGLADESH"
+              },
+              {
+                "v": "1246",
+                "t": "BARBADOS"
+              },
+              {
+                "v": "375",
+                "t": "BELARUS"
+              },
+              {
+                "v": "32",
+                "t": "BELGIUM"
+              },
+              {
+                "v": "501",
+                "t": "BELIZE"
+              },
+              {
+                "v": "229",
+                "t": "BENIN"
+              },
+              {
+                "v": "1441",
+                "t": "BERMUDA"
+              },
+              {
+                "v": "975",
+                "t": "BHUTAN"
+              },
+              {
+                "v": "591",
+                "t": "BOLIVIA (PLURINATIONAL STATE OF)"
+              },
+              {
+                "v": "1002",
+                "t": "BONAIRE, SINT EUSTATIUS AND SABA"
+              },
+              {
+                "v": "387",
+                "t": "BOSNIA AND HERZEGOVINA"
+              },
+              {
+                "v": "267",
+                "t": "BOTSWANA"
+              },
+              {
+                "v": "1003",
+                "t": "BOUVET ISLAND"
+              },
+              {
+                "v": "55",
+                "t": "BRAZIL"
+              },
+              {
+                "v": "1014",
+                "t": "BRITISH INDIAN OCEAN TERRITORY"
+              },
+              {
+                "v": "673",
+                "t": "BRUNEI DARUSSALAM"
+              },
+              {
+                "v": "359",
+                "t": "BULGARIA"
+              },
+              {
+                "v": "226",
+                "t": "BURKINA FASO"
+              },
+              {
+                "v": "257",
+                "t": "BURUNDI"
+              },
+              {
+                "v": "238",
+                "t": "CABO VERDE"
+              },
+              {
+                "v": "855",
+                "t": "CAMBODIA"
+              },
+              {
+                "v": "237",
+                "t": "CAMEROON"
+              },
+              {
+                "v": "1",
+                "t": "CANADA"
+              },
+              {
+                "v": "1345",
+                "t": "CAYMAN ISLANDS"
+              },
+              {
+                "v": "236",
+                "t": "CENTRAL AFRICAN REPUBLIC"
+              },
+              {
+                "v": "235",
+                "t": "CHAD"
+              },
+              {
+                "v": "56",
+                "t": "CHILE"
+              },
+              {
+                "v": "86",
+                "t": "CHINA"
+              },
+              {
+                "v": "9",
+                "t": "CHRISTMAS ISLAND"
+              },
+              {
+                "v": "672",
+                "t": "COCOS (KEELING) ISLANDS"
+              },
+              {
+                "v": "57",
+                "t": "COLOMBIA"
+              },
+              {
+                "v": "270",
+                "t": "COMOROS"
+              },
+              {
+                "v": "242",
+                "t": "CONGO"
+              },
+              {
+                "v": "243",
+                "t": "CONGO (DEMOCRATIC REPUBLIC OF THE)"
+              },
+              {
+                "v": "682",
+                "t": "COOK ISLANDS"
+              },
+              {
+                "v": "506",
+                "t": "COSTA RICA"
+              },
+              {
+                "v": "225",
+                "t": "C TE D'IVOIRE"
+              },
+              {
+                "v": "385",
+                "t": "CROATIA"
+              },
+              {
+                "v": "53",
+                "t": "CUBA"
+              },
+              {
+                "v": "1015",
+                "t": "CURA AO"
+              },
+              {
+                "v": "357",
+                "t": "CYPRUS"
+              },
+              {
+                "v": "420",
+                "t": "CZECHIA"
+              },
+              {
+                "v": "45",
+                "t": "DENMARK"
+              },
+              {
+                "v": "253",
+                "t": "DJIBOUTI"
+              },
+              {
+                "v": "1767",
+                "t": "DOMINICA"
+              },
+              {
+                "v": "1809",
+                "t": "DOMINICAN REPUBLIC"
+              },
+              {
+                "v": "593",
+                "t": "ECUADOR"
+              },
+              {
+                "v": "20",
+                "t": "EGYPT"
+              },
+              {
+                "v": "503",
+                "t": "EL SALVADOR"
+              },
+              {
+                "v": "240",
+                "t": "EQUATORIAL GUINEA"
+              },
+              {
+                "v": "291",
+                "t": "ERITREA"
+              },
+              {
+                "v": "372",
+                "t": "ESTONIA"
+              },
+              {
+                "v": "251",
+                "t": "ETHIOPIA"
+              },
+              {
+                "v": "500",
+                "t": "FALKLAND ISLANDS (MALVINAS)"
+              },
+              {
+                "v": "298",
+                "t": "FAROE ISLANDS"
+              },
+              {
+                "v": "679",
+                "t": "FIJI"
+              },
+              {
+                "v": "358",
+                "t": "FINLAND"
+              },
+              {
+                "v": "33",
+                "t": "FRANCE"
+              },
+              {
+                "v": "594",
+                "t": "FRENCH GUIANA"
+              },
+              {
+                "v": "689",
+                "t": "FRENCH POLYNESIA"
+              },
+              {
+                "v": "1004",
+                "t": "FRENCH SOUTHERN TERRITORIES"
+              },
+              {
+                "v": "241",
+                "t": "GABON"
+              },
+              {
+                "v": "220",
+                "t": "GAMBIA"
+              },
+              {
+                "v": "995",
+                "t": "GEORGIA"
+              },
+              {
+                "v": "49",
+                "t": "GERMANY"
+              },
+              {
+                "v": "233",
+                "t": "GHANA"
+              },
+              {
+                "v": "350",
+                "t": "GIBRALTAR"
+              },
+              {
+                "v": "30",
+                "t": "GREECE"
+              },
+              {
+                "v": "299",
+                "t": "GREENLAND"
+              },
+              {
+                "v": "1473",
+                "t": "GRENADA"
+              },
+              {
+                "v": "590",
+                "t": "GUADELOUPE"
+              },
+              {
+                "v": "1671",
+                "t": "GUAM"
+              },
+              {
+                "v": "502",
+                "t": "GUATEMALA"
+              },
+              {
+                "v": "1481",
+                "t": "GUERNSEY"
+              },
+              {
+                "v": "224",
+                "t": "GUINEA"
+              },
+              {
+                "v": "245",
+                "t": "GUINEA-BISSAU"
+              },
+              {
+                "v": "592",
+                "t": "GUYANA"
+              },
+              {
+                "v": "509",
+                "t": "HAITI"
+              },
+              {
+                "v": "1005",
+                "t": "HEARD ISLAND AND MCDONALD ISLANDS"
+              },
+              {
+                "v": "6",
+                "t": "HOLY SEE"
+              },
+              {
+                "v": "504",
+                "t": "HONDURAS"
+              },
+              {
+                "v": "852",
+                "t": "HONG KONG"
+              },
+              {
+                "v": "36",
+                "t": "HUNGARY"
+              },
+              {
+                "v": "354",
+                "t": "ICELAND"
+              },
+              {
+                "v": "91",
+                "t": "INDIA"
+              },
+              {
+                "v": "62",
+                "t": "INDONESIA"
+              },
+              {
+                "v": "98",
+                "t": "IRAN (ISLAMIC REPUBLIC OF)"
+              },
+              {
+                "v": "964",
+                "t": "IRAQ"
+              },
+              {
+                "v": "353",
+                "t": "IRELAND"
+              },
+              {
+                "v": "1624",
+                "t": "ISLE OF MAN"
+              },
+              {
+                "v": "972",
+                "t": "ISRAEL"
+              },
+              {
+                "v": "5",
+                "t": "ITALY"
+              },
+              {
+                "v": "1876",
+                "t": "JAMAICA"
+              },
+              {
+                "v": "81",
+                "t": "JAPAN"
+              },
+              {
+                "v": "1534",
+                "t": "JERSEY"
+              },
+              {
+                "v": "962",
+                "t": "JORDAN"
+              },
+              {
+                "v": "7",
+                "t": "KAZAKHSTAN"
+              },
+              {
+                "v": "254",
+                "t": "KENYA"
+              },
+              {
+                "v": "686",
+                "t": "KIRIBATI"
+              },
+              {
+                "v": "850",
+                "t": "KOREA(DEMOCRATIC PEOPLE'S REPUBLIC OF)"
+              },
+              {
+                "v": "82",
+                "t": "KOREA (REPUBLIC OF)"
+              },
+              {
+                "v": "965",
+                "t": "KUWAIT"
+              },
+              {
+                "v": "996",
+                "t": "KYRGYZSTAN"
+              },
+              {
+                "v": "856",
+                "t": "LAO PEOPLE'S DEMOCRATIC REPUBLIC"
+              },
+              {
+                "v": "371",
+                "t": "LATVIA"
+              },
+              {
+                "v": "961",
+                "t": "LEBANON"
+              },
+              {
+                "v": "266",
+                "t": "LESOTHO"
+              },
+              {
+                "v": "231",
+                "t": "LIBERIA"
+              },
+              {
+                "v": "218",
+                "t": "LIBYA"
+              },
+              {
+                "v": "423",
+                "t": "LIECHTENSTEIN"
+              },
+              {
+                "v": "370",
+                "t": "LITHUANIA"
+              },
+              {
+                "v": "352",
+                "t": "LUXEMBOURG"
+              },
+              {
+                "v": "853",
+                "t": "MACAO"
+              },
+              {
+                "v": "389",
+                "t": "MACEDONIA(THE FORMER YUGOSLAV REPUBLIC OF)"
+              },
+              {
+                "v": "261",
+                "t": "MADAGASCAR"
+              },
+              {
+                "v": "265",
+                "t": "MALAWI"
+              },
+              {
+                "v": "60",
+                "t": "MALAYSIA"
+              },
+              {
+                "v": "960",
+                "t": "MALDIVES"
+              },
+              {
+                "v": "223",
+                "t": "MALI"
+              },
+              {
+                "v": "356",
+                "t": "MALTA"
+              },
+              {
+                "v": "692",
+                "t": "MARSHALL ISLANDS"
+              },
+              {
+                "v": "596",
+                "t": "MARTINIQUE"
+              },
+              {
+                "v": "222",
+                "t": "MAURITANIA"
+              },
+              {
+                "v": "230",
+                "t": "MAURITIUS"
+              },
+              {
+                "v": "269",
+                "t": "MAYOTTE"
+              },
+              {
+                "v": "52",
+                "t": "MEXICO"
+              },
+              {
+                "v": "691",
+                "t": "MICRONESIA (FEDERATED STATES OF)"
+              },
+              {
+                "v": "373",
+                "t": "MOLDOVA (REPUBLIC OF)"
+              },
+              {
+                "v": "377",
+                "t": "MONACO"
+              },
+              {
+                "v": "976",
+                "t": "MONGOLIA"
+              },
+              {
+                "v": "382",
+                "t": "MONTENEGRO"
+              },
+              {
+                "v": "1664",
+                "t": "MONTSERRAT"
+              },
+              {
+                "v": "212",
+                "t": "MOROCCO"
+              },
+              {
+                "v": "258",
+                "t": "MOZAMBIQUE"
+              },
+              {
+                "v": "95",
+                "t": "MYANMAR"
+              },
+              {
+                "v": "264",
+                "t": "NAMIBIA"
+              },
+              {
+                "v": "674",
+                "t": "NAURU"
+              },
+              {
+                "v": "977",
+                "t": "NEPAL"
+              },
+              {
+                "v": "31",
+                "t": "NETHERLANDS"
+              },
+              {
+                "v": "687",
+                "t": "NEW CALEDONIA"
+              },
+              {
+                "v": "64",
+                "t": "NEW ZEALAND"
+              },
+              {
+                "v": "505",
+                "t": "NICARAGUA"
+              },
+              {
+                "v": "227",
+                "t": "NIGER"
+              },
+              {
+                "v": "234",
+                "t": "NIGERIA"
+              },
+              {
+                "v": "683",
+                "t": "NIUE"
+              },
+              {
+                "v": "15",
+                "t": "NORFOLK ISLAND"
+              },
+              {
+                "v": "1670",
+                "t": "NORTHERN MARIANA ISLANDS"
+              },
+              {
+                "v": "47",
+                "t": "NORWAY"
+              },
+              {
+                "v": "968",
+                "t": "OMAN"
+              },
+              {
+                "v": "92",
+                "t": "PAKISTAN"
+              },
+              {
+                "v": "680",
+                "t": "PALAU"
+              },
+              {
+                "v": "970",
+                "t": "PALESTINE, STATE OF"
+              },
+              {
+                "v": "507",
+                "t": "PANAMA"
+              },
+              {
+                "v": "675",
+                "t": "PAPUA NEW GUINEA"
+              },
+              {
+                "v": "595",
+                "t": "PARAGUAY"
+              },
+              {
+                "v": "51",
+                "t": "PERU"
+              },
+              {
+                "v": "63",
+                "t": "PHILIPPINES"
+              },
+              {
+                "v": "1011",
+                "t": "PITCAIRN"
+              },
+              {
+                "v": "48",
+                "t": "POLAND"
+              },
+              {
+                "v": "14",
+                "t": "PORTUGAL"
+              },
+              {
+                "v": "1787",
+                "t": "PUERTO RICO"
+              },
+              {
+                "v": "974",
+                "t": "QATAR"
+              },
+              {
+                "v": "262",
+                "t": "R UNION"
+              },
+              {
+                "v": "40",
+                "t": "ROMANIA"
+              },
+              {
+                "v": "8",
+                "t": "RUSSIAN FEDERATION"
+              },
+              {
+                "v": "250",
+                "t": "RWANDA"
+              },
+              {
+                "v": "1006",
+                "t": "SAINT BARTH LEMY"
+              },
+              {
+                "v": "290",
+                "t": "SAINT HELENA, ASCENSION AND TRISTAN DA CUNHA"
+              },
+              {
+                "v": "1869",
+                "t": "SAINT KITTS AND NEVIS"
+              },
+              {
+                "v": "1758",
+                "t": "SAINT LUCIA"
+              },
+              {
+                "v": "1007",
+                "t": "SAINT MARTIN (FRENCH PART)"
+              },
+              {
+                "v": "508",
+                "t": "SAINT PIERRE AND MIQUELON"
+              },
+              {
+                "v": "1784",
+                "t": "SAINT VINCENT AND THE GRENADINES"
+              },
+              {
+                "v": "685",
+                "t": "SAMOA"
+              },
+              {
+                "v": "378",
+                "t": "SAN MARINO"
+              },
+              {
+                "v": "239",
+                "t": "SAO TOME AND PRINCIPE"
+              },
+              {
+                "v": "966",
+                "t": "SAUDI ARABIA"
+              },
+              {
+                "v": "221",
+                "t": "SENEGAL"
+              },
+              {
+                "v": "381",
+                "t": "SERBIA"
+              },
+              {
+                "v": "248",
+                "t": "SEYCHELLES"
+              },
+              {
+                "v": "232",
+                "t": "SIERRA LEONE"
+              },
+              {
+                "v": "65",
+                "t": "SINGAPORE"
+              },
+              {
+                "v": "1721",
+                "t": "SINT MAARTEN (DUTCH PART)"
+              },
+              {
+                "v": "421",
+                "t": "SLOVAKIA"
+              },
+              {
+                "v": "386",
+                "t": "SLOVENIA"
+              },
+              {
+                "v": "677",
+                "t": "SOLOMON ISLANDS"
+              },
+              {
+                "v": "252",
+                "t": "SOMALIA"
+              },
+              {
+                "v": "28",
+                "t": "SOUTH AFRICA"
+              },
+              {
+                "v": "1008",
+                "t": "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS"
+              },
+              {
+                "v": "211",
+                "t": "SOUTH SUDAN"
+              },
+              {
+                "v": "35",
+                "t": "SPAIN"
+              },
+              {
+                "v": "94",
+                "t": "SRI LANKA"
+              },
+              {
+                "v": "249",
+                "t": "SUDAN"
+              },
+              {
+                "v": "597",
+                "t": "SURINAME"
+              },
+              {
+                "v": "1012",
+                "t": "SVALBARD AND JAN MAYEN"
+              },
+              {
+                "v": "268",
+                "t": "SWAZILAND"
+              },
+              {
+                "v": "46",
+                "t": "SWEDEN"
+              },
+              {
+                "v": "41",
+                "t": "SWITZERLAND"
+              },
+              {
+                "v": "963",
+                "t": "SYRIAN ARAB REPUBLIC"
+              },
+              {
+                "v": "886",
+                "t": "TAIWAN, PROVINCE OF CHINA[A]"
+              },
+              {
+                "v": "992",
+                "t": "TAJIKISTAN"
+              },
+              {
+                "v": "255",
+                "t": "TANZANIA, UNITED REPUBLIC OF"
+              },
+              {
+                "v": "66",
+                "t": "THAILAND"
+              },
+              {
+                "v": "670",
+                "t": "TIMOR-LESTE (EAST TIMOR)"
+              },
+              {
+                "v": "228",
+                "t": "TOGO"
+              },
+              {
+                "v": "690",
+                "t": "TOKELAU"
+              },
+              {
+                "v": "676",
+                "t": "TONGA"
+              },
+              {
+                "v": "1868",
+                "t": "TRINIDAD AND TOBAGO"
+              },
+              {
+                "v": "216",
+                "t": "TUNISIA"
+              },
+              {
+                "v": "90",
+                "t": "TURKEY"
+              },
+              {
+                "v": "993",
+                "t": "TURKMENISTAN"
+              },
+              {
+                "v": "1649",
+                "t": "TURKS AND CAICOS ISLANDS"
+              },
+              {
+                "v": "688",
+                "t": "TUVALU"
+              },
+              {
+                "v": "256",
+                "t": "UGANDA"
+              },
+              {
+                "v": "380",
+                "t": "UKRAINE"
+              },
+              {
+                "v": "971",
+                "t": "UNITED ARAB EMIRATES"
+              },
+              {
+                "v": "44",
+                "t": "UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND"
+              },
+              {
+                "v": "2",
+                "t": "UNITED STATES OF AMERICA"
+              },
+              {
+                "v": "1009",
+                "t": "UNITED STATES MINOR OUTLYING ISLANDS"
+              },
+              {
+                "v": "598",
+                "t": "URUGUAY"
+              },
+              {
+                "v": "998",
+                "t": "UZBEKISTAN"
+              },
+              {
+                "v": "678",
+                "t": "VANUATU"
+              },
+              {
+                "v": "58",
+                "t": "VENEZUELA (BOLIVARIAN REPUBLIC OF)"
+              },
+              {
+                "v": "84",
+                "t": "VIET NAM"
+              },
+              {
+                "v": "1284",
+                "t": "VIRGIN ISLANDS (BRITISH)"
+              },
+              {
+                "v": "1340",
+                "t": "VIRGIN ISLANDS (U.S.)"
+              },
+              {
+                "v": "681",
+                "t": "WALLIS AND FUTUNA"
+              },
+              {
+                "v": "1013",
+                "t": "WESTERN SAHARA"
+              },
+              {
+                "v": "967",
+                "t": "YEMEN"
+              },
+              {
+                "v": "260",
+                "t": "ZAMBIA"
+              },
+              {
+                "v": "263",
+                "t": "ZIMBABWE"
+              },
+              {
+                "v": "9999",
+                "t": "OTHERS"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "pin",
+          "label": "PIN Code",
+          "kind": "field",
+          "req": true,
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "zip",
+          "label": "Zip Code",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "sub",
+          "title": "Contact"
+        },
+        {
+          "type": "field",
+          "id": "mob1cc",
+          "label": "Country/Region code — Mobile 1",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "mob1",
+          "label": "Mobile No 1",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "std",
+          "label": "STD/ISD code (office phone)",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "office",
+          "label": "Office Phone Number",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "mob2cc",
+          "label": "Country/Region code — Mobile 2",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "mob2",
+          "label": "Mobile No 2",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "email1",
+          "label": "Email Address-1",
+          "kind": "field",
+          "req": true
+        },
+        {
+          "type": "field",
+          "id": "email2",
+          "label": "Email Address-2",
+          "kind": "field"
+        },
+        {
+          "type": "sec",
+          "code": "A2",
+          "title": "FILING STATUS"
+        },
+        {
+          "type": "field",
+          "id": "dueDate",
+          "label": "Due date for filing return of income",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "DUE",
+            "key": "ItrFilingDueDate",
+            "choices": [
+              {
+                "v": "2025-10-31",
+                "t": "2025-10-31"
+              },
+              {
+                "v": "2025-11-30",
+                "t": "2025-11-30"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "filedSec",
+          "label": "Filed u/s  /  Filed in response to notice u/s",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "FILSEC",
+            "key": "IncomeTaxSec",
+            "choices": [
+              {
+                "v": "11",
+                "t": "139(1)-On or before due date"
+              },
+              {
+                "v": "12",
+                "t": "139(4)-After due date"
+              },
+              {
+                "v": "13",
+                "t": "142(1)"
+              },
+              {
+                "v": "14",
+                "t": "148"
+              },
+              {
+                "v": "16",
+                "t": "153C"
+              },
+              {
+                "v": "17",
+                "t": "139(5)-Revised Return"
+              },
+              {
+                "v": "18",
+                "t": "139(9)"
+              },
+              {
+                "v": "19",
+                "t": "92CD-Modified return"
+              },
+              {
+                "v": "20",
+                "t": "119(2)(b)- after condonation of delay"
+              },
+              {
+                "v": "41",
+                "t": "170A - After order by the tribunal or court"
+              },
+              {
+                "v": "21",
+                "t": "139(8A)-Updated Return"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "origReceipt",
+          "label": "If revised / in response to defective / Modified — Receipt No. of Original return",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "origDate",
+          "label": "Date of filing of Original Return (DD/MM/YYYY)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "noticeDin",
+          "label": "If filed in response to a notice u/s 139(9)/142(1)/148/153C or order u/s 119(2)(b)/170A — Unique number / Document Identification Number (DIN)",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "noticeDate",
+          "label": "Date of such Notice or Order (or date of APA if filed u/s 92CD)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "resStatus",
+          "label": "Residential Status",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "opts",
+            "choices": []
+          }
+        },
+        {
+          "type": "sub",
+          "title": "Taxation u/s 115BA / 115BAA / 115BAB (applicable to Domestic Company)"
+        },
+        {
+          "type": "field",
+          "id": "s115opted",
+          "label": "Have you opted for taxation under section 115BA/115BAA/115BAB?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "S115",
+            "key": "Section115BA",
+            "choices": [
+              {
+                "v": "115BA",
+                "t": "Section 115BA"
+              },
+              {
+                "v": "115BAA",
+                "t": "Section 115BAA"
+              },
+              {
+                "v": "115BAB",
+                "t": "Section 115BAB"
+              },
+              {
+                "v": "NA",
+                "t": "None of above"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "s115ay",
+          "label": "If yes — AY in which option exercised first time",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "S115AY",
+            "key": "Section115BAAY",
+            "choices": [
+              {
+                "v": "2017-18",
+                "t": "2017-18"
+              },
+              {
+                "v": "2018-19",
+                "t": "2018-19"
+              },
+              {
+                "v": "2019-20",
+                "t": "2019-20"
+              },
+              {
+                "v": "2020-21",
+                "t": "2020-21"
+              },
+              {
+                "v": "2021-22",
+                "t": "2021-22"
+              },
+              {
+                "v": "2022-23",
+                "t": "2022-23"
+              },
+              {
+                "v": "2023-24",
+                "t": "2023-24"
+              },
+              {
+                "v": "2024-25",
+                "t": "2024-25"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "s115date",
+          "label": "Date of filing of relevant form (10-IB / 10-IC / 10-ID)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "s115ack",
+          "label": "Acknowledgment number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "s115curr",
+          "label": "If no — whether you are choosing to opt for taxation u/s 115BA/115BAA/115BAB this year?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "s115currSec",
+          "label": "If yes — Section",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "S115ONLY",
+            "choices": []
+          }
+        },
+        {
+          "type": "field",
+          "id": "s115currDate",
+          "label": "Date of filing of relevant form (10-IB/10-IC/10-ID)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "s115currAck",
+          "label": "Acknowledgment number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "gross400",
+          "label": "Whether total turnover / gross receipts in PY 2022-23 exceeds 400 crore rupees? (Domestic Company)",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sub",
+          "title": "Residency / Non-resident particulars"
+        },
+        {
+          "type": "field",
+          "id": "sec90res",
+          "label": "Whether assessee is a resident of a country/region or specified territory with which India has an agreement referred to in sec 90(1) / notified u/s 90A(1)?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nriPE",
+          "label": "In the case of non-resident, is there a Permanent Establishment (PE) in India?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nriSEP",
+          "label": "In the case of non-resident, is there a Significant Economic Presence (SEP) in India?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YNNA",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              },
+              {
+                "v": "NA",
+                "t": "Not Applicable"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "sepPay",
+          "label": "Aggregate of payments arising from the transaction(s) during the PY — Explanation 2A(a) to Sec 9(1)(i)",
+          "kind": "amount",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "sepUsers",
+          "label": "Number of users in India — Explanation 2A(b) to Sec 9(1)(i)",
+          "kind": "int",
+          "cond": true
+        },
+        {
+          "type": "sub",
+          "title": "Registrations & flags"
+        },
+        {
+          "type": "field",
+          "id": "regLaw",
+          "label": "Whether assessee is required to seek registration under any law relating to companies?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "regAct",
+          "label": "Act under which registration required",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "regNo",
+          "label": "Registration Number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "regDate",
+          "label": "Date of registration",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "indas",
+          "label": "Whether the financial statements are drawn up in compliance to Indian Accounting Standards (Ind AS) Rules, 2015?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "ifsc",
+          "label": "Whether assessee has a unit in an International Financial Services Centre and derives income solely in convertible foreign exchange?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "liquidation",
+          "label": "Whether the assessee company is under liquidation?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "fii",
+          "label": "Whether you are an FII / FPI?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "sebi",
+          "label": "If yes — SEBI Registration Number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "producer",
+          "label": "Whether the company is a producer company as defined in Sec.581A of Companies Act, 1956?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sub",
+          "title": "Representative assessee"
+        },
+        {
+          "type": "field",
+          "id": "repFlag",
+          "label": "Whether this return is being filed by a representative assessee?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "repName",
+          "label": "Name of representative assessee",
+          "kind": "field",
+          "req": true,
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "repCap",
+          "label": "Capacity of representative",
+          "kind": "select",
+          "req": true,
+          "cond": true,
+          "options": {
+            "name": "CAP",
+            "key": "RepCapacity",
+            "choices": [
+              {
+                "v": "R",
+                "t": "Resident Authorised Person"
+              },
+              {
+                "v": "D",
+                "t": "Designated Principal Officer of State Govt/ Central Govt"
+              },
+              {
+                "v": "A",
+                "t": "Agent of Non-resident"
+              },
+              {
+                "v": "G",
+                "t": "Administrator General"
+              },
+              {
+                "v": "C",
+                "t": "Court of Wards"
+              },
+              {
+                "v": "M",
+                "t": "Manager"
+              },
+              {
+                "v": "V",
+                "t": "Receiver"
+              },
+              {
+                "v": "O",
+                "t": "Others"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "repAddr",
+          "label": "Address of representative assessee",
+          "kind": "field",
+          "req": true,
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "repPAN",
+          "label": "PAN of the representative assessee",
+          "kind": "field",
+          "req": true,
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "repAadhaar",
+          "label": "Aadhaar No. of the representative",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "sub",
+          "title": "Start-up / LEI / MSME"
+        },
+        {
+          "type": "field",
+          "id": "dpiit",
+          "label": "Whether you are recognized as start-up by DPIIT?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "dpiitNo",
+          "label": "If yes — start-up recognition number allotted by DPIIT",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "imbCert",
+          "label": "Whether certificate from inter-ministerial board for certification is received?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "imbNo",
+          "label": "If yes — certification number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "form2",
+          "label": "Whether declaration in Form-2 (para 5, DPIIT notification 19/02/2019) filed before filing of return?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "form2Date",
+          "label": "If yes — date of filing Form-2",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "lei",
+          "label": "LEI Number",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "leiValid",
+          "label": "LEI valid upto date",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "msme",
+          "label": "Whether you are recognized as MSME?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "msmeNo",
+          "label": "If yes — registration number allotted as per MSMED Act, 2006",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "sec",
+          "code": "AUD",
+          "title": "AUDIT INFORMATION"
+        },
+        {
+          "type": "field",
+          "id": "a1",
+          "label": "Whether liable to maintain accounts as per section 44AA?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "a2",
+          "label": "Whether assessee is declaring income only under section 44AE/44B/44BB/44BBA/44BBB/44BBC/44D?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "a2i",
+          "label": "If No — whether during the year total sales/turnover/gross receipts of business is between Rs. 1 crore and Rs. 10 crore?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "a2ii",
+          "label": "If Yes at a2i — whether aggregate of all amounts received (incl. sales/turnover/gross receipts/capital account) in cash ≤ 5% of total?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "a2iii",
+          "label": "If Yes at a2i — whether aggregate of all payments made (incl. expenditure/capital account) in cash ≤ 5% of total?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "b44ab",
+          "label": "Whether liable for audit under section 44AB?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "b44abCnd",
+          "label": "If Yes at (b) — by virtue of which condition: bi. turnover exceeds 44AB limits / bii. 44BB not opting presumptive / biii. 44BBB not opting presumptive / biv. Others",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "enumOpts",
+            "choices": []
+          }
+        },
+        {
+          "type": "field",
+          "id": "cAudited",
+          "label": "If liable for audit u/s 44AB — whether the accounts have been audited by an accountant?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "audFurnDate",
+          "label": "Date of furnishing of the audit report (DD/MM/YYYY)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audName",
+          "label": "Name of the auditor signing the tax audit report",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audMem",
+          "label": "Membership no. of the auditor",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audFirm",
+          "label": "Name of the auditor (proprietorship / firm)",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audFRN",
+          "label": "Proprietorship / firm registration number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audPAN",
+          "label": "PAN of the auditor (proprietorship / firm)",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audAadhaar",
+          "label": "Aadhaar No. of the Auditor",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audDate",
+          "label": "Date of audit report (DD/MM/YYYY)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "audAck",
+          "label": "Acknowledgement Number of Audit report",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "udin",
+          "label": "UDIN",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "di92e",
+          "label": "Are you liable for Audit u/s 92E?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "dii92e",
+          "label": "If (di) is Yes — whether the accounts have been audited u/s 92E?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "date92e",
+          "label": "Date of furnishing audit report (DD/MM/YYYY)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "ack92e",
+          "label": "Acknowledgement Number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "sub",
+          "title": "diii — Other audit reports under the Income-tax Act"
+        },
+        {
+          "type": "sub",
+          "title": "div — Audit under any Act other than the Income-tax Act"
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "apl",
+      "tab": "② Applicable Schedules",
+      "title": "② APPLICABLE SCHEDULES",
+      "items": [
+        {
+          "type": "field",
+          "id": "apl_status",
+          "label": "Mandatory answered",
+          "kind": "calc"
+        }
+      ]
+    },
+    {
+      "id": "gen2",
+      "tab": "General 2",
+      "title": "GENERAL2",
+      "items": [
+        {
+          "type": "sec",
+          "code": "G2-1",
+          "title": "HOLDING STATUS"
+        },
+        {
+          "type": "field",
+          "id": "holdStatus",
+          "label": "Nature of Company",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "HOLD",
+            "choices": [
+              {
+                "v": "1",
+                "t": "1 - Holding Company"
+              },
+              {
+                "v": "2",
+                "t": "2 - Subsidiary Company"
+              },
+              {
+                "v": "3",
+                "t": "3 - Both"
+              },
+              {
+                "v": "4",
+                "t": "4 - Any other"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sub",
+          "title": "If subsidiary company — details of the Holding Company"
+        },
+        {
+          "type": "sec",
+          "code": "G2-2",
+          "title": "BUSINESS ORGANISATION"
+        },
+        {
+          "type": "sec",
+          "code": "G2-3",
+          "title": "KEY PERSONS"
+        },
+        {
+          "type": "sec",
+          "code": "G2-4",
+          "title": "SHAREHOLDERS INFORMATION"
+        },
+        {
+          "type": "sec",
+          "code": "G2-5",
+          "title": "OWNERSHIP INFORMATION"
+        },
+        {
+          "type": "sec",
+          "code": "G2-6",
+          "title": "FOREIGN COMPANY — PARENT DETAILS"
+        },
+        {
+          "type": "sub",
+          "title": "Details of Immediate Parent Company"
+        },
+        {
+          "type": "sub",
+          "title": "Details of Ultimate Parent Company"
+        },
+        {
+          "type": "sec",
+          "code": "G2-7",
+          "title": "NATURE OF COMPANY AND ITS BUSINESS"
+        },
+        {
+          "type": "field",
+          "id": "nc1",
+          "label": "Whether a public sector company as defined in section 2(36A) of the Income-tax Act",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc2",
+          "label": "Whether a company owned by the Reserve Bank of India",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc3",
+          "label": "Whether a company in which not less than forty percent of the shares are held (whether singly or taken together) by the Government or the RBI or a corporation owned by that bank",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc4",
+          "label": "Whether a banking company as defined in clause (c) of section 5 of the Banking Regulation Act, 1949",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc5",
+          "label": "Whether a scheduled bank being a bank included in the Second Schedule to the Reserve Bank of India Act",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc6",
+          "label": "Whether a company registered with Insurance Regulatory and Development Authority (sec 3(1) of the Insurance Regulatory and Development Authority Act, 1999)",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc7",
+          "label": "Whether a company being a non-banking financial institution",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "nc8",
+          "label": "Whether the company is unlisted",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "subsid",
+      "tab": "Subsidiary Details",
+      "title": "SUBSIDIARY DETAILS",
+      "items": [
+        {
+          "type": "sec",
+          "code": "SUB",
+          "title": "IF HOLDING COMPANY — DETAILS OF THE SUBSIDIARY COMPANIES"
+        }
+      ]
+    },
+    {
+      "id": "g8a",
+      "tab": "139(8A)",
+      "title": "PART A GENERAL INFORMATION – 139(8A) [Updated Return / ITR-U]",
+      "items": [
+        {
+          "type": "sec",
+          "code": "8A",
+          "title": "UPDATED RETURN — GENERAL"
+        },
+        {
+          "type": "field",
+          "id": "u_prevFiled",
+          "label": "Whether return previously filed for this assessment year?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "u_prevUs",
+          "label": "If Yes, whether u/s",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "PREVU",
+            "choices": [
+              {
+                "v": "1",
+                "t": "1 - 139(1)"
+              },
+              {
+                "v": "2",
+                "t": "2 - Other"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sub",
+          "title": "(A7) If applicable — original return particulars"
+        },
+        {
+          "type": "field",
+          "id": "u_itrType",
+          "label": "ITR Type (original return form)",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "ITRTYPE",
+            "choices": []
+          }
+        },
+        {
+          "type": "field",
+          "id": "u_origAck",
+          "label": "Acknowledgement Number",
+          "kind": "field",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "u_origDate",
+          "label": "Date of Filing of Original Return (DD/MM/YYYY)",
+          "kind": "date",
+          "cond": true
+        },
+        {
+          "type": "field",
+          "id": "u_eligible",
+          "label": "Are you eligible for filing an updated return as per the conditions in the first, second, third and fourth provisos to section 139(8A)?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "u_form",
+          "label": "ITR form chosen for updating income",
+          "kind": "text",
+          "cond": true
+        },
+        {
+          "type": "sub",
+          "title": "(A10) Reasons for updating your income (add all that apply)"
+        },
+        {
+          "type": "field",
+          "id": "u_period",
+          "label": "Are you filing the updated return during the period",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "PERIOD",
+            "choices": []
+          }
+        },
+        {
+          "type": "field",
+          "id": "u_redLoss",
+          "label": "Are you filing the updated return to reduce carried forward loss or unabsorbed depreciation or tax credit?",
+          "kind": "select",
+          "cond": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sub",
+          "title": "(A12)(b) Assessment years affected by reduction of carried forward loss / unabsorbed depreciation / tax credit"
+        }
+      ]
+    },
+    {
+      "id": "natbus",
+      "tab": "Nature of Business",
+      "title": "NATURE OF BUSINESS",
+      "items": [
+        {
+          "type": "sec",
+          "code": "NOB",
+          "title": "NATURE OF BUSINESS / PROFESSION"
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "bs",
+      "tab": "Balance Sheet",
+      "title": null,
+      "items": [
+        {
+          "type": "field",
+          "id": "bs_totEL",
+          "label": "Total Equity and liabilities (1D + 2 + 3E + 4E)",
+          "kind": "calc"
+        },
+        {
+          "type": "field",
+          "id": "bs_totAssets",
+          "label": "Total Assets (1F + 2G)",
+          "kind": "calc"
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "mfg",
+      "tab": "Manufacturing A/c",
+      "title": "PART A — MANUFACTURING ACCOUNT (FY 2024-25)",
+      "items": []
+    },
+    {
+      "id": "trd",
+      "tab": "Trading A/c",
+      "title": "PART A — TRADING ACCOUNT (FY 2024-25)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "pl",
+      "tab": "Profit & Loss",
+      "title": "PART A — PROFIT & LOSS ACCOUNT (FY 2024-25)",
+      "items": [
+        {
+          "type": "field",
+          "id": "pl_d22_nrFlag",
+          "label": "Whether any compensation included in 22xi was paid to non-residents?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "oi",
+      "tab": "Part A — OI",
+      "title": "PART A — OI · OTHER INFORMATION",
+      "items": [
+        {
+          "type": "field",
+          "id": "oi1_method",
+          "label": "Method of accounting employed in the previous year",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "METHOD",
+            "choices": [
+              {
+                "v": "MERC",
+                "t": "Mercantile"
+              },
+              {
+                "v": "CASH",
+                "t": "Cash"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oi2_change",
+          "label": "Is there any change in method of accounting?",
+          "kind": "select",
+          "req": true,
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oi4a_raw",
+          "label": "Raw Material",
+          "kind": "select",
+          "options": {
+            "name": "STKVAL",
+            "choices": [
+              {
+                "v": "1",
+                "t": "1 — Cost or market rates whichever is less"
+              },
+              {
+                "v": "2",
+                "t": "2 — At cost"
+              },
+              {
+                "v": "3",
+                "t": "3 — At market rate"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oi4b_fin",
+          "label": "Finished goods",
+          "kind": "select",
+          "options": {
+            "name": "STKVAL",
+            "choices": [
+              {
+                "v": "1",
+                "t": "1 — Cost or market rates whichever is less"
+              },
+              {
+                "v": "2",
+                "t": "2 — At cost"
+              },
+              {
+                "v": "3",
+                "t": "3 — At market rate"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oi4c_change",
+          "label": "Is there any change in stock valuation method?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "oi17_92ce",
+          "label": "Whether assessee is exercising option u/s 92CE(2A) [Secondary adjustment]?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ol",
+      "tab": "Part A — OL",
+      "title": "PART A — OL · RECEIPT AND PAYMENT ACCOUNT (Company under Liquidation)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "bsi",
+      "tab": "BS – Ind AS",
+      "title": "PART A-BS Ind AS — Balance Sheet as on 31-03-2025 (Schedule III Division II)",
+      "items": [
+        {
+          "type": "field",
+          "id": "bsi_totEL",
+          "label": "Total Equity and liabilities (1C + 2A + 2B)",
+          "kind": "calc"
+        },
+        {
+          "type": "field",
+          "id": "bsi_totAssets",
+          "label": "Total Assets (1 + 2)",
+          "kind": "calc"
+        }
+      ]
+    },
+    {
+      "id": "mfgi",
+      "tab": "Manufacturing – Ind AS",
+      "title": "PART A — MANUFACTURING ACCOUNT (Ind AS)",
+      "items": []
+    },
+    {
+      "id": "trdi",
+      "tab": "Trading – Ind AS",
+      "title": "PART A — TRADING ACCOUNT (Ind AS)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "pli",
+      "tab": "P&L – Ind AS",
+      "title": "PART A — P&L (Ind AS) — FY 2024-25",
+      "items": [
+        {
+          "type": "field",
+          "id": "pli_d22_nrFlag",
+          "label": "Whether any compensation included in 22xi was paid to non-residents?",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "qd",
+      "tab": "Quantitative Details",
+      "title": "PART A — QD · QUANTITATIVE DETAILS",
+      "items": []
+    },
+    {
+      "id": "hp",
+      "tab": "Schedule HP",
+      "title": "SCHEDULE HP — DETAILS OF INCOME FROM HOUSE PROPERTY",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "field",
+          "id": null,
+          "label": "Whether block ceases to exist? (Y/N)",
+          "kind": "select",
+          "options": {
+            "name": "YN",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Yes"
+              },
+              {
+                "v": "N",
+                "t": "No"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dpm",
+      "tab": "Schedule DPM",
+      "title": "SCHEDULE DPM — DEPRECIATION ON PLANT AND MACHINERY",
+      "items": []
+    },
+    {
+      "id": "doa",
+      "tab": "Schedule DOA",
+      "title": "SCHEDULE DOA — DEPRECIATION ON OTHER ASSETS",
+      "items": []
+    },
+    {
+      "id": "dep",
+      "tab": "Schedule DEP",
+      "title": "SCHEDULE DEP — SUMMARY OF DEPRECIATION ON ASSETS",
+      "items": []
+    },
+    {
+      "id": "dcg",
+      "tab": "Schedule DCG",
+      "title": "SCHEDULE DCG — DEEMED CAPITAL GAINS ON SALE OF DEPRECIABLE ASSETS",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "bp",
+      "tab": "Schedule BP",
+      "title": "SCHEDULE BP — COMPUTATION OF INCOME FROM BUSINESS OR PROFESSION",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        },
+        {
+          "type": "field",
+          "id": "esr1",
+          "label": "In-house research expenditure on scientific research",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr2",
+          "label": "Contribution to approved scientific research associations / universities / colleges (weighted)",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr3",
+          "label": "Contribution to approved companies for scientific research (100%)",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr4",
+          "label": "Contribution to approved research association for social science / statistical research",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr5",
+          "label": "Capital expenditure on scientific research",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr6",
+          "label": "Payment to National Laboratory / IIT / university for approved programme (weighted)",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr7",
+          "label": "In-house scientific research and development (DSIR approved)",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr8",
+          "label": "Expenditure on agricultural extension project",
+          "kind": "field"
+        },
+        {
+          "type": "field",
+          "id": "esr9",
+          "label": "Expenditure on skill development project",
+          "kind": "field"
+        }
+      ]
+    },
+    {
+      "id": "esr",
+      "tab": "Schedule ESR",
+      "title": "SCHEDULE ESR — EXPENDITURE ON SCIENTIFIC RESEARCH",
+      "items": []
+    },
+    {
+      "id": "sez",
+      "tab": "Schedule 10AA",
+      "title": "SCHEDULE 10AA — DEDUCTION FOR SEZ UNDERTAKINGS",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "cg",
+      "tab": "Schedule CG",
+      "title": "SCHEDULE CG — CAPITAL GAINS",
+      "items": [
+        {
+          "type": "field",
+          "id": "cg_unstcg_flag",
+          "label": "Whether any unutilized CG on asset transferred during PY 2021-22 to 2023-24 not used for new asset / not deposited in CG account?",
+          "kind": "select",
+          "options": {
+            "name": "UNUSED_FLAG",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Y - Yes"
+              },
+              {
+                "v": "N",
+                "t": "N - No"
+              },
+              {
+                "v": "X",
+                "t": "N/A"
+              }
+            ]
+          }
+        },
+        {
+          "type": "field",
+          "id": "cg_unltcg_flag",
+          "label": "Whether any unutilized LT CG?",
+          "kind": "select",
+          "options": {
+            "name": "UNUSED_FLAG",
+            "choices": [
+              {
+                "v": "Y",
+                "t": "Y - Yes"
+              },
+              {
+                "v": "N",
+                "t": "N - No"
+              },
+              {
+                "v": "X",
+                "t": "N/A"
+              }
+            ]
+          }
+        },
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "sch112a",
+      "tab": "Schedule 112A",
+      "title": "SCHEDULE 112A — DETAILS OF LTCG ON EQUITY SHARES / UNITS OF EQUITY-ORIENTED MF (RESIDENT & NR-OTHER)",
+      "items": []
+    },
+    {
+      "id": "sch115ad",
+      "tab": "Schedule 115AD",
+      "title": "SCHEDULE 115AD(1)(b)(iii) PROVISO — DETAILS OF LTCG ON EQUITY SHARES / EQUITY-ORIENTED MF (NR-FII)",
+      "items": []
+    },
+    {
+      "id": "vda",
+      "tab": "Schedule VDA",
+      "title": "SCHEDULE VDA — INCOME FROM TRANSFER OF VIRTUAL DIGITAL ASSETS",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "os",
+      "tab": "Schedule OS",
+      "title": "SCHEDULE OS — INCOME FROM OTHER SOURCES",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        },
+        {
+          "type": "field",
+          "id": null,
+          "label": "Date of Filing (DD/MM/YYYY)",
+          "kind": "field"
+        }
+      ]
+    },
+    {
+      "id": "cfl",
+      "tab": "Schedule CFL",
+      "title": "SCHEDULE CFL — DETAILS OF LOSSES TO BE CARRIED FORWARD TO FUTURE YEARS",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        },
+        {
+          "type": "field",
+          "id": "ud_",
+          "label": "Assessment Year (YYYY-YY)",
+          "kind": "field"
+        }
+      ]
+    },
+    {
+      "id": "ud",
+      "tab": "Schedule UD",
+      "title": "SCHEDULE UD — UNABSORBED DEPRECIATION & ALLOWANCE UNDER SECTION 35(4)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "cyla",
+      "tab": "Schedule CYLA-BFLA",
+      "title": "SCHEDULE CYLA + BFLA — CURRENT YEAR + BROUGHT-FORWARD LOSS ADJUSTMENT",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "icds",
+      "tab": "Schedule ICDS",
+      "title": "SCHEDULE ICDS — EFFECT OF INCOME COMPUTATION & DISCLOSURE STANDARDS ON PROFIT",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "sch80g",
+      "tab": "Schedule 80G",
+      "title": "SCHEDULE 80G — DETAILS OF DONATIONS ENTITLED FOR DEDUCTION UNDER SECTION 80G",
+      "items": []
+    },
+    {
+      "id": "sch80gga",
+      "tab": "Schedule 80GGA",
+      "title": "SCHEDULE 80GGA — DONATIONS FOR SCIENTIFIC RESEARCH OR RURAL DEVELOPMENT",
+      "items": []
+    },
+    {
+      "id": "sch80ra",
+      "tab": "Schedule RA",
+      "title": "SCHEDULE RA — DONATIONS TO RESEARCH ASSOCIATIONS [s.35(1)(ii) / 35(1)(iia) / 35(1)(iii) / 35(2AA)]",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "sch80ia",
+      "tab": "Schedule 80-IA",
+      "title": "SCHEDULE 80-IA — DEDUCTION u/s 80-IA: PROFITS FROM INDUSTRIAL UNDERTAKINGS / INFRASTRUCTURE",
+      "items": [
+        {
+          "type": "field",
+          "id": "ia_4i_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": "ia_4iv_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": "ia_4v_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        }
+      ]
+    },
+    {
+      "id": "sch80ib",
+      "tab": "Schedule 80-IB",
+      "title": "SCHEDULE 80-IB — DEDUCTION u/s 80-IB: PROFITS FROM CERTAIN INDUSTRIAL UNDERTAKINGS (NON-INFRASTRUCTURE)",
+      "items": [
+        {
+          "type": "field",
+          "id": "ib_min_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": "ib_hous_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": "ib_fruit_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": "ib_grain_dtls",
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        },
+        {
+          "type": "field",
+          "id": null,
+          "label": "Deduction amount (₹)",
+          "kind": "amount"
+        }
+      ]
+    },
+    {
+      "id": "sch80ic",
+      "tab": "Schedule 80-IC",
+      "title": "SCHEDULE 80-IC / 80-IE — DEDUCTION FOR ELIGIBLE UNDERTAKINGS IN SPECIAL CATEGORY STATES",
+      "items": []
+    },
+    {
+      "id": "sch80iac",
+      "tab": "Schedule 80IAC",
+      "title": "SCHEDULE 80-IAC — DEDUCTION FOR ELIGIBLE START-UP",
+      "items": []
+    },
+    {
+      "id": "sch80ggc",
+      "tab": "Schedule 80GGC",
+      "title": "SCHEDULE 80GGC — CONTRIBUTIONS TO POLITICAL PARTIES (also 80GGB for companies)",
+      "items": []
+    },
+    {
+      "id": "sch80m",
+      "tab": "Schedule 80M",
+      "title": "SCHEDULE 80M — INTER-CORPORATE DIVIDEND DEDUCTION (s.80M, AY 2021-22 onwards)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "sch80la",
+      "tab": "Schedule 80LA",
+      "title": "SCHEDULE 80LA — DEDUCTION FOR OFFSHORE BANKING UNITS AND UNITS IN IFSC",
+      "items": []
+    },
+    {
+      "id": "via",
+      "tab": "Schedule VIA",
+      "title": "SCHEDULE VI-A — DEDUCTIONS UNDER CHAPTER VI-A",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "si",
+      "tab": "Schedule SI",
+      "title": "SCHEDULE SI — INCOME CHARGEABLE TO TAX AT SPECIAL RATES",
+      "items": []
+    },
+    {
+      "id": "if",
+      "tab": "Schedule IF",
+      "title": "SCHEDULE IF — INFORMATION REGARDING INVESTMENT IN UNINCORPORATED ENTITIES (PARTNERSHIP / LLP / AOP)",
+      "items": []
+    },
+    {
+      "id": "ei",
+      "tab": "Schedule EI",
+      "title": "SCHEDULE EI — DETAILS OF EXEMPT INCOME (NOT INCLUDED IN TOTAL INCOME)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "pti",
+      "tab": "Schedule PTI",
+      "title": "SCHEDULE PTI — PASS-THROUGH INCOME FROM BUSINESS TRUST / INVESTMENT FUND u/s 115U, 115UA, 115UB",
+      "items": []
+    },
+    {
+      "id": "mat",
+      "tab": "Schedule MAT",
+      "title": "SCHEDULE MAT — COMPUTATION OF MINIMUM ALTERNATE TAX u/s 115JB",
+      "items": []
+    },
+    {
+      "id": "matc",
+      "tab": "Schedule MATC",
+      "title": "SCHEDULE MATC — TAX CREDIT u/s 115JAA (MAT CREDIT CARRY-FORWARD LEDGER)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "bbs",
+      "tab": "Schedule BBS",
+      "title": "SCHEDULE BBS — TAX ON DISTRIBUTED INCOME OF DOMESTIC COMPANY ON BUY BACK OF SHARES u/s 115QA",
+      "items": []
+    },
+    {
+      "id": "tpsa",
+      "tab": "Schedule TPSA",
+      "title": "SCHEDULE TPSA — TAX ON SECONDARY ADJUSTMENT u/s 92CE(2A)",
+      "items": []
+    },
+    {
+      "id": "sch115td",
+      "tab": "Schedule 115TD",
+      "title": "SCHEDULE 115TD — ACCRETED INCOME u/s 115TD (CHARITABLE INSTITUTIONS)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "fsi",
+      "tab": "Schedule FSI",
+      "title": "SCHEDULE FSI — DETAILS OF INCOME FROM OUTSIDE INDIA AND TAX RELIEF (RESIDENTS ONLY)",
+      "items": []
+    },
+    {
+      "id": "tr1",
+      "tab": "Schedule TR",
+      "title": "SCHEDULE TR — SUMMARY OF TAX RELIEF CLAIMED FOR TAXES PAID OUTSIDE INDIA",
+      "items": []
+    },
+    {
+      "id": "fa",
+      "tab": "Schedule FA",
+      "title": "SCHEDULE FA — DETAILS OF FOREIGN ASSETS AND INCOME FROM SOURCES OUTSIDE INDIA",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "sh",
+      "tab": "Schedule SH",
+      "title": "SCHEDULE SH — SHAREHOLDING OF UNLISTED COMPANY / START-UP",
+      "items": []
+    },
+    {
+      "id": "al",
+      "tab": "Schedule AL",
+      "title": "SCHEDULE AL — ASSETS AND LIABILITIES AT END OF YEAR",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "gst",
+      "tab": "Schedule GST",
+      "title": "SCHEDULE GST — TURNOVER / GROSS RECEIPTS REPORTED FOR GST",
+      "items": []
+    },
+    {
+      "id": "fd",
+      "tab": "Schedule FD",
+      "title": "SCHEDULE FD — FOREIGN CURRENCY RECEIPTS AND PAYMENTS BREAK-UP",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "btiTti",
+      "tab": "Part B-TI / TTI",
+      "title": "PART B-TI (Total Income) + PART B-TTI (Tax on Total Income) — KEYSTONE",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "it",
+      "tab": "Schedule IT",
+      "title": "SCHEDULE IT — DETAILS OF ADVANCE TAX & SELF-ASSESSMENT TAX CHALLANS",
+      "items": []
+    },
+    {
+      "id": "tds2",
+      "tab": "Schedule TDS-2",
+      "title": "SCHEDULE TDS-2 — TDS ON INCOME OTHER THAN SALARY (FORM 16A)",
+      "items": []
+    },
+    {
+      "id": "tds3",
+      "tab": "Schedule TDS-3",
+      "title": "SCHEDULE TDS-3 — TDS U/S 194-IA / 194-IB / 194-M (BUYER/TENANT)",
+      "items": []
+    },
+    {
+      "id": "tcs",
+      "tab": "Schedule TCS",
+      "title": "SCHEDULE TCS — TAX COLLECTED AT SOURCE (FORM 27D)",
+      "items": [
+        {
+          "type": "sec",
+          "code": null,
+          "title": null
+        },
+        {
+          "type": "sub",
+          "title": null
+        }
+      ]
+    },
+    {
+      "id": "verify",
+      "tab": "Verification",
+      "title": "VERIFICATION — DECLARATION BY THE SIGNATORY",
+      "items": []
+    },
+    {
+      "id": "summary",
+      "tab": "Summary",
+      "title": "SUMMARY — RETURN-AT-A-GLANCE",
+      "items": []
+    }
+  ]
+}

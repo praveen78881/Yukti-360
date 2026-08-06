@@ -1,0 +1,96 @@
+{
+  "id": "Get-TXP-Schema",
+  "properties": {
+    "txpd": {
+      "items": {
+        "properties": {
+		"flag":{
+					"description": "Status of Invoice",
+					"type": "string"
+			},
+          "chksum": {
+            "maxLength": 64,
+            "description": "Invoice checksum value",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9]+$",
+            "minLength": 1
+          },
+		  "diff_percent":{
+                                 "description":"Differential percentage",
+								 "type":"number",
+								 "multipleOf": 0.01								 
+								 },  
+          "itms": {
+            "items": {
+              "properties": {
+                "ad_amt": {
+                  "description": "Advance to be adjusted",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "rt": {
+                  "description": "rate as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "iamt": {
+                  "description": "IGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "camt": {
+                  "description": "CGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "samt": {
+                  "description": "SGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "csamt": {
+                  "description": "Cess Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                }
+              },
+              "required": [
+                "rt",
+                "ad_amt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "pos": {
+            "description": "Actual Place of Supply",
+            "maxLength": 2,
+            "minLength": 2,
+            "type": "string",
+			"pattern": "^(3[0-8]|[12][0-9]|0[1-9]|97)$"
+          },
+          "sply_ty": {
+            "description": "Nature of Supply",
+            "type": "string",
+            "enum": [
+              "INTER",
+              "INTRA"
+            ]
+          }
+        },
+        "required": [
+          "sply_ty",
+          "itms",
+          "pos",
+          "chksum"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "txpd"
+  ],
+  "type": "object"
+}

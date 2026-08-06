@@ -3,13 +3,13 @@
 import { Link } from 'react-router-dom';
 import { EntityBadge } from './EntityBadge';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
+import { getIcon } from '@/lib/constants/entityIcons';
 import type { Company } from '@/types/company';
-import * as LucideIcons from 'lucide-react';
 
 export function CompanyCard({ company }: { company: Company }) {
   const entityConfig = ENTITY_TYPES[company.entity_type as keyof typeof ENTITY_TYPES];
   const iconName = entityConfig?.icon || 'Building2';
-  const Icon = (LucideIcons as any)[iconName] || LucideIcons.Building2;
+  const Icon = getIcon(iconName);
 
   return (
     <Link to={`/company/${company.id}`}

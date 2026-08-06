@@ -1,6 +1,7 @@
 import { listJournalEntries } from '@/lib/offlineDb';
 import type { JournalEntry } from '@/lib/accounting/computeEngine';
 import { computeProfitLoss } from '@/lib/accounting/profitLossCompute';
+import { computeTradingAccount } from '@/lib/accounting/tradingAccountCompute';
 
 export type TaxAdjustmentType = 'addback' | 'deduction';
 
@@ -45,7 +46,8 @@ export function computeTaxableIncome(
 ): TaxableIncomeResult {
   const { entries, fromDate, toDate } = loadEntriesForYear(companyId, year);
 
-  const pl = computeProfitLoss(entries, 0);
+  const tradingAccount = computeTradingAccount(entries);
+  const pl = computeProfitLoss(entries, tradingAccount.grossProfit);
   const profitBeforeTax = pl.netProfit;
 
   let taxable = profitBeforeTax;

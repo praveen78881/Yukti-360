@@ -1,0 +1,53 @@
+---
+title: "Generate E-Way Bill Session"
+description: "To automate E-Way Billing using APIs, an E-Way Bill session needs to be created with API credentials created on the portal. This recipe takes you through the steps to get a GST E-Way Bill access token."
+---
+
+<Info>
+  **Prerequisites:** If you haven't created API credentials on the E-Way Bill portal yet, follow the steps in the [**Create API Credentials**](/api-reference/gst/compliance/guides/e-way-bill/authentication/create_api_credentials) guide first, then return to this recipe.
+</Info>
+
+<Steps>
+  <Step title="Authenticate" stepNumber={1} titleSize="h2">
+    To begin the GST E-Way Bill workflow, your application must first authenticate using the [**Authenticate**](../../../api-reference/authenticate) endpoint to obtain the **Sandbox JWT access token**.
+
+    This endpoint requires your API Key and API Secret, and returns a JWT access token that's valid for 24 hours. This token is required for all subsequent API calls.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/authenticate \
+        --header 'accept: application/json' \
+        --header 'x-api-key: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-secret: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When authentication is successful, you'll receive the **Sandbox JWT access token** in the response. This token must be used in the `authorization` header (without the `Bearer` prefix) for all subsequent API calls.
+  </Step>
+
+  <Step title="Authenticate with E-Way Bill API" stepNumber={2} titleSize="h2">
+    Once you have the Sandbox JWT access token, authenticate with the E-Way Bill portal using the [**E-Way Bill Authentication**](../../../api-reference/gst/compliance/endpoints/e-way-bill/authenticate) endpoint.
+
+    You need to provide the **username** and **password** that were created on the E-Way Bill portal, along with the taxpayer's **GSTIN** (15-character GST Identification Number).
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/e-way-bill/tax-payer/authenticate' \
+        --header 'authorization: {sandbox-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-source: primary' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "username": "ACME_IND_API_QCK",
+        "password": "QnVzaW5lc3NfQVBJX1FDSw",
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    When authentication is successful, you'll receive an **E-Way Bill access token** in the response along with an expiry timestamp. The `x-source` header specifies which server to use: `primary`, `secondary`, or `tertiary`.
+  </Step>
+</Steps>

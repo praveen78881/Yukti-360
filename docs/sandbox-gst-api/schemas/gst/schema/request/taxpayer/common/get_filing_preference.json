@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "title": "GET PREFERENCE schema",
+  "additionalProperties": false,
+  "properties": {
+    "response": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quarter": {
+            "description": "Quarter value",
+            "$ref": "#/definitions/quarter"
+          },
+          "preference": {
+            "description": "Preference for the quarter",
+            "$ref": "#/definitions/pref"
+          }
+        },
+        "required": [
+          "quarter",
+          "preference"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "pref": {
+      "type": "string",
+      "enum": [
+        "M",
+        "Q",
+        "N"
+      ]
+    },
+    "quarter": {
+      "type": "string",
+      "enum": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ]
+    }
+  }
+}

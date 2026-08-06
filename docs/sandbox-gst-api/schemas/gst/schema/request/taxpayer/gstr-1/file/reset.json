@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "title": "GSTR1 Reset Schema",
+  "properties": {
+    "gstin": {
+      "description": "Supplier GSTIN",
+      "$ref": "#/definitions/gstin"
+    },
+    "ret_period": {
+      "description": "Return Period",
+      "type": "string",
+      "minLength": 6,
+      "maxLength": 6,
+      "pattern": "^((0[1-9]|1[012])((19|20)\\d\\d))$"
+    }
+  },
+  "required": [
+    "gstin",
+    "ret_period"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "gstin": {
+      "type": "string",
+      "maxLength": 15,
+      "minLength": 15,
+      "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}"
+    }
+  }
+}

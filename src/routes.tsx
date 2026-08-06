@@ -52,7 +52,14 @@ const GstPage = lazy(() => import('@/app/company/[id]/gst/page').then(m => ({ de
 const Gstr1Page = lazy(() => import('@/app/company/[id]/gst/gstr1/page').then(m => ({ default: m.default })));
 const Gstr3bPage = lazy(() => import('@/app/company/[id]/gst/gstr3b/page').then(m => ({ default: m.default })));
 const ItcRegisterPage = lazy(() => import('@/app/company/[id]/gst/itc-register/page').then(m => ({ default: m.default })));
+const LedgersPage = lazy(() => import('@/app/company/[id]/gst/ledgers/page').then(m => ({ default: m.default })));
 const EwayBillPage = lazy(() => import('@/app/company/[id]/gst/eway-bill/page').then(m => ({ default: m.default })));
+const GstBooksBridgePage = lazy(() => import('@/app/company/[id]/gst/books-bridge/page').then(m => ({ default: m.default })));
+const GstSearchPage = lazy(() => import('@/app/company/[id]/gst/search/page').then(m => ({ default: m.default })));
+const EInvoicingPage = lazy(() => import('@/app/company/[id]/gst/e-invoicing/page').then(m => ({ default: m.default })));
+const Gstr9Page = lazy(() => import('@/app/company/[id]/gst/annuals/page').then(m => ({ default: m.default })));
+const Gstr2aPage = lazy(() => import('@/app/company/[id]/gst/gstr2a/page').then(m => ({ default: m.default })));
+const Gstr2bPage = lazy(() => import('@/app/company/[id]/gst/gstr2b/page').then(m => ({ default: m.default })));
 const IncomeTaxPage = lazy(() => import('@/app/company/[id]/income-tax/page').then(m => ({ default: m.default })));
 const TdsRegisterPage = lazy(() => import('@/app/company/[id]/tds-register/page').then(m => ({ default: m.default })));
 const TcsRegisterPage = lazy(() => import('@/app/company/[id]/tcs-register/page').then(m => ({ default: m.default })));
@@ -86,6 +93,7 @@ const FoldersPage = lazy(() => import('@/app/company/[id]/folders/page').then(m 
 const BulkWorkspacePage = lazy(() => import('@/app/company/[id]/bulk-workspace/page').then(m => ({ default: m.default })));
 const BankImportPage = lazy(() => import('@/app/company/[id]/bank-import/page').then(m => ({ default: m.default })));
 const TallyViewerPage = lazy(() => import('@/app/company/[id]/tally/page').then(m => ({ default: m.default })));
+const ErpBridgePage = lazy(() => import('@/app/company/[id]/erp-bridge/page').then(m => ({ default: m.default })));
 const BankAccountsPage = lazy(() => import('@/app/company/[id]/bank-accounts/page').then(m => ({ default: m.default })));
 const SettingsPage = lazy(() => import('@/app/company/[id]/settings/page').then(m => ({ default: m.default })));
 
@@ -155,9 +163,16 @@ export const router = createBrowserRouter([
       { path: 'depreciation', element: <Suspense fallback={<PageLoader />}><DepreciationPage /></Suspense> },
       { path: 'gst', element: <Suspense fallback={<PageLoader />}><GstPage /></Suspense> },
       { path: 'gst/gstr1', element: <Suspense fallback={<PageLoader />}><Gstr1Page /></Suspense> },
+      { path: 'gst/search', element: <Suspense fallback={<PageLoader />}><GstSearchPage /></Suspense> },
+      { path: 'gst/e-invoicing', element: <Suspense fallback={<PageLoader />}><EInvoicingPage /></Suspense> },
+      { path: 'gst/annuals', element: <Suspense fallback={<PageLoader />}><Gstr9Page /></Suspense> },
+      { path: 'gst/gstr2a', element: <Suspense fallback={<PageLoader />}><Gstr2aPage /></Suspense> },
+      { path: 'gst/gstr2b', element: <Suspense fallback={<PageLoader />}><Gstr2bPage /></Suspense> },
       { path: 'gst/gstr3b', element: <Suspense fallback={<PageLoader />}><Gstr3bPage /></Suspense> },
       { path: 'gst/itc-register', element: <Suspense fallback={<PageLoader />}><ItcRegisterPage /></Suspense> },
+      { path: 'gst/ledgers', element: <Suspense fallback={<PageLoader />}><LedgersPage /></Suspense> },
       { path: 'gst/eway-bill', element: <Suspense fallback={<PageLoader />}><EwayBillPage /></Suspense> },
+      { path: 'gst/books-bridge', element: <Suspense fallback={<PageLoader />}><GstBooksBridgePage /></Suspense> },
       { path: 'income-tax', element: <Suspense fallback={<PageLoader />}><IncomeTaxPage /></Suspense> },
       { path: 'tds-register', element: <Suspense fallback={<PageLoader />}><TdsRegisterPage /></Suspense> },
       { path: 'tcs-register', element: <Suspense fallback={<PageLoader />}><TcsRegisterPage /></Suspense> },
@@ -188,6 +203,7 @@ export const router = createBrowserRouter([
       { path: 'bulk-workspace', element: <Suspense fallback={<PageLoader />}><BulkWorkspacePage /></Suspense> },
       { path: 'bank-import', element: <Suspense fallback={<PageLoader />}><BankImportPage /></Suspense> },
       { path: 'tally', element: <Suspense fallback={<PageLoader />}><TallyViewerPage /></Suspense> },
+      { path: 'erp-bridge', element: <Suspense fallback={<PageLoader />}><ErpBridgePage /></Suspense> },
       { path: 'bank-accounts', element: <Suspense fallback={<PageLoader />}><BankAccountsPage /></Suspense> },
       { path: 'settings', element: <Suspense fallback={<PageLoader />}><SettingsPage /></Suspense> },
       { path: 'ai', element: <Navigate to=".." replace /> },

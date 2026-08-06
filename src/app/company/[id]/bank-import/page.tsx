@@ -17,7 +17,7 @@ import type { PrimaryGroup, JournalNature } from '@/lib/coa';
 import {
   Upload, ChevronDown, ChevronRight, Check, CheckSquare, Square,
   FileUp, AlertCircle, Loader2, Trash2, Info, X, Download, FileSpreadsheet,
-  HelpCircle, Lock,
+  HelpCircle,
 } from 'lucide-react';
 
 type Stage = 'upload' | 'review' | 'transferring';
@@ -326,7 +326,7 @@ export default function BankImportPage() {
   // Contra account for bulk transfer
   const [contraName, setContraName] = useState('');
   const [contraMeta, setContraMeta] = useState<{ primaryGroup: string; subGroup: string; nature: string } | null>(null);
-  const [voucherType, setVoucherType] = useState<VoucherType>('JRN');
+  const [voucherType, setVoucherType] = useState<VoucherType | 'AUTO'>('AUTO');
 
   // Transfer state
   const [transferDone, setTransferDone] = useState(0);
@@ -505,15 +505,7 @@ export default function BankImportPage() {
         </button>
       </div>
 
-      {/* Lock overlay wrapper — shows UI but blocks all interaction */}
       <div className="relative">
-        {/* Lock badge */}
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm pointer-events-none">
-          <Lock className="h-3.5 w-3.5" />
-          Feature locked — contact us to activate
-        </div>
-        {/* Transparent click blocker */}
-        <div className="absolute inset-0 z-10 cursor-not-allowed" />
 
         {/* ── Stage: Upload ──────────────────────────────────────────────── */}
         {stage === 'upload' && (
@@ -681,10 +673,10 @@ export default function BankImportPage() {
                   </div>
                   <select
                     value={voucherType}
-                    onChange={(e) => setVoucherType(e.target.value as VoucherType)}
+                    onChange={(e) => setVoucherType(e.target.value as VoucherType | 'AUTO')}
                     className="h-8 px-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    <option value="JRN">Auto (PMT/RCT)</option>
+                    <option value="AUTO">Auto (PMT/RCT)</option>
                     <option value="PMT">Payment</option>
                     <option value="RCT">Receipt</option>
                     <option value="JRN">Journal</option>

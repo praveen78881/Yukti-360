@@ -270,7 +270,9 @@ export interface InvoiceV2Draft {
   period: string;
   reverse_charge: boolean;
   invoice_type?: 'R' | 'DE' | 'SEWP' | 'SEWOP' | 'CBW';
-  ecom_gstin?: string;
+  ecom_gstin?: string;         // e-commerce operator GSTIN (etin) when supplied through an ECO
+  ecom_supply?: boolean;       // this supply is made through an e-commerce operator
+  ecom_9_5?: boolean;          // u/s 9(5) — the ECO is liable to pay the tax (→ Table 15 / supeco.paytx)
   b2cs_typ?: 'OE' | 'E';
   diff_percent?: number;
   original_invoice_no?: string;

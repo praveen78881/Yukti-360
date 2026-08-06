@@ -1,0 +1,95 @@
+{
+"type": "object",  
+  "properties":{
+      "gstin":{
+         "description":"GSTIN of the taxpayer",
+         "type":"string",
+         "maxLength":15,
+         "minLength":15,
+         "pattern":"^[a-zA-Z0-9]+$"
+      },
+      "fy":{
+         "description":"Previous Financial Year",
+         "type":"string",
+         "pattern":"^[0-9]{4}[-]{1}[0-9]{2}$"
+      },
+	  "pan":{
+		"description":"Pan number of the user",
+        "type":"string",
+		 "maxLength":10,
+         "minLength":10,
+         "pattern":"^[a-zA-Z0-9]+$"
+	  },
+	  "gsttofil":{
+		"description":"GSTIN turnover based on return filing",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	  "pantofil":{
+		"description":"PAN turnover based on return filing",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	  "estgstto":{
+		"description":"Estimated GSTIN TurnOver",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	  "estpanto":{
+		"description":"Estimated Pan TurnOver",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	   "finalgstto":{
+		"description":"Final GSTIN TurnOver after officer action.",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	   "finalpanto":{
+		"description":"Final PAN TurnOver after officer action.",
+        "type":"number",
+		"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+	  },
+	  "tpdecto":{
+		"type": "array",
+		 "items": {
+        "type": "object",
+		"properties":{
+			"estgstto":{
+			"description":"Estimated GSTIN TurnOver provided by GST System",
+			"type":"number",
+			"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+			},
+			"gsttobytp":{
+			"description":"GSTIN turnover Declared by Taxpayer",
+			"type":"number",
+			"pattern":"^[0-9]{0,18}[.]{0,1}[0-9]{0,2}$"
+			},
+			"docId":{
+				"properties":{
+			"id":{
+			"description":"Document ID",
+			"type":"string",
+                        "maxLength": 15
+			}
+			}
+			},
+			"remarks":{
+			"description":"remarks provided for the document",
+			"type":"string",
+			"maxLength":1000,
+			"minLength":0
+			},
+			"filing date":{
+			"description": "Filing Date",
+			"type":"string"
+			}
+		}
+	  }
+	  }
+	 },
+	"required":[
+      "gstin",
+      "fy"
+   ]
+}

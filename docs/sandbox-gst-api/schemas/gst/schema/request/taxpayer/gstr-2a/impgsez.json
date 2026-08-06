@@ -1,0 +1,111 @@
+{
+  "type": "object",
+  "properties": {
+    "impgsez": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "refdt": {
+            "description": "Reference Date",
+            "$ref": "#/definitions/nonEmptyDate"
+          },
+          "portcd": {
+            "description": "Port Code",
+            "$ref": "#/definitions/portcd"
+          },
+          "benum": {
+            "description": "Bill of Entry number",
+            "$ref": "#/definitions/benum"
+          },
+          "bedt": {
+            "description": "Bill of Entry Date",
+            "$ref": "#/definitions/nonEmptyDate"
+          },
+          "sgstin": {
+            "description": "GSTIN/UID of the SEZ supplier",
+            "$ref": "#/definitions/sgstin"
+          },
+          "tdname": {
+            "description": "Trade name of the Supplier",
+            "$ref": "#/definitions/tdname"
+          },
+          "txval": {
+            "description": " The taxable value of the imported goods",
+            "$ref": "#/definitions/txval"
+          },
+          "iamt": {
+            "description": " The IGST amount for imported goods",
+            "$ref": "#/definitions/nonEmptyCost"
+          },
+          "csamt": {
+            "description": " The cess amount for the imported goods",
+            "$ref": "#/definitions/nonEmptyCost"
+          },
+          "amd": {
+            "description": " Flag to check if the Bill of Entry is amended",
+            "$ref": "#/definitions/amended"
+          }
+        },
+        "required": [
+          "refdt",
+          "portcd",
+          "benum",
+          "bedt",
+          "txval",
+          "iamt",
+          "sgstin",
+          "tdname",
+          "csamt"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "sgstin": {
+      "type": "string",
+      "maxLength": 15,
+      "minLength": 15,
+      "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}"
+    },
+    "txval": {
+      "type": "number",
+      "multipleOf": 0.01,
+      "maximum": 99999999999.99,
+      "minimum": 0
+    },
+    "nonEmptyDate": {
+      "type": "string",
+      "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))$"
+    },
+    "portcd": {
+      "type": "string",
+      "maxLength": 6,
+      "minLength": 6,
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "benum": {
+      "type": "number",
+      "multipleOf": 1,
+      "maximum": 9999999,
+      "minimum": 1000,
+      "pattern": "^[0-9]+$"
+    },
+    "tdname": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9\\s]*$"
+    },
+    "nonEmptyCost": {
+      "type": "number",
+      "multipleOf": 0.01,
+      "maximum": 99999999999.99,
+      "minimum": 0
+    },
+    "amended": {
+      "type": "string",
+      "maxLength": 1,
+      "minLength": 1,
+      "pattern": "^[Y]"
+    }
+  }
+}

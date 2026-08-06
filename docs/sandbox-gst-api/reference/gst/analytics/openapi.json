@@ -1,0 +1,923 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "analytics",
+    "version": "1.0.0",
+    "description": "**GST Analytics API** enables businesses to analyze and dive deep into the GST data including reconciliations of GSTR-2B with purchase ledgers, compliance checks of businesses, and more."
+  },
+  "servers": [
+    {
+      "url": "https://test-api.sandbox.co.in"
+    },
+    {
+      "url": "https://api.sandbox.co.in"
+    }
+  ],
+  "paths": {
+    "/gst/analytics/gstr-2a-reconciliation": {
+      "post": {
+        "summary": "Reconcile GSTR-2A Job",
+        "description": "Create GSTR-2A reconciliation job and get two signed URLs to upload GSTR-2A and purchase ledger.",
+        "tags": [
+          "GSTR-2A Reconciliation"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "description": "JWT access token",
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "description": "API key for identification",
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0.0"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 Job Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP-like status code returned by the API.",
+                      "example": 200
+                    },
+                    "transaction_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "@entity": {
+                          "type": "string",
+                          "description": "Fully-qualified entity type.",
+                          "example": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job",
+                          "const": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job"
+                        },
+                        "job_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID of the reconciliation job (UUID).",
+                          "example": "d3d19997-c48a-4867-95b9-5a77c3567098"
+                        },
+                        "gstin": {
+                          "type": "string",
+                          "description": "GSTIN of the taxpayer (15 characters).",
+                          "pattern": "^[0-9]{2}[A-Z0-9]{13}$",
+                          "minLength": 15,
+                          "maxLength": 15,
+                          "example": "24EGCAZ2081S7Z4"
+                        },
+                        "year": {
+                          "type": "integer",
+                          "description": "Financial year (calendar year) for the job.",
+                          "example": 2025
+                        },
+                        "month": {
+                          "type": "integer",
+                          "description": "Month number (1-12).",
+                          "minimum": 1,
+                          "maximum": 12,
+                          "example": 12
+                        },
+                        "filing_preference": {
+                          "type": "string",
+                          "description": "Filing preference used for the job.",
+                          "enum": [
+                            "monthly"
+                          ],
+                          "example": "monthly"
+                        },
+                        "reconciliation_criteria": {
+                          "type": "string",
+                          "description": "Matching criteria used for reconciliation.",
+                          "enum": [
+                            "strict"
+                          ],
+                          "example": "strict"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Current status of the job.",
+                          "enum": [
+                            "created",
+                            "queued",
+                            "in_progress",
+                            "succeeded",
+                            "failed"
+                          ],
+                          "example": "created"
+                        },
+                        "gstr_2a_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the input GSTR-2A JSON file."
+                        },
+                        "purchase_ledger_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the purchase ledger JSON file."
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "Job creation timestamp in milliseconds since epoch"
+                        }
+                      },
+                      "required": [
+                        "@entity",
+                        "job_id",
+                        "gstin",
+                        "year",
+                        "month",
+                        "filing_preference",
+                        "reconciliation_criteria",
+                        "status",
+                        "gstr_2a_url",
+                        "purchase_ledger_url",
+                        "created_at"
+                      ]
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "examples": {
+                  "200 Job Created": {
+                    "summary": "200 Job Created",
+                    "value": {
+                      "code": 200,
+                      "timestamp": 1777273620309,
+                      "data": {
+                        "created_at": 1777273620951,
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job",
+                        "job_id": "f42e3d84-409a-4351-a9d7-9697750e7f98",
+                        "gstin": "24ABKCS2033B1ZV",
+                        "year": 2026,
+                        "month": 3,
+                        "reconciliation_criteria": "strict",
+                        "purchase_ledger_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2a-reconciliation/purchase-ledger.json",
+                        "gstr_2a_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2a-reconciliation/gstr-2a.json",
+                        "status": "created"
+                      },
+                      "transaction_id": "f42e3d84-409a-4351-a9d7-9697750e7f98"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "@entity": {
+                    "type": "string",
+                    "const": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.request",
+                    "description": "Entity name"
+                  },
+                  "gstin": {
+                    "type": "string",
+                    "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+                    "description": "GSTIN of the taxpayer"
+                  },
+                  "year": {
+                    "type": "integer",
+                    "description": "Year e.g. 2020"
+                  },
+                  "month": {
+                    "type": "integer",
+                    "description": "Month e.g. 10"
+                  },
+                  "reconciliation_criteria": {
+                    "type": "string",
+                    "enum": [
+                      "strict",
+                      "moderate",
+                      "flexible"
+                    ],
+                    "description": "Preference for the reconciliation strictness. Possible values: strict, moderate, flexible"
+                  }
+                },
+                "required": [
+                  "@entity",
+                  "gstin",
+                  "year",
+                  "month",
+                  "reconciliation_criteria"
+                ]
+              },
+              "examples": {
+                "Reconcile GSTR-2A Job": {
+                  "summary": "Reconcile GSTR-2A Job",
+                  "value": {
+                    "@entity": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.request",
+                    "gstin": "24ABKCS2033B1ZV",
+                    "year": 2026,
+                    "month": 3,
+                    "reconciliation_criteria": "strict"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Reconcile GSTR-2A Job Status",
+        "description": "Fetch GSTR-2A reconciliation job status and download reconciliation report on job's successful completion.",
+        "tags": [
+          "GSTR-2A Reconciliation"
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "query",
+            "required": true,
+            "description": "Job id of the created job",
+            "deprecated": false,
+            "examples": {
+              "200 Reconciliation Job Done": {
+                "summary": "200 Reconciliation Job Done",
+                "value": "d3d19997-c48a-4867-95b9-5a77c3567098"
+              },
+              "200 Validation failed": {
+                "summary": "200 Validation failed",
+                "value": "0cf9ae62-545a-403a-a206-f3f99df30570"
+              }
+            },
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "description": "JWT access token",
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "description": "API key for identification",
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0.0"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "200 Reconciliation Job Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP-like status code returned by the API.",
+                      "example": 200
+                    },
+                    "transaction_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "@entity": {
+                          "type": "string",
+                          "description": "Fully-qualified entity type.",
+                          "example": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job",
+                          "const": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job"
+                        },
+                        "job_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID of the reconciliation job (UUID).",
+                          "example": "d3d19997-c48a-4867-95b9-5a77c3567098"
+                        },
+                        "gstin": {
+                          "type": "string",
+                          "description": "GSTIN of the taxpayer (15 characters).",
+                          "pattern": "^[0-9]{2}[A-Z0-9]{13}$",
+                          "minLength": 15,
+                          "maxLength": 15,
+                          "example": "24EGCAZ2081S7Z4"
+                        },
+                        "year": {
+                          "type": "integer",
+                          "description": "Financial year (calendar year) for the job.",
+                          "example": 2025
+                        },
+                        "month": {
+                          "type": "integer",
+                          "description": "Month number (1-12).",
+                          "minimum": 1,
+                          "maximum": 12,
+                          "example": 12
+                        },
+                        "filing_preference": {
+                          "type": "string",
+                          "description": "Filing preference used for the job.",
+                          "enum": [
+                            "monthly"
+                          ],
+                          "example": "monthly"
+                        },
+                        "reconciliation_criteria": {
+                          "type": "string",
+                          "description": "Matching criteria used for reconciliation.",
+                          "enum": [
+                            "strict"
+                          ],
+                          "example": "strict"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Current status of the job.",
+                          "enum": [
+                            "created",
+                            "queued",
+                            "in_progress",
+                            "succeeded",
+                            "failed"
+                          ],
+                          "example": "created"
+                        },
+                        "reconciliation_report_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the reconciliation report."
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "Job creation timestamp in milliseconds since epoch"
+                        },
+                        "updated_at": {
+                          "type": "integer",
+                          "description": "Job updation timestamp in milliseconds since epoch"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "examples": {
+                  "200 Reconciliation Job Done": {
+                    "summary": "200 Reconciliation Job Done",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job",
+                        "job_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "reconciliation_criteria": "strict",
+                        "status": "succeeded",
+                        "reconciliation_report_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2a-reconciliation/gstr-2a-reconciliation-report.xlsx",
+                        "created_at": 123,
+                        "updated_at": 123
+                      },
+                      "timestamp": 123
+                    }
+                  },
+                  "200 Validation failed": {
+                    "summary": "200 Validation failed",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2a_reconciliation.job",
+                        "job_id": "0cf9ae62-545a-403a-a206-f3f99df30570",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "filing_preference": "monthly",
+                        "reconciliation_criteria": "strict",
+                        "status": "failed",
+                        "message": "Purchase ledger invalid as per schema",
+                        "validation_report_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2a-reconciliation/gstr-2a-reconciliation-report.xlsx",
+                        "created_at": 1777291058000,
+                        "updated_at": 1777291058000
+                      },
+                      "timestamp": 1777291058000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gst/analytics/gstr-2b-reconciliation": {
+      "post": {
+        "summary": "Reconcile GSTR-2B Job",
+        "description": "Submit GSTR-2B reconciliation job and get two signed URLs to upload GSTR-2B and purchase ledger.",
+        "tags": [
+          "GSTR-2B Reconciliation"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "1.0.0"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 Job Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "transaction_id": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "@entity": {
+                          "type": "string",
+                          "description": "Fully-qualified entity type.",
+                          "example": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                          "const": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job"
+                        },
+                        "job_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID of the reconciliation job (UUID).",
+                          "example": "d3d19997-c48a-4867-95b9-5a77c3567098"
+                        },
+                        "gstin": {
+                          "type": "string",
+                          "description": "GSTIN of the taxpayer (15 characters).",
+                          "pattern": "^[0-9]{2}[A-Z0-9]{13}$",
+                          "minLength": 15,
+                          "maxLength": 15,
+                          "example": "24EGCAZ2081S7Z4"
+                        },
+                        "year": {
+                          "type": "integer",
+                          "description": "Financial year (calendar year) for the job.",
+                          "example": 2025
+                        },
+                        "month": {
+                          "type": "integer",
+                          "description": "Month number (1-12).",
+                          "minimum": 1,
+                          "maximum": 12,
+                          "example": 12
+                        },
+                        "filing_preference": {
+                          "type": "string",
+                          "description": "Filing preference used for the job.",
+                          "enum": [
+                            "monthly"
+                          ],
+                          "example": "monthly"
+                        },
+                        "reconciliation_criteria": {
+                          "type": "string",
+                          "description": "Matching criteria used for reconciliation.",
+                          "enum": [
+                            "strict"
+                          ],
+                          "example": "strict"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Current status of the job.",
+                          "enum": [
+                            "created",
+                            "queued",
+                            "in_progress",
+                            "succeeded",
+                            "failed"
+                          ],
+                          "example": "created"
+                        },
+                        "gstr_2b_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the input GSTR-2B JSON file."
+                        },
+                        "purchase_ledger_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the purchase ledger JSON file."
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "Job creation timestamp in milliseconds since epoch"
+                        }
+                      },
+                      "required": [
+                        "@entity",
+                        "job_id",
+                        "gstin",
+                        "year",
+                        "month",
+                        "filing_preference",
+                        "reconciliation_criteria",
+                        "status",
+                        "gstr_2b_url",
+                        "purchase_ledger_url",
+                        "created_at"
+                      ]
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "examples": {
+                  "200 Job Created": {
+                    "summary": "200 Job Created",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                        "job_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "filing_preference": "monthly",
+                        "reconciliation_criteria": "strict",
+                        "status": "created",
+                        "gstr_2b_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2b-reconciliation/gstr-2b.json",
+                        "purchase_ledger_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2b-reconciliation/purchase-ledger.json",
+                        "created_at": 123
+                      },
+                      "timestamp": 123
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "@entity": {
+                    "type": "string",
+                    "const": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.request",
+                    "description": "Entity name"
+                  },
+                  "gstin": {
+                    "type": "string",
+                    "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+                    "description": "GSTIN of the taxpayer"
+                  },
+                  "year": {
+                    "type": "integer",
+                    "description": "Year e.g. 2020"
+                  },
+                  "month": {
+                    "type": "integer",
+                    "description": "Month e.g. 10"
+                  },
+                  "filing_preference": {
+                    "type": "string",
+                    "enum": [
+                      "monthly"
+                    ],
+                    "description": "Return filing preference for the reconciliation job."
+                  },
+                  "reconciliation_criteria": {
+                    "type": "string",
+                    "enum": [
+                      "strict",
+                      "moderate",
+                      "flexible"
+                    ],
+                    "description": "Preference for the reconciliation strictness. Possible values: strict, moderate, flexible"
+                  }
+                },
+                "required": [
+                  "@entity",
+                  "gstin",
+                  "year",
+                  "month",
+                  "reconciliation_criteria"
+                ]
+              },
+              "examples": {
+                "Reconcile GSTR-2B Job": {
+                  "summary": "Reconcile GSTR-2B Job",
+                  "value": {
+                    "@entity": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.request",
+                    "gstin": "24EGCAZ2081S7Z4",
+                    "year": 2023,
+                    "month": 12,
+                    "filing_preference": "monthly",
+                    "reconciliation_criteria": "strict"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Reconcile GSTR-2B Job Status",
+        "description": "Poll GSTR-2B reconciliation job status and download reconciliation report on job's successful completion.",
+        "tags": [
+          "GSTR-2B Reconciliation"
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "query",
+            "required": true,
+            "description": "Job id of the created job",
+            "examples": {
+              "200 Reconciliation Job Done": {
+                "summary": "200 Reconciliation Job Done",
+                "value": "d3d19997-c48a-4867-95b9-5a77c3567098"
+              },
+              "200 Purchase ledger validation failed": {
+                "summary": "200 Purchase ledger validation failed",
+                "value": "d1cfcffb-15d5-44c3-ae13-cca04c8c4310"
+              },
+              "200 GSTR-2B not as per schema": {
+                "summary": "200 GSTR-2B not as per schema",
+                "value": "d65ab027-1250-40e1-9af1-12ea9efa36ce"
+              }
+            },
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "1.0.0"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "200 Reconciliation Job Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "transaction_id": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "@entity": {
+                          "type": "string",
+                          "description": "Fully-qualified entity type.",
+                          "example": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                          "const": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job"
+                        },
+                        "job_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID of the reconciliation job (UUID).",
+                          "example": "d3d19997-c48a-4867-95b9-5a77c3567098"
+                        },
+                        "gstin": {
+                          "type": "string",
+                          "description": "GSTIN of the taxpayer (15 characters).",
+                          "pattern": "^[0-9]{2}[A-Z0-9]{13}$",
+                          "minLength": 15,
+                          "maxLength": 15,
+                          "example": "24EGCAZ2081S7Z4"
+                        },
+                        "year": {
+                          "type": "integer",
+                          "description": "Financial year (calendar year) for the job.",
+                          "example": 2025
+                        },
+                        "month": {
+                          "type": "integer",
+                          "description": "Month number (1-12).",
+                          "minimum": 1,
+                          "maximum": 12,
+                          "example": 12
+                        },
+                        "filing_preference": {
+                          "type": "string",
+                          "description": "Filing preference used for the job.",
+                          "enum": [
+                            "monthly"
+                          ],
+                          "example": "monthly"
+                        },
+                        "reconciliation_criteria": {
+                          "type": "string",
+                          "description": "Matching criteria used for reconciliation.",
+                          "enum": [
+                            "strict"
+                          ],
+                          "example": "strict"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Current status of the job.",
+                          "enum": [
+                            "created",
+                            "queued",
+                            "in_progress",
+                            "succeeded",
+                            "failed"
+                          ],
+                          "example": "created"
+                        },
+                        "reconciliation_report_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Presigned URL for the reconciliation report."
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "Job creation timestamp in milliseconds since epoch"
+                        },
+                        "updated_at": {
+                          "type": "integer",
+                          "description": "Job updation timestamp in milliseconds since epoch"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "examples": {
+                  "200 Reconciliation Job Done": {
+                    "summary": "200 Reconciliation Job Done",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                        "job_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "filing_preference": "monthly",
+                        "reconciliation_criteria": "strict",
+                        "status": "succeeded",
+                        "reconciliation_report_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2b-reconciliation/gstr-2b-reconciliation-report.xlsx",
+                        "created_at": 123,
+                        "updated_at": 123
+                      },
+                      "timestamp": 1777273236000
+                    }
+                  },
+                  "200 Purchase ledger validation failed": {
+                    "summary": "200 Purchase ledger validation failed",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                        "job_id": "d1cfcffb-15d5-44c3-ae13-cca04c8c4310",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "filing_preference": "monthly",
+                        "reconciliation_criteria": "strict",
+                        "status": "failed",
+                        "message": "Purchase ledger is invalid as per schema",
+                        "validation_report_url": "https://in-co-sandbox-gst-test-storage.s3.ap-south-1.amazonaws.com/gstr-2b-reconciliation/gstr-2b-reconciliation-report.xlsx"
+                      },
+                      "timestamp": 1777273236000
+                    }
+                  },
+                  "200 GSTR-2B not as per schema": {
+                    "summary": "200 GSTR-2B not as per schema",
+                    "value": {
+                      "code": 200,
+                      "transaction_id": "d3d19997-c48a-4867-95b9-5a77c3567098",
+                      "data": {
+                        "@entity": "in.co.sandbox.gst.analytics.gstr-2b_reconciliation.job",
+                        "job_id": "d65ab027-1250-40e1-9af1-12ea9efa36ce",
+                        "gstin": "24EGCAZ2081S7Z4",
+                        "year": 2023,
+                        "month": 12,
+                        "filing_preference": "monthly",
+                        "reconciliation_criteria": "strict",
+                        "status": "failed",
+                        "message": "GSTR-2B is invalid as per schema"
+                      },
+                      "timestamp": 1777273236000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

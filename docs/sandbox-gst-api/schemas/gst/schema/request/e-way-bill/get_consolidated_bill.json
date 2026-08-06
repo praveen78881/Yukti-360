@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get consolidated E-Way Bill response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "enteredDate": {
+      "type": "string"
+    },
+    "fromPlace": {
+      "type": "string"
+    },
+    "fromState": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "transDocDate": {
+      "type": "string"
+    },
+    "transDocNo": {
+      "type": "string"
+    },
+    "transMode": {
+      "type": "string"
+    },
+    "tripSheetEwbBills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "docDate": {
+            "type": "string"
+          },
+          "docNo": {
+            "type": "string"
+          },
+          "ewbDate": {
+            "type": "string"
+          },
+          "ewbNo": {
+            "type": "number"
+          },
+          "fromGstin": {
+            "type": "string"
+          },
+          "fromTradeName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "toGstin": {
+            "type": "string"
+          },
+          "toTradeName": {
+            "type": "string"
+          },
+          "totInvValue": {
+            "type": "number"
+          },
+          "userGstin": {
+            "type": "string"
+          },
+          "validUpto": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tripSheetNo": {
+      "type": "number"
+    },
+    "userGstin": {
+      "type": "string"
+    },
+    "vehicleNo": {
+      "type": "string"
+    }
+  }
+}

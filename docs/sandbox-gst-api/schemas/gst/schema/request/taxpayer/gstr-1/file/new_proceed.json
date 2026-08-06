@@ -1,0 +1,31 @@
+{
+	"id": "Proceedfile request-Schema",
+	"type": "object",
+	"properties": {
+		"gstin": {
+			"description": "GSTIN of the taxpayer",
+			"type": "string",
+			"maxLength": 15,
+			"minLength": 15,
+			"pattern": "^[a-zA-Z0-9]+$",
+			"required": true
+		},
+		"ret_period": {
+			"description": "Return Period",
+			"type": "string",
+			"maxLength": 6,
+			"minLength": 6,
+			"pattern": "^((0[1-9]|1[0123456])((19|20|30)\\d\\d))*$",
+			"required": true
+		},
+		"isnil": {
+		"description": "is nil",
+		"type": "string",
+		"enum": ["Y"]
+		}
+	},
+	"required": [
+		"gstin",
+		"ret_period"
+	]
+}

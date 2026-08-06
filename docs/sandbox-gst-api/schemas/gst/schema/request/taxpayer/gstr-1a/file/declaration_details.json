@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "gstin": {
+      "type": "string",
+	  "maxLength": 15,
+	  "minLength": 15,
+	  "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}"
+    },
+    "ret_period": {
+      "description": "Return Period",
+	  "$ref": "#/definitions/returnperiod"
+    },
+    "r2bStaleStatus": {
+	  "description": "GSTR2B Stale Status",	
+      "type": "string",
+      "enum": ["S", "N"]
+    },
+    "declared_tmstmp": {
+	  "description": "Declaration Time Stamp",	
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])\\s(0[0-9]|1[0-9]|2[123]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$"
+    },
+    "chksum": {
+	  "description": "CheckSum of the payload",	
+      "type": "string",
+      "maxLength": 64
+    },
+    "liab": {
+      "type": "object",
+	  "additionalProperties": false,
+      "properties": {
+        "gstr1Liab": {
+          "type": "object",
+		  "additionalProperties": false,
+          "properties": {
+            "sec_nm": { 
+				"description": "GSTR1 Liability Section Name",
+				"type": "string",
+				"enum": ["TTL_LIAB_GSTR1","TTL_LIAB_GSTR1Q"]
+				},
+            "chksum": { 
+				"description": "GSTR1 Liablity Check sum value",
+				"type": "string" 
+				},
+            "ttl_tax": { 
+				"description": "Total taxable value of records",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_igst": { 
+				"description": "Total IGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_sgst": {
+				"description": "Total SGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_cgst": {
+				"description": "Total CGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_cess": {
+				"description": "Total CESS",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_val": {
+				"description": "Total Value",
+				"$ref": "#/definitions/taxvalue"
+				}
+          },
+          "required": ["sec_nm", "chksum", "ttl_tax", "ttl_igst", "ttl_cgst", "ttl_sgst", "ttl_cess", "ttl_val"]
+        },
+        "iffLiab": {
+          "type": "array",
+          "items": {
+            "type": "object",
+			"additionalProperties": false,
+            "properties": {
+              "iff_ret_period": {
+				   "description": "IFF Return Period",
+				   "$ref": "#/definitions/returnperiod"
+				  },
+			  "sec_nm": { 
+					"description": "IFF Liability Section Name",
+					"type": "string",
+					"enum": ["TTL_LIAB_IFF"]
+				},
+              "chksum": { 
+				"description": "IFF Liablity Check sum value",
+				"type": "string" 
+				},
+              "ttl_tax": { 
+				"description": "Total taxable value of records",
+				"$ref": "#/definitions/taxvalue"
+				},
+              "ttl_igst": { 
+				"description": "Total IGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+              "ttl_sgst": {
+				"description": "Total SGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+              "ttl_cgst": {
+				"description": "Total CGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+              "ttl_cess": {
+				"description": "Total CESS",
+				"$ref": "#/definitions/taxvalue"
+				},
+              "ttl_val": {
+				"description": "Total Value",
+				"$ref": "#/definitions/taxvalue"
+				}
+            },
+			"required": ["sec_nm", "chksum", "iff_ret_period", "ttl_tax", "ttl_igst", "ttl_cgst", "ttl_sgst", "ttl_cess", "ttl_val"]
+          }
+        },
+		"gstr1aLiab": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+			"sec_nm": { 
+				"description": "GSTR1A Liability Section Name",
+				"type": "string",
+				"enum": ["TTL_LIAB_GSTR1A","TTL_LIAB_GSTR1AQ"]
+				},
+			"chksum": { 
+				"description": "GSTR1 Liablity Check sum value",
+				"type": "string" 
+				},
+            "ttl_tax": { 
+				"description": "Total taxable value of records",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_igst": { 
+				"description": "Total IGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_sgst": {
+				"description": "Total SGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_cgst": {
+				"description": "Total CGST",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_cess": {
+				"description": "Total CESS",
+				"$ref": "#/definitions/taxvalue"
+				},
+            "ttl_val": {
+				"description": "Total Value",
+				"$ref": "#/definitions/taxvalue"
+				}
+          },
+          "required": ["sec_nm", "chksum", "ttl_tax", "ttl_igst", "ttl_cgst", "ttl_sgst", "ttl_cess", "ttl_val"]
+        }
+      },
+	  "required": ["gstr1Liab", "gstr1aLiab"]
+    },
+    "bal": {
+      "type": "object",
+	  "additionalProperties": false,
+      "properties": {
+        "cash_bal": { 
+			"description": "Cash Balance details",	
+			"$ref": "#/definitions/balance" 
+			},
+        "itc_bal": {
+			"description": "ITC Available details",		
+			"$ref": "#/definitions/balance" 
+			},
+        "gstr2b_itc_bal": {
+			"description": "ITC Available as per GSTR2B details",	
+			"$ref": "#/definitions/balance" 
+			}
+      },
+	   "required": ["cash_bal", "itc_bal","gstr2b_itc_bal"]
+    }
+  },
+  "definitions": {
+    "balance": {
+      "type": "object",
+	  "additionalProperties": false,
+      "properties": {
+        "chksum": {
+		"description": "Checksum of the object",	
+		"type": "string",
+		"maxLength": 64
+    },
+        "igst_bal": {
+			"description": "Total IGST Available",	
+			"$ref": "#/definitions/taxvalue" 
+			},
+        "cgst_bal": {
+			"description": "Total CGST Available",	
+			"$ref": "#/definitions/taxvalue" 
+			},
+        "sgst_bal": {
+			"description": "Total SGST Available",
+			"$ref": "#/definitions/taxvalue" 
+			},
+        "cess_bal": {
+			"description": "Total CESS Available",	
+			"$ref": "#/definitions/taxvalue" 
+			},
+        "ttl_bal": {
+			"description": "Total Balance Available",
+			"$ref": "#/definitions/taxvalue" 
+			}
+      },
+	    "required": [ "chksum", "igst_bal", "cgst_bal", "sgst_bal", "cess_bal", "ttl_bal"]
+
+    },
+	"taxvalue": {
+      "type": "number",
+      "multipleOf": 0.01
+    },
+	"returnperiod": {
+		 "type": "string",
+         "minLength": 1,
+         "pattern": "^((0[1-9]|1[012])((19|20)\\d\\d))$"
+	}
+  },
+  "required": ["gstin", "ret_period", "r2bStaleStatus","chksum", "liab", "bal"]
+}

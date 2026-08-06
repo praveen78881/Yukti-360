@@ -347,6 +347,10 @@ textarea{resize:vertical;min-height:30px}
 
       <!-- Income related info. -->
       <div class="it-sub">Income related info.</div>
+      <div class="itr"><div class="lbl">Salary — schedule details (per employer)</div><div class="drillcol sf-open" data-sf="sf-salary">⋯</div><div class="st" id="st_salary"></div><div class="schtag">S</div></div>
+      <div class="itr"><div class="lbl">Capital Gains — schedule details</div><div class="drillcol sf-open" data-sf="sf-cg">⋯</div><div class="st" id="st_cg"></div><div class="schtag">CG</div></div>
+      <div class="itr"><div class="lbl">Other Sources — schedule details</div><div class="drillcol sf-open" data-sf="sf-os">⋯</div><div class="st" id="st_os"></div><div class="schtag">OS</div></div>
+      <div class="itr"><div class="lbl">Quantitative Details (Part A-QD)</div><div class="drillcol sf-open" data-sf="sf-qd">⋯</div><div class="st" id="st_qd"></div><div class="schtag">QD</div></div>
       <div class="itr"><div class="lbl">Pass Through Income u/s 115U/ 115UA/ 115UB</div><div class="drillcol sf-open" data-sf="sf-pti">⋯</div><div class="st" id="st_pti"></div><div class="schtag">PTI</div></div>
       <div class="itr"><div class="lbl">Income of Other persons included in computation</div><div class="drillcol sf-open" data-sf="sf-spi">⋯</div><div class="st" id="st_spi"></div><div class="schtag">SPI</div></div>
 
@@ -1000,7 +1004,142 @@ textarea{resize:vertical;min-height:30px}
   </div>
 </div>
 
+<!-- ===== Salary — Schedule S detail (per employer) ===== -->
+<div class="subform sf-wide" id="sf-salary">
+  <div class="sf-top"><div><h2>Salary — Schedule S details</h2><div class="sf-meta">A.Y. 2025-26 · per-employer breakup, exempt allowances &amp; sec-16 deductions</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Enter one row per employer. Gross salary = salary u/s 17(1) + perquisites + profits in lieu. All amounts in ₹.</div>
+    <div class="sf-sectit">Employers<button class="addbtn" id="addSalEmpBtn" style="margin-left:14px">+ Add employer</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-txt"><col class="c-sel"><col class="c-txt"><col class="c-txt"><col class="c-sel"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Name of employer</th><th class="l">Nature</th><th class="l">Address</th><th class="l">City</th><th class="l">State</th><th>Salary u/s 17(1)</th><th>Perquisites 17(2)</th><th>Profits in lieu 17(3)</th><th></th></tr></thead>
+      <tbody id="salemp-rows"></tbody></table>
+    <div class="sf-sectit" style="margin-top:14px">Allowances exempt u/s 10<button class="addbtn" id="addSalExBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl" style="max-width:720px"><colgroup><col class="c-sel"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Nature (sec 10)</th><th>Amount</th><th></th></tr></thead>
+      <tbody id="salex-rows"></tbody></table>
+    <table class="sf-tbl sf-simple" style="max-width:640px;margin-top:14px"><colgroup><col style="width:auto"><col class="c-num"></colgroup><tbody>
+      <tr class="sect"><td colspan="2">Deductions u/s 16</td></tr>
+      <tr><td class="l">Standard deduction u/s 16(ia)</td><td><input type="text" id="sal_ded16ia" class="num"></td></tr>
+      <tr><td class="l">Professional tax u/s 16(iii)</td><td><input type="text" id="sal_proftax" class="num"></td></tr>
+    </tbody></table>
+    <div class="sf-grand">Gross salary <b id="sal_gross_total">₹0</b> &nbsp;·&nbsp; Net income under Salaries <b id="sal_net_total">₹0</b></div>
+  </div>
+</div>
+
+<!-- ===== Capital Gains — Schedule CGFor23 detail ===== -->
+<div class="subform sf-wide" id="sf-cg">
+  <div class="sf-top"><div><h2>Capital Gains — Schedule CG details</h2><div class="sf-meta">A.Y. 2025-26 · STCG / LTCG by asset class, 112A scrip grid, VDA, 54-deductions &amp; quarterly accrual</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Enter each transaction. Gain = full value of consideration − (cost + improvement + transfer expenditure). All amounts in ₹; dates DD/MM/YYYY.</div>
+
+    <div class="sf-sectit">STCG — Equity shares / units (STT paid, sec 111A)<button class="addbtn" id="addCgStEqBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th>Full value consideration</th><th>Cost of acquisition</th><th>Improvement</th><th>Transfer expenditure</th><th></th></tr></thead>
+      <tbody id="cgsteq-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">STCG — Land / Building<button class="addbtn" id="addCgStLBBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-txt"><col class="c-sel"><col class="c-sel"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Date purchase</th><th class="l">Date sale</th><th>Full value</th><th>Cost</th><th>Improvement</th><th>Transfer exp.</th><th class="l">Buyer name</th><th class="l">Buyer PAN</th><th>Buyer %</th><th>Buyer amt</th><th class="l">Property address</th><th class="l">State</th><th class="l">Sec 54 exemption</th><th>Exempt amt</th><th></th></tr></thead>
+      <tbody id="cgstlb-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">STCG — Other assets<button class="addbtn" id="addCgStOthBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th>Full value consideration</th><th>Cost of acquisition</th><th>Improvement</th><th>Transfer expenditure</th><th></th></tr></thead>
+      <tbody id="cgstoth-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">LTCG — Land / Building<button class="addbtn" id="addCgLtLBBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-txt"><col class="c-sel"><col class="c-sel"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Date purchase</th><th class="l">Date sale</th><th>Full value</th><th>Indexed cost</th><th>Indexed improvement</th><th>Transfer exp.</th><th class="l">Buyer name</th><th class="l">Buyer PAN</th><th>Buyer %</th><th>Buyer amt</th><th class="l">Property address</th><th class="l">State</th><th class="l">Sec 54 exemption</th><th>Exempt amt</th><th></th></tr></thead>
+      <tbody id="cgltlb-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">LTCG — Equity/units u/s 112A (scrip-wise, Schedule 112A)<button class="addbtn" id="addCg112aBtn" style="margin-left:14px">+ Add scrip</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-sel"><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Acquired on/before 31-01-18?</th><th class="l">ISIN</th><th class="l">Share/unit name</th><th>Total sale value</th><th>Cost of acquisition</th><th>FMV 31-01-2018</th><th>Acquisition cost (higher)</th><th></th></tr></thead>
+      <tbody id="cg112a-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Income from transfer of VDA (crypto, sec 115BBH — 30%)<button class="addbtn" id="addCgVdaBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl" style="max-width:820px"><colgroup><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Date acquired</th><th class="l">Date transferred</th><th>Cost of acquisition</th><th>Consideration received</th><th></th></tr></thead>
+      <tbody id="cgvda-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Deduction claimed against capital gains (sec 54 / 54B / 54D / 54EC / 54F / 54G)<button class="addbtn" id="addCgDedBtn" style="margin-left:14px">+ Add claim</button></div>
+    <table class="sf-tbl" style="max-width:820px"><colgroup><col class="c-sel"><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Section</th><th class="l">Date of transfer</th><th class="l">Date of purchase/deposit</th><th>Amount deducted</th><th></th></tr></thead>
+      <tbody id="cgded-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">NRI — capital gains taxable at DTAA rate (Schedule CG, item A/B DTAA)<button class="addbtn" id="addCgNriBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-txt"><col class="c-txt"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Nature of income</th><th class="l">Country</th><th class="l">DTAA article</th><th>Rate as per treaty %</th><th>Rate as per IT Act %</th><th>Amount</th><th></th></tr></thead>
+      <tbody id="cgnri-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Accrual of capital gains during the year (for sec 234C interest)</div>
+    <table class="sf-tbl" style="max-width:900px"><colgroup><col style="width:auto"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup>
+      <thead><tr><th class="l">Rate bucket</th><th>Upto 15/6</th><th>16/6–15/9</th><th>16/9–15/12</th><th>16/12–15/3</th><th>16/3–31/3</th></tr></thead>
+      <tbody>
+        <tr><td class="l">STCG at applicable rate</td><td><input type="text" id="cgacc_stapp_q1" class="num"></td><td><input type="text" id="cgacc_stapp_q2" class="num"></td><td><input type="text" id="cgacc_stapp_q3" class="num"></td><td><input type="text" id="cgacc_stapp_q4" class="num"></td><td><input type="text" id="cgacc_stapp_q5" class="num"></td></tr>
+        <tr><td class="l">STCG 111A (15/20%)</td><td><input type="text" id="cgacc_st15_q1" class="num"></td><td><input type="text" id="cgacc_st15_q2" class="num"></td><td><input type="text" id="cgacc_st15_q3" class="num"></td><td><input type="text" id="cgacc_st15_q4" class="num"></td><td><input type="text" id="cgacc_st15_q5" class="num"></td></tr>
+        <tr><td class="l">LTCG 12.5%</td><td><input type="text" id="cgacc_lt125_q1" class="num"></td><td><input type="text" id="cgacc_lt125_q2" class="num"></td><td><input type="text" id="cgacc_lt125_q3" class="num"></td><td><input type="text" id="cgacc_lt125_q4" class="num"></td><td><input type="text" id="cgacc_lt125_q5" class="num"></td></tr>
+        <tr><td class="l">VDA gains (30%)</td><td><input type="text" id="cgacc_vda_q1" class="num"></td><td><input type="text" id="cgacc_vda_q2" class="num"></td><td><input type="text" id="cgacc_vda_q3" class="num"></td><td><input type="text" id="cgacc_vda_q4" class="num"></td><td><input type="text" id="cgacc_vda_q5" class="num"></td></tr>
+      </tbody></table>
+    <div class="sf-grand">Total STCG <b id="cg_stcg_total">₹0</b> &nbsp;·&nbsp; Total LTCG <b id="cg_ltcg_total">₹0</b></div>
+  </div>
+</div>
+
+<!-- ===== Other Sources — Schedule OS detail ===== -->
+<div class="subform sf-wide" id="sf-os">
+  <div class="sf-top"><div><h2>Other Sources — Schedule OS details</h2><div class="sf-meta">A.Y. 2025-26 · interest/dividend nature-wise, winnings 115BB, DTAA &amp; quarterly breakup</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <table class="sf-tbl sf-simple" style="max-width:680px"><colgroup><col style="width:auto"><col class="c-num"></colgroup><tbody>
+      <tr class="sect"><td colspan="2">Income chargeable at normal rate</td></tr>
+      <tr><td class="l">Dividend income (gross)</td><td><input type="text" id="os_div" class="num"></td></tr>
+      <tr><td class="l">Interest — savings bank</td><td><input type="text" id="os_int_savings" class="num"></td></tr>
+      <tr><td class="l">Interest — term deposits</td><td><input type="text" id="os_int_term" class="num"></td></tr>
+      <tr><td class="l">Interest — income-tax refund</td><td><input type="text" id="os_int_refund" class="num"></td></tr>
+      <tr><td class="l">Interest — others</td><td><input type="text" id="os_int_others" class="num"></td></tr>
+      <tr><td class="l">Rent from machinery/plant/building</td><td><input type="text" id="os_rent_mp" class="num"></td></tr>
+      <tr><td class="l">Family pension</td><td><input type="text" id="os_family_pension" class="num"></td></tr>
+      <tr><td class="l">Any other income</td><td><input type="text" id="os_any_other" class="num"></td></tr>
+      <tr class="sect"><td colspan="2">Income chargeable at special rate</td></tr>
+      <tr><td class="l">Winnings from lotteries/games etc. (sec 115BB)</td><td><input type="text" id="os_winnings" class="num"></td></tr>
+    </tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Any other income — nature-wise<button class="addbtn" id="addOsOthBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl" style="max-width:720px"><colgroup><col class="c-txt"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Nature of income</th><th>Amount</th><th></th></tr></thead>
+      <tbody id="osoth-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Income chargeable at special rate under DTAA<button class="addbtn" id="addOsDtaaBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-txt"><col class="c-sel"><col class="c-txt"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Nature of income</th><th class="l">Country</th><th class="l">DTAA article</th><th>Rate as per treaty %</th><th>Rate as per IT Act %</th><th>Amount</th><th></th></tr></thead>
+      <tbody id="osdtaa-rows"></tbody></table>
+
+    <div class="sf-sectit" style="margin-top:14px">Quarterly breakup (for sec 234C interest)</div>
+    <table class="sf-tbl" style="max-width:900px"><colgroup><col style="width:auto"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup>
+      <thead><tr><th class="l">Item</th><th>Upto 15/6</th><th>16/6–15/9</th><th>16/9–15/12</th><th>16/12–15/3</th><th>16/3–31/3</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Dividend income</td><td><input type="text" id="osq_div_q1" class="num"></td><td><input type="text" id="osq_div_q2" class="num"></td><td><input type="text" id="osq_div_q3" class="num"></td><td><input type="text" id="osq_div_q4" class="num"></td><td><input type="text" id="osq_div_q5" class="num"></td></tr>
+        <tr><td class="l">Winnings from lotteries</td><td><input type="text" id="osq_ltry_q1" class="num"></td><td><input type="text" id="osq_ltry_q2" class="num"></td><td><input type="text" id="osq_ltry_q3" class="num"></td><td><input type="text" id="osq_ltry_q4" class="num"></td><td><input type="text" id="osq_ltry_q5" class="num"></td></tr>
+      </tbody></table>
+    <div class="sf-grand">Income from Other Sources <b id="os_total">₹0</b></div>
+  </div>
+</div>
+
 <!-- 44AB Tax Audit details -->
+<div class="subform sf-wide" id="sf-qd">
+  <div class="sf-top"><div><h2>Quantitative Details — Part A-QD</h2><div class="sf-meta">A.Y. 2025-26 · item-wise opening / purchase / sale / closing quantities</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Mandatory for assessees maintaining books. Trading concern: goods traded. Manufacturing: raw materials and finished / by-products separately. Shortage/excess is computed as opening + purchase − sale − closing.</div>
+    <div class="sf-sectit">Items<button class="addbtn" id="addQdBtn" style="margin-left:14px">+ Add item</button></div>
+    <table class="sf-tbl"><colgroup><col class="c-sel"><col class="c-txt"><col class="c-sel"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Concern</th><th class="l">Item name</th><th class="l">Unit</th><th>Opening</th><th>Purchase</th><th>Sale</th><th>Closing</th><th>Short/excess</th><th></th></tr></thead>
+      <tbody id="qd-rows"></tbody></table>
+  </div>
+</div>
+
 <div class="subform sf-wide" id="sf-44ab">
   <div class="sf-top"><div><h2>44AB Tax Audit details</h2><div class="sf-meta">A.Y. 2025-26 · applicable when liable to audit u/s 44AB</div></div>
     <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
@@ -1295,6 +1434,7 @@ const ESOP_YEARS=['2021-22','2022-23','2023-24','2024-25','2025-26'];
 
 /* ===== factories ===== */
 const newBankRow=()=>({name:'',acc:'',ifsc:'',type:'(Select)',refund:false});
+const newQdRow=()=>({type:'TRADING',item:'',unit:'101',opening:'',purchase:'',sale:'',closing:''});
 const newSpiRow=()=>({name:'',pan:'',rel:'',head:'(Select)',amount:''});
 const newGstrRow=()=>({gstin:'',outward:''});
 const newCeDepRow=()=>({bank:'',bsr:'',date:'',challan:'',amount:''});
@@ -1533,6 +1673,10 @@ const data={
   ceDeposit:[newCeDepRow()], esop:{years:{}, sold:false, soldRows:[newEsopSoldRow()]},
   director:[newDirectorRow()], unlisted:[newUnlistedRow()], pti:[newPtiRow()],
   nature:[newNatureRow()],
+  sal:{employers:[{}], exempt:[{}], ded16ia:'', proftax:''},
+  os:{fields:{}, others:[{}], dtaa:[{}], q:{}},
+  cg:{stEq:[{}], stLB:[{}], stOth:[{}], ltLB:[{}], lt112a:[{}], vda:[{}], ded:[{}], acc:{}, nri:[{}]},
+  qd:[newQdRow()],
   residential:{a:false,citizen:false,b:false},
   audit44ab_data:{},
   bs:{}, pl:{}, al:{},
@@ -1541,6 +1685,7 @@ const data={
   fixedBreakups:{},   // key -> { rowKey: amount }          (named Winman rows)
 };
 FA_KEYS.forEach(k=>data[k]=[newFaRow(k)]);
+try{window.data=data;}catch(e){}
 AL_BREAKUP_KEYS.forEach(k=>data.breakups[k]=[newBreakupRow()]);
 Object.keys(BREAKUP_TITLES).forEach(k=>{
   if(FIXED_BREAKUP[k]){data.fixedBreakups[k]={};FIXED_BREAKUP[k].rows.forEach(r=>data.fixedBreakups[k][r.k]='');}
@@ -1552,7 +1697,7 @@ function bindRm(tb){
   tb.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{
     const m=b.dataset.rm.match(/^(.+)_(\d+)$/); if(!m)return;
     const key=m[1], idx=+m[2];
-    const map={bank:['bank',renderBank],spimin:['spiMinor',renderSpi],spioth:['spiOther',renderSpi],
+    const map={bank:['bank',renderBank],qd:['qd',renderQd],spimin:['spiMinor',renderSpi],spioth:['spiOther',renderSpi],
       gstr:['gstr',renderGstr],cedep:['ceDeposit',renderCeDeposit],esopsold:null,director:['director',renderDirector],unlisted:['unlisted',renderUnlisted],
       nat:['nature',renderNature],pti:['pti',renderPti],alfirm:['alFirm',renderAlFirm]};
     if(FA_COLS[key]){ if(data[key].length>1)data[key].splice(idx,1); renderFa(key); computeAll(); return; }
@@ -1656,6 +1801,134 @@ function renderPti(){const tb=$('pti-rows');if(!tb)return;tb.innerHTML='';
       <td><input type="text" id="pti_${i}_tds" value="${r.tds||''}"></td>
       <td class="rm"><button class="bp-rm-tbl" data-rm="pti_${i}">✕</button></td>`;tb.appendChild(tr);});
   bindRm(tb);}
+
+/* ===== Salary / Capital Gains / Other Sources drill-in grids (Schedule S / CGFor23 / OS) ===== */
+const SAL_NATURE=[['','(Select)'],['CGOV','Central Govt'],['SGOV','State Govt'],['PSU','Public Sector Unit'],['PE','Other / Private'],['PESG','Pensioners - CG/SG'],['PEPS','Pensioners - PSU']];
+const STATES=["(Select)","01-ANDAMAN AND NICOBAR ISLANDS","02-ANDHRA PRADESH","03-ARUNACHAL PRADESH","04-ASSAM","05-BIHAR","06-CHANDIGARH","07-DADRA NAGAR AND HAVELI","08-DAMAN AND DIU","09-DELHI","10-GOA","11-GUJARAT","12-HARYANA","13-HIMACHAL PRADESH","14-JAMMU AND KASHMIR","15-KARNATAKA","16-KERALA","17-LAKHSWADEEP","18-MADHYA PRADESH","19-MAHARASHTRA","20-MANIPUR","21-MEGHALAYA","22-MIZORAM","23-NAGALAND","24-ODISHA","25-PUDUCHERRY","26-PUNJAB","27-RAJASTHAN","28-SIKKIM","29-TAMILNADU","30-TRIPURA","31-UTTAR PRADESH","32-WEST BENGAL","33-CHHATTISGARH","34-UTTARAKHAND","35-JHARKHAND","36-TELANGANA","37-LADAKH","99-FOREIGN"];
+const EX10=['(Select)','10(5)','10(6)','10(7)','10(10)','10(10A)','10(10AA)','10(13A)','10(14)'];
+const CGDED=['(Select)','54','54B','54D','54EC','54F','54G','54GA'];
+const YN2=[['','(Select)'],['Y','Yes (on/before)'],['N','No (after)']];
+const QD_TYPE=[['TRADING','Trading'],['RAWMAT','Mfg - raw material'],['FINISHED','Mfg - finished/by-product']];
+const QD_UNIT=[['101','Kg'],['102','Litre'],['103','Metre'],['104','Number'],['105','Quintal'],['106','Others']];
+function selOpts(list,cur){return list.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${v}" ${v===cur?'selected':''}>${l}</option>`;}).join('');}
+function stateOpts(cur){return STATES.map(o=>`<option ${o===cur?'selected':''}>${o}</option>`).join('');}
+function cgGain(r){return num(r.fvc)-(num(r.cost)+num(r.imp)+num(r.exp));}
+function renderSalEmp(){const tb=$('salemp-rows');if(!tb)return;tb.innerHTML='';
+  data.sal.employers.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="salemp_${i}_name" value="${(r.name||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><select id="salemp_${i}_nature">${selOpts(SAL_NATURE,r.nature||'')}</select></td>
+      <td class="l"><input type="text" id="salemp_${i}_addr" value="${(r.addr||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><input type="text" id="salemp_${i}_city" value="${(r.city||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><select id="salemp_${i}_state">${stateOpts(r.state||'(Select)')}</select></td>
+      <td><input type="text" id="salemp_${i}_sal17" value="${r.sal17||''}"></td>
+      <td><input type="text" id="salemp_${i}_perq" value="${r.perq||''}"></td>
+      <td><input type="text" id="salemp_${i}_pil" value="${r.pil||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="salemp_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderSalEx(){const tb=$('salex-rows');if(!tb)return;tb.innerHTML='';
+  data.sal.exempt.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><select id="salex_${i}_nature">${selOpts(EX10,r.nature||'(Select)')}</select></td>
+      <td><input type="text" id="salex_${i}_amount" value="${r.amount||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="salex_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderSalary(){renderSalEmp();renderSalEx();setv('sal_ded16ia',data.sal.ded16ia);setv('sal_proftax',data.sal.proftax);}
+function renderCgSimple(key,tbid,pfx){const tb=$(tbid);if(!tb)return;tb.innerHTML='';
+  data.cg[key].forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="text" id="${pfx}_${i}_fvc" value="${r.fvc||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_cost" value="${r.cost||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_imp" value="${r.imp||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_exp" value="${r.exp||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="${pfx}_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCgLB(key,tbid,pfx){const tb=$(tbid);if(!tb)return;tb.innerHTML='';
+  data.cg[key].forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="${pfx}_${i}_dop" value="${r.dop||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td class="l"><input type="text" id="${pfx}_${i}_dos" value="${r.dos||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td><input type="text" id="${pfx}_${i}_fvc" value="${r.fvc||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_cost" value="${r.cost||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_imp" value="${r.imp||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_exp" value="${r.exp||''}"></td>
+      <td class="l"><input type="text" id="${pfx}_${i}_buyer" value="${(r.buyer||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><input type="text" id="${pfx}_${i}_buyerpan" class="up" value="${r.buyerpan||''}" style="text-align:left"></td>
+      <td><input type="text" id="${pfx}_${i}_buyershare" value="${r.buyershare||''}"></td>
+      <td><input type="text" id="${pfx}_${i}_buyeramt" value="${r.buyeramt||''}"></td>
+      <td class="l"><input type="text" id="${pfx}_${i}_buyeraddr" value="${(r.buyeraddr||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><select id="${pfx}_${i}_buyerstate">${stateOpts(r.buyerstate)}</select></td>
+      <td class="l"><select id="${pfx}_${i}_ex54sec">${selOpts(CGDED,r.ex54sec||'(Select)')}</select></td>
+      <td><input type="text" id="${pfx}_${i}_ex54amt" value="${r.ex54amt||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="${pfx}_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCg112a(){const tb=$('cg112a-rows');if(!tb)return;tb.innerHTML='';
+  data.cg.lt112a.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><select id="cg112a_${i}_onb">${selOpts(YN2,r.onb||'')}</select></td>
+      <td class="l"><input type="text" id="cg112a_${i}_isin" class="up" value="${r.isin||''}" style="text-align:left"></td>
+      <td class="l"><input type="text" id="cg112a_${i}_name" value="${(r.name||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td><input type="text" id="cg112a_${i}_sale" value="${r.sale||''}"></td>
+      <td><input type="text" id="cg112a_${i}_cost" value="${r.cost||''}"></td>
+      <td><input type="text" id="cg112a_${i}_fmv" value="${r.fmv||''}"></td>
+      <td><input type="text" id="cg112a_${i}_acq" value="${r.acq||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="cg112a_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCgVda(){const tb=$('cgvda-rows');if(!tb)return;tb.innerHTML='';
+  data.cg.vda.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="cgvda_${i}_dop" value="${r.dop||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td class="l"><input type="text" id="cgvda_${i}_dos" value="${r.dos||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td><input type="text" id="cgvda_${i}_cost" value="${r.cost||''}"></td>
+      <td><input type="text" id="cgvda_${i}_cons" value="${r.cons||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="cgvda_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCgDed(){const tb=$('cgded-rows');if(!tb)return;tb.innerHTML='';
+  data.cg.ded.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><select id="cgded_${i}_sec">${selOpts(CGDED,r.sec||'(Select)')}</select></td>
+      <td class="l"><input type="text" id="cgded_${i}_dt" value="${r.dt||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td class="l"><input type="text" id="cgded_${i}_dp" value="${r.dp||''}" oninput="fmtDate(this)" placeholder="DD/MM/YYYY" style="text-align:left"></td>
+      <td><input type="text" id="cgded_${i}_amt" value="${r.amt||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="cgded_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderQd(){const tb=$('qd-rows');if(!tb)return;tb.innerHTML='';
+  data.qd.forEach((r,i)=>{const se=num(r.opening)+num(r.purchase)-num(r.sale)-num(r.closing);const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><select id="qd_${i}_type">${selOpts(QD_TYPE,r.type)}</select></td>
+      <td class="l"><input type="text" id="qd_${i}_item" value="${r.item||''}" style="text-align:left"></td>
+      <td class="l"><select id="qd_${i}_unit">${selOpts(QD_UNIT,r.unit)}</select></td>
+      <td><input type="text" id="qd_${i}_opening" value="${r.opening||''}"></td>
+      <td><input type="text" id="qd_${i}_purchase" value="${r.purchase||''}"></td>
+      <td><input type="text" id="qd_${i}_sale" value="${r.sale||''}"></td>
+      <td><input type="text" id="qd_${i}_closing" value="${r.closing||''}"></td>
+      <td><span class="cv">${Math.round(se)}</span></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="qd_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCgNri(){const tb=$('cgnri-rows');if(!tb)return;tb.innerHTML='';
+  data.cg.nri.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="cgnri_${i}_nature" value="${(r.nature||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><input type="text" id="cgnri_${i}_country" value="${r.country||''}" style="text-align:left"></td>
+      <td class="l"><input type="text" id="cgnri_${i}_article" value="${r.article||''}" style="text-align:left"></td>
+      <td><input type="text" id="cgnri_${i}_treaty" value="${r.treaty||''}"></td>
+      <td><input type="text" id="cgnri_${i}_itact" value="${r.itact||''}"></td>
+      <td><input type="text" id="cgnri_${i}_amt" value="${r.amt||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="cgnri_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderCg(){renderCgSimple('stEq','cgsteq-rows','cgsteq');renderCgLB('stLB','cgstlb-rows','cgstlb');
+  renderCgSimple('stOth','cgstoth-rows','cgstoth');renderCgLB('ltLB','cgltlb-rows','cgltlb');
+  renderCg112a();renderCgVda();renderCgDed();renderCgNri();
+  Object.keys(data.cg.acc).forEach(k=>setv('cgacc_'+k,data.cg.acc[k]));}
+function renderOsOth(){const tb=$('osoth-rows');if(!tb)return;tb.innerHTML='';
+  data.os.others.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="osoth_${i}_nature" value="${(r.nature||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td><input type="text" id="osoth_${i}_amount" value="${r.amount||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="osoth_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderOsDtaa(){const tb=$('osdtaa-rows');if(!tb)return;tb.innerHTML='';
+  data.os.dtaa.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><input type="text" id="osdtaa_${i}_nature" value="${(r.nature||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td class="l"><select id="osdtaa_${i}_country">${COUNTRIES.map(o=>`<option ${o===r.country?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td class="l"><input type="text" id="osdtaa_${i}_article" value="${(r.article||'').replace(/"/g,'&quot;')}" style="text-align:left"></td>
+      <td><input type="text" id="osdtaa_${i}_treaty" value="${r.treaty||''}"></td>
+      <td><input type="text" id="osdtaa_${i}_itact" value="${r.itact||''}"></td>
+      <td><input type="text" id="osdtaa_${i}_amt" value="${r.amt||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="osdtaa_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function renderOs(){Object.keys(data.os.fields).forEach(k=>setv('os_'+k,data.os.fields[k]));
+  renderOsOth();renderOsDtaa();Object.keys(data.os.q).forEach(k=>setv('osq_'+k,data.os.q[k]));}
 
 /* -- Foreign asset schedules (generic from FA_COLS) -- */
 function renderFa(key){
@@ -1864,6 +2137,10 @@ function populate(sfId){
   else if(sfId==='sf-unlisted')renderUnlisted();
   else if(sfId==='sf-nature')renderNature();
   else if(sfId==='sf-pti')renderPti();
+  else if(sfId==='sf-salary')renderSalary();
+  else if(sfId==='sf-cg')renderCg();
+  else if(sfId==='sf-os')renderOs();
+  else if(sfId==='sf-qd')renderQd();
   else if(sfId.startsWith('sf-fa_'))renderFa(sfId.slice(3));
   else if(sfId==='sf-al_firm')renderAlFirm();
   else if(AL_BREAKUP_KEYS.includes(sfId.slice(3))){const key=sfId.slice(3);
@@ -1933,6 +2210,22 @@ function saveSubFormField(sfId,inp){const id=inp.id,v=inp.value;let m;
   if(m=id.match(/^esopsold_(\d+)_(ay|date|tax)$/)){data.esop.soldRows[+m[1]][m[2]]=v;return;}
   if(m=id.match(/^nat_(\d+)_(sector|subsector|code|trade1|trade2)$/)){data.nature[+m[1]][m[2]]=v;return;}
   if(m=id.match(/^pti_(\d+)_(entity|name|pan|head|income|tds)$/)){data.pti[+m[1]][m[2]]=(m[2]==='pan'?v.toUpperCase():v);return;}
+  // Salary / Capital Gains / Other Sources drill-ins
+  if(m=id.match(/^salemp_(\d+)_(name|nature|addr|city|state|sal17|perq|pil)$/)){data.sal.employers[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^salex_(\d+)_(nature|amount)$/)){data.sal.exempt[+m[1]][m[2]]=v;return;}
+  if(id==='sal_ded16ia'){data.sal.ded16ia=v;return;} if(id==='sal_proftax'){data.sal.proftax=v;return;}
+  if(m=id.match(/^(cgsteq|cgstoth)_(\d+)_(fvc|cost|imp|exp)$/)){(m[1]==='cgsteq'?data.cg.stEq:data.cg.stOth)[+m[2]][m[3]]=v;return;}
+  if(m=id.match(/^(cgstlb|cgltlb)_(\d+)_(dop|dos|fvc|cost|imp|exp|buyer|buyerpan|buyershare|buyeramt|buyeraddr|buyerstate|ex54sec|ex54amt)$/)){(m[1]==='cgstlb'?data.cg.stLB:data.cg.ltLB)[+m[2]][m[3]]=(m[3]==='buyerpan'?v.toUpperCase():v);return;}
+  if(m=id.match(/^cg112a_(\d+)_(onb|isin|name|sale|cost|fmv|acq)$/)){data.cg.lt112a[+m[1]][m[2]]=(m[2]==='isin'?v.toUpperCase():v);return;}
+  if(m=id.match(/^cgvda_(\d+)_(dop|dos|cost|cons)$/)){data.cg.vda[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^cgded_(\d+)_(sec|dt|dp|amt)$/)){data.cg.ded[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^cgacc_(.+)$/)){data.cg.acc[m[1]]=v;return;}
+  if(m=id.match(/^cgnri_(\d+)_(nature|country|article|treaty|itact|amt)$/)){data.cg.nri[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^osq_(.+)$/)){data.os.q[m[1]]=v;return;}
+  if(m=id.match(/^osoth_(\d+)_(nature|amount)$/)){data.os.others[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^osdtaa_(\d+)_(nature|country|article|treaty|itact|amt)$/)){data.os.dtaa[+m[1]][m[2]]=v;return;}
+  if(m=id.match(/^os_([a-z_]+)$/)){data.os.fields[m[1]]=v;return;}
+  if(m=id.match(/^qd_(\d+)_(type|item|unit|opening|purchase|sale|closing)$/)){data.qd[+m[1]][m[2]]=v;return;}
   if(id==='esr_pan'){data.esop.pan=v.toUpperCase();return;} if(id==='esr_dpiit'){data.esop.dpiit=v;return;}
   // FA detail popup
   if(m=id.match(/^fadet_([a-zA-Z]+)$/)){ if(faDetailKey&&data[faDetailKey]&&data[faDetailKey][faDetailIdx])data[faDetailKey][faDetailIdx][m[1]]=v; return;}
@@ -2183,6 +2476,7 @@ function onFlagChange(fld,v){
 
 // add-row buttons
 $('addBankBtn').addEventListener('click',()=>{data.bank.push(newBankRow());renderBank();computeAll();});
+{const _qb=$('addQdBtn');if(_qb)_qb.addEventListener('click',()=>{data.qd.push(newQdRow());renderQd();});}
 $('addSpiMinorBtn').addEventListener('click',()=>{data.spiMinor.push(newSpiRow());renderSpi();computeAll();});
 $('addSpiOtherBtn').addEventListener('click',()=>{data.spiOther.push(newSpiRow());renderSpi();computeAll();});
 $('addGstrBtn').addEventListener('click',()=>{data.gstr.push(newGstrRow());renderGstr();computeAll();});
@@ -2526,7 +2820,9 @@ $('exportJsonBtn').addEventListener('click',()=>{
   switchMainTab('summary');
   const {errors,warnings}=validateItr3();
   renderValidation(errors,warnings);
-  if(errors.length===0){ doExportItr3(); }
+  // COMPULSORY GATE: any Category-A error blocks export and shows a numbered popup.
+  if(errors.length){ showValidationPopup(errors,warnings); return; }
+  doExportItr3();
 });
 function renderValidation(errors,warnings){
   const p=$('validationPanel'); let html='';
@@ -2536,20 +2832,243 @@ function renderValidation(errors,warnings){
   html+=`<div class="val-summary">${errors.length} error(s), ${warnings.length} warning(s)</div>`;
   p.innerHTML=html;
 }
+function _esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// Blocking popup listing ALL validation reasons (Sl.No + rule wording) for the CA to fix.
+function showValidationPopup(errors,warnings){
+  let ov=$('itr3ValPopup');
+  if(!ov){ ov=document.createElement('div'); ov.id='itr3ValPopup';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:24px;';
+    document.body.appendChild(ov);
+  }
+  const errHtml=errors.map(e=>`<li style="margin:6px 0;color:#b91c1c;">${_esc(e)}</li>`).join('');
+  const warnHtml=warnings.length?`<div style="margin-top:14px;font-weight:600;color:#92400e;">Warnings (do not block export):</div><ul style="margin:6px 0 0 18px;padding:0;">${warnings.map(w=>`<li style="margin:4px 0;color:#92400e;">${_esc(w)}</li>`).join('')}</ul>`:'';
+  ov.innerHTML=`<div style="background:#fff;max-width:680px;width:100%;max-height:80vh;overflow:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:22px 24px;font-family:inherit;">
+    <div style="font-size:18px;font-weight:700;color:#b91c1c;margin-bottom:4px;">Cannot export &mdash; ${errors.length} validation error(s) must be fixed</div>
+    <div style="font-size:13px;color:#475569;margin-bottom:12px;">This return does not pass the mandatory ITR-3 validation checks. Fix each item below, then export again.</div>
+    <ol style="margin:0;padding:0 0 0 18px;list-style:none;">${errHtml}</ol>
+    ${warnHtml}
+    <div style="text-align:right;margin-top:18px;"><button id="itr3ValPopupClose" style="background:#1e293b;color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:14px;cursor:pointer;">Close</button></div>
+  </div>`;
+  ov.style.display='flex';
+  $('itr3ValPopupClose').onclick=()=>{ov.style.display='none';};
+  ov.onclick=(e)=>{ if(e.target===ov) ov.style.display='none'; };
+}
+/* ============================================================================
+   BACKGROUND VALIDATION ENGINE (ITR-3, AY 2025-26)
+   Extensible rule table. Each rule = {sl, cat, msg, fail(I,ctx)->bool}:
+     I   = built JSON node ITR.ITR3 (validated on the wire body, not the model)
+     ctx = {pan,name,dob,status,data,calcReady,calcVal}
+     fail() returns true when the rule is VIOLATED.
+     cat 'A' => hard reject (blocks export); cat 'B'/'D' => warning (non-blocking).
+   Rules that throw (inputs absent for this return) are skipped, never counted.
+   Sl.No + wording carried verbatim from CBDT ITR-3 Validation Rules V1.0 AY25-26.
+   Coverage: see the honest count comment at the end of the ITR3_RULES appends.
+   ============================================================================ */
+const ITR3_RULES=[];
+function _vn(v){ return typeof v==='number'?v:(v==null?0:(parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0)); }
+function _eq(a,b){ return Math.abs(_vn(a)-_vn(b))<=1; }               // equal within Re.1 (rounding)
+function _sum(){ let s=0; for(let i=0;i<arguments.length;i++)s+=_vn(arguments[i]); return s; }
+function _get(o,path){ return path.split('.').reduce((x,k)=>(x==null?undefined:x[k]),o); }
+function _eq5(a,b){ return Math.abs(_vn(a)-_vn(b))<=5; }              // round-off +5/-5 (per Part B-TI note)
+/* ---- BATCH 1: mandatory-field presence + enum/format + Schedule Part A-BS arithmetic ---- */
+ITR3_RULES.push(
+ {sl:'P1',cat:'A',msg:'PAN of the assessee is mandatory and must be in the format ABCDE1234F.',
+  fail:(I)=>!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test((_get(I,'PartA_GEN1.PersonalInfo.PAN')||''))},
+ {sl:'P2',cat:'A',msg:'Name of the assessee is mandatory.',
+  fail:(I,c)=>!(c.name)&&!(_get(I,'Verification.Declaration.AssesseeVerName'))},
+ {sl:'33',cat:'A',msg:'The date of Birth/Formation should be before 01/04 of the AY for which the ITR is being filed.',
+  fail:(I)=>{const dob=_get(I,'PartA_GEN1.PersonalInfo.DOB');if(!dob)return false;const y=parseInt(String(dob).slice(0,4),10);const ay=parseInt(_get(I,'Form_ITR3.AssessmentYear')||'0',10);return !!(y&&ay&&y>=ay);}},
+ {sl:'F1',cat:'A',msg:'Aadhaar number in Part A General must be a valid 12-digit number.',
+  fail:(I)=>{const a=String(_get(I,'PartA_GEN1.PersonalInfo.AadhaarCardNo')||'').trim();return a!==''&&!/^[0-9]{12}$/.test(a);}},
+ {sl:'F2',cat:'A',msg:'State Code in Part A General address is mandatory and must be a valid code (01-38 or 99).',
+  fail:(I)=>{const s=String(_get(I,'PartA_GEN1.PersonalInfo.Address.StateCode')||'').trim();if(!s)return true;const n=parseInt(s,10);return !(s==='99'||(n>=1&&n<=38));}},
+ {sl:'F3',cat:'A',msg:'PIN Code in Part A General address is mandatory and must be a 6-digit number.',
+  fail:(I)=>!/^[0-9]{6}$/.test(String(_get(I,'PartA_GEN1.PersonalInfo.Address.PinCode')||'').trim())},
+ // ---- Schedule Part A-BS arithmetic (only when the Balance Sheet is present) ----
+ {sl:'52',cat:'A',msg:'In Schedule Part A BS, "Sources of funds" should match with "Total application of funds".',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundSrc.TotFundSrc'),_get(B,'FundApply.TotFundApply'));}},
+ {sl:'53',cat:'A',msg:'In Schedule Part A BS, "Total of Proprietor’s fund" should equal sum of "Proprietor’s Capital" and "Total Reserve and surplus".',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundSrc.PropFund.TotPropFund'),_sum(_get(B,'FundSrc.PropFund.PropCap'),_get(B,'FundSrc.PropFund.ResrNSurp.TotResrNSurp')));}},
+ {sl:'54',cat:'A',msg:'In Schedule Part A BS, "Total Loan Funds" should equal sum of "Secured Loans" and "Unsecured Loans".',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundSrc.LoanFunds.TotLoanFund'),_sum(_get(B,'FundSrc.LoanFunds.SecrLoan.TotSecrLoan'),_get(B,'FundSrc.LoanFunds.UnsecrLoan.TotUnSecrLoan')));}},
+ {sl:'55',cat:'A',msg:'In Schedule Part A BS, "Total of sources of funds" should equal sum of Proprietor’s fund, Loan Funds, Deferred Tax Liability and Advances.',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundSrc.TotFundSrc'),_sum(_get(B,'FundSrc.PropFund.TotPropFund'),_get(B,'FundSrc.LoanFunds.TotLoanFund'),_get(B,'FundSrc.DeferredTax'),_get(B,'FundSrc.Advances.TotalAdvances')));}},
+ {sl:'56',cat:'A',msg:'In Schedule Part A BS, "Total of investments" should equal sum of Long term Investments and Short term Investments.',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundApply.Investments.TotInvestments'),_sum(_get(B,'FundApply.Investments.LongTermInv.TotLongTermInv'),_get(B,'FundApply.Investments.TradeInv.TotTradeInv')));}},
+ {sl:'57',cat:'A',msg:'In Schedule Part A BS, "Total of current assets" should equal sum of inventories, sundry debtors, cash & bank balances and other current assets.',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;const ca=_get(B,'FundApply.CurrAssetLoanAdv.CurrAsset');if(!ca)return false;return !_eq(ca.TotCurrAsset,_sum(_get(ca,'Inventories.TotInventries'),ca.SndryDebtors,_get(ca,'CashOrBankBal.TotCashOrBankBal'),ca.OthCurrAsset));}},
+ {sl:'58',cat:'A',msg:'In Schedule Part A BS, "Total of net current assets" should equal difference between "Total current assets, loans and advances" and "Total current liabilities and provisions".',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;const c=_get(B,'FundApply.CurrAssetLoanAdv');if(!c)return false;return !_eq(c.NetCurrAsset,_vn(c.TotCurrAssetLoanAdv)-_vn(_get(c,'CurrLiabilitiesProv.TotCurrLiabilitiesProvision')));}},
+ {sl:'59',cat:'A',msg:'In Schedule Part A BS, "Total of application of funds" should equal sum of Total Fixed Assets, Total Investments, Total Current assets loans & advances and Total Miscellaneous expenditure.',
+  fail:(I)=>{const B=I.PARTA_BS;if(!B)return false;return !_eq(_get(B,'FundApply.TotFundApply'),_sum(_get(B,'FundApply.FixedAsset.TotFixedAsset'),_get(B,'FundApply.Investments.TotInvestments'),_get(B,'FundApply.CurrAssetLoanAdv.TotCurrAssetLoanAdv'),_get(B,'FundApply.MiscAdjust.TotMiscAdjust')));}}
+);
+/* ---- BATCH 2: Schedule Part B-TI head totals + Part B-TTI tax-ladder cross-checks ---- */
+ITR3_RULES.push(
+ {sl:'915',cat:'A',msg:'In Part B-TI, "Total Short term Capital Gains" should equal the sum of the individual Short Term Capital Gain amounts.',
+  fail:(I)=>{const s=_get(I,'PartB-TI.CapGain.ShortTerm');if(!s)return false;return !_eq(s.TotalShortTerm,_sum(s.ShortTerm20Per,s.ShortTerm30Per,s.ShortTermAppRate,s.ShortTermSplRateDTAA));}},
+ {sl:'916',cat:'A',msg:'In Part B-TI, "Total Long term Capital Gains" should equal the sum of the individual Long Term Capital Gain amounts.',
+  fail:(I)=>{const l=_get(I,'PartB-TI.CapGain.LongTerm');if(!l)return false;return !_eq(l.TotalLongTerm,_sum(l.LongTerm12_5Per,l.LongTermSplRateDTAA));}},
+ {sl:'956',cat:'A',msg:'"Total Capital Gains" should equal the sum of "Sum of Short-term/Long-term capital gains" and "Capital gain chargeable @30% u/s 115BBH".',
+  fail:(I)=>{const c=_get(I,'PartB-TI.CapGain');if(!c)return false;return !_eq(c.TotalCapGains,_sum(c.ShortTermLongTermTotal,c.CapGains30Per115BBH));}},
+ {sl:'918',cat:'A',msg:'In Part B-TI, total Income from Other Sources should equal the sum of the individual Other Sources incomes.',
+  fail:(I)=>{const o=_get(I,'PartB-TI.IncFromOS');if(!o)return false;return !_eq(o.TotIncFromOS,_sum(o.OtherSrcThanOwnRaceHorse,o.IncChargblSplRate,o.FromOwnRaceHorse));}},
+ {sl:'919',cat:'A',msg:'In Part B-TI, Total Income (Sl.No.6) should equal the total of head-wise incomes (Salary + House Property + Business/Profession + Capital Gains + Other Sources).',
+  fail:(I)=>{const T=I['PartB-TI'];if(!T)return false;const exp=_sum(T.Salaries,Math.max(0,_vn(T.IncomeFromHP)),_get(T,'ProfBusGain.TotProfBusGain'),_get(T,'CapGain.TotalCapGains'),_get(T,'IncFromOS.TotIncFromOS'));return !_eq(T.TotalTI,exp);}},
+ {sl:'942',cat:'A',msg:'In Part B-TI, Chapter VI-A deduction total (12c) should equal Part-B/CA/D (12a) plus Part-C (12b).',
+  fail:(I)=>{const d=_get(I,'PartB-TI.DeductionsUndSchVIADtl');if(!d)return false;return !_eq(d.TotDeductUndSchVIA,_sum(d.PartBchapterVIA,d.PartCchapterVIA));}},
+ {sl:'913',cat:'A',msg:'If tax computed is more than 0, Gross Total Income must be disclosed and cannot be Nil or 0.',
+  fail:(I)=>{const g=_vn(_get(I,'PartB-TI.GrossTotalIncome'));const t=_vn(_get(I,'PartB_TTI.ComputationOfTaxLiability.GrossTaxPayable'));return t>0&&g<=0;}},
+ {sl:'963',cat:'A',msg:'In Part B-TTI, Tax Payable on Total Income should equal (Normal Tax + Special Tax − Rebate on Agricultural Income).',
+  fail:(I)=>{const tp=_get(I,'PartB_TTI.ComputationOfTaxLiability.TaxPayableOnTI');if(!tp)return false;return !_eq(tp.TaxPayableOnTotInc,_vn(tp.TaxAtNormalRatesOnAggrInc)+_vn(tp.TaxAtSpecialRates)-_vn(tp.RebateOnAgriInc));}},
+ {sl:'970',cat:'A',msg:'In Part B-TTI, Aggregate liability should equal Net tax liability plus Total Interest & fee payable (234A/B/C/F).',
+  fail:(I)=>{const c=_get(I,'PartB_TTI.ComputationOfTaxLiability');if(!c)return false;const ip=c.IntrstPay||{};return !_eq(c.AggregateTaxInterestLiability,_sum(c.NetTaxLiability,ip.IntrstPayUs234A,ip.IntrstPayUs234B,ip.IntrstPayUs234C,ip.LateFilingFee234F));}},
+ {sl:'971',cat:'A',msg:'In Part B-TTI, Total Taxes Paid should equal the sum of Advance Tax, TDS, TCS and Self-Assessment Tax.',
+  fail:(I)=>{const t=_get(I,'PartB_TTI.TaxPaid.TaxesPaid');if(!t)return false;return !_eq(t.TotalTaxesPaid,_sum(t.AdvanceTax,t.TDS,t.TCS,t.SelfAssessmentTax));}},
+ {sl:'935',cat:'B',msg:'In Part B-TI, Total Income should equal Gross Total Income minus Chapter VI-A deductions (round-off ±5 allowed).',
+  fail:(I)=>{const T=I['PartB-TI'];if(!T)return false;return !_eq5(T.TotalIncome,_vn(T.GrossTotalIncome)-_vn(_get(T,'DeductionsUndSchVIADtl.TotDeductUndSchVIA')));}}
+);
+/* ---- BATCH 3: conditional-required (44AB audit) + Manufacturing/Trading/P&L arithmetic + verifier/bank ---- */
+ITR3_RULES.push(
+ {sl:'51',cat:'A',msg:'If the assessee is liable for audit u/s 44AB, Part A-BS and Part A-P&L should be filled.',
+  fail:(I)=>{const a=_get(I,'PartA_GEN2.AuditInfo.LiableSec44ABflg');if(a!=='Y')return false;return !(I.PARTA_BS&&I.PARTA_PL);}},
+ {sl:'61',cat:'A',msg:'In Part A Manufacturing Account, Total Opening Inventory (1Aiii) should equal 1Ai + 1Aii.',
+  fail:(I)=>{const M=I.ManufacturingAccount;if(!M||!M.OpeningInventory)return false;const o=M.OpeningInventory;return !_eq(o.OpngInvntryTotal,_sum(o.OpngStckRawMat,o.OpngStckWrkinPrgrs));}},
+ {sl:'64',cat:'A',msg:'In Part A Manufacturing Account, Total debits (1F) should equal Opening Inventory + Purchases + Direct Wages + Direct Expenses + Factory Overheads.',
+  fail:(I)=>{const M=I.ManufacturingAccount;if(!M||!M.OpeningInventory)return false;const o=M.OpeningInventory;return !_eq(o.TotalDebtsManfctrngAcc,_sum(o.OpngInvntryTotal,o.Purchases,o.DirectWages,o.DirectExpenses,o.TotalFactoryOverheads));}},
+ {sl:'65',cat:'A',msg:'In Part A Manufacturing Account, total closing stock should equal the sum of its break-up.',
+  fail:(I)=>{const M=I.ManufacturingAccount;if(!M||!M.ClosingStock)return false;const c=M.ClosingStock;return !_eq(c.ClsngStckTotal,_sum(c.ClsngStckRawMaterial,c.ClsngStckWrkInPrgrs));}},
+ {sl:'66',cat:'A',msg:'In Part A Manufacturing Account, Cost of Goods Produced (Sl.No.3) should equal 1F − 2 (Total debits − Closing stock).',
+  fail:(I)=>{const M=I.ManufacturingAccount;if(!M)return false;return !_eq(M.CostOfGoodsPrdcd,_vn(_get(M,'OpeningInventory.TotalDebtsManfctrngAcc'))-_vn(_get(M,'ClosingStock.ClsngStckTotal')));}},
+ {sl:'70',cat:'A',msg:'In Part A-Trading Account, total Sales/Gross receipts should equal Sale of Goods + Sale of Services + Operating Revenue.',
+  fail:(I)=>{const T=I.TradingAccount;if(!T)return false;return !_eq(T.SalesGrossReceiptsTotal,_sum(T.SaleOfGoods,T.SaleOfServices,T.OperatingRevenueTotal));}},
+ {sl:'72',cat:'A',msg:'In Part A-Trading Account, Total revenue from operations should equal Sales/Gross receipts plus Duties & taxes.',
+  fail:(I)=>{const T=I.TradingAccount;if(!T)return false;return !_eq(T.TotRevenueFrmOperations,_sum(T.SalesGrossReceiptsTotal,_get(T,'ExciseCustomsVAT.TotExciseCustomsVAT')));}},
+ {sl:'94',cat:'A',msg:'In Part A P&L, Net profit before taxes (Sl.No.53) should equal Profit before interest, depreciation & taxes − Total Interest − Depreciation & amortization.',
+  fail:(I)=>{const d=_get(I,'PARTA_PL.DebitsToPL');if(!d)return false;return !_eq(d.PBT,_vn(d.PBIDTA)-_vn(_get(d,'InterestExpdrtDtls.InterestExpdr'))-_vn(d.DepreciationAmort));}},
+ {sl:'95',cat:'A',msg:'In Part A P&L, Profit after tax (Sl.No.56) should equal Net Profit before Taxes − provision for current tax − provision for deferred tax.',
+  fail:(I)=>{const t=_get(I,'PARTA_PL.TaxProvAppr'),d=_get(I,'PARTA_PL.DebitsToPL');if(!t||!d)return false;return !_eq(t.ProfitAfterTax,_vn(d.PBT)-_vn(t.ProvForCurrTax)-_vn(t.ProvDefTax));}},
+ {sl:'V1',cat:'A',msg:'PAN quoted in the Verification schedule should be the same as the assessee PAN (unless the return is filed by a representative assessee).',
+  fail:(I)=>{if(_get(I,'PartA_GEN1.FilingStatus.AsseseeRepFlg')==='Y')return false;const p=_get(I,'PartA_GEN1.PersonalInfo.PAN'),v=_get(I,'Verification.Declaration.AssesseeVerPAN');if(!p||!v)return false;return p!==v;}},
+ {sl:'B1',cat:'A',msg:'A refund is due but no bank account with IFSC has been provided — a valid bank account is mandatory for the refund to be credited.',
+  fail:(I)=>{const r=_vn(_get(I,'PartB_TTI.Refund.RefundDue'));if(r<=0)return false;const rows=_get(I,'PartB_TTI.Refund.BankAccountDtls.AddtnlBankDetails');return !(Array.isArray(rows)&&rows.some(b=>b&&b.IFSCCode&&b.BankAccountNo));}}
+);
+/* ---- BATCH 4: Schedule DEP/DCG depreciation totals + Part B-TTI tax-ladder (contd) ---- */
+ITR3_RULES.push(
+ {sl:'325',cat:'A',msg:'In Schedule DEP, Total depreciation on plant and machinery should equal the sum of the block-wise depreciation (@15/30/40/45%).',
+  fail:(I)=>{const s=_get(I,'ScheduleDEP.SummaryFromDeprSch.PlantMachinerySummary');if(!s)return false;return !_eq(s.TotPlntMach,_sum(s.DeprBlockTot15Percent,s.DeprBlockTot30Percent,s.DeprBlockTot40Percent,s.DeprBlockTot45Percent));}},
+ {sl:'326',cat:'A',msg:'In Schedule DEP, total depreciation on building should equal the sum of the block-wise depreciation (@5/10/40%).',
+  fail:(I)=>{const s=_get(I,'ScheduleDEP.SummaryFromDeprSch.BuildingSummary');if(!s)return false;return !_eq(s.TotBuildng,_sum(s.DeprBlockTot5Percent,s.DeprBlockTot10Percent,s.DeprBlockTot40Percent));}},
+ {sl:'327',cat:'A',msg:'In Schedule DEP, total depreciation should equal the sum of depreciation on plant & machinery, building, furniture & fittings, intangible assets and ships.',
+  fail:(I)=>{const s=_get(I,'ScheduleDEP.SummaryFromDeprSch');if(!s)return false;return !_eq(s.TotalDepreciation,_sum(_get(s,'PlantMachinerySummary.TotPlntMach'),_get(s,'BuildingSummary.TotBuildng'),s.FurnitureSummary,s.IntangibleAssetSummary,s.ShipsSummary));}},
+ {sl:'325C',cat:'A',msg:'In Schedule DCG, capital-gains depreciation on plant and machinery should equal the sum of its block-wise amounts (@15/30/40/45%).',
+  fail:(I)=>{const s=_get(I,'ScheduleDCG.SummaryFromDeprSchCG.PlantMachinerySummaryCG');if(!s)return false;return !_eq(s.TotPlntMach,_sum(s.DeprBlockTot15Percent,s.DeprBlockTot30Percent,s.DeprBlockTot40Percent,s.DeprBlockTot45Percent));}},
+ {sl:'326C',cat:'A',msg:'In Schedule DCG, capital-gains depreciation on building should equal the sum of its block-wise amounts (@5/10/40%).',
+  fail:(I)=>{const s=_get(I,'ScheduleDCG.SummaryFromDeprSchCG.BuildingSummaryCG');if(!s)return false;return !_eq(s.TotBuildng,_sum(s.DeprBlockTot5Percent,s.DeprBlockTot10Percent,s.DeprBlockTot40Percent));}},
+ {sl:'327C',cat:'A',msg:'In Schedule DCG, total should equal the sum of plant & machinery, building, furniture & fittings, intangible assets and ships.',
+  fail:(I)=>{const s=_get(I,'ScheduleDCG.SummaryFromDeprSchCG');if(!s)return false;return !_eq(s.TotalDepreciation,_sum(_get(s,'PlantMachinerySummaryCG.TotPlntMach'),_get(s,'BuildingSummaryCG.TotBuildng'),s.FurnitureSummary,s.IntangibleAssetSummary,s.ShipsSummary));}},
+ {sl:'964',cat:'A',msg:'In Part B-TTI, "Tax payable" (after 87A) should equal Tax Payable on Total Income minus Rebate u/s 87A.',
+  fail:(I)=>{const tp=_get(I,'PartB_TTI.ComputationOfTaxLiability.TaxPayableOnTI');if(!tp)return false;return !_eq(tp.TaxPayableOnRebate,_vn(tp.TaxPayableOnTotInc)-_vn(tp.Rebate87A));}},
+ {sl:'965',cat:'A',msg:'In Part B-TTI, "Gross tax liability" should equal the sum of Tax Payable (after 87A), Total Surcharge and Health & Education Cess.',
+  fail:(I)=>{const tp=_get(I,'PartB_TTI.ComputationOfTaxLiability.TaxPayableOnTI');if(!tp)return false;return !_eq(tp.GrossTaxLiability,_sum(tp.TaxPayableOnRebate,tp.TotalSurcharge,tp.EducationCess));}},
+ {sl:'968',cat:'A',msg:'In Part B-TTI, "Total Tax Relief" should equal the sum of Relief u/s 89, u/s 90/90A and u/s 91.',
+  fail:(I)=>{const r=_get(I,'PartB_TTI.ComputationOfTaxLiability.TaxRelief');if(!r)return false;return !_eq(r.TotTaxRelief,_sum(r.Section89,r.Section90,r.Section90A,r.Section91));}},
+ {sl:'979',cat:'A',msg:'In Part B-TTI, Gross tax payable should be the higher of the Gross tax liability (1d) and the tax on deemed total income u/s 115JC (2i).',
+  fail:(I)=>{const c=_get(I,'PartB_TTI.ComputationOfTaxLiability');if(!c)return false;const a=_vn(_get(c,'TaxPayableOnTI.GrossTaxLiability')),d=_vn(_get(c,'TaxPayableOnDeemedTI.TotalTax'));return !_eq(c.GrossTaxPayable,Math.max(a,d));}},
+ {sl:'981',cat:'A',msg:'In Part B-TTI, Net tax liability should equal Tax payable after credit u/s 115JD minus Total Tax Relief.',
+  fail:(I)=>{const c=_get(I,'PartB_TTI.ComputationOfTaxLiability');if(!c)return false;return !_eq(c.NetTaxLiability,_vn(c.TaxPayAfterCreditUs115JD)-_vn(_get(c,'TaxRelief.TotTaxRelief')));}},
+ {sl:'976',cat:'A',msg:'In Part B-TTI, Refund claimed should equal Total Taxes Paid minus Aggregate liability (when taxes paid exceed the aggregate liability).',
+  fail:(I)=>{const c=_get(I,'PartB_TTI.ComputationOfTaxLiability');const paid=_vn(_get(I,'PartB_TTI.TaxPaid.TaxesPaid.TotalTaxesPaid'));const agg=_vn(c&&c.AggregateTaxInterestLiability);if(paid<=agg)return false;return !_eq(_get(I,'PartB_TTI.Refund.RefundDue'),paid-agg);}}
+);
+/* ---- BATCH 5: Schedule BP internal totals + CYLA loss-remaining + BFLA aggregate + CGFor23 + audit-flag enums ---- */
+ITR3_RULES.push(
+ {sl:'BP-44',cat:'A',msg:'In Schedule BP, total of deemed income under sections 44AD/44ADA/44AE/44B/44BB/44BBA/44BBC/44BBD/44DA should equal the sum of the individual presumptive amounts.',
+  fail:(I)=>{const d=_get(I,'ITR3ScheduleBP.BusinessIncOthThanSpec.DeemedProfitBusUs');if(!d)return false;return !_eq(d.TotDeemedProfitBusUs,_sum(d.Section44AD,d.Section44ADA,d.Section44AE,d.Section44B,d.Section44BB,d.Section44BBA,d.Section44BBC,d.Section44BBD,d.Section44DA));}},
+ {sl:'240',cat:'A',msg:'In Schedule BP, "Depreciation allowable under section 32(1)(ii) and 32(1)(iia)" total should equal the sum of its 32(1)(ii) and 32(1)(i) components.',
+  fail:(I)=>{const d=_get(I,'ITR3ScheduleBP.BusinessIncOthThanSpec.DepreciationAllowITAct32');if(!d)return false;return !_eq(d.TotDeprAllowITAct,_sum(d.DepreciationAllowUs32_1_ii,d.DepreciationAllowUs32_1_i));}},
+ {sl:'292',cat:'A',msg:'In Schedule BP, total exempt income credited to P&L should equal the sum of share of income from firm, share from AOP/BOI and other exempt income.',
+  fail:(I)=>{const e=_get(I,'ITR3ScheduleBP.BusinessIncOthThanSpec.IncCredPL');if(!e)return false;return !_eq(e.TotExempIncPL,_sum(e.FirmShareInc,e.AOPBOISharInc,e.OthExempInc));}},
+ {sl:'557',cat:'A',msg:'In Schedule CYLA, House-property loss remaining after set-off should equal House-property loss of the current year minus total House-property loss set off.',
+  fail:(I)=>{const C=I.ScheduleCYLA;if(!C||!C.LossRemAftSetOff)return false;return !_eq(C.LossRemAftSetOff.BalHPlossCurYrAftSetoff,_vn(_get(C,'TotalCurYr.TotHPlossCurYr'))-_vn(_get(C,'TotalLossSetOff.TotHPlossCurYrSetoff')));}},
+ {sl:'558',cat:'A',msg:'In Schedule CYLA, Business loss remaining after set-off should equal Business loss of the current year minus total Business loss set off.',
+  fail:(I)=>{const C=I.ScheduleCYLA;if(!C||!C.LossRemAftSetOff)return false;return !_eq(C.LossRemAftSetOff.BalBusLossAftSetoff,_vn(_get(C,'TotalCurYr.TotBusLoss'))-_vn(_get(C,'TotalLossSetOff.TotBusLossSetoff')));}},
+ {sl:'559',cat:'A',msg:'In Schedule CYLA, Other-sources loss remaining after set-off should equal Other-sources loss of the current year minus total Other-sources loss set off.',
+  fail:(I)=>{const C=I.ScheduleCYLA;if(!C||!C.LossRemAftSetOff)return false;return !_eq(C.LossRemAftSetOff.BalOthSrcLossNoRaceHorseAftSetoff,_vn(_get(C,'TotalCurYr.TotOthSrcLossNoRaceHorse'))-_vn(_get(C,'TotalLossSetOff.TotOthSrcLossNoRaceHorseSetoff')));}},
+ {sl:'437',cat:'A',msg:'In Schedule CG, Income chargeable under the head "Capital Gains" should equal the sum of "Sum of Capital Gain Incomes" and "Income from transfer of Virtual Digital Assets".',
+  fail:(I)=>{const g=I.ScheduleCGFor23;if(!g)return false;return !_eq(g.TotScheduleCGFor23,_sum(g.SumOfCGIncm,g.IncmFromVDATrnsf));}},
+ {sl:'F4',cat:'A',msg:'In Part A General (Audit Information), the audit-liability flags (44AA, 44AB, 92E, Account-audited) must each be either "Y" or "N".',
+  fail:(I)=>{const a=_get(I,'PartA_GEN2.AuditInfo');if(!a)return false;return ['LiableSec44AAflg','LiableSec44ABflg','LiableSec92Eflg','AccountAuditFlag'].some(k=>{const v=a[k];return v!=null&&v!==''&&v!=='Y'&&v!=='N';});}},
+ {sl:'588',cat:'B',msg:'In Schedule BFLA, "Income of current year after set off of brought-forward losses" should equal the sum of the head-wise incomes remaining after set-off.',
+  fail:(I)=>{const B=I.ScheduleBFLA;if(!B)return false;let s=0,seen=false;for(const k of Object.keys(B)){const v=_get(B,k+'.IncBFLA.IncOfCurYrAfterSetOffBFLosses');if(v!=null){seen=true;s+=_vn(v);}}if(!seen)return false;return !_eq5(B.IncomeOfCurrYrAftCYLABFLA,s);}},
+ {sl:'D240',cat:'B',msg:'In Schedule BP, depreciation allowable u/s 32 should reconcile with the total depreciation computed in Schedule DEP (Sl.No.6).',
+  fail:(I)=>{const bp=_vn(_get(I,'ITR3ScheduleBP.BusinessIncOthThanSpec.DepreciationAllowITAct32.TotDeprAllowITAct'));const dep=_get(I,'ScheduleDEP.SummaryFromDeprSch.TotalDepreciation');if(dep==null)return false;if(bp===0&&_vn(dep)===0)return false;return !_eq(bp,dep);}}
+);
+/* ---- BATCH 6: Schedule 112A / VDA / SI internal totals + prepaid-tax challan totals + AMTC credit ---- */
+ITR3_RULES.push(
+ {sl:'489',cat:'A',msg:'In Schedule 112A, Col.13 Total deductions should be equal to sum of Col.(7+12) — cost of acquisition plus expenditure connected with transfer.',
+  fail:(I)=>{const s=I.Schedule112A;if(!s)return false;return !_eq(s.Deductions112A,_sum(s.AcquisitionCost112A,s.ExpExclCnctTransfer112A));}},
+ {sl:'490',cat:'A',msg:'In Schedule 112A, Col.14 Balance should be equal to the output of Col.6 − Col.13 (Total Sale Value minus Total deductions).',
+  fail:(I)=>{const s=I.Schedule112A;if(!s)return false;return !_eq(s.Balance112A,_vn(s.SaleValue112A)-_vn(s.Deductions112A));}},
+ {sl:'502',cat:'A',msg:'In Schedule VDA, Total (Sl.No.A) should equal the sum of Col.7 income for rows where head of income is Business income.',
+  fail:(I)=>{const v=I.ScheduleVDA;if(!v||!Array.isArray(v.ScheduleVDADtls))return false;const s=v.ScheduleVDADtls.filter(r=>r&&r.HeadUndIncTaxed==='BI').reduce((a,r)=>a+_vn(r.IncomeFromVDA),0);return !_eq(v.TotIncBusiness,s);}},
+ {sl:'503',cat:'A',msg:'In Schedule VDA, Total (Sl.No.B) should equal the sum of Col.7 income for rows where head of income is Capital Gain.',
+  fail:(I)=>{const v=I.ScheduleVDA;if(!v||!Array.isArray(v.ScheduleVDADtls))return false;const s=v.ScheduleVDADtls.filter(r=>r&&r.HeadUndIncTaxed==='CG').reduce((a,r)=>a+_vn(r.IncomeFromVDA),0);return !_eq(v.TotIncCapGain,s);}},
+ {sl:'SI-T1',cat:'A',msg:'In Schedule SI, Total income chargeable at special rates should equal the sum of the special-rate income of each line item.',
+  fail:(I)=>{const s=I.ScheduleSI;if(!s||!Array.isArray(s.SplCodeRateTax))return false;const t=s.SplCodeRateTax.reduce((a,r)=>a+_vn(r&&r.SplRateInc),0);return !_eq(s.TotSplRateInc,t);}},
+ {sl:'SI-T2',cat:'A',msg:'In Schedule SI, Total tax on income chargeable at special rates should equal the sum of the tax of each line item.',
+  fail:(I)=>{const s=I.ScheduleSI;if(!s||!Array.isArray(s.SplCodeRateTax))return false;const t=s.SplCodeRateTax.reduce((a,r)=>a+_vn(r&&r.SplRateIncTax),0);return !_eq(s.TotSplRateIncTax,t);}},
+ {sl:'IT-T1',cat:'A',msg:'In Schedule IT, Total of advance tax and self-assessment tax payments should equal the sum of the individual challan amounts.',
+  fail:(I)=>{const s=I.ScheduleIT;if(!s||!Array.isArray(s.TaxPayment))return false;const t=s.TaxPayment.reduce((a,r)=>a+_vn(r&&r.Amt),0);return !_eq(s.TotalTaxPayments,t);}},
+ {sl:'TCS-T1',cat:'A',msg:'In Schedule TCS, Total tax collected at source should equal the sum of the TCS amount claimed in own hands across the individual rows.',
+  fail:(I)=>{const s=I.ScheduleTCS;if(!s||!Array.isArray(s.TCS))return false;const t=s.TCS.reduce((a,r)=>a+_vn(r&&r.TCSClaimedThisYearDtls&&r.TCSClaimedThisYearDtls.TCSAmtCollOwnHand),0);return !_eq(s.TotalSchTCS,t);}},
+ {sl:'842',cat:'B',msg:'In Schedule AMTC, Tax credit available u/s 115JD (Sl.No.3) should equal Tax under other provisions minus Tax u/s 115JC, and cannot be negative (0 when 115JC tax is the higher).',
+  fail:(I)=>{const c=I.ScheduleAMTC;if(!c)return false;return !_eq(c.AmtTaxCreditAvailable,Math.max(0,_vn(c.TaxOthProvisions)-_vn(c.TaxSection115JC)));}}
+);
+/* ---------------------------------------------------------------------------
+   COVERAGE (honest): ITR3_RULES currently encodes 67 rules for AY 2025-26.
+   Classes: mandatory-field presence (PAN/Name/PIN/StateCode) = 4;
+   enum/format (Aadhaar 12-digit, StateCode, DOB<AY, PIN 6-digit) = 4;
+   cross-field arithmetic — Balance Sheet (Sl.52-59) = 8, Part B-TI head totals
+   (915,916,918,919,942,956) = 6, Manufacturing/Trading (61,64,65,66,70,72) = 6,
+   P&L chain (94,95) = 2, tax ladder Part B-TTI (963,970,971,964,965,968,979,981,976) = 9,
+   depreciation Schedule DEP/DCG (325,326,327 + DCG mirror 325C/326C/327C) = 6;
+   Schedule BP internal totals (BP-44 deemed-profit, 240 dep-u/s32, 292 exempt-inc) = 3,
+   Schedule CYLA loss-remaining (557 HP, 558 Bus, 559 OthSrc) = 3, Schedule CG/VDA (437) = 1;
+   conditional-required (51 audit⇒BS+PL, 913 tax⇒GTI) = 2;
+   integrity/eligibility (V1 verifier-PAN, B1 refund-bank) = 2;
+   enum/flag (F4 audit-flags Y/N) = 1;
+   BATCH 6 self-contained schedule totals (489/490 Sch112A, 502/503 SchVDA,
+   SI-T1/SI-T2 SchSI, IT-T1 SchIT, TCS-T1 SchTCS) = 8, AMTC credit 842 = 1 (cat B);
+   advisory / warnings cat B (935 TI=GTI−VIA, 588 BFLA aggregate, D240 BP↔DEP reconcile, 842 AMTC credit) = 4.
+   Category A (hard reject) = 63; Category B (warning) = 4 (935, 588, D240, 842).
+   The CBDT ITR-3 V1.0 doc lists ~1000+ Sl.Nos across Cat A/B/D; the vast
+   majority are NON-deterministic here (require PAN/Aadhaar/RBI/profile DB
+   lookups, or reference schedules — Salary/HP/CG/OS/DEP/CFL/SI line items —
+   not materialised in this tool's simplified overlay JSON). Only rules that are
+   deterministically checkable against the built wire JSON are encoded, to
+   guarantee zero false blocks on a valid return. The ITR3_RULES array is the
+   single extension point: append more {sl,cat,msg,fail} as schedules are wired.
+   --------------------------------------------------------------------------- */
 function validateItr3(){
   const errors=[],warnings=[];
-  const pan=($('cl_pan').value||'').toUpperCase().trim();
-  const name=($('cl_name').value||'').trim();
-  const dob=($('cl_dob').value||'').trim();
-  if(!/^[A-Z]{5}\d{4}[A-Z]$/.test(pan)) errors.push('PAN is missing or invalid (format ABCDE1234F).');
-  if(!name) errors.push('Name of Assessee is required.');
-  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dob)) warnings.push('Date of Birth should be DD/MM/YYYY (needed for correct age-based slab).');
-  // ITR-3 covers all income including business/profession — no income ceiling, full capital gains allowed.
-  const biz=calcVal('it_bp_income');
-  if(biz>0){ warnings.push('Business/Profession income is present — review the Balance Sheet and P&L tabs and, if the accounts are audited u/s 44AB, set the audit flags before filing.'); }
-  const bal=calcVal('it_balancePayable');
-  if(bal<0){ const hasBank=(data.bank||[]).some(b=>b.acc&&b.ifsc); if(!hasBank) warnings.push('Refund due but no bank account with IFSC entered — add one for the refund to be credited.'); }
-  if(!calcReady) warnings.push('Open the Computation tab at least once so tax figures are available.');
+  let I=null;
+  try{ const j=buildItr3Json(); I=(j&&j.ITR&&j.ITR.ITR3)?j.ITR.ITR3:null; }
+  catch(e){ errors.push('Sl.No 0: Return JSON could not be assembled — '+((e&&e.message)||e)); }
+  const ctx={
+    pan:($('cl_pan').value||'').toUpperCase().trim(),
+    name:($('cl_name').value||'').trim(),
+    dob:($('cl_dob').value||'').trim(),
+    status:($('cl_status')?$('cl_status').value:'I'),
+    data:(typeof data!=='undefined'?data:{}), calcReady:calcReady, calcVal:calcVal
+  };
+  if(I){
+    for(const r of ITR3_RULES){
+      let bad=false;
+      try{ bad=!!r.fail(I,ctx); }catch(e){ bad=false; }
+      if(bad){ (r.cat==='A'?errors:warnings).push('Sl.No '+r.sl+': '+r.msg); }
+    }
+  }
+  // non-numbered advisories (do not block)
+  if(!ctx.calcReady) warnings.push('Open the Computation tab at least once so tax figures are available.');
   return {errors,warnings};
 }
 function doExportItr3(){
@@ -2617,6 +3136,71 @@ function buildItr3Json(){
   const setB=(k,v)=>{ if(bfla[k]&&bfla[k].IncBFLA){bfla[k].IncBFLA.IncOfCurYrUndHeadFromCYLA=v;bfla[k].IncBFLA.IncOfCurYrAfterSetOffBFLosses=v;} };
   setB('Salary',salary); setB('STCGAppRate',stcg); setB('LTCG12_5Per',ltcg);
   bfla.IncomeOfCurrYrAftCYLABFLA=salary+Math.max(0,hp)+biz+osTotal+cgTotal;
+  // ---- CYLA/BFLA income heads (real computed; no-loss pass-through per head) ----
+  { const heads={Salary:salary,HP:Math.max(0,hp),BusProfExclSpecProf:biz,SpeculativeInc:0,SpecifiedInc:0,OthSrcExclRaceHorse:osNormal,OthSrcRaceHorse:0,IncOSDTAA:0};
+    for(const k in heads){ const v=heads[k];
+      cyla[k]={IncCYLA:{IncOfCurYrUnderThatHead:v,IncOfCurYrAfterSetOff:v}};
+      bfla[k]=(k==='Salary')?{IncBFLA:{IncOfCurYrUndHeadFromCYLA:v,IncOfCurYrAfterSetOffBFLosses:v}}:{IncBFLA:{IncOfCurYrUndHeadFromCYLA:v,BFUnabsorbedDeprSetoff:0,BFAllUs35Cl4Setoff:0,IncOfCurYrAfterSetOffBFLosses:v}}; } }
+  // ===== Business books: populate PARTA_BS / PARTA_PL from the B/S & P&L tab (real capture in data.bs/data.pl) =====
+  const B=data.bs||{}, P=data.pl||{};
+  const Bv=k=>R(num(B[k])), Pv=k=>R(num(P[k]));
+  const _hasBS=Object.keys(B).some(k=>num(B[k])!==0);
+  const _hasPL=Object.keys(P).some(k=>num(P[k])!==0);
+  { // ---- PARTA_BS (mapped 1:1 from data.bs; totals mirror computeAll) ----
+    const secured=Bv('bs_sec_fcl')+Bv('bs_sec_rlb')+Bv('bs_sec_rlo');
+    const unsecured=Bv('bs_unsec_banks')+Bv('bs_unsec_others');
+    const curliab=Bv('bs_cl_creditors')+Bv('bs_cl_leased')+Bv('bs_cl_intacc')+Bv('bs_cl_intnotdue');
+    const provisions=Bv('bs_prov_it')+Bv('bs_prov_leave')+Bv('bs_prov_other');
+    const totLiab=Bv('bs_capital')+Bv('bs_reserves')+secured+unsecured+Bv('bs_dtl')+Bv('bs_advances')+curliab+provisions;
+    const fixedassets=Bv('bs_fa_gross')-Bv('bs_fa_dep')+Bv('bs_fa_cwip');
+    const investments=Bv('bs_inv_ltq')+Bv('bs_inv_ltu')+Bv('bs_inv_steq')+Bv('bs_inv_stpref')+Bv('bs_inv_stdeb');
+    const inventories=Bv('bs_inv_stores')+Bv('bs_inv_raw')+Bv('bs_inv_wip')+Bv('bs_inv_fg');
+    const curassets=inventories+Bv('bs_ca_debtors')+Bv('bs_ca_cash')+Bv('bs_ca_banks')+Bv('bs_ca_other');
+    const loansadv=Bv('bs_la_adv')+Bv('bs_la_dep')+Bv('bs_la_bra');
+    const totAssets=fixedassets+investments+curassets+loansadv+Bv('bs_misc')+Bv('bs_dta')+Bv('bs_pldr');
+    const fs=partA_BS.FundSrc, fa=partA_BS.FundApply;
+    fs.PropFund.PropCap=Bv('bs_capital'); fs.PropFund.ResrNSurp.OthResr=Bv('bs_reserves'); fs.PropFund.ResrNSurp.TotResrNSurp=Bv('bs_reserves'); fs.PropFund.TotPropFund=Bv('bs_capital')+Bv('bs_reserves');
+    fs.LoanFunds.SecrLoan.ForeignCurrLoan=Bv('bs_sec_fcl'); fs.LoanFunds.SecrLoan.RupeeLoan.FrmBank=Bv('bs_sec_rlb'); fs.LoanFunds.SecrLoan.RupeeLoan.FrmOthrs=Bv('bs_sec_rlo'); fs.LoanFunds.SecrLoan.RupeeLoan.TotRupeeLoan=Bv('bs_sec_rlb')+Bv('bs_sec_rlo'); fs.LoanFunds.SecrLoan.TotSecrLoan=secured;
+    fs.LoanFunds.UnsecrLoan.FrmBank=Bv('bs_unsec_banks'); fs.LoanFunds.UnsecrLoan.FrmOthrs=Bv('bs_unsec_others'); fs.LoanFunds.UnsecrLoan.TotUnSecrLoan=unsecured; fs.LoanFunds.TotLoanFund=secured+unsecured;
+    fs.DeferredTax=Bv('bs_dtl'); fs.Advances.TotalAdvances=Bv('bs_advances'); fs.TotFundSrc=totLiab;
+    fa.FixedAsset.GrossBlock=Bv('bs_fa_gross'); fa.FixedAsset.Depreciation=Bv('bs_fa_dep'); fa.FixedAsset.NetBlock=Bv('bs_fa_gross')-Bv('bs_fa_dep'); fa.FixedAsset.CapWrkProg=Bv('bs_fa_cwip'); fa.FixedAsset.TotFixedAsset=fixedassets;
+    fa.Investments.LongTermInv.GovtOthSecQuoted=Bv('bs_inv_ltq'); fa.Investments.LongTermInv.GovOthSecUnQoted=Bv('bs_inv_ltu'); fa.Investments.LongTermInv.TotLongTermInv=Bv('bs_inv_ltq')+Bv('bs_inv_ltu');
+    fa.Investments.TradeInv.EquityShares=Bv('bs_inv_steq'); fa.Investments.TradeInv.PreferShares=Bv('bs_inv_stpref'); fa.Investments.TradeInv.Debenture=Bv('bs_inv_stdeb'); fa.Investments.TradeInv.TotTradeInv=Bv('bs_inv_steq')+Bv('bs_inv_stpref')+Bv('bs_inv_stdeb'); fa.Investments.TotInvestments=investments;
+    const ca=fa.CurrAssetLoanAdv;
+    ca.CurrAsset.Inventories.StoresConsumables=Bv('bs_inv_stores'); ca.CurrAsset.Inventories.RawMatl=Bv('bs_inv_raw'); ca.CurrAsset.Inventories.StkInProcess=Bv('bs_inv_wip'); ca.CurrAsset.Inventories.FinOrTradGood=Bv('bs_inv_fg'); ca.CurrAsset.Inventories.TotInventries=inventories;
+    ca.CurrAsset.SndryDebtors=Bv('bs_ca_debtors'); ca.CurrAsset.CashOrBankBal.CashinHand=Bv('bs_ca_cash'); ca.CurrAsset.CashOrBankBal.BankBal=Bv('bs_ca_banks'); ca.CurrAsset.CashOrBankBal.TotCashOrBankBal=Bv('bs_ca_cash')+Bv('bs_ca_banks'); ca.CurrAsset.OthCurrAsset=Bv('bs_ca_other'); ca.CurrAsset.TotCurrAsset=curassets;
+    ca.LoanAdv.AdvRecoverable=Bv('bs_la_adv'); ca.LoanAdv.Deposits=Bv('bs_la_dep'); ca.LoanAdv.BalWithRevAuth=Bv('bs_la_bra'); ca.LoanAdv.TotLoanAdv=loansadv; ca.TotCurrAssetLoanAdv=curassets+loansadv;
+    ca.CurrLiabilitiesProv.CurrLiabilities.SundryCred=Bv('bs_cl_creditors'); ca.CurrLiabilitiesProv.CurrLiabilities.LiabForLeasedAsset=Bv('bs_cl_leased'); ca.CurrLiabilitiesProv.CurrLiabilities.AccrIntonLeasedAsset=Bv('bs_cl_intacc'); ca.CurrLiabilitiesProv.CurrLiabilities.AccrIntNotDue=Bv('bs_cl_intnotdue'); ca.CurrLiabilitiesProv.CurrLiabilities.TotCurrLiabilities=curliab;
+    ca.CurrLiabilitiesProv.Provisions.ITProvision=Bv('bs_prov_it'); ca.CurrLiabilitiesProv.Provisions.ELSuperAnnGratProvision=Bv('bs_prov_leave'); ca.CurrLiabilitiesProv.Provisions.OthProvision=Bv('bs_prov_other'); ca.CurrLiabilitiesProv.Provisions.TotProvisions=provisions; ca.CurrLiabilitiesProv.TotCurrLiabilitiesProvision=curliab+provisions;
+    ca.NetCurrAsset=(curassets+loansadv)-(curliab+provisions);
+    fa.MiscAdjust.MiscExpndr=Bv('bs_misc'); fa.MiscAdjust.DefTaxAsset=Bv('bs_dta'); fa.MiscAdjust.AccumaltedLosses=Bv('bs_pldr'); fa.MiscAdjust.TotMiscAdjust=Bv('bs_misc')+Bv('bs_dta')+Bv('bs_pldr'); fa.TotFundApply=totAssets;
+  }
+  { // ---- PARTA_PL debits/credits (mapped from data.pl; chain mirrors computeAll) ----
+    const d=partA_PL.DebitsToPL, c=partA_PL.CreditsToPL;
+    d.Freight=Pv('pl_exp_freight'); d.ConsumptionOfStores=Pv('pl_exp_consumption'); d.PowerFuel=Pv('pl_exp_power'); d.RentExpdr=Pv('pl_exp_rents'); d.RepairsBldg=Pv('pl_exp_repairs_bldg'); d.RepairMach=Pv('pl_exp_repairs_mach');
+    d.EmployeeComp.SalsWages=Pv('pl_exp_salaries'); d.EmployeeComp.TotEmployeeComp=Pv('pl_exp_salaries');
+    d.Insurances.OthInsur=Pv('pl_exp_insurance'); d.Insurances.TotInsurances=Pv('pl_exp_insurance');
+    d.StaffWelfareExp=Pv('pl_exp_staff'); d.Entertainment=Pv('pl_exp_entertainment'); d.Hospitality=Pv('pl_exp_hospitality'); d.Conference=Pv('pl_exp_conference'); d.SalePromoExp=Pv('pl_exp_salespromo'); d.Advertisement=Pv('pl_exp_advert');
+    d.CommissionExpdrDtls.Others=Pv('pl_exp_commission'); d.CommissionExpdrDtls.Total=Pv('pl_exp_commission');
+    d.RoyalityDtls.Others=Pv('pl_exp_royalty'); d.RoyalityDtls.Total=Pv('pl_exp_royalty');
+    d.ProfessionalConstDtls.Others=Pv('pl_exp_professional'); d.ProfessionalConstDtls.Total=Pv('pl_exp_professional');
+    d.HotelBoardLodge=Pv('pl_exp_hotel'); d.TravelExp=Pv('pl_exp_travelling'); d.ConveyanceExp=Pv('pl_exp_conveyance'); d.TelephoneExp=Pv('pl_exp_telephone'); d.GuestHouseExp=Pv('pl_exp_guesthouse'); d.ClubExp=Pv('pl_exp_club'); d.FestivalCelebExp=Pv('pl_exp_festival'); d.Scholarship=Pv('pl_exp_scholarship'); d.Gift=Pv('pl_exp_gift'); d.Donation=Pv('pl_exp_donation');
+    d.AuditFee=Pv('pl_exp_audit'); d.OtherExpenses=Pv('pl_exp_other'); d.BadDebtDtls.BadDebt=Pv('pl_exp_baddebts'); d.OthProvisionsExpdr=Pv('pl_exp_provisions');
+    d.InterestExpdrtDtls.Others=Pv('pl_less_interest'); d.InterestExpdrtDtls.InterestExpdr=Pv('pl_less_interest'); d.DepreciationAmort=Pv('pl_less_depreciation');
+    c.OthIncome.MiscOthIncome=Pv('pl_pl_other_inc'); c.OthIncome.TotOthIncome=Pv('pl_pl_other_inc');
+    const eK=['pl_exp_advert','pl_exp_audit','pl_exp_baddebts','pl_exp_club','pl_exp_commission','pl_exp_conference','pl_exp_consumption','pl_exp_conveyance','pl_exp_donation','pl_exp_entertainment','pl_exp_festival','pl_exp_freight','pl_exp_gift','pl_exp_guesthouse','pl_exp_hospitality','pl_exp_hotel','pl_exp_insurance','pl_exp_power','pl_exp_professional','pl_exp_provisions','pl_exp_rents','pl_exp_repairs_bldg','pl_exp_repairs_mach','pl_exp_royalty','pl_exp_salaries','pl_exp_salespromo','pl_exp_scholarship','pl_exp_staff','pl_exp_taxes','pl_exp_telephone','pl_exp_travelling','pl_exp_other'];
+    const totalExp=eK.reduce((s,k)=>s+Pv(k),0);
+    const mfgOpen=Pv('pl_mfg_os_raw')+Pv('pl_mfg_os_wip'), mfgClose=Pv('pl_mfg_cs_raw')+Pv('pl_mfg_cs_wip');
+    const cop=mfgOpen+Pv('pl_mfg_purchases')+Pv('pl_mfg_wages')+Pv('pl_mfg_directexp')+Pv('pl_mfg_factory')-mfgClose;
+    const trdInc=Pv('pl_trd_sale_goods')+Pv('pl_trd_sale_services')+Pv('pl_trd_other_rev')+Pv('pl_trd_gross_prof')+Pv('pl_trd_duties')+Pv('pl_trd_closing_fg');
+    const grossProfit=trdInc-(Pv('pl_trd_opening_fg')+Pv('pl_trd_purchases')+Pv('pl_trd_directexp')+Pv('pl_trd_taxes_inputs')+cop);
+    const pbit=grossProfit+Pv('pl_pl_other_inc')+Pv('pl_trd_intraday')+Pv('pl_trd_fno')-totalExp;
+    const pbt=pbit-Pv('pl_less_interest')-Pv('pl_less_depreciation');
+    const pat=pbt-Pv('pl_less_currenttax')-Pv('pl_less_deferredtax');
+    d.PBIDTA=R(pbit); d.PBT=R(pbt);
+    const t=partA_PL.TaxProvAppr; t.ProvForCurrTax=Pv('pl_less_currenttax'); t.ProvDefTax=Pv('pl_less_deferredtax'); t.ProfitAfterTax=R(pat); t.BalBFPrevYr=Pv('pl_add_bf'); t.TrfToReserves=Pv('pl_less_reserves');
+    c.TotCreditsToPL=R(grossProfit+Pv('pl_pl_other_inc')+Pv('pl_trd_intraday')+Pv('pl_trd_fno'));
+  }
   // --- assemble ---
   const j={ ITR:{ ITR3:{
     CreationInfo:{ SWVersionNo:'1.0', SWCreatedBy:'SW20000000', JSONCreatedBy:'SW20000000', JSONCreationDate:today, IntermediaryCity:'NA', Digest:'-' },
@@ -2661,14 +3245,583 @@ function buildItr3Json(){
     },
     Verification:{ Declaration:{ AssesseeVerName:name, FatherName:V.father||'', AssesseeVerPAN:pan }, Capacity:'S', Place:A.city||'', Date:today }
   }}};
+  // A1/A2/A3 — TDS schedules with schema-correct keys + schedule totals
   if(window.__aisData && window.__aisData.tdsEntries && window.__aisData.tdsEntries.length){
-    const sal=window.__aisData.tdsEntries.filter(t=>t.section==='192');
-    const oth=window.__aisData.tdsEntries.filter(t=>t.section!=='192');
-    if(sal.length) j.ITR.ITR3.TDSonSalaries={ TDSonSalary:sal.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},IncChrgSal:R(t.amountPaid),TotalTDSSal:R(t.tds)})) };
-    if(oth.length) j.ITR.ITR3.TDSonOthThanSals={ TDSonOthThanSal:oth.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},AmtForTaxDeduct:R(t.amountPaid),TotTDSOnAmtPaid:R(t.tds)})) };
+    const te=window.__aisData.tdsEntries;
+    const sal=te.filter(t=>t.section==='192');
+    const propSecs=['194IA','194IB','194IC','194S','195'];
+    const oth=te.filter(t=>t.section!=='192' && propSecs.indexOf((t.section||'').toUpperCase())===-1);
+    const prop=te.filter(t=>propSecs.indexOf((t.section||'').toUpperCase())!==-1);
+    if(sal.length){ const rows=sal.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan||'',EmployerOrDeductorOrCollecterName:t.deductor||''},IncChrgSal:R(t.amountPaid),TotalTDSSal:R(t.tds)})); j.ITR.ITR3.ScheduleTDS1={ TDSonSalary:rows, TotalTDSonSalaries:R(rows.reduce((a,r2)=>a+r2.TotalTDSSal,0)) }; }
+    if(oth.length){ const rows=oth.map(t=>({TDSCreditName:'S',TANOfDeductor:t.tan||'',TDSSection:t.section||'194',TaxDeductCreditDtls:{TaxDeductedTDS:R(t.tds),TaxClaimedTDS:R(t.tds),TaxClaimedOwnHands:R(t.tds)},GrossAmount:R(t.amountPaid),HeadOfIncome:'OS',AmtCarriedFwd:0})); j.ITR.ITR3.ScheduleTDS2={ TDSOthThanSalaryDtls:rows, TotalTDSonOthThanSals:R(rows.reduce((a,r2)=>a+r2.TaxDeductCreditDtls.TaxClaimedOwnHands,0)) }; }
+    if(prop.length){ const rows=prop.map(t=>({TDSCreditName:'S',PANOfBuyerTenant:t.tan||'',TDSSection:t.section||'194',TaxDeductCreditDtls:{TaxDeductedTDS:R(t.tds),TaxClaimedTDS:R(t.tds),TaxClaimedOwnHands:R(t.tds)},GrossAmount:R(t.amountPaid),AmtCarriedFwd:0})); j.ITR.ITR3.ScheduleTDS3={ TDS3onOthThanSalDtls:rows, TotalTDS3OnOthThanSal:R(rows.reduce((a,r2)=>a+r2.TaxDeductCreditDtls.TaxClaimedOwnHands,0)) }; }
   }
+  // ===== ScheduleTDS1/2/3 fallback from calc prepaid-taxes UI (real, bpData.tdsTcs) =====
+  try{ const bw=calcWin(); const tt=bw&&bw.bpData&&bw.bpData.tdsTcs;
+    if(tt){ const hmap={'Salary':'','House Property':'HP','Business / Profession':'BP','Capital Gains':'CG','Other Sources':'OS','Exempt income':'EI'};
+      if(!j.ITR.ITR3.ScheduleTDS1){ const sal=(tt.salaryTds||[]).filter(r=>(r.tan||'').trim()||num(r.tdsDeducted));
+        if(sal.length){ const rows=sal.map(r=>({EmployerOrDeductorOrCollectDetl:{TAN:(r.tan||'').toUpperCase().trim(),EmployerOrDeductorOrCollecterName:r.employerName||''},IncChrgSal:R(num(r.grossSalary)),TotalTDSSal:R(num(r.tdsClaimed)||num(r.tdsDeducted))}));
+          j.ITR.ITR3.ScheduleTDS1={TDSonSalary:rows,TotalTDSonSalaries:R(rows.reduce((a,x)=>a+x.TotalTDSSal,0))}; } }
+      if(!j.ITR.ITR3.ScheduleTDS2){ const oth=(tt.form16A||[]).filter(r=>(r.tan||'').trim()||num(r.tdsDeducted));
+        if(oth.length){ const rows=oth.map(r=>({TDSCreditName:'S',TANOfDeductor:(r.tan||'').toUpperCase().trim(),TDSSection:r.section||'194A',TaxDeductCreditDtls:{TaxDeductedTDS:R(num(r.tdsDeducted)),TaxClaimedTDS:R(num(r.tdsClaimedCY)||num(r.tdsDeducted)),TaxClaimedOwnHands:R(num(r.tdsClaimedCY)||num(r.tdsDeducted))},GrossAmount:R(num(r.grossReceiptOffered)||num(r.grossReceipts)),HeadOfIncome:hmap[r.headOfIncome]||'OS',AmtCarriedFwd:R(num(r.balanceCF))}));
+          j.ITR.ITR3.ScheduleTDS2={TDSOthThanSalaryDtls:rows,TotalTDSonOthThanSals:R(rows.reduce((a,x)=>a+x.TaxDeductCreditDtls.TaxClaimedOwnHands,0))}; } }
+      if(!j.ITR.ITR3.ScheduleTDS3){ const prop=(tt.form16BCDE||[]).filter(r=>(r.pan||'').trim()||num(r.tdsDeducted));
+        if(prop.length){ const rows=prop.map(r=>({TDSCreditName:'S',PANOfBuyerTenant:(r.pan||'').toUpperCase().trim(),TDSSection:r.section||'194IA',TaxDeductCreditDtls:{TaxDeductedTDS:R(num(r.tdsDeducted)),TaxClaimedTDS:R(num(r.tdsClaimedCY)||num(r.tdsDeducted)),TaxClaimedOwnHands:R(num(r.tdsClaimedCY)||num(r.tdsDeducted))},GrossAmount:R(num(r.grossReceiptOffered)||num(r.grossReceipts)),HeadOfIncome:hmap[r.headOfIncome]||'CG',AmtCarriedFwd:R(num(r.balanceCF))}));
+          j.ITR.ITR3.ScheduleTDS3={TDS3onOthThanSalDtls:rows,TotalTDS3OnOthThanSal:R(rows.reduce((a,x)=>a+x.TaxDeductCreditDtls.TaxClaimedOwnHands,0))}; } }
+    }
+  }catch(e){}
+  // ===== ScheduleIT — advance-tax & self-assessment-tax challans (real, from calc bpData.advTax/sat) =====
+  try{ const bw=calcWin(); const bp=bw&&bw.bpData; if(bp){
+    const isoD=s=>{const m=String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';};
+    const pays=[];
+    (bp.advTax&&bp.advTax.rows||[]).forEach(r=>{ if(num(r.amount)||r.bsr) pays.push({BSRCode:String(r.bsr||'').trim(),DateDep:isoD(r.dateDeposit)||r.dateDeposit||'',SrlNoOfChaln:R(num(r.challanSlNo)),Amt:R(num(r.amount))}); });
+    (bp.sat&&bp.sat.rows||[]).forEach(r=>{ if(num(r.amountPaid)||r.bsr) pays.push({BSRCode:String(r.bsr||'').trim(),DateDep:isoD(r.dateDeposit)||r.dateDeposit||'',SrlNoOfChaln:R(num(r.challanSlNo)),Amt:R(num(r.amountPaid))}); });
+    if(pays.length){ j.ITR.ITR3.ScheduleIT={ TaxPayment:pays, TotalTaxPayments:R(pays.reduce((a,x)=>a+x.Amt,0)) }; }
+  } }catch(e){}
+  // ===== ScheduleTCS — tax collected at source (real, from calc bpData.tdsTcs.tcs) =====
+  try{ const bw=calcWin(); const bp=bw&&bw.bpData; const tcs=bp&&bp.tdsTcs&&bp.tdsTcs.tcs;
+    if(tcs&&tcs.length){ const rows=tcs.filter(r=>(r.tan||'').trim()||num(r.tcsCollected)||num(r.tcsClaimedCY)).map(r=>({
+        TCSCreditOwner:'1', EmployerOrDeductorOrCollectTAN:(r.tan||'').toUpperCase().trim(),
+        TCSCurrFYDtls:{TCSAmtCollOwnHand:R(num(r.tcsCollected)),TCSAmtCollSpouseOrOthrHand:0},
+        TCSClaimedThisYearDtls:{TCSAmtCollOwnHand:R(num(r.tcsClaimedCY)||num(r.tcsCollected))},
+        AmtCarriedFwd:R(num(r.balanceCF)) }));
+      if(rows.length) j.ITR.ITR3.ScheduleTCS={ TCS:rows, TotalSchTCS:R(rows.reduce((a,x)=>a+x.TCSClaimedThisYearDtls.TCSAmtCollOwnHand,0)) }; }
+  }catch(e){}
+  // B6 — surcharge / cess / rebate / relief from restored window.__taxBreakup
+  try{ const tb=window.__taxBreakup; if(tb){ const c=j.ITR.ITR3.PartB_TTI.ComputationOfTaxLiability; const tp=c.TaxPayableOnTI; tp.Surcharge25ofSI=R(tb.surcharge); tp.TotalSurcharge=R(tb.surcharge); tp.EducationCess=R(tb.cess); tp.Rebate87A=R(tb.rebate87A); tp.GrossTaxLiability=R((tb.taxBeforeSC||0)+(tb.surcharge||0)+(tb.cess||0)); c.TaxRelief={ Section89:R(tb.reliefTotal), TotTaxRelief:R(tb.reliefTotal) }; } }catch(e){}
+  // ===== TradingAccount + ManufacturingAccount (real, from data.pl); gate PARTA_BS/PL on real capture =====
+  if(_hasPL){
+    const mfgOpen=Pv('pl_mfg_os_raw')+Pv('pl_mfg_os_wip'), mfgClose=Pv('pl_mfg_cs_raw')+Pv('pl_mfg_cs_wip'), factoryOH=Pv('pl_mfg_factory');
+    const cop=mfgOpen+Pv('pl_mfg_purchases')+Pv('pl_mfg_wages')+Pv('pl_mfg_directexp')+factoryOH-mfgClose;
+    j.ITR.ITR3.ManufacturingAccount={ OpeningInventory:{ OpngStckRawMat:Pv('pl_mfg_os_raw'), OpngStckWrkinPrgrs:Pv('pl_mfg_os_wip'), OpngInvntryTotal:R(mfgOpen), Purchases:Pv('pl_mfg_purchases'), DirectWages:Pv('pl_mfg_wages'), DirectExpenses:Pv('pl_mfg_directexp'), CarriageInward:0, PowerAndFuel:0, OthDirectExpenses:0, IndirectWages:0, FactoryRentAndRates:0, FactoryInsurance:0, FactoryFuelAndPower:0, FactoryGeneralExpenses:factoryOH, DeprctnOfFactoryMachinery:0, TotalFactoryOverheads:R(factoryOH), TotalDebtsManfctrngAcc:R(mfgOpen+Pv('pl_mfg_purchases')+Pv('pl_mfg_wages')+Pv('pl_mfg_directexp')+factoryOH) }, ClosingStock:{ ClsngStckRawMaterial:Pv('pl_mfg_cs_raw'), ClsngStckWrkInPrgrs:Pv('pl_mfg_cs_wip'), ClsngStckTotal:R(mfgClose) }, CostOfGoodsPrdcd:R(cop) };
+    const operRev=Pv('pl_trd_other_rev'), grossRcpt=Pv('pl_trd_sale_goods')+Pv('pl_trd_sale_services')+operRev;
+    const ta={ SaleOfGoods:Pv('pl_trd_sale_goods'), SaleOfServices:Pv('pl_trd_sale_services'), OperatingRevenueTotal:operRev, SalesGrossReceiptsTotal:R(grossRcpt), ExciseCustomsVAT:{ UnionExciseDuty:0, ServiceTax:0, VATorSaleTax:0, CentralGoodServiceTax:0, StateGoodServiceTax:0, IntegratedGoodServiceTax:0, UnionTerrGoodServiceTax:0, OthDutyTaxCess:Pv('pl_trd_duties'), TotExciseCustomsVAT:Pv('pl_trd_duties') }, TotRevenueFrmOperations:R(grossRcpt+Pv('pl_trd_duties')), ClsngStckOfFinishedStcks:Pv('pl_trd_closing_fg'), TardingAccTotCred:R(grossRcpt+Pv('pl_trd_duties')+Pv('pl_trd_closing_fg')), OpeningStock:Pv('pl_trd_opening_fg'), Purchases:Pv('pl_trd_purchases'), DirectExpenses:Pv('pl_trd_directexp'), DirectExpensesTotal:R(Pv('pl_trd_directexp')) };
+    if(operRev>0) ta.OtherOperatingRevenueDtls=[{OperatingRevenueName:'Other operating revenue',OperatingRevenueAmt:operRev}];
+    j.ITR.ITR3.TradingAccount=ta;
+  } else { delete j.ITR.ITR3.PARTA_PL; }
+  if(!_hasBS) delete j.ITR.ITR3.PARTA_BS;
+
+  // ===== ScheduleVIA — Chapter VI-A per-section (real, from calc 80 cells) =====
+  if(ded>0){
+    const v=id=>{const d=calcDoc();if(!d)return 0;const el=d.getElementById(id);if(!el)return 0;const s=String(el.textContent||el.value||'').replace(/[^\d.-]/g,'');return R(parseFloat(s)||0);};
+    const s80c=v('it_80_ccccd'), s80d=v('it_80_d'), s80dd=v('it_80_dd'), s80ddb=v('it_80_ddb'), s80e=v('it_80_e'), s80cch=v('it_80_cch');
+    const s80g=v('d80g_total'), s80gga=v('d80gga_ded'), s80ggc=v('d80ggc_ded'), s80gg=v('d80gg_ded');
+    const s80ee=v('d80ee_ded'), s80eea=v('d80eea_ded'), s80eeb=v('d80eeb_ded');
+    const s80ia=v('d80ia_total'), s80ib=v('d80ib_total'), s80ie=v('d80ie_total');
+    const s80u=v('d80u_ded'), s80ttx=v('d80tta_ttb_ded');
+    const partB={ Section80C:s80c, Section80D:s80d, Section80DD:s80dd, Section80DDB:s80ddb, Section80E:s80e,
+      Section80EE:s80ee, Section80EEA:s80eea, Section80EEB:s80eeb, Section80G:s80g, Section80GG:s80gg, Section80GGA:s80gga, Section80GGC:s80ggc };
+    const totB=s80c+s80cch+s80d+s80dd+s80ddb+s80e+s80ee+s80eea+s80eeb+s80g+s80gg+s80gga+s80ggc;
+    const totC=s80ia+s80ib+s80ie;
+    const totCAD=s80u+s80ttx;
+    const usr=Object.assign({},partB,{ Section80IA:s80ia, Section80IB:s80ib, Section80IC:s80ie, Section80TTA:s80ttx, Section80U:s80u, AnyOthSec80CCH:s80cch,
+      TotPartBchapterVIA:totB, TotPartCchapterVIA:totC, TotPartCAandDchapterVIA:totCAD, TotalChapVIADeductions:ded });
+    j.ITR.ITR3.ScheduleVIA={ DeductUndChapVIA:Object.assign({},partB,{ Section80IA:s80ia, Section80IB:s80ib, Section80IC:s80ie, Section80TTA:s80ttx, Section80U:s80u, AnyOthSec80CCH:s80cch, TotPartBchapterVIA:totB, TotPartCchapterVIA:totC, TotPartCAandDchapterVIA:totCAD, TotalChapVIADeductions:ded }), UsrDeductUndChapVIA:usr };
+  }
+
+  // ===== FilingStatus flags + drill-in schedules (un-hardcode 'N': director/unlisted/rep/nature-of-business) =====
+  { const fst=j.ITR.ITR3.PartA_GEN1.FilingStatus;
+    const dirRows=(data.director||[]).filter(r=>r.company||r.din).map(r=>({NameOfCompany:r.company||'',CompanyType:(r.ctype&&r.ctype!=='(Select)'?r.ctype:'D'),SharesTypes:(r.listed&&r.listed!=='(Select)'?r.listed:'L'),PAN:r.pan||'',DIN:r.din||''}));
+    if(dirRows.length){ fst.CompDirectorPrvYrFlg='Y'; fst.CompDirectorPrvYr={CompDirectorPrvYrDtls:dirRows}; }
+    const unlRows=(data.unlisted||[]).filter(r=>r.company||r.pan||r.opQty||r.clQty).map(r=>({NameOfCompany:r.company||'',PAN:r.pan||'',CompanyType:(r.ctype&&r.ctype!=='(Select)'?r.ctype:'D'),OpngBalNumberOfShares:R(num(r.opQty)),OpngBalCostOfAcquisition:R(num(r.opCost)),ClsngBalNumberOfShares:R(num(r.clQty)),ClsngBalCostOfAcquisition:R(num(r.clCost))}));
+    if(unlRows.length){ fst.HeldUnlistedEqShrPrYrFlg='Y'; fst.HeldUnlistedEqShrPrYr={HeldUnlistedEqShrPrYrDtls:unlRows}; }
+    const rep=data.repassessee||{};
+    if(rep.name){ fst.AsseseeRepFlg='Y'; fst.AssesseeRep={RepName:rep.name||'',RepEmailID:rep.email||'',CountryCodeRepMobileNo:rep.cc||'91',RepMobileNo:rep.contact||''}; }
+    const natRows=(data.nature||[]).filter(r=>r.code||r.trade1||r.trade2).map(r=>({Code:(r.code||'00001'),TradeName1:(r.trade1||''),Description:(r.trade2||r.subsector||'')}));
+    if(natRows.length && j.ITR.ITR3.PartA_GEN2){ j.ITR.ITR3.PartA_GEN2.NatOfBus={NatureOfBusiness:natRows}; }
+  }
+
+  // ===== ScheduleESOP (real, from data.esop) =====
+  { const es=data.esop||{}, yrs=es.years||{};
+    if(es.pan||Object.keys(yrs).some(y=>num((yrs[y]||{}).bf))){
+      const esop={ PanofStartUp:(es.pan||'').toUpperCase(), DPIITRegNo:es.dpiit||'' };
+      const map={'2021-22':'ScheduleESOP2122_Type','2022-23':'ScheduleESOP2223_Type','2023-24':'ScheduleESOP2324_Type','2024-25':'ScheduleESOP2425_Type'};
+      let esopTot=0; Object.keys(map).forEach(y=>{ const r=yrs[y]||{}; esopTot+=num(r.cy); esop[map[y]]={ AssessmentYear:y.replace('-',''), TaxDeferredBFEarlierAY:R(num(r.bf)), TaxPayableCurrentAY:R(num(r.cy)), BalanceTaxCF:R(Math.max(0,num(r.bf)-num(r.sale)-num(r.cy))) }; });
+      esop.TotalTaxAttributedAmt=R(esopTot);
+      j.ITR.ITR3.ScheduleESOP=esop;
+    }
+  }
+
+  // ===== ScheduleAL — Assets & Liabilities (real, from data.al + breakups + alFirm) =====
+  { const alv=id=>R(num((data.al||{})[id]));
+    const bkTot=key=>R(((data.breakups||{})[key]||[]).reduce((s,r)=>s+num(r.amount),0));
+    const immv=alv('al_immovable');
+    if(immv>0 || bkTot('al_bank')>0 || alv('al_cash')>0){
+      const immRows=(data.alFirm||[]).filter(r=>r.name||r.cost).map(r=>({ Description:r.name||'Immovable property', AddressAL:{ ResidenceNo:r.flat||'NA', ResidenceName:r.premises||'', RoadOrStreet:r.road||'', LocalityOrArea:r.area||'NA', CityOrTownOrDistrict:r.city||'NA', StateCode:r.state||'99', CountryCode:r.country||'91', PinCode:r.pin||'' }, Amount:R(num(r.cost)) }));
+      if(!immRows.length && immv>0) immRows.push({ Description:'Immovable property', AddressAL:{ ResidenceNo:'NA', ResidenceName:'', RoadOrStreet:'', LocalityOrArea:'NA', CityOrTownOrDistrict:A.city||'NA', StateCode:A.stateCode||'99', CountryCode:'91', PinCode:A.pin||'' }, Amount:immv });
+      j.ITR.ITR3.ScheduleAL={ ImmovableDetails:immRows, MovableAsset:{ DepositsInBank:bkTot('al_bank'), SharesAndSecurities:bkTot('al_shares'), InsurancePolicies:bkTot('al_insurance'), LoansAndAdvancesGiven:bkTot('al_loans'), CashInHand:alv('al_cash'), JewelleryBullionEtc:bkTot('al_jewellery'), ArchCollDrawPaintSulpArt:bkTot('al_paintings'), VehiclYachtsBoatsAircrafts:bkTot('al_vehicles') }, LiabilityInRelatAssets:bkTot('al_liab') };
+    }
+  }
+
+  // ===== ScheduleFA + Foreign flags (real, from FA drill-ins) =====
+  const _faNonEmpty=k=>(data[k]||[]).filter(r=>Object.keys(r).some(f=>String(r[f]||'').trim()!==''));
+  const _hasFA=(typeof FA_KEYS!=='undefined')&&FA_KEYS.some(k=>_faNonEmpty(k).length>0);
+  const _isoD=s=>{const m=String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:'';};
+  if(_hasFA){
+    const fa={}, rows=k=>_faNonEmpty(k), cc=r=>r.country||'';
+    if(rows('fa_depository').length) fa.DtlsForeignCustodialAcc=rows('fa_depository').map(r=>({CountryName:cc(r),CountryCodeExcludingIndia:cc(r),FinancialInstName:r.instName||'',FinancialInstAddress:r.instAddr||'',ZipCode:r.zip||'',AccountNumber:r.acctNo||'',Status:r.owner||'',AccOpenDate:_isoD(r.opened)||r.opened||'',PeakBalanceDuringPeriod:R(num(r.peak)),ClosingBalance:R(num(r.closing)),GrossAmtPaidCredited:R(num(r.gross)),NatureOfAmount:r.nature||''}));
+    if(rows('fa_equity').length) fa.DtlsForeignEquityDebtInterest=rows('fa_equity').map(r=>({CountryName:cc(r),CountryCodeExcludingIndia:cc(r),NameOfEntity:r.entName||'',AddressOfEntity:r.entAddr||'',ZipCode:r.zip||'',NatureOfEntity:r.entNature||'',InterestAcquiringDate:_isoD(r.acquired)||r.acquired||'',InitialValOfInvstmnt:R(num(r.initial)),PeakBalanceDuringPeriod:R(num(r.peak)),ClosingBalance:R(num(r.closing)),TotGrossAmtPaidCredited:R(num(r.gross)),TotGrossProceeds:R(num(r.proceeds))}));
+    if(rows('fa_immovable').length) fa.DetailsImmovableProperty=rows('fa_immovable').map(r=>({CountryName:cc(r),CountryCodeExcludingIndia:cc(r),ZipCode:r.zip||'',Ownership:r.owner||'',DateOfAcq:_isoD(r.acquired)||r.acquired||'',TotalInvestment:R(num(r.totalInv)),IncDrvProperty:R(num(r.income)),NatureOfInc:r.natureInc||'',IncTaxAmt:R(num(r.taxable)),IncTaxSch:r.schedule||'',IncTaxSchNo:r.itemNo||''}));
+    if(Object.keys(fa).length) j.ITR.ITR3.ScheduleFA=fa;
+  }
+  { const fst=j.ITR.ITR3.PartA_GEN1.FilingStatus; if(_hasFA) fst.ForeignExchangeFlag='Y'; if(j.ITR.ITR3.PartB_TTI) j.ITR.ITR3.PartB_TTI.AssetOutIndiaFlag=_hasFA?'Y':'N'; }
+
+  // ===== ScheduleSI — special-rate income & tax (real, from window.__taxBreakup / CG heads) =====
+  try{ const tb=window.__taxBreakup; if(tb){ const ay=j.ITR.ITR3.Form_ITR3.AssessmentYear; const stPct=(ay==='2026'?20:15);
+    const si=[]; const push=(code,pct,inc,tx)=>{ if(R(inc)>0) si.push({SecCode:code,SplRatePercent:pct,SplRateInc:R(inc),SplRateIncTax:R(tx)}); };
+    push('22',12.5,ltcg,tb.cgSpecialTax); push('1A',stPct,stcg,0);
+    if(si.length) j.ITR.ITR3.ScheduleSI={ SplCodeRateTax:si, TotSplRateInc:si.reduce((s,x)=>s+x.SplRateInc,0), TotSplRateIncTax:si.reduce((s,x)=>s+x.SplRateIncTax,0) }; } }catch(e){}
+
+  // ===== ScheduleS — Salary detail (real, from data.sal drill-in) =====
+  try{ const sc=s=>{const m=String(s||'').match(/^(\d{2})-/);return m?m[1]:'99';};
+    const emps=(data.sal.employers||[]).filter(r=>r.name||num(r.sal17)||num(r.perq)||num(r.pil));
+    if(emps.length){ let tg=0;
+      const rows=emps.map(r=>{const g=R(num(r.sal17)+num(r.perq)+num(r.pil));tg+=g;
+        return {NameOfEmployer:r.name||'',NatureOfEmployment:(r.nature&&r.nature!=='(Select)'&&r.nature?r.nature:'PE'),
+          AddressDetail:{AddrDetail:r.addr||'NA',CityOrTownOrDistrict:r.city||'NA',StateCode:sc(r.state)},
+          Salarys:{GrossSalary:g,Salary:R(num(r.sal17)),ValueOfPerquisites:R(num(r.perq)),ProfitsinLieuOfSalary:R(num(r.pil))}};});
+      const exRows=(data.sal.exempt||[]).filter(r=>num(r.amount)).map(r=>({SalNatureDesc:(r.nature&&r.nature!=='(Select)'?r.nature:'10(14)'),SalOthAmount:R(num(r.amount))}));
+      const exTot=exRows.reduce((s,r)=>s+r.SalOthAmount,0);
+      const entAllow=R(num(data.sal.entallow)); const d16=R(num(data.sal.ded16ia)+num(data.sal.proftax)+entAllow); const net=tg-exTot;
+      const S={ Salaries:rows, TotalGrossSalary:R(tg), AllwncExtentExemptUs10:R(exTot), NetSalary:R(net),
+        DeductionUS16:d16, DeductionUnderSection16ia:R(num(data.sal.ded16ia)), EntertainmntalwncUs16ii:entAllow, ProfessionalTaxUs16iii:R(num(data.sal.proftax)), TotIncUnderHeadSalaries:R(net-d16) };
+      if(exRows.length) S.AllwncExemptUs10={AllwncExemptUs10Dtls:exRows};
+      j.ITR.ITR3.ScheduleS=S;
+    }
+  }catch(e){}
+
+  // ===== ScheduleCGFor23 + Schedule112A — Capital Gains detail (real, from data.cg drill-in) =====
+  try{ const cg=data.cg||{}, ay2=j.ITR.ITR3.Form_ITR3.AssessmentYear;
+    const dedR=(c,i,e)=>({AquisitCost:R(num(c)),ImproveCost:R(num(i)),ExpOnTrans:R(num(e)),TotalDedn:R(num(c)+num(i)+num(e))});
+    const gv=r=>R(num(r.fvc)-(num(r.cost)+num(r.imp)+num(r.exp)));
+    const scCG=s=>{const m=String(s||'').match(/^(\d{2})-/);return m?m[1]:'99';};
+    const buyerNode=r=>{ if(!(r.buyer||num(r.buyeramt))) return null;
+      const d={ NameOfBuyer:r.buyer||'NA', PercentageShare:R(num(r.buyershare)||100), Amount:R(num(r.buyeramt)||num(r.fvc)), AddressOfProperty:r.buyeraddr||'NA', StateCode:scCG(r.buyerstate), CountryCode:'91' };
+      if((r.buyerpan||'').trim()) d.PANofBuyer=(r.buyerpan||'').toUpperCase().trim();
+      return { TrnsfImmblPrprtyDtls:[d] }; };
+    const ex54Node=r=>{ if(!(r.ex54sec&&r.ex54sec!=='(Select)'&&num(r.ex54amt))) return null;
+      const amt=R(num(r.ex54amt)); return { ExemptionOrDednUs54Dtls:[{ExemptionSecCode:r.ex54sec,ExemptionAmount:amt}], ExemptionGrandTotal:amt }; };
+    let stTot=0, ltTot=0; const CG={};
+    const st={};
+    const eq=(cg.stEq||[]).filter(r=>num(r.fvc)||num(r.cost));
+    if(eq.length){ st.EquityMFonSTT=eq.map(r=>{const g=gv(r);stTot+=g;return {MFSectionCode:'1A',EquityMFonSTTDtls:{FullConsideration:R(num(r.fvc)),DeductSec48:dedR(r.cost,r.imp,r.exp),BalanceCG:g,CapgainonAssets:g}};}); }
+    const stlb=(cg.stLB||[]).filter(r=>num(r.fvc)||num(r.cost));
+    if(stlb.length){ st.SaleofLandBuild={SaleofLandBuildDtls:stlb.map(r=>{const g=gv(r);const fvc=R(num(r.fvc));const ex=ex54Node(r);const cap=ex?R(g-ex.ExemptionGrandTotal):g;stTot+=cap;const o={DateofPurchase:_isoD(r.dop)||r.dop||'',DateofSale:_isoD(r.dos)||r.dos||'',FullConsideration:fvc,PropertyValuation:fvc,FullConsideration50C:fvc,AquisitCost:R(num(r.cost)),ImproveCost:R(num(r.imp)),ExpOnTrans:R(num(r.exp)),TotalDedn:R(num(r.cost)+num(r.imp)+num(r.exp)),Balance:g,CapgainonAssets:cap};const b=buyerNode(r);if(b)o.TrnsfImmblPrprty=b;if(ex)o.ExemptionOrDednUs54=ex;return o;})}; }
+    const stoth=(cg.stOth||[]).filter(r=>num(r.fvc)||num(r.cost));
+    if(stoth.length){ const t=stoth.reduce((a,r)=>{const g=gv(r);stTot+=g;return {f:a.f+num(r.fvc),c:a.c+num(r.cost),i:a.i+num(r.imp),e:a.e+num(r.exp),g:a.g+g};},{f:0,c:0,i:0,e:0,g:0}); st.SaleOnOtherAssets={FullConsideration:R(t.f),DeductSec48:dedR(t.c,t.i,t.e),BalanceCG:R(t.g),CapgainonAssets:R(t.g)}; }
+    const nriCg=(cg.nri||[]).filter(r=>r.nature||num(r.amt));
+    if(nriCg.length){ const dt=R(nriCg.reduce((s,r)=>s+num(r.amt),0));
+      st.NRICgDTAA={ NRIDTAADtls:nriCg.map(r=>({DTAAamt:R(num(r.amt)),ItemNoincl:'A1a',CountryName:r.country||'',CountryCodeExcludingIndia:r.country||'',DTAAarticle:r.article||'',RateAsPerTreaty:R(num(r.treaty)),SecITAct:'112',RateAsPerITAct:R(num(r.itact)),ApplicableRate:R(Math.min(num(r.treaty),num(r.itact)))})) };
+      st.TotalAmtNotTaxUsDTAAStcg=0; st.TotalAmtTaxUsDTAAStcg=dt; }
+    if(Object.keys(st).length){
+      const ptiStcg=R((data.pti||[]).reduce((s,r)=>s+num(r.stcgAppRate||r.stcg),0));
+      if(st.TotalAmtDeemedStcg===undefined) st.TotalAmtDeemedStcg=R(num(cg.deemedStcg));
+      if(st.PassThrIncNatureSTCG===undefined) st.PassThrIncNatureSTCG=ptiStcg;
+      if(st.TotalAmtNotTaxUsDTAAStcg===undefined) st.TotalAmtNotTaxUsDTAAStcg=0;
+      if(st.TotalAmtTaxUsDTAAStcg===undefined) st.TotalAmtTaxUsDTAAStcg=0;
+      st.TotalSTCG=R(stTot); CG.ShortTermCapGainFor23=st; }
+    const lt={};
+    const ltlb=(cg.ltLB||[]).filter(r=>num(r.fvc)||num(r.cost));
+    if(ltlb.length){ lt.SaleofLandBuild={SaleofLandBuildDtls:ltlb.map(r=>{const g=gv(r);const fvc=R(num(r.fvc));const td=R(num(r.cost)+num(r.imp)+num(r.exp));const ex=ex54Node(r);const cap=ex?R(g-ex.ExemptionGrandTotal):g;ltTot+=cap;const o={DateofPurchase:_isoD(r.dop)||r.dop||'',DateofSale:_isoD(r.dos)||r.dos||'',FullConsideration:fvc,PropertyValuation:fvc,FullConsideration50C:fvc,AquisitCost:R(num(r.cost)),AquisitCostIndex:R(num(r.cost)),ExpOnTrans:R(num(r.exp)),TotalDedn:td,TotalDednForEiB:td,Balance:g,BalanceForEiB:g,CapgainonAssets:cap,CapgainonAssets_1ea:cap,TaxSec1121aiiB:R(cap*0.125),TaxSec1121a:R(cap*0.20),ExcessAmtSec1121a:Math.max(0,R(cap*0.20)-R(cap*0.125))};const b=buyerNode(r);if(b)o.TrnsfImmblPrprty=b;if(ex)o.ExemptionOrDednUs54=ex;return o;})}; }
+    const scrips=(cg.lt112a||[]).filter(r=>r.isin||num(r.sale));
+    if(scrips.length){ let sv=0,ca=0,ac=0,fm=0,bal=0,balBE=0,balAE=0;
+      const rows=scrips.map(r=>{const acq=R(Math.max(num(r.acq),num(r.cost)));const b=R(num(r.sale)-acq);sv+=num(r.sale);ca+=num(r.cost);ac+=acq;fm+=num(r.fmv);bal+=b;ltTot+=b;
+        const sd=_isoD(r.saledate)||r.saledate||''; if(sd && sd<'2024-07-23') balBE+=b; else balAE+=b;
+        return {ShareOnOrBefore:(r.onb==='Y'?'Y':'N'),ISINCode:r.isin||'',ShareUnitName:r.name||'',TotSaleValue:R(num(r.sale)),CostAcqWithoutIndx:R(num(r.cost)),AcquisitionCost:acq,FairMktValuePerShareunit:R(num(r.fmv)),TotFairMktValueCapAst:R(num(r.fmv)),ExpExclCnctTransfer:0,TotalDeductions:acq,LTCGBeforelower6and11:b,Balance:b};});
+      j.ITR.ITR3.Schedule112A={Schedule112ADtls:rows,SaleValue112A:R(sv),CostAcqWithoutIndx112A:R(ca),AcquisitionCost112A:R(ac),FairMktValueCapAst112A:R(fm),ExpExclCnctTransfer112A:0,Deductions112A:R(ac),Balance112A:R(bal),Balance112ABE:R(balBE),Balance112AAE:R(balAE),TotalBalance112A:R(bal),LTCGBeforelowerB1B2112A:R(bal)};
+      lt.SaleOfEquityShareUs112A={BalanceCG:R(bal),BalanceCGTransferBE:R(balBE),BalanceCGTransferAE:R(balAE),DeductionUs54F:0,DeductionUs54FBE:0,DeductionUs54FAE:0,CapgainonAssets:R(bal),CapgainonAssetsTransferBE:R(balBE),CapgainonAssetsTransferAE:R(balAE)};
+    }
+    const ptiRows=(data.pti||[]);
+    const ptiLtcg=R(ptiRows.reduce((s,r)=>s+num(r.ltcg125||r.ltcg),0));
+    const ptiLtcg112a=R(ptiRows.reduce((s,r)=>s+num(r.ltcg112a),0));
+    if(Object.keys(lt).length){
+      if(lt.TotalAmtDeemedLtcg===undefined) lt.TotalAmtDeemedLtcg=R(num(cg.deemedLtcg));
+      if(lt.PassThrIncNatureLTCG===undefined) lt.PassThrIncNatureLTCG=ptiLtcg;
+      if(lt.PassThrIncNatureLTCGUs112A===undefined) lt.PassThrIncNatureLTCGUs112A=ptiLtcg112a;
+      if(lt.TotalAmtNotTaxUsDTAALtcg===undefined) lt.TotalAmtNotTaxUsDTAALtcg=0;
+      if(lt.TotalAmtTaxUsDTAALtcg===undefined) lt.TotalAmtTaxUsDTAALtcg=0;
+      lt.TotalLTCG=R(ltTot); CG.LongTermCapGain23=lt; }
+    const vda=(cg.vda||[]).filter(r=>num(r.cons)||num(r.cost));
+    CG.IncmFromVDATrnsf=R(vda.reduce((s,r)=>s+Math.max(0,num(r.cons)-num(r.cost)),0));
+    // ===== ScheduleVDA — Virtual Digital Assets (real, from data.cg.vda) =====
+    if(vda.length){ const vrows=vda.map(r=>{const acq=R(num(r.cost)),con=R(num(r.cons)),inc=Math.max(0,con-acq);return {DateofAcquisition:_isoD(r.dop)||r.dop||'',DateofTransfer:_isoD(r.dos)||r.dos||'',HeadUndIncTaxed:(r.head==='BI'?'BI':'CG'),AcquisitionCost:acq,ConsidReceived:con,IncomeFromVDA:inc};});
+      const tBI=vrows.filter(x=>x.HeadUndIncTaxed==='BI').reduce((s,x)=>s+x.IncomeFromVDA,0), tCG=vrows.filter(x=>x.HeadUndIncTaxed==='CG').reduce((s,x)=>s+x.IncomeFromVDA,0);
+      j.ITR.ITR3.ScheduleVDA={ScheduleVDADtls:vrows,TotIncBusiness:R(tBI),TotIncCapGain:R(tCG)}; }
+    const deds=(cg.ded||[]).filter(r=>r.sec&&r.sec!=='(Select)'&&num(r.amt));
+    if(deds.length){ const di={}; let dt=0; deds.forEach(r=>{const k='DeducClaimDtlsUs'+r.sec;(di[k]=di[k]||[]).push({DateofTransfer:_isoD(r.dt)||r.dt||'',DateofPurchase:_isoD(r.dp)||r.dp||'',AmtDeducted:R(num(r.amt))});dt+=num(r.amt);}); di.TotDeductClaim=R(dt); CG.DeducClaimInfo=di; }
+    const acc=cg.acc||{};
+    { const A={}, drCG=p=>({DateRange:{Upto15Of6:R(num(acc[p+'_q1'])),Upto15Of9:R(num(acc[p+'_q2'])),Up16Of9To15Of12:R(num(acc[p+'_q3'])),Up16Of12To15Of3:R(num(acc[p+'_q4'])),Up16Of3To31Of3:R(num(acc[p+'_q5']))}});
+      const hasP=p=>['_q1','_q2','_q3','_q4','_q5'].some(q=>num(acc[p+q]));
+      if(hasP('stapp'))A.ShortTermUnderAppRate=drCG('stapp');
+      if(hasP('st15'))A[ay2==='2026'?'ShortTermUnder20Per':'ShortTermUnder15Per']=drCG('st15');
+      if(hasP('lt125'))A.LongTermUnder12_5Per=drCG('lt125');
+      if(hasP('vda'))A.VDATrnsfGainsUnder30Per=drCG('vda');
+      if(Object.keys(A).length)CG.AccruOrRecOfCG=A;
+    }
+    if(Object.keys(CG).length){ CG.SumOfCGIncm=R(stTot+ltTot); CG.TotScheduleCGFor23=R(stTot+ltTot); j.ITR.ITR3.ScheduleCGFor23=CG; }
+  }catch(e){}
+
+  // ===== ScheduleOS — Other Sources detail (real, from data.os drill-in) =====
+  try{ const F=(data.os||{}).fields||{}, others=((data.os||{}).others||[]).filter(r=>r.nature||num(r.amount)),
+      dtaa=((data.os||{}).dtaa||[]).filter(r=>r.nature||num(r.amt)), Q=(data.os||{}).q||{};
+    if(Object.keys(F).some(k=>num(F[k]))||others.length||dtaa.length){
+      const div=R(num(F.div)), intr=R(num(F.int_savings)+num(F.int_term)+num(F.int_refund)+num(F.int_others)), win=R(num(F.winnings));
+      const othTot=others.reduce((s,r)=>s+num(r.amount),0);
+      const normal=div+intr+R(num(F.rent_mp))+R(num(F.family_pension))+R(num(F.any_other))+R(othTot);
+      const IO={ GrossIncChrgblTaxAtAppRate:normal, DividendGross:div, InterestGross:intr,
+        IntrstFrmSavingBank:R(num(F.int_savings)), IntrstFrmTermDeposit:R(num(F.int_term)), IntrstFrmIncmTaxRefund:R(num(F.int_refund)), IntrstFrmOthers:R(num(F.int_others)),
+        RentFromMachPlantBldgs:R(num(F.rent_mp)), FamilyPension:R(num(F.family_pension)), AnyOtherIncome:R(num(F.any_other)),
+        LtryPzzlChrgblUs115BB:win, IncChargeableSpecialRates:win, Deductions:{Depreciation:0,TotDeductions:0}, BalanceNoRaceHorse:normal };
+      // required schema leaves (schema-mandatory even when nil): dividend split, 56(2)(x), unexplained-income 68/69, pass-through
+      Object.assign(IO,{ DividendOthThan22e:div, Dividend22e:R(num(F.div_22e)), NatofPassThrghIncome:0,
+        Aggrtvaluewithoutcons562x:R(num(F.gift_aggr)), Immovpropwithoutcons562x:R(num(F.gift_immov_wo)), Immovpropinadeqcons562x:R(num(F.gift_immov_inad)), Anyotherpropwithoutcons562x:R(num(F.gift_oth_wo)), Anyotherpropinadeqcons562x:R(num(F.gift_oth_inad)),
+        Tot562x:R(num(F.gift_aggr)+num(F.gift_immov_wo)+num(F.gift_immov_inad)+num(F.gift_oth_wo)+num(F.gift_oth_inad)),
+        CashCreditsUs68:R(num(F.cc_68)), UnExplndInvstmntsUs69:R(num(F.ui_69)), UnExplndMoneyUs69A:R(num(F.um_69a)), UnDsclsdInvstmntsUs69B:R(num(F.ud_69b)), UnExplndExpndtrUs69C:R(num(F.ue_69c)), AmtBrwdRepaidOnHundiUs69D:R(num(F.hundi_69d)),
+        IncChrgblUs115BBE:R(num(F.cc_68)+num(F.ui_69)+num(F.um_69a)+num(F.ud_69b)+num(F.ue_69c)+num(F.hundi_69d)),
+        OthersGross:win, PassThrIncOSChrgblSplRate:R(num(F.pti_splrate)) });
+      if(others.length) IO.OthersInc={OthersIncDtls:others.map(r=>({OthNatOfInc:r.nature||'Other',OthAmount:R(num(r.amount))}))};
+      if(dtaa.length) IO.IncChargblSplRateOS={ NRIOsDTAA:{ NRIDTAADtlsSchOS:dtaa.map(r=>({NatureOfIncome:r.nature||'',CountryName:r.country||'',CountryCodeExcludingIndia:r.country||'',DTAAarticle:r.article||'',RateAsPerTreaty:R(num(r.treaty)),RateAsPerITAct:R(num(r.itact)),DTAAamt:R(num(r.amt)),ItemNoincl:''})) }, TotalAmtTaxUsDTAASchOs:R(dtaa.reduce((s,r)=>s+num(r.amt),0)) };
+      const OS={ IncOthThanOwnRaceHorse:IO, TotOthSrcNoRaceHorse:normal, IncChargeable:R(normal+win) };
+      const drOS=p=>({DateRange:{Upto15Of6:R(num(Q[p+'_q1'])),Up16Of6To15Of9:R(num(Q[p+'_q2'])),Up16Of9To15Of12:R(num(Q[p+'_q3'])),Up16Of12To15Of3:R(num(Q[p+'_q4'])),Up16Of3To31Of3:R(num(Q[p+'_q5']))}});
+      const hasQ=p=>['_q1','_q2','_q3','_q4','_q5'].some(q=>num(Q[p+q]));
+      if(hasQ('ltry'))OS.IncFrmLottery=drOS('ltry');
+      if(hasQ('div'))OS.DividendIncUs115A1ai=drOS('div');
+      j.ITR.ITR3.ScheduleOS=OS;
+    }
+  }catch(e){}
+
+  // ===== Depreciation cascade — ScheduleDPM / DOA / DEP / DCG (real, from iframe sf-depit blocks) =====
+  try{ const _bw=calcWin(); const _depitRoot=_bw&&_bw.bpData&&_bw.bpData.depit; const DEPIT_BLOCKS=_bw&&_bw.DEPIT_BLOCKS; const depitBlockCalc=_bw&&_bw.depitBlockCalc;
+    if(_depitRoot && typeof depitBlockCalc==='function' && DEPIT_BLOCKS){ const bpData={depit:_depitRoot};
+    const rateOf=k=>{const b=DEPIT_BLOCKS.find(x=>x[0]===k);return b?b[2]:0;};
+    const addlOf=k=>{ const a=(bpData.depit.addlDep||{})[k]; if(!a)return {gt:0,lt:0,ly:0,tot:0};
+      const gt=Math.round(num(a.addH1)*20/100), lt=Math.round(num(a.addH2)*10/100), ly=Math.round(num(a.lyAddLT180)*10/100);
+      return {gt,lt,ly,tot:gt+lt+ly}; };
+    const detail=(k,opts)=>{ opts=opts||{};
+      const r=bpData.depit.blocks[k]||{}, rate=rateOf(k);
+      const c=depitBlockCalc(k);
+      const open=num(r.opening),h1=num(r.addH1),h2=num(r.addH2),del=num(r.deletions);
+      const eligFull=Math.max(0,open+h1-del), eligHalf=h2;
+      const depFull=Math.round(eligFull*rate/100), depHalf=Math.round(eligHalf*rate/200);
+      const ad=opts.addl?addlOf(k):{gt:0,lt:0,ly:0,tot:0};
+      const dis=c.grossDep?Math.round(c.grossDep*num(r.personalPct)/100):0;
+      if(opts.no45split){
+        const gross=c.grossDep, tot=gross+ad.tot, net=tot-dis;
+        return { WDVFirstDay:R(open), Total:R(open+h1+h2), RealizationTotalPeriod:R(del), FullRateDeprAmt:R(eligFull),
+          DepreciationAtFullRate:R(gross), TotalDepreciation:R(tot), DepDisAllowUs38_2:R(dis),
+          NetAggregateDepreciation:R(net), ProportionateAggDepreciation:R(net), ExpdrOnTrforSaleAsset:0,
+          CapGainUs50:R(c.stcg), WDVLastDay:R(c.wdvClose), AdjustmentSec115BAC:0 };
+      }
+      const tot=depFull+depHalf+ad.tot, net=tot-dis;
+      const d={ WDVFirstDay:R(open), AdditionsGrThan180Days:R(h1), AdditionsLessThan180Days:R(h2), Total:R(open+h1+h2),
+        RealizationTotalPeriod:R(del), RealizationPeriodLessThan180days:0, FullRateDeprAmt:R(eligFull), HalfRateDeprAmt:R(eligHalf),
+        DepreciationAtFullRate:R(depFull), DepreciationAtHalfRate:R(depHalf), TotalDepreciation:R(tot), DepDisAllowUs38_2:R(dis),
+        NetAggregateDepreciation:R(net), ProportionateAggDepreciation:R(net), ExpdrOnTrforSaleAsset:0,
+        CapGainUs50:R(c.stcg), WDVLastDay:R(c.wdvClose), AdjustmentSec115BAC:0 };
+      if(opts.addl){ d.AddlnDeprOnGT180DayAdditions=R(ad.gt); d.AddlnDeprOnLessThan180DayAdditions=R(ad.lt); d.AddlnDeprOnAssetLessThan180Days=R(ad.ly); }
+      return d;
+    };
+    const net=k=>{const c=depitBlockCalc(k);const r=bpData.depit.blocks[k]||{};const ad=(['pm15','pm30','pm40'].indexOf(k)>=0?addlOf(k).tot:0);const dis=c.grossDep?Math.round(c.grossDep*num(r.personalPct)/100):0;return c.grossDep+ad-dis;};
+    const dcgV=k=>R(depitBlockCalc(k).stcg);
+    const dpm={ PlantMachinery:{
+      Rate15:{DepreciationDetail:detail('pm15',{addl:true})},
+      Rate30:{DepreciationDetail:detail('pm30',{addl:true})},
+      Rate40:{DepreciationDetail:detail('pm40',{addl:true})},
+      Rate45:{DepreciationDetail:detail('pm45',{no45split:true})} } };
+    j.ITR.ITR3.ScheduleDPM=dpm;
+    const doa={
+      Land:{DepreciationDetail:{ WDVFirstDay:R(num((bpData.depit.land||{}).opening)),
+        WDVLastDay:R(num((bpData.depit.land||{}).opening)+num((bpData.depit.land||{}).additions)-num((bpData.depit.land||{}).deletions)) }},
+      Building:{ Rate5:{DepreciationDetail:detail('b5res')}, Rate10:{DepreciationDetail:detail('b10')}, Rate40:{DepreciationDetail:detail('b40')} },
+      FurnitureFittings:{ Rate10:{DepreciationDetail:detail('furn10')} },
+      IntangibleAssets:{ Rate25:{DepreciationDetail:detail('intang25')} },
+      Ships:{ Rate20:{DepreciationDetail:detail('ships20')} } };
+    j.ITR.ITR3.ScheduleDOA=doa;
+    const pmT=net('pm15')+net('pm30')+net('pm40')+net('pm45');
+    const bT=net('b5res')+net('b10')+net('b40');
+    const furnN=net('furn10'), intN=net('intang25'), shipN=net('ships20');
+    const depTot=pmT+bT+furnN+intN+shipN;
+    j.ITR.ITR3.ScheduleDEP={ SummaryFromDeprSch:{
+      PlantMachinerySummary:{ DeprBlockTot15Percent:R(net('pm15')), DeprBlockTot30Percent:R(net('pm30')), DeprBlockTot40Percent:R(net('pm40')), DeprBlockTot45Percent:R(net('pm45')), TotPlntMach:R(pmT) },
+      BuildingSummary:{ DeprBlockTot5Percent:R(net('b5res')), DeprBlockTot10Percent:R(net('b10')), DeprBlockTot40Percent:R(net('b40')), TotBuildng:R(bT) },
+      FurnitureSummary:R(furnN), IntangibleAssetSummary:R(intN), ShipsSummary:R(shipN), TotalDepreciation:R(depTot) } };
+    const pmCG=dcgV('pm15')+dcgV('pm30')+dcgV('pm40')+dcgV('pm45');
+    const bCG=dcgV('b5res')+dcgV('b10')+dcgV('b40');
+    const furnCG=dcgV('furn10'), intCG=dcgV('intang25'), shipCG=dcgV('ships20');
+    const dcgTot=pmCG+bCG+furnCG+intCG+shipCG;
+    j.ITR.ITR3.ScheduleDCG={ SummaryFromDeprSchCG:{
+      PlantMachinerySummaryCG:{ DeprBlockTot15Percent:R(dcgV('pm15')), DeprBlockTot30Percent:R(dcgV('pm30')), DeprBlockTot40Percent:R(dcgV('pm40')), DeprBlockTot45Percent:R(dcgV('pm45')), TotPlntMach:R(pmCG) },
+      BuildingSummaryCG:{ DeprBlockTot5Percent:R(dcgV('b5res')), DeprBlockTot10Percent:R(dcgV('b10')), DeprBlockTot40Percent:R(dcgV('b40')), TotBuildng:R(bCG) },
+      FurnitureSummary:R(furnCG), IntangibleAssetSummary:R(intCG), ShipsSummary:R(shipCG), TotalDepreciation:R(dcgTot) } };
+    try{ const bp=j.ITR.ITR3.ITR3ScheduleBP&&j.ITR.ITR3.ITR3ScheduleBP.BusinessIncOthThanSpec;
+      if(bp){ bp.DepreciationDebPLCosAct=R(num((data.pl||{}).pl_less_depreciation));
+        bp.DepreciationAllowITAct32={ DepreciationAllowUs32_1_ii:R(depTot), DepreciationAllowUs32_1_i:0, TotDeprAllowITAct:R(depTot) }; } }catch(e){}
+  } }catch(e){}
+
+  // ===== ITR3ScheduleUD — Unabsorbed Depreciation & Allowance u/s 35(4) c/f (real, from iframe lossCFL.ud) =====
+  try{ const bw=calcWin(); const ud=bw&&bw.bpData&&bw.bpData.lossCFL&&bw.bpData.lossCFL.ud;
+    const rows=(ud||[]).filter(r=>r.ay||num(r.bfDep)||num(r.soDep)||num(r.bfAllow)||num(r.soAllow));
+    if(rows.length){ const ayN=+(j.ITR.ITR3.Form_ITR3.AssessmentYear||'2025'); const ayStr=ayN+'-'+String(ayN+1).slice(-2);
+      let tBfD=0,tSoD=0,tCfD=0,tBfA=0,tSoA=0,tCfA=0;
+      const arr=rows.map(r=>{ const bfD=R(num(r.bfDep)),soD=Math.min(bfD,R(num(r.soDep))),cfD=bfD-soD;
+        const bfA=R(num(r.bfAllow)),soA=Math.min(bfA,R(num(r.soAllow))),cfA=bfA-soA;
+        tBfD+=bfD;tSoD+=soD;tCfD+=cfD;tBfA+=bfA;tSoA+=soA;tCfA+=cfA;
+        return { AssYr:String(r.ay||ayStr), AmtBFUD:bfD, AmtDeprSOCY:soD, BalCFNY:cfD, AmtBFUAllow:bfA, AmtAllowSOCY:soA, AllowBalCFNY:cfA }; });
+      j.ITR.ITR3.ITR3ScheduleUD={ CurrAssYr:ayStr, CurBalCFNY:0, CurAllowBalCFNY:0, ScheduleUD:arr,
+        TotBFUDepritAmt:tBfD, TotCurYrdepritSetoffInc:tSoD, TotDepritBalCFNY:tCfD,
+        TotBFUAllowAmt:tBfA, TotCurYrAllowSetoffInc:tSoA, TotalBalCFNY:tCfA };
+      try{ const bfl=j.ITR.ITR3.ScheduleBFLA; if(bfl&&bfl.TotalBFLossSetOff) bfl.TotalBFLossSetOff.TotUnabsorbedDeprSetoff=tSoD; }catch(e){}
+    }
+  }catch(e){}
+
+  // ===== ScheduleHP — House Property detail (real, from hpData drill-in) =====
+  try{ const sc2=s=>{const m=String(s||'').match(/^(\d{2})/);return (m&&m[1]!=='(S')?m[1]:'19';};
+    const _cw=(typeof calcWin==='function')?calcWin():null;
+    const HPD=(_cw&&typeof _cw.getHpData==='function'&&Array.isArray(_cw.getHpData()))?_cw.getHpData():[];
+    const props=HPD.filter(p=>{const d=p.details||{};const anyRent=((p.gav||{}).rentRows||[]).some(r=>num(r.amount));const anyInt=((p.interest||{}).loans||[]).some(l=>num(l.interest))||num((p.interest||{}).pre);return d.flat||d.road||d.city||anyRent||anyInt||num(p.arrears);});
+    if(props.length){ let hpTot=0, ptiTot=0;
+      const rows=props.map((p,i)=>{ const d=p.details||{};
+        const addr=[d.flat,d.premises,d.road,d.locality].filter(Boolean).join(', ')||'NA';
+        const lo=p.type==='let-out';
+        const share=lo?Math.max(0,Math.min(100,num(p.share)||100)):100;
+        const loans=((p.interest||{}).loans||[]);
+        const interest=loans.reduce((s,l)=>s+num(l.interest),0)+num((p.interest||{}).pre);
+        const rd={ HPSNo:i+1,
+          AddressDetailWithZipCode:{ AddrDetail:addr, CityOrTownOrDistrict:d.city||'NA', StateCode:sc2(d.state), CountryCode:'91' },
+          PropertyOwner:'SE', PropCoOwnedFlg:'NO', AsseseeShareProperty:share, ifLetOut:(lo?'L':'S') };
+        let inc, intForNode;
+        if(lo){ const grossRent=((p.gav||{}).rentRows||[]).reduce((s,r)=>s+num(r.amount),0);
+          const unreal=num((p.gav||{}).unrealised), mun=num(p.municipal);
+          const totUT=unreal+mun, balALV=Math.max(0,grossRent-totUT);
+          const own=R(balALV*share/100), thirty=own>0?R(own*0.30):0;
+          const arrGross=num(p.arrears), arrTax=arrGross>0?R(arrGross-R(arrGross*0.30)):0;
+          intForNode=R(interest); const totDed=thirty+intForNode; inc=own-totDed+arrTax;
+          rd.Rentdetails={ AnnualLetableValue:R(grossRent), RentNotRealized:R(unreal), LocalTaxes:R(mun), TotalUnrealizedAndTax:R(totUT), BalanceALV:R(balALV), AnnualOfPropOwned:own, ThirtyPercentOfBalance:thirty, IntOnBorwCap:intForNode, TotalDeduct:totDed, ArrearsUnrealizedRentRcvd:arrTax, IncomeOfHP:R(inc) };
+          rd.TenantDetails=[{ TenantSNo:1, NameofTenant:(d.owner||'NA') }];
+          ptiTot+=num(p.pti);
+        } else { intForNode=Math.min(R(interest),200000); inc=-intForNode;
+          rd.Rentdetails={ AnnualLetableValue:0, RentNotRealized:0, LocalTaxes:0, TotalUnrealizedAndTax:0, BalanceALV:0, AnnualOfPropOwned:0, ThirtyPercentOfBalance:0, IntOnBorwCap:intForNode, TotalDeduct:intForNode, ArrearsUnrealizedRentRcvd:0, IncomeOfHP:R(inc) };
+        }
+        if(intForNode>0){ const dtls=loans.filter(l=>num(l.interest)||l.name).map(l=>({ LoanTknFrom:(String(l.from||'').toUpperCase().charAt(0)==='I'?'I':'B'), BankOrInstnName:l.name||'NA', LoanAccNoOfBankOrInstnRefNo:l.acct||'NA', DateofLoan:_isoD(l.sanction)||today, TotalLoanAmt:R(num(l.totalLoan)), LoanOutstndngAmt:R(num(l.closingBal)), InterestUs24B:R(num(l.interest)) }));
+          if(!dtls.length) dtls.push({ LoanTknFrom:'B', BankOrInstnName:'NA', LoanAccNoOfBankOrInstnRefNo:'NA', DateofLoan:today, TotalLoanAmt:0, LoanOutstndngAmt:0, InterestUs24B:intForNode });
+          rd.Rentdetails.Section24B={ Section24BDtls:dtls, TotalInterestUs24B:R(dtls.reduce((s,x)=>s+x.InterestUs24B,0)) };
+        }
+        hpTot+=inc; return rd; });
+      const HP={ PropertyDetails:rows, TotalIncomeChargeableUnHP:R(hpTot+ptiTot) };
+      if(ptiTot) HP.PassThroghIncome=R(ptiTot);
+      j.ITR.ITR3.ScheduleHP=HP;
+    }
+  }catch(e){}
+
+  // ===== PARTA_OI — Other Information (real: stock-valuation/duties from 44AB drill-in; gated on business/books) =====
+  if(_hasPL || _hasBS || biz>0){ const O=data.audit44ab_data||{};
+    const valMap=t=>({'Lower of Cost/Market rate':'1','At Cost':'2','At Market rate':'3'}[t]||'1');
+    const z43=()=>({AmtUs43B:{TaxDutyCesAmt:0,ContToEmpPFSFGF:0,EmpBonusComm:0,IntPayaleToFI:0,SumPayaleLoanBrToFinComp:0,IntPayaleToFISchBank:0,LeaveEncashPayable:0,TotAmtUs43b:0}});
+    const cgst=R(num(O.cgst)),sgst=R(num(O.sgst)),igst=R(num(O.igst)),utgst=R(num(O.utgst)),excise=R(num(O.excise)),stax=R(num(O.servicetax)),vat=R(num(O.vat)),oth=R(num(O.othertax));
+    const totECV=cgst+sgst+igst+utgst+excise+stax+vat+oth;
+    j.ITR.ITR3.PARTA_OI={
+      MethodOfAcct:'MERC', ChangeInAcctMethFlg:'N', ProfDeviatDueAcctMeth:0, DecProOrIncLossUs145_2:0,
+      MethodOfValClgStk:{ ValRawMaterial:valMap(O.valRaw), ValFinishedGoods:valMap(O.valFg), ChngStockValMetFlg:(O.valChange?'Y':'N'), EffectOnPL:0, DecProOrIncLossUs145_A:0 },
+      NoCredToPLAmt:{ Section28Items:0, ProformaCreditsDue:0, PrevYrEscalClaim:0, OthItemInc:0, CapReceipt:0, TotNoCredToPLAmt:0 },
+      AmtDisallUs36:{ StkInsurPrem:0,EmpHealthInsurPrem:0,EmpBonusCommSum:0,IntOnBorrCap:0,ZeroCoupBondDisc:0,RecogPFContribAmt:0,AppSuperAnnFundAmt:0,PensionSchemeSec80CCD:0,AppGratFundAmt:0,OthFundAmt:0,EmpContributionCredits:0,BadDebtDoubtAmt:0,BadDebtDoubtProvn:0,SpecResrvTranfr:0,FamPlanPromoExp:0,SecuritiesPaidAmt:0,MrktLossOthExpLossICDS:0,OthDisallowances:0,TotAmtDisallUs36:0 },
+      AmtDisallUs37:{ CapitalNatureExp:0,PersonalExp:0,BusOrProfessnExp:0,PoliticPartyExp:0,LawVoilatPenalExp:0,OthPenalFineExp:0,OffenceExp:0,ContigentLiability:0,OthAmtNotAllowUs37:0,TotAmtDisallUs37:0 },
+      AmtDisallUs40:{ NonCompChapXVIIBAmt:0,NonComp40aiiChapXVIIBAmt:0,NonComp40aibChapXVIIBAmt:0,NonComp40aiiiChapXVIIBAmt:0,TaxAmtOnProfits:0,WTAmt:0,RolyatyOrServiceFee:0,IntSalBonPartner:0,OthDisallow:0,TotAmtDisallUs40:0,AmtDisallUs40PyNowAll:0 },
+      AmtDisallUs40A:{ AmtPaidUs40A2b:0,AmtGT20kCash:0,ProvPmtGrat:0,ContToSetupTrust:0,OthDisallow:0,TotAmtDisallUs40A:0 },
+      AmtDisallUs43BPyNowAll:z43(), AmtDisall43B:z43(),
+      AmtExciseCustomsVATOutstanding:{ ExciseCustomsVAT:{ UnionExciseDuty:excise,ServiceTax:stax,VATorSaleTax:vat,CentralGoodServiceTax:cgst,StateGoodServiceTax:sgst,IntegratedGoodServiceTax:igst,UnionTerrGoodServiceTax:utgst,OthDutyTaxCess:oth,TotExciseCustomsVAT:totECV } },
+      DeemedProfUs33ABs:0, ProfTaxAmtUs41:0, PriorAmtIncCrDrPL:0, AmountOfExpDisAllwUs14A:0, ScheduleTPSAFlg:'N'
+    };
+  }
+
+  // ===== PARTA_QD — Quantitative Details (real, from data.qd drill-in) =====
+  try{ const items=(data.qd||[]).filter(r=>r.item||num(r.opening)||num(r.purchase)||num(r.sale)||num(r.closing));
+    if(items.length){ const QD={};
+      const mk=r=>{const se=R(num(r.opening)+num(r.purchase)-num(r.sale)-num(r.closing));return {ItemName:r.item||'NA',UnitOfMeasure:(['101','102','103','104','105','106'].indexOf(r.unit)>=0?r.unit:'101'),OpeningStock:R(num(r.opening)),PurchaseQty:R(num(r.purchase)),SaleQty:R(num(r.sale)),ClgStock:R(num(r.closing)),AnyShortExces:se};};
+      const trd=items.filter(r=>(r.type||'TRADING')==='TRADING'), raw=items.filter(r=>r.type==='RAWMAT'), fin=items.filter(r=>r.type==='FINISHED');
+      if(trd.length) QD.TradingConcern={ QuantitDet:trd.map(mk) };
+      if(raw.length||fin.length){ QD.ManfactrConcern={};
+        if(raw.length) QD.ManfactrConcern.RawMaterial={ QuantitDet:raw.map(mk) };
+        if(fin.length) QD.ManfactrConcern.FinishrByProd={ QuantitDet:fin.map(mk) };
+      }
+      if(Object.keys(QD).length) j.ITR.ITR3.PARTA_QD=QD;
+    }
+  }catch(e){}
+
+  // ===== ScheduleGST — turnover per GSTIN (real, from data.gstr) =====
+  { const gst=(data.gstr||[]).filter(r=>(r.gstin||'').trim()||num(r.outward));
+    if(gst.length){ j.ITR.ITR3.ScheduleGST={ TurnoverGrsRcptForGSTIN: gst.map(r=>({GSTINNo:(r.gstin||'').toUpperCase().trim(), AmtTurnGrossRcptGSTIN:R(num(r.outward))})) }; } }
+
+  // ===== SchedulePTI — pass-through income 115UA/UB (real, from data.pti) =====
+  { const pti=(data.pti||[]).filter(r=>(r.name||'').trim()||num(r.income)||num(r.tds));
+    if(pti.length){ const rows=pti.map(r=>{
+        const inc=R(num(r.income)), tds=R(num(r.tds)), invt=/115UB/.test(r.entity||'')?'115UB':'115UA';
+        const d={ InvstmntCvrdUs115UA115UB:invt, BusinessName:r.name||'', BusinessPAN:(r.pan||'').toUpperCase() };
+        const h=r.head||'';
+        if(h==='House Property'){ d.IncFromHP={AmountOfInc:inc,CurrYrLossShareByInvstFund:0,NetIncomeLoss:inc,TDSAmount:tds}; }
+        else if(h==='Capital Gains'){ d.CapitalGainsPTI={ LongTermCG:{AmountOfInc:inc,CurrYrLossShareByInvstFund:0,NetIncomeLoss:inc,TDSAmount:tds} }; }
+        else { d.IncOthSrc={AmountOfInc:inc,NetIncomeLoss:inc,TDSAmount:tds}; }
+        return d; });
+      j.ITR.ITR3.SchedulePTI={ SchedulePTIDtls: rows }; } }
+
+  // ===== ScheduleEI — exempt income (real, from iframe bpData.exempt) =====
+  try{ const bw=calcWin(); const ex=bw&&bw.bpData&&bw.bpData.exempt; const ec=ex&&ex._computed;
+    if(ec && R(ec.grandTotal)>0){ const intInc=R(num(ex.ppfInt)+num(ex.sukanya));
+      const agri=R(ec.agriAuto); const others=Math.max(0,R(ec.grandTotal)-intInc-agri);
+      const EI={ TotalExemptInc:R(ec.grandTotal) };
+      if(intInc>0) EI.InterestInc=intInc;
+      if(agri>0) EI.NetAgriIncOrOthrIncRule7=agri;
+      if(others>0) EI.Others=others;
+      j.ITR.ITR3.ScheduleEI=EI;
+    }
+  }catch(e){}
+
+  // ===== ScheduleCFL — loss carry-forward summaries (real, from iframe bpData.lossCFL) =====
+  try{ const bw=calcWin(); const L=bw&&bw.bpData&&bw.bpData.lossCFL; const c=L&&L._computed;
+    if(c && c.perHead){ const ph=c.perHead;
+      const bf=k=>R((ph[k]?ph[k].bf:0)-(ph[k]?ph[k].setoff:0)), cyv=k=>R(ph[k]?ph[k].cy:0), cf=k=>R(ph[k]?ph[k].cf:0);
+      const tot=(f)=>f('hp')+f('biz')+f('spec')+f('specbz');
+      if(tot(bf)||tot(cyv)||tot(cf)){
+        const sum=(hp,biz,spec,specbz)=>({LossSummaryDetail:{TotalHPPTILossCF:hp,BusLossOthThanSpecLossCF:biz,LossFrmSpecBusCF:spec,LossFrmSpecifiedBusCF:specbz,TotalSTCGPTILossCF:0,TotalLTCGPTILossCF:0,OthSrcLossRaceHorseCF:0}});
+        j.ITR.ITR3.ScheduleCFL={
+          TotalOfBFLossesEarlierYrs:sum(bf('hp'),bf('biz'),bf('spec'),bf('specbz')),
+          CurrentAYloss:sum(cyv('hp'),cyv('biz'),cyv('spec'),cyv('specbz')),
+          TotalLossCFSummary:sum(cf('hp'),cf('biz'),cf('spec'),cf('specbz')),
+          AdjTotBFLossInBFLA:sum(R(ph.hp?ph.hp.setoff:0),R(ph.biz?ph.biz.setoff:0),R(ph.spec?ph.spec.setoff:0),R(ph.specbz?ph.specbz.setoff:0))
+        };
+      }
+    }
+  }catch(e){}
+
+  // ===== Schedule80G / 80GGA / 80GGC — donations (real, from iframe bpData.deductions.s80other) =====
+  try{ const bw=calcWin(); const D=bw&&bw.bpData&&bw.bpData.deductions; const so=D&&D.s80other;
+    if(so){ const stc=s=>{const t=String(s||'').trim();return /^\d{1,2}$/.test(t)?t.padStart(2,'0'):(A.stateCode||'99');};
+      const donee=r=>{const amt=R(num(r.amount)); const disallow=r.cash&&num(r.amount)>2000; const elig=disallow?0:amt;
+        const d={ DoneeWithPanName:r.name||'', DoneePAN:(r.pan||'').toUpperCase(), AddressDetail:{ AddrDetail:r.address||'NA', CityOrTownOrDistrict:r.city||'NA', StateCode:stc(r.state), PinCode:R(num(r.pin)) }, DonationAmtCash:r.cash?amt:0, DonationAmtOtherMode:r.cash?0:amt, DonationAmt:amt, EligibleDonationAmt:elig };
+        if(r.txnRef) d.TransactionRefNum=r.txnRef; if(r.ifsc) d.IFSCCode=r.ifsc; return d; };
+      const sec=(rows,suf,eligName)=>{ const arr=rows.map(donee); const t=arr.reduce((a,x)=>({c:a.c+x.DonationAmtCash,o:a.o+x.DonationAmtOtherMode,d:a.d+x.DonationAmt,e:a.e+x.EligibleDonationAmt}),{c:0,o:0,d:0,e:0}); const s={DoneeWithPan:arr}; s['TotDon'+suf+'Cash']=t.c; s['TotDon'+suf+'OtherMode']=t.o; s['TotDon'+suf]=t.d; s[eligName]=t.e; return s; };
+      const g50=(so.g50||[]).filter(r=>(r.name||'').trim()||num(r.amount));
+      const g100=(so.g100||[]).filter(r=>(r.name||'').trim()||num(r.amount));
+      const G={};
+      const g100nc=g100.filter(r=>!r.ceiling), g100wc=g100.filter(r=>r.ceiling);
+      const g50nc=g50.filter(r=>!r.ceiling), g50wc=g50.filter(r=>r.ceiling);
+      if(g100nc.length) G.Don100Percent=sec(g100nc,'100Percent','TotEligibleDon100Percent');
+      if(g100wc.length) G.Don100PercentApprReqd=sec(g100wc,'100PercentApprReqd','TotEligibleDon100PercentApprReqd');
+      if(g50nc.length) G.Don50PercentNoApprReqd=sec(g50nc,'50PercentNoApprReqd','TotEligibleDon50Percent');
+      if(g50wc.length) G.Don50PercentApprReqd=sec(g50wc,'50PercentApprReqd','TotEligibleDon50PercentApprReqd');
+      if(Object.keys(G).length){ let gc=0,go=0,gd=0,ge=0; Object.values(G).forEach(s=>{(s&&s.DoneeWithPan||[]).forEach(x=>{gc+=x.DonationAmtCash;go+=x.DonationAmtOtherMode;gd+=x.DonationAmt;ge+=x.EligibleDonationAmt;});}); G.TotalDonationsUs80GCash=R(gc); G.TotalDonationsUs80GOtherMode=R(go); G.TotalDonationsUs80G=R(gd); G.TotalEligibleDonationsUs80G=R(ge); j.ITR.ITR3.Schedule80G=G; }
+      const gga=(so.gga||[]).filter(r=>(r.name||'').trim()||num(r.amount));
+      if(gga.length){ const clauseMap={'2a':'80GGA2a','2aa':'80GGA2aa','2b':'80GGA2b','2bb':'80GGA2bb','2c':'80GGA2c','2cc':'80GGA2cc'};
+        const rows=gga.map(r=>{const amt=R(num(r.amount)); const disallow=r.cash&&num(r.amount)>10000; const elig=disallow?0:amt; const cl=String(r.clause||'').replace(/[()\s]/g,'');
+          return { RelevantClauseUndrDedClaimed:clauseMap[cl]||'80GGA2a', NameOfDonee:r.name||'', AddressDetail:{ AddrDetail:r.address||'NA', CityOrTownOrDistrict:r.city||'NA', StateCode:stc(r.state), PinCode:R(num(r.pin)) }, DoneePAN:(r.pan||'').toUpperCase(), DonationAmtCash:r.cash?amt:0, DonationAmtOtherMode:r.cash?0:amt, DonationAmt:amt, EligibleDonationAmt:elig }; });
+        const t=rows.reduce((a,x)=>({c:a.c+x.DonationAmtCash,o:a.o+x.DonationAmtOtherMode,d:a.d+x.DonationAmt,e:a.e+x.EligibleDonationAmt}),{c:0,o:0,d:0,e:0});
+        j.ITR.ITR3.Schedule80GGA={ DonationDtlsSciRsrchRuralDev:rows, TotalDonationAmtCash80GGA:t.c, TotalDonationAmtOtherMode80GGA:t.o, TotalDonationsUs80GGA:t.d, TotalEligibleDonationAmt80GGA:t.e }; }
+      const ggc=(so.ggc||[]).filter(r=>(r.partyName||'').trim()||num(r.amount));
+      if(ggc.length){ const rows=ggc.map(r=>{const amt=R(num(r.amount)); const elig=r.cash?0:amt; const d={ DonationDate:_isoD(r.date)||r.date||today, DonationAmtCash:r.cash?amt:0, DonationAmtOtherMode:r.cash?0:amt, DonationAmt:amt, EligibleDonationAmt:elig, PoliticalPartyName:r.partyName||'', PoliticalPartyPAN:(r.partyPan||'').toUpperCase() }; if(r.txnRef) d.TransactionRefNum=r.txnRef; if(r.ifsc) d.IFSCCode=r.ifsc; return d; });
+        const t=rows.reduce((a,x)=>({c:a.c+x.DonationAmtCash,o:a.o+x.DonationAmtOtherMode,d:a.d+x.DonationAmt,e:a.e+x.EligibleDonationAmt}),{c:0,o:0,d:0,e:0});
+        j.ITR.ITR3.Schedule80GGC={ Schedule80GGCDetails:rows, TotalDonationAmtCash80GGC:t.c, TotalDonationAmtOtherMode80GGC:t.o, TotalDonationsUs80GGC:t.d, TotalEligibleDonationAmt80GGC:t.e }; }
+    }
+  }catch(e){}
+
+  // ===== ScheduleAMT / ScheduleAMTC — 115JC/JD (real, from iframe bpData.amt._computed; old regime) =====
+  try{ const bw=calcWin(); const am=bw&&bw.bpData&&bw.bpData.amt; const c=am&&am._computed;
+    if(c && !isNew){
+      const ayN=+(j.ITR.ITR3.Form_ITR3.AssessmentYear||'2025'); const ayStr=ayN+'-'+String(ayN+1).slice(-2);
+      if(c.amt>0){ const tAdj=R(c.addbackC)+R(c.addback_10aa)+R(c.addback_35ad);
+        j.ITR.ITR3.ScheduleAMT={ TotalIncItem11:R(ti),
+          AdjustmentSec115JC:{ DeductClaimSec6A:R(c.addbackC), DeductClaimSec10AA:R(c.addback_10aa), DeductClaimSec35AD:R(c.addback_35ad), Total:tAdj },
+          AdjustedUnderSec115JC:R(c.ati), AdjustedUnderSec115JCIFSC:0, AdjustedUnderSec115JCOther:R(c.ati), TaxPayableUnderSec115JC:R(c.amtBase) };
+      }
+      if(R(c.credit_bf)>0 || R(c.credit_generated)>0){
+        j.ITR.ITR3.ScheduleAMTC={ TaxSection115JC:R(c.amt), TaxOthProvisions:R(c.normalTax), AmtTaxCreditAvailable:R(c.credit_generated),
+          CurrAssYr:ayStr, CurrYrAmtCreditFwd:R(c.credit_generated), CurrYrCreditCarryFwd:R(c.credit_cf),
+          TotAMTGross:R(c.credit_bf), TotSetOffEys:0, TotBalBF:R(c.credit_bf), TotAmtCreditUtilisedCY:R(c.credit_used), TotBalAMTCreditCF:R(c.credit_cf),
+          TaxSection115JD:R(c.credit_used), AmtLiabilityAvailable:R(c.taxForLiability) };
+      }
+    }
+  }catch(e){}
+
+  // ===== Individual Chapter VI-A schedules — 80D / 80DD / 80U / 80EE / 80EEA / 80EEB (real, from iframe bpData.deductions) =====
+  try{ const bw=calcWin(); const DED=bw&&bw.bpData&&bw.bpData.deductions;
+    if(DED){
+      // ---- 80D (health insurance, 4 buckets) ----
+      const s80d=DED.s80d;
+      if(s80d){ const cfg={sel_ot:{cap:25000,sr:false},sel_sc:{cap:50000,sr:true},par_ot:{cap:25000,sr:false},par_sc:{cap:50000,sr:true}};
+        const eligOf=k=>{const c=s80d[k]||{},cf=cfg[k];const prem=num(c.prem),yrs=num(c.yrs)||1;const premCY=(s80d.lumpsum&&yrs>1)?Math.round(prem/yrs):prem;const chk=Math.min(num(c.chk),5000);const med=cf.sr?num(c.med):0;return {premCY:R(premCY),chk:R(chk),med:R(med),ded:R(Math.min(premCY+chk+med,cf.cap))};};
+        const insDtls=k=>{const c=s80d[k]||{};if(!(c.co||c.pol||num(c.prem)))return null;const amt=eligOf(k).premCY;return {Sch80DInsDtls:[{InsurerName:c.co||'NA',PolicyNo:c.pol||'NA',HealthInsAmt:amt}],TotalPayments:amt};};
+        const selOt=eligOf('sel_ot'),selSc=eligOf('sel_sc'),parOt=eligOf('par_ot'),parSc=eligOf('par_sc');
+        const totDed=selOt.ded+selSc.ded+parOt.ded+parSc.ded;
+        if(totDed>0){ const selfSr=!!(s80d.sel_sc&&(s80d.sel_sc.co||num(s80d.sel_sc.prem)||num(s80d.sel_sc.med)));
+          const parSr=!!(s80d.par_sc&&(s80d.par_sc.co||num(s80d.par_sc.prem)||num(s80d.par_sc.med)));
+          const H={ SeniorCitizenFlag:(selfSr?'Y':'N') };
+          const iSelOt=insDtls('sel_ot'); if(iSelOt){ H.SelfAndFamily=selOt.ded; H.HealthInsPremSlfFam=selOt.premCY; H.Sec80DSelfFamHIDtls=iSelOt; H.PrevHlthChckUpSlfFam=selOt.chk; }
+          if(selfSr){ const iSelSc=insDtls('sel_sc'); H.SelfAndFamilySeniorCitizen=selSc.ded; H.HlthInsPremSlfFamSrCtzn=selSc.premCY; if(iSelSc)H.Sec80DSelfFamSrCtznHIDtls=iSelSc; H.PrevHlthChckUpSlfFamSrCtzn=selSc.chk; H.MedicalExpSlfFamSrCtzn=selSc.med; }
+          const iParOt=insDtls('par_ot'); if(iParOt){ H.ParentsSeniorCitizenFlag=(parSr?'Y':'N'); H.Parents=parOt.ded; H.HlthInsPremParents=parOt.premCY; H.Sec80DParentsHIDtls=iParOt; H.PrevHlthChckUpParents=parOt.chk; }
+          if(parSr){ const iParSc=insDtls('par_sc'); if(H.ParentsSeniorCitizenFlag===undefined)H.ParentsSeniorCitizenFlag='Y'; H.ParentsSeniorCitizen=parSc.ded; H.HlthInsPremParentsSrCtzn=parSc.premCY; if(iParSc)H.Sec80DParentsSrCtznHIDtls=iParSc; H.PrevHlthChckUpParentsSrCtzn=parSc.chk; H.MedicalExpParentsSrCtzn=parSc.med; }
+          H.EligibleAmountOfDedn=R(totDed);
+          j.ITR.ITR3.Schedule80D={ Sec80DSelfFamSrCtznHealth:H };
+        }
+      }
+      // ---- 80DD (disabled dependent) ----
+      const s80dd=DED.s80dd;
+      if(s80dd&&(s80dd.name||s80dd.type||s80dd.udid)){ const depMap={spouse:1,son:2,daughter:3,father:4,mother:5}; const rel=String(s80dd.relation||'').toLowerCase(); let dt=6; Object.keys(depMap).forEach(k=>{if(rel.includes(k))dt=depMap[k];});
+        const D80={ NatureOfDisability:(s80dd.severe?'2':'1'), TypeOfDisability:'1', DeductionAmount:R(s80dd.severe?125000:75000), DependentType:String(dt) };
+        if((s80dd.udid||'').trim())D80.UDIDNum=s80dd.udid; j.ITR.ITR3.Schedule80DD=D80; }
+      // ---- 80U (self disability) ----
+      const so=DED.s80other;
+      if(so&&(so.u_type||so.u_udid||so.u_severe)){ const U={ NatureOfDisability:(so.u_severe?'2':'1'), TypeOfDisability:'1', DeductionAmount:R(so.u_severe?125000:75000) };
+        if((so.u_udid||'').trim())U.UDIDNum=so.u_udid; j.ITR.ITR3.Schedule80U=U; }
+      // ---- 80EE / 80EEA / 80EEB (housing / EV loan interest) ----
+      if(so){ const loanRow=(r,intKey)=>{ const d={ LoanTknFrom:(/other|nbfc|individ/i.test(r.from||'')?'I':'B'), BankOrInstnName:r.bank||'NA', LoanAccNoOfBankOrInstnRefNo:r.acctNo||'NA', DateofLoan:_isoD(r.sanctionDate)||today, TotalLoanAmt:R(num(r.totalLoan)), LoanOutstndngAmt:R(num(r.closingBal)) }; d[intKey]=R(num(r.interest)); return d; };
+        const ee=(so.ee||[]).filter(r=>r.bank||num(r.interest));
+        if(ee.length){ const rows=ee.map(r=>loanRow(r,'Interest80EE')); j.ITR.ITR3.Schedule80EE={ Schedule80EEDtls:rows, TotalInterest80EE:R(rows.reduce((s,x)=>s+x.Interest80EE,0)) }; }
+        const eea=(so.eea||[]).filter(r=>r.bank||num(r.interest));
+        if(eea.length){ const rows=eea.map(r=>loanRow(r,'Interest80EEA')); j.ITR.ITR3.Schedule80EEA={ PropStmpDtyVal:R(eea.reduce((s,r)=>s+num(r.stampDuty),0)), Schedule80EEADtls:rows, TotalInterest80EEA:R(rows.reduce((s,x)=>s+x.Interest80EEA,0)) }; }
+        const eeb=(so.eeb||[]).filter(r=>r.bank||num(r.interest));
+        if(eeb.length){ const rows=eeb.map(r=>{const d=loanRow(r,'Interest80EEB');d.VehicleRegNo=r.vehicleRegNo||'NA';return d;}); j.ITR.ITR3.Schedule80EEB={ Schedule80EEBDtls:rows, TotalInterest80EEB:R(rows.reduce((s,x)=>s+x.Interest80EEB,0)) }; }
+      }
+      // ---- 80E (education loan interest) ----
+      const s80e=DED.s80e;
+      if(s80e&&(s80e.loans||[]).some(r=>r.bank||num(r.interest))){ const rows=(s80e.loans||[]).filter(r=>r.bank||num(r.interest)).map(r=>({ LoanTknFrom:'B', BankOrInstnName:r.bank||'NA', LoanAccNoOfBankOrInstnRefNo:r.acctNo||'NA', DateofLoan:_isoD(r.sanctionDate)||today, TotalLoanAmt:R(num(r.totalLoan)), LoanOutstndngAmt:R(num(r.closingBal)), Interest80E:R(num(r.interest)) }));
+        j.ITR.ITR3.Schedule80E={ Schedule80EDtls:rows, TotalInterest80E:R(rows.reduce((s,x)=>s+x.Interest80E,0)) }; }
+      // ---- 80C (identification of investments) ----
+      const s80c=DED.s80c;
+      if(s80c&&(s80c.rows||[]).some(r=>num(r.amount))){ const rows=(s80c.rows||[]).filter(r=>num(r.amount)).map(r=>({ Amount:R(num(r.amount)), IdentificationNo:r.accNo||'NA' }));
+        j.ITR.ITR3.Schedule80C={ Schedule80CDtls:rows, TotalAmt:R(rows.reduce((s,x)=>s+x.Amount,0)) }; }
+    }
+  }catch(e){}
+
+  // ===== ScheduleFSI + ScheduleTR1 — Foreign source income & tax relief u/s 90/90A/91 (real, from iframe bpData.relief.rel90) =====
+  try{ const bw=calcWin(); const r90=bw&&bw.bpData&&bw.bpData.relief&&bw.bpData.relief.rel90;
+    const frows=((r90&&r90.rows)||[]).filter(r=>(r.country||'').trim()||num(r.income)||num(r.reliefClaimed)||num(r.taxOutside));
+    if(frows.length){
+      const BUCKETS=['IncFromSal','IncFromHP','IncFromBusiness','IncCapGain','IncOthSrc'];
+      const bucketOf=h=>{const s=String(h||'').toLowerCase();
+        if(/sal/.test(s))return 'IncFromSal'; if(/house|hp|propert/.test(s))return 'IncFromHP';
+        if(/bus|prof/.test(s))return 'IncFromBusiness'; if(/cap|cg|gain/.test(s))return 'IncCapGain'; return 'IncOthSrc';};
+      const secN=r=>{const s=String(r.sectionRelief||'').replace(/\s/g,'');return (s==='90'||s==='90A'||s==='91')?s:'91';};
+      const fsiRows=frows.map(r=>{ const b=bucketOf(r.headOfIncome);
+        const inc=R(num(r.income)),tpo=R(num(r.taxOutside)),tpi=R(num(r.taxIndia)),trel=R(num(r.reliefClaimed)), s=secN(r);
+        const d={ CountryName:r.country||'', CountryCodeExcludingIndia:r.country||'', TaxIdentificationNo:r.tin||'NA' };
+        BUCKETS.forEach(k=>d[k]={IncFrmOutsideInd:0,TaxPaidOutsideInd:0,TaxPayableinInd:0,TaxReliefinInd:0});
+        d[b]={IncFrmOutsideInd:inc,TaxPaidOutsideInd:tpo,TaxPayableinInd:tpi,TaxReliefinInd:trel};
+        if(s==='90'||s==='90A') d[b].DTAAReliefUs90or90A=trel;
+        d.TotalCountryWise={IncFrmOutsideInd:inc,TaxPaidOutsideInd:tpo,TaxPayableinInd:tpi,TaxReliefinInd:trel};
+        return d; });
+      j.ITR.ITR3.ScheduleFSI={ ScheduleFSIDtls:fsiRows };
+      let tPaid=0,tRel=0,tDTAA=0,tNonDTAA=0;
+      const trRows=frows.map(r=>{ const tpo=R(num(r.taxOutside)),trel=R(num(r.reliefClaimed)), s=secN(r);
+        tPaid+=tpo; tRel+=trel; if(s==='91')tNonDTAA+=trel; else tDTAA+=trel;
+        return { CountryName:r.country||'', CountryCodeExcludingIndia:r.country||'', TaxIdentificationNo:r.tin||'NA', TaxPaidOutsideIndia:tpo, TaxReliefOutsideIndia:trel, ReliefClaimedUsSection:s }; });
+      const TR={ ScheduleTR:trRows, TotalTaxPaidOutsideIndia:R(tPaid), TotalTaxReliefOutsideIndia:R(tRel), TaxReliefOutsideIndiaDTAA:R(tDTAA), TaxReliefOutsideIndiaNotDTAA:R(tNonDTAA), TaxPaidOutsideIndFlg:(tPaid>0?'YES':'NO') };
+      if(num(r90.refundAmount)) TR.AmtTaxRefunded=R(num(r90.refundAmount));
+      if((r90.refundAY||'').trim()) TR.AssmtYrTaxRelief=r90.refundAY;
+      j.ITR.ITR3.ScheduleTR1=TR;
+    }
+  }catch(e){}
+
   return j;
 }
+window.buildItr3Json=buildItr3Json;
 
 // kick off calculator injection — defer until the calc-html block (which follows this script) is parsed
 if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',injectCalculator); }
@@ -4732,6 +5885,7 @@ t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(n)}static async#E(e,
         <th class="l">Address</th>
         <th class="l">City</th>
         <th class="l">State</th>
+        <th class="l">Pin</th>
         <th>Paid in Cash?</th>
         <th class="l">IFS Code</th>
         <th class="l">Txn Ref / Cheque No.</th>
@@ -4757,6 +5911,7 @@ t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(n)}static async#E(e,
         <th class="l">Address</th>
         <th class="l">City</th>
         <th class="l">State</th>
+        <th class="l">Pin</th>
         <th>Paid in Cash?</th>
         <th class="l">IFS Code</th>
         <th class="l">Txn Ref / Cheque No.</th>
@@ -5637,6 +6792,32 @@ t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(n)}static async#E(e,
       &nbsp;·&nbsp; <b>Total 35AD C/F <span id="cfl_specbz_grand_cf" style="color:#c0392b">₹0</span></b>
     </div>
 
+    <!-- ===== UNABSORBED DEPRECIATION & ALLOWANCE C/F (Schedule UD) ===== -->
+    <div class="sf-sectit" style="margin-top:14px">Unabsorbed Depreciation &amp; Allowance u/s 35(4) c/f (Schedule UD)
+      <button class="addbtn" id="addCflUdBtn" style="margin-left:14px">+ Add UD year</button>
+    </div>
+    <table class="sf-tbl">
+      <thead><tr>
+        <th class="l" style="width:140px">Assessment Year</th>
+        <th>B/F Unabsorbed Depreciation</th>
+        <th>Depr. set off this year</th>
+        <th>Depr. C/F</th>
+        <th>B/F Allowance 35(4)</th>
+        <th>Allowance set off this year</th>
+        <th>Allowance C/F</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="cfl-ud-rows"></tbody>
+    </table>
+    <div class="sf-grand">
+      Total B/F Depr <b id="cfl_ud_bfdep_total">₹0</b>
+      &nbsp;·&nbsp; Depr set off <b id="cfl_ud_sodep_total">₹0</b>
+      &nbsp;·&nbsp; <b>Depr C/F <span id="cfl_ud_cfdep_total" style="color:#c0392b">₹0</span></b>
+      &nbsp;·&nbsp; Total B/F Allow <b id="cfl_ud_bfallow_total">₹0</b>
+      &nbsp;·&nbsp; Allow set off <b id="cfl_ud_soallow_total">₹0</b>
+      &nbsp;·&nbsp; <b>Allow C/F <span id="cfl_ud_cfallow_total" style="color:#c0392b">₹0</span></b>
+    </div>
+
     <!-- ===== TOTAL DISCLOSURE ===== -->
     <div class="sf-grand" style="border-top:2px solid var(--lin);margin-top:14px;font-size:14px">
       <b>Total Loss Carry-Forward to AY 2027-28 = <span id="cfl_grand_total" style="color:#c0392b">₹0</span></b>
@@ -6491,6 +7672,7 @@ function newProperty(){
 }
 let hpData=[newProperty()];
 let currentHp=0;
+try{ window.getHpData=function(){return hpData;}; }catch(e){}
 
 function renderProperties(){
   const c=$('hp-blocks'); if(!c)return;
@@ -8164,6 +9346,7 @@ const DEPIT_BLOCKS = [
   ['intang25', 'Intangible assets 25%',                               25]
 ];
 const DEPIT_ADDL_BLOCKS = ['pm15','pm30','pm40']; // additional dep @ 20% applies only to P&M 15/30/40
+try{ window.DEPIT_BLOCKS=DEPIT_BLOCKS; window.DEPIT_ADDL_BLOCKS=DEPIT_ADDL_BLOCKS; }catch(e){}
 
 bpData.depit = {
   useManual: false,
@@ -11568,7 +12751,8 @@ function render80GRows(tbId, arr, rmAttr){
       <td class="l"><input type="text" id="${rmAttr}_${i}_pan" value="${r.pan??''}" style="text-align:left;max-width:120px"></td>
       <td class="l"><input type="text" id="${rmAttr}_${i}_addr" value="${r.address??''}" style="text-align:left"></td>
       <td class="l"><input type="text" id="${rmAttr}_${i}_city" value="${r.city??''}" style="text-align:left;max-width:100px"></td>
-      <td class="l"><input type="text" id="${rmAttr}_${i}_state" value="${r.state??''}" style="text-align:left;max-width:80px"></td>
+      <td class="l"><input type="text" id="${rmAttr}_${i}_state" value="${r.state??''}" style="text-align:left;max-width:80px" placeholder="01-37"></td>
+      <td class="l"><input type="text" id="${rmAttr}_${i}_pin" value="${r.pin??''}" style="text-align:left;max-width:80px"></td>
       <td style="text-align:center"><input type="checkbox" id="${rmAttr}_${i}_cash" ${r.cash?'checked':''}></td>
       <td class="l"><input type="text" id="${rmAttr}_${i}_ifsc" value="${r.ifsc??''}" style="text-align:left;max-width:110px"></td>
       <td class="l"><input type="text" id="${rmAttr}_${i}_txn" value="${r.txnRef??''}" style="text-align:left"></td>
@@ -11880,10 +13064,10 @@ function save80OtherField(inp){
   if(id==='d80u_udid')  { r.u_udid = v; return; }
   // 80G rows
   let m;
-  if(m=id.match(/^g(50|100)_(\d+)_(name|amt|pan|addr|city|state|ifsc|txn)$/)){
+  if(m=id.match(/^g(50|100)_(\d+)_(name|amt|pan|addr|city|state|pin|ifsc|txn)$/)){
     const arr = m[1]==='50' ? r.g50 : r.g100;
     const row = arr[+m[2]]; if(!row) return;
-    const fldMap={name:'name',amt:'amount',pan:'pan',addr:'address',city:'city',state:'state',ifsc:'ifsc',txn:'txnRef'};
+    const fldMap={name:'name',amt:'amount',pan:'pan',addr:'address',city:'city',state:'state',pin:'pin',ifsc:'ifsc',txn:'txnRef'};
     row[fldMap[m[3]]] = v; return;
   }
   if(m=id.match(/^g(50|100)_(\d+)_(ceil|cash)$/)){
@@ -12650,8 +13834,43 @@ bpData.lossCFL.bf = bpData.lossCFL.bf || {
   spec: [],
   specbz: []
 };
+// Unabsorbed depreciation & allowance u/s 35(4) — Schedule UD [{ay, bfDep, soDep, bfAllow, soAllow}]
+bpData.lossCFL.ud = bpData.lossCFL.ud || [];
 
 function newCflRow(){ return {ay:'', amount:'', setoff:''}; }
+function newUdRow(){ return {ay:'', bfDep:'', soDep:'', bfAllow:'', soAllow:''}; }
+
+/* Render the UD (unabsorbed depreciation / allowance) table-body */
+function renderUdTbody(){
+  const arr = bpData.lossCFL.ud;
+  const tb = $('cfl-ud-rows'); if(!tb) return {bfDep:0,soDep:0,cfDep:0,bfAllow:0,soAllow:0,cfAllow:0};
+  tb.innerHTML='';
+  let tBfDep=0,tSoDep=0,tCfDep=0,tBfAllow=0,tSoAllow=0,tCfAllow=0;
+  arr.forEach((r,i)=>{
+    const bfDep=num(r.bfDep), soDep=Math.min(bfDep,num(r.soDep)), cfDep=bfDep-soDep;
+    const bfAllow=num(r.bfAllow), soAllow=Math.min(bfAllow,num(r.soAllow)), cfAllow=bfAllow-soAllow;
+    tBfDep+=bfDep;tSoDep+=soDep;tCfDep+=cfDep;tBfAllow+=bfAllow;tSoAllow+=soAllow;tCfAllow+=cfAllow;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="l"><input type="text" id="ud_${i}_ay" value="${r.ay??''}" style="text-align:left;max-width:120px" placeholder="2022-23"></td>
+      <td><input type="text" id="ud_${i}_bfDep" value="${r.bfDep??''}"></td>
+      <td><input type="text" id="ud_${i}_soDep" value="${r.soDep??''}"></td>
+      <td class="calc" id="ud_${i}_cfDep">${inr(cfDep)}</td>
+      <td><input type="text" id="ud_${i}_bfAllow" value="${r.bfAllow??''}"></td>
+      <td><input type="text" id="ud_${i}_soAllow" value="${r.soAllow??''}"></td>
+      <td class="calc" id="ud_${i}_cfAllow">${inr(cfAllow)}</td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm-ud="${i}">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-rm-ud]').forEach(b=>b.addEventListener('click',()=>{
+    bpData.lossCFL.ud.splice(+b.dataset.rmUd,1); computeLossCFL(); populateLossCFL();
+  }));
+  const f=(id,v)=>{const el=$(id);if(el)el.textContent=inr(v);};
+  f('cfl_ud_bfdep_total',tBfDep);f('cfl_ud_sodep_total',tSoDep);f('cfl_ud_cfdep_total',tCfDep);
+  f('cfl_ud_bfallow_total',tBfAllow);f('cfl_ud_soallow_total',tSoAllow);f('cfl_ud_cfallow_total',tCfAllow);
+  bpData.lossCFL._ud={bfDep:tBfDep,soDep:tSoDep,cfDep:tCfDep,bfAllow:tBfAllow,soAllow:tSoAllow,cfAllow:tCfAllow};
+  return bpData.lossCFL._ud;
+}
 
 /* Render a single CFL table-body */
 function renderCflTbody(arrKey, tbodyId, options){
@@ -12714,6 +13933,7 @@ function computeLossCFL(){
   const bizRes = renderCflTbody('biz', 'cfl-biz-rows', {showStatus:false});
   const specRes = renderCflTbody('spec', 'cfl-spec-rows', {showStatus:true});
   const specbzRes = renderCflTbody('specbz', 'cfl-specbz-rows', {showStatus:false});
+  renderUdTbody();
 
   // Per-head totals: B/F balance after setoff + CY unabsorbed
   const hpGrandCF = (hpRes.bf - hpRes.setoff) + cy.hpLoss;
@@ -12783,9 +14003,14 @@ function populateLossCFL(){
   wireAdd('addCflBizBtn', 'biz');
   wireAdd('addCflSpecBtn', 'spec');
   wireAdd('addCflSpecBzBtn', 'specbz');
+  const ub = $('addCflUdBtn');
+  if(ub && !ub._wired){ ub._wired=true; ub.addEventListener('click',()=>{ bpData.lossCFL.ud.push(newUdRow()); populateLossCFL(); }); }
 }
 
 function saveLossCFLField(inp){
+  // UD rows: ud_{i}_{field}
+  let mu = inp.id.match(/^ud_(\d+)_(ay|bfDep|soDep|bfAllow|soAllow)$/);
+  if(mu){ const row=bpData.lossCFL.ud[+mu[1]]; if(row) row[mu[2]]=inp.value; return; }
   // ID pattern: cfl_{arrKey}_{i}_{field}
   const m = inp.id.match(/^cfl_(hp|biz|spec|specbz)_(\d+)_(ay|amt|setoff)$/);
   if(!m) return;
@@ -12926,7 +14151,8 @@ function computeAll(){
               ? baseTaxWithAgri(slabBase, agriNet, isNew, currentAge)
               : baseTaxOnly(slabBase, isNew, currentAge);
   // 87A rebate: eligibility based on TI; cap by slab tax. NOT available against any special-rate tax.
-  slabTax = Math.max(0, slabTax - rebate87A(isNew, ti, slabTax));
+  const __reb87 = rebate87A(isNew, ti, slabTax);
+  slabTax = Math.max(0, slabTax - __reb87);
   const taxBeforeSC = slabTax + cgRes.specialTax + osRes.osSpecialTax;
   // Surcharge: 15% cap on CG special tax only; full rate on slab + OS winnings tax
   let sc = (typeof surchargeWithCgCap==='function')
@@ -12943,6 +14169,7 @@ function computeAll(){
   const reliefTotal = rel89.arrears + rel89.commute + rel89.comp + rel89.gratuity + rel90Val;
   const taxAfterRelief = Math.max(0, taxOnTI - reliefTotal);
   setTxt('it_taxOnTI', taxAfterRelief);
+  try{ (window.parent||window).__taxBreakup={ slabTax:slabTax, rebate87A:__reb87, cgSpecialTax:cgRes.specialTax, osSpecialTax:osRes.osSpecialTax, taxBeforeSC:taxBeforeSC, surcharge:sc, cess:cess, taxOnTI:taxOnTI, reliefTotal:reliefTotal, taxAfterRelief:taxAfterRelief }; }catch(e){}
   // Prepaid taxes: TDS/TCS + Advance Tax + Self-Assessment Tax (income-tax portion only)
   const tdsTcsTotal = (typeof computeTdsTcs==='function') ? computeTdsTcs() : 0;
   const advTaxTotal = (typeof computeAdvTax==='function') ? computeAdvTax() : 0;

@@ -1,0 +1,53 @@
+---
+title: "Generate E-Invoice Session"
+description: "To automate e-Invoicing using APIs, an E-Invoice session needs to be created with API credentials created on the portal. This recipe takes you through the steps to get a GST E-Invoice access token."
+---
+
+<Info>
+  **Prerequisites:** If you haven't created API credentials on the E-Invoice portal (NIC) yet, follow the steps in the [**Create API Credentials**](/api-reference/gst/compliance/guides/e-invoice/authentication/create_api_credentials) guide first, then return to this recipe.
+</Info>
+
+<Steps>
+  <Step title="Authenticate" stepNumber={1} titleSize="h2">
+    To begin the GST E-Invoice workflow, your application must first authenticate using the [**Authenticate**](../../../api-reference/authenticate) endpoint to obtain the **Sandbox JWT access token**.
+
+    This endpoint requires your API Key and API Secret, and returns a JWT access token that's valid for 24 hours. This token is required for all subsequent API calls.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/authenticate \
+        --header 'accept: application/json' \
+        --header 'x-api-key: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-secret: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When authentication is successful, you'll receive the **Sandbox JWT access token** in the response. This token must be used in the `authorization` header (without the `Bearer` prefix) for all subsequent API calls.
+  </Step>
+
+  <Step title="Authenticate with E-Invoice API" stepNumber={2} titleSize="h2">
+    Once you have the Sandbox JWT access token, authenticate with the E-Invoice portal using the [**E-Invoice Authentication**](../../../api-reference/gst/compliance/endpoints/e-invoice/authenticate) endpoint.
+
+    You need to provide the **username** and **password** that were created on the E-Invoice portal (NIC), along with the taxpayer's **GSTIN** (15-character GST Identification Number). The `force` query parameter should be set to `true` if you need to refresh the token 10 minutes before expiry.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/e-invoice/tax-payer/authenticate?force=true' \
+        --header 'authorization: {sandbox-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-source: primary' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "username": "ACME_IND_API_QCK",
+        "password": "QnVzaW5lc3NfQVBJX1FDSw",
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    When authentication is successful, you'll receive an **E-Invoice access token** in the response along with an expiry timestamp. The `x-source` header specifies which NIC server to use: `primary` (NIC 1) or `secondary` (NIC 2).
+  </Step>
+</Steps>

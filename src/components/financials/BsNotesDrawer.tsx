@@ -26,9 +26,13 @@ interface Props {
   onClose: () => void;
   /** Header section label — defaults to "Balance Sheet" */
   sectionLabel?: string;
+  /** Derived (non-ledger) lines that feed this head, e.g. current-year P&L surplus
+   *  in Reserves & Surplus. `amount` is the SIGNED contribution to the line
+   *  (positive = adds, shown as Cr; negative = reduces, shown as Dr). */
+  extraRows?: { name: string; amount: number }[];
 }
 
-export function BsNotesDrawer({ companyId, label, groups, entries, onClose, sectionLabel = 'Balance Sheet' }: Props) {
+export function BsNotesDrawer({ companyId, label, groups, entries, onClose, sectionLabel = 'Balance Sheet', extraRows = [] }: Props) {
   const navigate = useNavigate();
 
   const accounts = useMemo(() => {
@@ -45,8 +49,10 @@ export function BsNotesDrawer({ companyId, label, groups, entries, onClose, sect
       if (b.nature === 'asset') return sum + (b.balance_type === 'Dr' ? b.balance : -b.balance);
       // Liabilities / capital: Cr = positive
       return sum + (b.balance_type === 'Cr' ? b.balance : -b.balance);
-    }, 0)
-  , [accounts]);
+    }, 0) + extraRows.reduce((s, r) => s + r.amount, 0)
+  , [accounts, extraRows]);
+
+  const isEmpty = accounts.length === 0 && extraRows.length === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -73,7 +79,7 @@ export function BsNotesDrawer({ companyId, label, groups, entries, onClose, sect
 
         {/* Account table */}
         <div className="flex-1 overflow-y-auto">
-          {accounts.length === 0 ? (
+          {isEmpty ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-400 px-6 text-center">
               <p className="text-sm">No accounts posted under this head yet.</p>
               <p className="text-[11px] mt-1 text-gray-300">
@@ -118,6 +124,20 @@ export function BsNotesDrawer({ companyId, label, groups, entries, onClose, sect
                         {formatIndianCurrency(b.balance)}
                       </span>
                       <span className="text-[10px] text-gray-400 ml-1">{b.balance_type}</span>
+                    </td>
+                  </tr>
+                ))}
+                {extraRows.map((r) => (
+                  <tr key={r.name} className="border-b border-gray-100">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-800">{r.name}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Derived — not a ledger account</p>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums">
+                      <span className={r.amount >= 0 ? 'text-emerald-700' : 'text-blue-700'}>
+                        {formatIndianCurrency(Math.abs(r.amount))}
+                      </span>
+                      <span className="text-[10px] text-gray-400 ml-1">{r.amount >= 0 ? 'Cr' : 'Dr'}</span>
                     </td>
                   </tr>
                 ))}

@@ -1,0 +1,99 @@
+---
+title: "GST API Recipes"
+sidebarTitle: "Overview"
+description: "Production-ready GST API integration recipes for GSTR-1, GSTR-3B, GSTR-9, E-Invoice, and E-Way Bill. Step-by-step implementation guides with code samples."
+"og:description": "Ready-to-use API recipes for GST compliance automation. Implement GSTR filing, E-Invoice generation, and E-Way Bill workflows with our step-by-step guides."
+---
+
+Ready-made, step-by-step implementation patterns for building robust GST workflows. Get actionable code samples and API sequences for automating returns, validating compliance, and integrating GST logic into your business applications.
+
+<Tip>
+**New to Sandbox GST APIs?** Start with our [GST Product Overview](/api-reference/gst/overview) to understand the full capabilities, then come back here to implement specific workflows.
+</Tip>
+
+---
+
+## Authentication
+
+Establish secure sessions before making GST API calls. These recipes guide you through generating authenticated sessions for different GST services.
+
+<CardGroup cols={2}>
+    <Card title="Generate Taxpayer Session" icon="key" href="/recipes/gst/authentication/generate_tax_payer_session">
+        Authenticate with GST portal for taxpayer operations like return filing and compliance checks.
+    </Card>
+    <Card title="Generate E-Invoice Session" icon="file-invoice" href="/recipes/gst/authentication/generate_e_invoice_session">
+        Set up authenticated sessions for E-Invoice generation and management via IRP.
+    </Card>
+    <Card title="Generate E-Way Bill Session" icon="truck" href="/recipes/gst/authentication/generate_e_way_bill_session">
+        Authenticate for E-Way Bill operations including generation and updates.
+    </Card>
+</CardGroup>
+
+---
+
+## GSTR-1 Filing
+
+File your outward supplies return with these step-by-step recipes. Covers both regular and nil return scenarios.
+
+<CardGroup cols={2}>
+    <Card title="File GSTR-1" icon="file-arrow-up" href="/recipes/gst/gstr-1/file_gstr_1">
+        Complete workflow for preparing and filing GSTR-1 with invoice-level details.
+    </Card>
+    <Card title="File Nil GSTR-1" icon="file-circle-check" href="/recipes/gst/gstr-1/file_nil_gstr_1">
+        Simplified process for filing nil GSTR-1 when there are no outward supplies.
+    </Card>
+</CardGroup>
+
+---
+
+## GSTR-3B Filing
+
+File your summary return with automated tax liability computation. Supports regular and nil filing scenarios.
+
+<CardGroup cols={2}>
+    <Card title="File GSTR-3B" icon="calculator" href="/recipes/gst/gstr-3b/file_gstr_3b">
+        End-to-end workflow for computing liabilities and filing GSTR-3B summary return.
+    </Card>
+    <Card title="File Nil GSTR-3B" icon="file-circle-check" href="/recipes/gst/gstr-3b/file_nil_gstr_3b">
+        Quick process for filing nil GSTR-3B when there's no business activity.
+    </Card>
+</CardGroup>
+
+---
+
+## GSTR-9 Filing
+
+File your annual return consolidating all monthly/quarterly returns into a comprehensive yearly summary.
+
+<CardGroup cols={2}>
+    <Card title="File GSTR-9" icon="calendar-check" href="/recipes/gst/gstr-9/file_gstr_9">
+        Complete annual return filing workflow with reconciliation and verification steps.
+    </Card>
+</CardGroup>
+
+---
+
+## E-Invoice
+
+Generate and manage E-Invoices via the Invoice Registration Portal (IRP). Ensure B2B transaction compliance.
+
+<CardGroup cols={2}>
+    <Card title="Generate E-Invoice" icon="file-plus" href="/recipes/gst/e-invoice/generate_e_invoice">
+        Step-by-step workflow for generating IRN and QR code for your invoices.
+    </Card>
+    <Card title="Get E-Invoices" icon="magnifying-glass" href="/recipes/gst/e-invoice/get_e_invoice_using_taxpayer_api">
+        Retrieve and verify E-Invoice details using the Taxpayer API.
+    </Card>
+</CardGroup>
+
+---
+
+<CardGroup cols={2}>
+  <Card title="GST API Reference" icon="code" href="/api-reference/gst/overview">
+    Explore the complete GST API documentation with request/response schemas.
+  </Card>
+  <Card title="Need Help?" icon="headset" href="https://help.sandbox.co.in/portal">
+    Get support for integration questions and troubleshooting.
+  </Card>
+</CardGroup>
+

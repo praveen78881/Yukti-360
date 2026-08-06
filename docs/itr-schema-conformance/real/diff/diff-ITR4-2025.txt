@@ -1,0 +1,317 @@
+# ITR4 AY2025-26  (emitted tool: itr4-2025-26)
+schema leaves 509 | required 354 | emitted-present 115 | OK(non-zero) 32 | ZERO 83 | MISS 394
+REQUIRED: 354 | reqOK 30 | reqZERO 73 | reqMISS 251 | %required-fillable 8.5%
+
+
+## Per-schedule
+  CreationInfo                 total    6 | OK    6 ZERO    0 MISS    0 | req    6 reqMISS    0
+  FilingStatus                 total   30 | OK    5 ZERO    0 MISS   25 | req   10 reqMISS    6
+  Form_ITR4                    total    5 | OK    5 ZERO    0 MISS    0 | req    5 reqMISS    0
+  IncomeDeductions             total   93 | OK    0 ZERO   44 MISS   49 | req   66 reqMISS   23
+  LTCG112A                     total    3 | OK    0 ZERO    0 MISS    3 | req    3 reqMISS    3
+  PartA_139_8A                 total   17 | OK    0 ZERO    0 MISS   17 | req   12 reqMISS   12
+  PartB-ATI                    total   34 | OK    0 ZERO    0 MISS   34 | req   20 reqMISS   20
+  PersonalInfo                 total   25 | OK   12 ZERO    8 MISS    5 | req   15 reqMISS    0
+  Refund                       total    6 | OK    0 ZERO    1 MISS    5 | req    6 reqMISS    5
+  Schedule80C                  total    3 | OK    0 ZERO    0 MISS    3 | req    3 reqMISS    3
+  Schedule80D                  total   33 | OK    0 ZERO    0 MISS   33 | req   17 reqMISS   17
+  Schedule80DD                 total    8 | OK    0 ZERO    0 MISS    8 | req    4 reqMISS    4
+  Schedule80E                  total    8 | OK    0 ZERO    0 MISS    8 | req    8 reqMISS    8
+  Schedule80EE                 total    8 | OK    0 ZERO    0 MISS    8 | req    8 reqMISS    8
+  Schedule80EEA                total    9 | OK    0 ZERO    0 MISS    9 | req    9 reqMISS    9
+  Schedule80EEB                total    9 | OK    0 ZERO    0 MISS    9 | req    9 reqMISS    9
+  Schedule80G                  total   64 | OK    0 ZERO    0 MISS   64 | req   52 reqMISS   52
+  Schedule80GGC                total   11 | OK    0 ZERO    0 MISS   11 | req    9 reqMISS    9
+  Schedule80U                  total    5 | OK    0 ZERO    0 MISS    5 | req    3 reqMISS    3
+  ScheduleBP                   total   48 | OK    0 ZERO   12 MISS   36 | req   20 reqMISS   13
+  ScheduleEA10_13A             total    9 | OK    0 ZERO    0 MISS    9 | req    8 reqMISS    8
+  ScheduleIT                   total    5 | OK    0 ZERO    0 MISS    5 | req    5 reqMISS    5
+  ScheduleTCS                  total    6 | OK    0 ZERO    0 MISS    6 | req    6 reqMISS    6
+  ScheduleTDS3Dtls             total   11 | OK    0 ZERO    0 MISS   11 | req    5 reqMISS    5
+  ScheduleUs24B                total    8 | OK    0 ZERO    0 MISS    8 | req    8 reqMISS    8
+  TDSonOthThanSals             total   10 | OK    0 ZERO    0 MISS   10 | req    5 reqMISS    5
+  TDSonSalaries                total    5 | OK    0 ZERO    0 MISS    5 | req    5 reqMISS    5
+  TaxComputation               total   12 | OK    0 ZERO   11 MISS    1 | req   11 reqMISS    0
+  TaxExmpIntIncDtls            total    4 | OK    0 ZERO    0 MISS    4 | req    3 reqMISS    3
+  TaxPaid                      total    6 | OK    0 ZERO    6 MISS    0 | req    6 reqMISS    0
+  TaxReturnPreparer            total    3 | OK    0 ZERO    0 MISS    3 | req    2 reqMISS    2
+  Verification                 total    5 | OK    4 ZERO    1 MISS    0 | req    5 reqMISS    0
+
+## REQUIRED leaves MISSING (filing blockers), grouped by schedule
+### FilingStatus  (6)
+  ITR4.FilingStatus.clauseiv7provisio139iDtls[].clauseiv7provisio139iNature
+  ITR4.FilingStatus.clauseiv7provisio139iDtls[].clauseiv7provisio139iAmount
+  ITR4.FilingStatus.AssesseeRep.RepName
+  ITR4.FilingStatus.AssesseeRep.RepCapacity
+  ITR4.FilingStatus.AssesseeRep.RepAddress
+  ITR4.FilingStatus.AssesseeRep.RepPAN
+### IncomeDeductions  (23)
+  ITR4.IncomeDeductions.IncomeNotified89A
+  ITR4.IncomeDeductions.IncomeNotified89AType[].NOT89ACountrycode
+  ITR4.IncomeDeductions.IncomeNotified89AType[].NOT89AAmount
+  ITR4.IncomeDeductions.AllwncExemptUs10.AllwncExemptUs10Dtls[].SalNatureDesc
+  ITR4.IncomeDeductions.AllwncExemptUs10.AllwncExemptUs10Dtls[].SalOthAmount
+  ITR4.IncomeDeductions.AllwncExemptUs10.TotalAllwncExemptUs10
+  ITR4.IncomeDeductions.AnnualValue
+  ITR4.IncomeDeductions.AnnualValue30Percent
+  ITR4.IncomeDeductions.TotalIncomeOfHP
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].OthSrcNatureDesc
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89A[].NOT89ACountrycode
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89A[].NOT89AAmount
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].OthSrcOthAmount
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].DividendInc.DateRange.Upto15Of6
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].DividendInc.DateRange.Upto15Of9
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].DividendInc.DateRange.Up16Of9To15Of12
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].DividendInc.DateRange.Up16Of12To15Of3
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].DividendInc.DateRange.Up16Of3To31Of3
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89AInc.DateRange.Upto15Of6
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89AInc.DateRange.Upto15Of9
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89AInc.DateRange.Up16Of9To15Of12
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89AInc.DateRange.Up16Of12To15Of3
+  ITR4.IncomeDeductions.OthersInc.OthersIncDtlsOthSrc[].NOT89AInc.DateRange.Up16Of3To31Of3
+### LTCG112A  (3)
+  ITR4.LTCG112A.TotSaleCnsdrn
+  ITR4.LTCG112A.TotCstAcqisn
+  ITR4.LTCG112A.LongCap112A
+### PartA_139_8A  (12)
+  ITR4.PartA_139_8A.PAN
+  ITR4.PartA_139_8A.Name
+  ITR4.PartA_139_8A.AssessmentYear
+  ITR4.PartA_139_8A.PreviouslyFiledForThisAY
+  ITR4.PartA_139_8A.Applicable_139_8A.AcknowledgementNo
+  ITR4.PartA_139_8A.Applicable_139_8A.OrigRetFiledDate
+  ITR4.PartA_139_8A.LaidOutIn_139_8A
+  ITR4.PartA_139_8A.ITRFormUpdatingInc
+  ITR4.PartA_139_8A.UpdatingInc.ReasonsForUpdatingIncDtls[].ReasonsForUpdatingIncome
+  ITR4.PartA_139_8A.UpdatedReturnDuringPeriod
+  ITR4.PartA_139_8A.RetrntoRedCarriedFL.UnabsorbedDepreciation
+  ITR4.PartA_139_8A.RetrntoRedCarriedFL.UDYear.UnabsorbedDepreciationYearDtls[].UnabsorbedDepreciationYear
+### PartB-ATI  (20)
+  ITR4.PartB-ATI.UpdatedTotInc
+  ITR4.PartB-ATI.AmtPayable
+  ITR4.PartB-ATI.FeeIncUS234F
+  ITR4.PartB-ATI.AggrLiabilityRefund
+  ITR4.PartB-ATI.AggrLiabilityNoRefund
+  ITR4.PartB-ATI.AddtnlIncTax
+  ITR4.PartB-ATI.NetPayable
+  ITR4.PartB-ATI.TaxUS140B
+  ITR4.PartB-ATI.TaxDue10_11
+  ITR4.PartB-ATI.ScheduleIT1.TaxPayment1.ITTaxPayments[].BSRCode
+  ITR4.PartB-ATI.ScheduleIT1.TaxPayment1.ITTaxPayments[].DateDep
+  ITR4.PartB-ATI.ScheduleIT1.TaxPayment1.ITTaxPayments[].SrlNoOfChaln
+  ITR4.PartB-ATI.ScheduleIT1.TaxPayment1.ITTaxPayments[].Amt
+  ITR4.PartB-ATI.ScheduleIT1.Total
+  ITR4.PartB-ATI.ScheduleIT2.TaxPayment2.ITTaxPayments[].BSRCode
+  ITR4.PartB-ATI.ScheduleIT2.TaxPayment2.ITTaxPayments[].DateDep
+  ITR4.PartB-ATI.ScheduleIT2.TaxPayment2.ITTaxPayments[].SrlNoOfChaln
+  ITR4.PartB-ATI.ScheduleIT2.TaxPayment2.ITTaxPayments[].Amt
+  ITR4.PartB-ATI.ScheduleIT2.Total
+  ITR4.PartB-ATI.ReleifUS89
+### Refund  (5)
+  ITR4.Refund.BankAccountDtls.AddtnlBankDetails[].IFSCCode
+  ITR4.Refund.BankAccountDtls.AddtnlBankDetails[].BankName
+  ITR4.Refund.BankAccountDtls.AddtnlBankDetails[].BankAccountNo
+  ITR4.Refund.BankAccountDtls.AddtnlBankDetails[].AccountType
+  ITR4.Refund.BankAccountDtls.AddtnlBankDetails[].UseForRefund
+### Schedule80C  (3)
+  ITR4.Schedule80C.Schedule80CDtls[].Amount
+  ITR4.Schedule80C.Schedule80CDtls[].IdentificationNo
+  ITR4.Schedule80C.TotalAmt
+### Schedule80D  (17)
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamHIDtls.Sch80DInsDtls[].InsurerName
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamHIDtls.Sch80DInsDtls[].PolicyNo
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamHIDtls.Sch80DInsDtls[].HealthInsAmt
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamHIDtls.TotalPayments
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamSrCtznHIDtls.Sch80DInsDtls[].InsurerName
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamSrCtznHIDtls.Sch80DInsDtls[].PolicyNo
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamSrCtznHIDtls.Sch80DInsDtls[].HealthInsAmt
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DSelfFamSrCtznHIDtls.TotalPayments
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsHIDtls.Sch80DInsDtls[].InsurerName
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsHIDtls.Sch80DInsDtls[].PolicyNo
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsHIDtls.Sch80DInsDtls[].HealthInsAmt
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsHIDtls.TotalPayments
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsSrCtznHIDtls.Sch80DInsDtls[].InsurerName
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsSrCtznHIDtls.Sch80DInsDtls[].PolicyNo
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsSrCtznHIDtls.Sch80DInsDtls[].HealthInsAmt
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.Sec80DParentsSrCtznHIDtls.TotalPayments
+  ITR4.Schedule80D.Sec80DSelfFamSrCtznHealth.EligibleAmountOfDedn
+### Schedule80DD  (4)
+  ITR4.Schedule80DD.NatureOfDisability
+  ITR4.Schedule80DD.TypeOfDisability
+  ITR4.Schedule80DD.DeductionAmount
+  ITR4.Schedule80DD.DependentType
+### Schedule80E  (8)
+  ITR4.Schedule80E.Schedule80EDtls[].LoanTknFrom
+  ITR4.Schedule80E.Schedule80EDtls[].BankOrInstnName
+  ITR4.Schedule80E.Schedule80EDtls[].LoanAccNoOfBankOrInstnRefNo
+  ITR4.Schedule80E.Schedule80EDtls[].DateofLoan
+  ITR4.Schedule80E.Schedule80EDtls[].TotalLoanAmt
+  ITR4.Schedule80E.Schedule80EDtls[].LoanOutstndngAmt
+  ITR4.Schedule80E.Schedule80EDtls[].Interest80E
+  ITR4.Schedule80E.TotalInterest80E
+### Schedule80EE  (8)
+  ITR4.Schedule80EE.Schedule80EEDtls[].LoanTknFrom
+  ITR4.Schedule80EE.Schedule80EEDtls[].BankOrInstnName
+  ITR4.Schedule80EE.Schedule80EEDtls[].LoanAccNoOfBankOrInstnRefNo
+  ITR4.Schedule80EE.Schedule80EEDtls[].DateofLoan
+  ITR4.Schedule80EE.Schedule80EEDtls[].TotalLoanAmt
+  ITR4.Schedule80EE.Schedule80EEDtls[].LoanOutstndngAmt
+  ITR4.Schedule80EE.Schedule80EEDtls[].Interest80EE
+  ITR4.Schedule80EE.TotalInterest80EE
+### Schedule80EEA  (9)
+  ITR4.Schedule80EEA.PropStmpDtyVal
+  ITR4.Schedule80EEA.Schedule80EEADtls[].LoanTknFrom
+  ITR4.Schedule80EEA.Schedule80EEADtls[].BankOrInstnName
+  ITR4.Schedule80EEA.Schedule80EEADtls[].LoanAccNoOfBankOrInstnRefNo
+  ITR4.Schedule80EEA.Schedule80EEADtls[].DateofLoan
+  ITR4.Schedule80EEA.Schedule80EEADtls[].TotalLoanAmt
+  ITR4.Schedule80EEA.Schedule80EEADtls[].LoanOutstndngAmt
+  ITR4.Schedule80EEA.Schedule80EEADtls[].Interest80EEA
+  ITR4.Schedule80EEA.TotalInterest80EEA
+### Schedule80EEB  (9)
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].LoanTknFrom
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].BankOrInstnName
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].LoanAccNoOfBankOrInstnRefNo
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].DateofLoan
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].TotalLoanAmt
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].LoanOutstndngAmt
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].VehicleRegNo
+  ITR4.Schedule80EEB.Schedule80EEBDtls[].Interest80EEB
+  ITR4.Schedule80EEB.TotalInterest80EEB
+### Schedule80G  (52)
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].DoneeWithPanName
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].DoneePAN
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].AddressDetail.AddrDetail
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].AddressDetail.CityOrTownOrDistrict
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].AddressDetail.StateCode
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].AddressDetail.PinCode
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].DonationAmt
+  ITR4.Schedule80G.Don100Percent.DoneeWithPan[].EligibleDonationAmt
+  ITR4.Schedule80G.Don100Percent.TotDon100PercentCash
+  ITR4.Schedule80G.Don100Percent.TotDon100PercentOtherMode
+  ITR4.Schedule80G.Don100Percent.TotDon100Percent
+  ITR4.Schedule80G.Don100Percent.TotEligibleDon100Percent
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].DoneeWithPanName
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].DoneePAN
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].AddressDetail.AddrDetail
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].AddressDetail.CityOrTownOrDistrict
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].AddressDetail.StateCode
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].AddressDetail.PinCode
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].DonationAmt
+  ITR4.Schedule80G.Don50PercentNoApprReqd.DoneeWithPan[].EligibleDonationAmt
+  ITR4.Schedule80G.Don50PercentNoApprReqd.TotDon50PercentNoApprReqdCash
+  ITR4.Schedule80G.Don50PercentNoApprReqd.TotDon50PercentNoApprReqdOtherMode
+  ITR4.Schedule80G.Don50PercentNoApprReqd.TotDon50PercentNoApprReqd
+  ITR4.Schedule80G.Don50PercentNoApprReqd.TotEligibleDon50Percent
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].DoneeWithPanName
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].DoneePAN
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].AddressDetail.AddrDetail
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].AddressDetail.CityOrTownOrDistrict
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].AddressDetail.StateCode
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].AddressDetail.PinCode
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].DonationAmt
+  ITR4.Schedule80G.Don100PercentApprReqd.DoneeWithPan[].EligibleDonationAmt
+  ITR4.Schedule80G.Don100PercentApprReqd.TotDon100PercentApprReqdCash
+  ITR4.Schedule80G.Don100PercentApprReqd.TotDon100PercentApprReqdOtherMode
+  ITR4.Schedule80G.Don100PercentApprReqd.TotDon100PercentApprReqd
+  ITR4.Schedule80G.Don100PercentApprReqd.TotEligibleDon100PercentApprReqd
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].DoneeWithPanName
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].DoneePAN
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].AddressDetail.AddrDetail
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].AddressDetail.CityOrTownOrDistrict
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].AddressDetail.StateCode
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].AddressDetail.PinCode
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].DonationAmt
+  ITR4.Schedule80G.Don50PercentApprReqd.DoneeWithPan[].EligibleDonationAmt
+  ITR4.Schedule80G.Don50PercentApprReqd.TotDon50PercentApprReqdCash
+  ITR4.Schedule80G.Don50PercentApprReqd.TotDon50PercentApprReqdOtherMode
+  ITR4.Schedule80G.Don50PercentApprReqd.TotDon50PercentApprReqd
+  ITR4.Schedule80G.Don50PercentApprReqd.TotEligibleDon50PercentApprReqd
+  ITR4.Schedule80G.TotalDonationsUs80GCash
+  ITR4.Schedule80G.TotalDonationsUs80GOtherMode
+  ITR4.Schedule80G.TotalDonationsUs80G
+  ITR4.Schedule80G.TotalEligibleDonationsUs80G
+### Schedule80GGC  (9)
+  ITR4.Schedule80GGC.Schedule80GGCDetails[].DonationDate
+  ITR4.Schedule80GGC.Schedule80GGCDetails[].DonationAmtCash
+  ITR4.Schedule80GGC.Schedule80GGCDetails[].DonationAmtOtherMode
+  ITR4.Schedule80GGC.Schedule80GGCDetails[].DonationAmt
+  ITR4.Schedule80GGC.Schedule80GGCDetails[].EligibleDonationAmt
+  ITR4.Schedule80GGC.TotalDonationAmtCash80GGC
+  ITR4.Schedule80GGC.TotalDonationAmtOtherMode80GGC
+  ITR4.Schedule80GGC.TotalDonationsUs80GGC
+  ITR4.Schedule80GGC.TotalEligibleDonationAmt80GGC
+### Schedule80U  (3)
+  ITR4.Schedule80U.NatureOfDisability
+  ITR4.Schedule80U.TypeOfDisability
+  ITR4.Schedule80U.DeductionAmount
+### ScheduleBP  (13)
+  ITR4.ScheduleBP.NatOfBus44AD[].NameOfBusiness
+  ITR4.ScheduleBP.NatOfBus44AD[].CodeAD
+  ITR4.ScheduleBP.NatOfBus44ADA[].NameOfBusiness
+  ITR4.ScheduleBP.NatOfBus44ADA[].CodeADA
+  ITR4.ScheduleBP.NatOfBus44AE[].NameOfBusiness
+  ITR4.ScheduleBP.NatOfBus44AE[].CodeAE
+  ITR4.ScheduleBP.GoodsDtlsUs44AE[].RegNumberGoodsCarriage
+  ITR4.ScheduleBP.GoodsDtlsUs44AE[].OwnedLeasedHiredFlag
+  ITR4.ScheduleBP.GoodsDtlsUs44AE[].TonnageCapacity
+  ITR4.ScheduleBP.GoodsDtlsUs44AE[].HoldingPeriod
+  ITR4.ScheduleBP.GoodsDtlsUs44AE[].PresumptiveIncome
+  ITR4.ScheduleBP.TurnoverGrsRcptForGSTIN[].GSTINNo
+  ITR4.ScheduleBP.TurnoverGrsRcptForGSTIN[].AmtTurnGrossRcptGSTIN
+### ScheduleEA10_13A  (8)
+  ITR4.ScheduleEA10_13A.Placeofwork
+  ITR4.ScheduleEA10_13A.ActlHRARecv
+  ITR4.ScheduleEA10_13A.ActlRentPaid
+  ITR4.ScheduleEA10_13A.DtlsSalUsSec171
+  ITR4.ScheduleEA10_13A.BasicSalary
+  ITR4.ScheduleEA10_13A.ActlRentPaid10Per
+  ITR4.ScheduleEA10_13A.Sal40Or50Per
+  ITR4.ScheduleEA10_13A.EligbleExmpAllwncUs13A
+### ScheduleIT  (5)
+  ITR4.ScheduleIT.TaxPayment[].BSRCode
+  ITR4.ScheduleIT.TaxPayment[].DateDep
+  ITR4.ScheduleIT.TaxPayment[].SrlNoOfChaln
+  ITR4.ScheduleIT.TaxPayment[].Amt
+  ITR4.ScheduleIT.TotalTaxPayments
+### ScheduleTCS  (6)
+  ITR4.ScheduleTCS.TCS[].EmployerOrDeductorOrCollectDetl.TAN
+  ITR4.ScheduleTCS.TCS[].EmployerOrDeductorOrCollectDetl.EmployerOrDeductorOrCollecterName
+  ITR4.ScheduleTCS.TCS[].Amtfrom26AS
+  ITR4.ScheduleTCS.TCS[].TotalTCS
+  ITR4.ScheduleTCS.TCS[].AmtTCSClaimedThisYear
+  ITR4.ScheduleTCS.TotalSchTCS
+### ScheduleTDS3Dtls  (5)
+  ITR4.ScheduleTDS3Dtls.TDS3Details[].PANofTenant
+  ITR4.ScheduleTDS3Dtls.TDS3Details[].TDSSection
+  ITR4.ScheduleTDS3Dtls.TDS3Details[].TDSClaimed
+  ITR4.ScheduleTDS3Dtls.TDS3Details[].TDSCreditCarriedFwd
+  ITR4.ScheduleTDS3Dtls.TotalTDS3Details
+### ScheduleUs24B  (8)
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].LoanTknFrom
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].BankOrInstnName
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].LoanAccNoOfBankOrInstnRefNo
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].DateofLoan
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].TotalLoanAmt
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].LoanOutstndngAmt
+  ITR4.ScheduleUs24B.ScheduleUs24BDtls[].InterestUs24B
+  ITR4.ScheduleUs24B.TotalInterestUs24B
+### TDSonOthThanSals  (5)
+  ITR4.TDSonOthThanSals.TDSonOthThanSalDtls[].TANOfDeductor
+  ITR4.TDSonOthThanSals.TDSonOthThanSalDtls[].TDSSection
+  ITR4.TDSonOthThanSals.TDSonOthThanSalDtls[].TDSClaimed
+  ITR4.TDSonOthThanSals.TDSonOthThanSalDtls[].TDSCreditCarriedFwd
+  ITR4.TDSonOthThanSals.TotalTDSonOthThanSals
+### TDSonSalaries  (5)
+  ITR4.TDSonSalaries.TDSonSalary[].EmployerOrDeductorOrCollectDetl.TAN
+  ITR4.TDSonSalaries.TDSonSalary[].EmployerOrDeductorOrCollectDetl.EmployerOrDeductorOrCollecterName
+  ITR4.TDSonSalaries.TDSonSalary[].IncChrgSal
+  ITR4.TDSonSalaries.TDSonSalary[].TotalTDSSal
+  ITR4.TDSonSalaries.TotalTDSonSalaries
+### TaxExmpIntIncDtls  (3)
+  ITR4.TaxExmpIntIncDtls.OthersInc.OthersIncDtls[].NatureDesc
+  ITR4.TaxExmpIntIncDtls.OthersInc.OthersIncDtls[].OthAmount
+  ITR4.TaxExmpIntIncDtls.OthersInc.OthersTotalTaxExe
+### TaxReturnPreparer  (2)
+  ITR4.TaxReturnPreparer.IdentificationNoOfTRP
+  ITR4.TaxReturnPreparer.NameOfTRP

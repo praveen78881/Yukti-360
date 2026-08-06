@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get other-party E-Way Bills by date response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "docDate": {
+        "type": "string"
+      },
+      "docNo": {
+        "type": "string"
+      },
+      "ewayBillDate": {
+        "type": "string"
+      },
+      "ewbNo": {
+        "type": "number"
+      },
+      "fromGstin": {
+        "type": "string"
+      },
+      "fromTradeName": {
+        "type": "string"
+      },
+      "genGstin": {
+        "type": "string"
+      },
+      "genMode": {
+        "type": "string"
+      },
+      "hsnCode": {
+        "type": "number"
+      },
+      "hsnDesc": {
+        "type": "string"
+      },
+      "rejectStatus": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "toGstin": {
+        "type": "string"
+      },
+      "toTradeName": {
+        "type": "string"
+      },
+      "totInvValue": {
+        "type": "number"
+      }
+    }
+  }
+}

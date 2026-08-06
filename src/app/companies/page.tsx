@@ -1,8 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { listCompanies, deleteCompany } from '@/lib/offlineDb';
+import { listCompanies, deleteCompany, createCompany, createInitialBookPeriod, createJournalEntry } from '@/lib/offlineDb';
+import { initEntityData } from '@/entities/initEntity';
+import { parseJournalJson, bookPeriodFromDate } from '@/lib/accounting/journalTransfer';
+import { generateUniqueEntryCode } from '@/lib/utils/entryCodeGenerator';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
-import { Plus, Search, Trash2, ChevronRight, Building2, PhoneCall, Phone, Award, ShieldCheck } from 'lucide-react';
+import { Plus, Search, Trash2, ChevronRight, Building2, PhoneCall, Phone, Award, ShieldCheck, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Company } from '@/types/company';
 import SignUpForm, { type UserRegistration } from './SignUpForm';
@@ -50,6 +53,9 @@ export default function CompaniesPage() {
   // Lazy initializer: localStorage is read synchronously on first render — no async delay.
   const [registrationData, setRegistrationData] = useState<UserRegistration | null>(readRegistration);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [importingCo, setImportingCo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   // Load companies list whenever we have registration data
   useEffect(() => {
@@ -85,6 +91,64 @@ export default function CompaniesPage() {
     toast.success(`${company.name} deleted`);
   };
 
+  // Import a whole company from a vaarta_journal_import_v2 file (same structure the
+  // Journal page imports/exports): create a shell company named from the file, then
+  // load all its journal entries. Entity/GST details default and can be set in Settings.
+  const handleImportCompany = async (file: File) => {
+    setImportingCo(true);
+    try {
+      const raw = await file.text();
+      const parsed = parseJournalJson(raw);
+      if (!parsed.ok) { toast.error(parsed.error || 'Unsupported company/journal JSON.'); return; }
+      if (parsed.entries.length === 0) { toast.error('No valid journal entries found in the file.'); return; }
+
+      const name = (parsed.companyName || file.name.replace(/\.json$/i, '') || 'Imported Company').trim();
+      const company = createCompany({
+        name,
+        entity_type: 'pvt_ltd', // default — change in Company Settings
+        entity_details: {} as Company['entity_details'],
+        business_nature: [],
+        inventory_enabled: false,
+        inventory_config: { valuationMethod: 'weighted_average', pettyCashThreshold: 5000 } as Company['inventory_config'],
+        gst_status: 'unregistered' as Company['gst_status'],
+        gst_details: {} as Company['gst_details'],
+        tds_applicable: false,
+        tcs_applicable: false,
+        accounting_method: 'mercantile',
+        financial_year_start: 'april',
+      });
+      createInitialBookPeriod(company.id);
+      try { initEntityData(company); } catch { /* non-fatal */ }
+
+      let ok = 0, failed = 0;
+      for (const item of parsed.entries) {
+        try {
+          createJournalEntry({
+            company_id: company.id,
+            entry_code: generateUniqueEntryCode(company.id),
+            entry_date: item.entry_date,
+            voucher_type: item.voucher_type,
+            voucher_number: item.voucher_number ?? undefined,
+            lines: item.lines as unknown as Parameters<typeof createJournalEntry>[0]['lines'],
+            narration: item.narration ?? '',
+            book_period: bookPeriodFromDate(item.entry_date),
+            is_opening: false,
+            is_closing: false,
+          });
+          ok += 1;
+        } catch { failed += 1; }
+      }
+      setCompanies(listCompanies());
+      toast.success(`Imported "${name}" with ${ok} entr${ok === 1 ? 'y' : 'ies'}${parsed.skipped || failed ? ` (${parsed.skipped + failed} skipped)` : ''}. Set entity & GST details in Settings.`);
+      navigate(`/company/${company.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Company import failed.');
+    } finally {
+      setImportingCo(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const fmtDate = (iso: string) => {
     try {
       return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -103,13 +167,29 @@ export default function CompaniesPage() {
               <span className="hero-accent">CA</span> Studio Workspace
             </h1>
           </div>
-          <Link
-            to="/companies/create"
-            className="btn-pill-primary relative shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            New Company
-          </Link>
+          <div className="relative flex shrink-0 items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportCompany(f); }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importingCo}
+              title="Import a company from a journal JSON (vaarta_journal_import_v2)"
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-xs font-bold text-slate-700 bg-white/90 border border-white/40 hover:bg-white transition-all shadow-sm disabled:opacity-60 cursor-pointer"
+            >
+              {importingCo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {importingCo ? 'Importing…' : 'Import Company'}
+            </button>
+            <Link to="/companies/create" className="btn-pill-primary">
+              <Plus className="h-4 w-4" />
+              New Company
+            </Link>
+          </div>
         </div>
       </header>
 

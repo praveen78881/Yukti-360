@@ -13,7 +13,7 @@ interface ExportButtonsProps {
   data: Record<string, any>[];
   pdfOrientation?: 'portrait' | 'landscape';
   includeSignatureBlock?: boolean;
-  /** When true (default), export options are locked behind Pro version. */
+  /** When true, export options are locked behind Pro version. Unlocked by default. */
   locked?: boolean;
   /** Optional custom PDF handler (accepted for callers that supply their own). */
   onPdf?: () => Promise<void> | void;
@@ -28,7 +28,7 @@ const LOCK_SVG = (
 export function ExportButtons({
   title, companyName, entityType, dateRange,
   columns, data, pdfOrientation, includeSignatureBlock,
-  locked = true,
+  locked = false, onPdf,
 }: ExportButtonsProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -98,7 +98,7 @@ export function ExportButtons({
               <button
                 className={btnClass}
                 disabled={!!loading}
-                onClick={() => handle('pdf', () => exportToPDF(title, companyName, entityType, dateRange, columns, data, { orientation: pdfOrientation, includeSignatureBlock }))}
+                onClick={() => handle('pdf', () => onPdf ? onPdf() : exportToPDF(title, companyName, entityType, dateRange, columns, data, { orientation: pdfOrientation, includeSignatureBlock }))}
               >
                 {loading === 'pdf' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
                 PDF
@@ -106,7 +106,7 @@ export function ExportButtons({
               <button
                 className={btnClass}
                 disabled={!!loading}
-                onClick={() => handle('excel', () => exportToExcel(title, columns, data))}
+                onClick={() => handle('excel', () => exportToExcel(title, columns, data, undefined, { companyName, title, dateRange, entityType }))}
               >
                 {loading === 'excel' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5" />}
                 Excel
@@ -114,7 +114,7 @@ export function ExportButtons({
               <button
                 className={btnClass}
                 disabled={!!loading}
-                onClick={() => handle('csv', () => exportToCSV(columns, data, title.replace(/\s+/g, '_')))}
+                onClick={() => handle('csv', () => exportToCSV(columns, data, title.replace(/\s+/g, '_'), { companyName, title, dateRange, entityType }))}
               >
                 {loading === 'csv' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
                 CSV

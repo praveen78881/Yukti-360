@@ -1,0 +1,293 @@
+---
+title: "File GSTR-9"
+description: "GSTR-9 is an annual GST return summarizing a taxpayer's filings, including supplies, taxes paid, ITC, and adjustments for the financial year. This recipe guides you through the complete GSTR-9 filing workflow."
+---
+
+## Workflow Overview
+
+The GSTR-9 filing process follows this sequence:
+
+1. **Authenticate** - Create a taxpayer session (valid for 6 hours)
+2. **Get Auto-Calculated Details** - Fetch pre-calculated data from GST Department
+3. **Pull HSN Summary** - Get GSTR-1 HSN data for Table 17
+4. **Save GSTR-9** - Upload your annual return data for validation
+5. **Check Status** - Verify the save operation completed successfully
+6. **Get GSTR-9 Details** - Retrieve saved data required for filing
+7. **Proceed to File** - Mark the return ready for filing
+8. **Check Status** - Verify proceed operation completed
+9. **Generate EVC OTP** - Get Electronic Verification Code OTP
+10. **File GSTR-9** - Submit the annual return with OTP verification
+
+<Info>
+Before you begin:
+- GSTR-1 and GSTR-3B for all months of the financial year must be filed
+- Ensure your Taxpayer access token is valid (6-hour validity) throughout the filing process
+- The financial year format is `FY YYYY-YY` (e.g., `FY 2023-24`)
+</Info>
+
+<Warning>
+GSTR-9 is an annual return and once filed, it cannot be revised. Review all data carefully before proceeding to file.
+</Warning>
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before filing GSTR-9, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours.
+  </Step>
+
+  <Step title="Get GSTR-9 Auto-Calculated Details" stepNumber={2} titleSize="h2">
+    Fetch the auto-calculated table details in GSTR-9 as computed by the GST Department using the [**GSTR-9 Auto Calculated Details**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details) endpoint.
+
+    This data is pre-populated based on your GSTR-1 and GSTR-3B filings and serves as the baseline for your annual return.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-9/auto-calculated?financial_year=FY%202023-24' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When successful, you'll receive:
+    - **table4** - Details of outward supplies (B2B, B2C, exports, etc.)
+    - **table5** - Details of exempt, nil-rated, and non-GST supplies
+    - **table6** - Input Tax Credit (ITC) details
+    - **table8** - ITC reconciliation details
+    - **table9** - Tax paid details
+    - **chksum** - Checksums for each table
+
+    Review these values and use them as reference when preparing your GSTR-9 data.
+  </Step>
+
+  <Step title="Get GSTR-1 HSN Summary" stepNumber={3} titleSize="h2">
+    Pull the HSN summary for outward supplies from your GSTR-1 filings using the [**GSTR-1 HSN Summary**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn) endpoint. This data is used to populate Table 17 in GSTR-9.
+
+    Call this endpoint for each month of the financial year to compile the complete HSN summary.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/hsn/2024/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When successful, you'll receive:
+    - **hsn.data** - Array of HSN codes with taxable value, quantity, and tax amounts
+    - **hsn_sc** - HSN/SAC code
+    - **txval** - Taxable value
+    - **iamt**, **camt**, **samt**, **csamt** - Tax amounts (IGST, CGST, SGST, Cess)
+
+    <Tip>
+    Aggregate the HSN data from all 12 months of the financial year to prepare the Table 17 data for your GSTR-9 submission.
+    </Tip>
+  </Step>
+
+  <Step title="Save GSTR-9" stepNumber={4} titleSize="h2">
+    Save your GSTR-9 data using the [**Save GSTR-9**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save) endpoint. This includes outward supplies, input tax credits (ITC), and tax payments for the financial year.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-9/save?financial_year=FY%202023-24' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "gstin": "29AAACQ3770E000",
+        "fp": "032024",
+        "table4": {
+          "b2c": { "txval": 1000, "iamt": 20, "camt": 20, "samt": 20, "csamt": 0 },
+          "b2b": { "txval": 1000, "iamt": 20, "camt": 20, "samt": 20, "csamt": 0 }
+        },
+        "table5": {
+          "zero_rtd": { "txval": 0 },
+          "exmt": { "txval": 0 },
+          "nil": { "txval": 0 }
+        },
+        "table6": {
+          "supp_non_rchrg": [{ "itc_typ": "ip", "iamt": 20, "camt": 20, "samt": 20, "csamt": 0 }],
+          "itc_clmd": { "iamt": 20, "camt": 20, "samt": 20, "csamt": 0 }
+        },
+        "table7": {
+          "rule37": { "iamt": 0, "camt": 0, "samt": 0, "csamt": 0 }
+        },
+        "table8": {
+          "itc_inwd_supp": { "iamt": 20, "camt": 20, "samt": 20, "csamt": 0 }
+        },
+        "table9": {
+          "iamt": { "txpyble": 1000 },
+          "camt": { "txpyble": 1000 },
+          "samt": { "txpyble": 1000 }
+        },
+        "table17": {
+          "items": [
+            { "hsn_sc": "998232", "txval": 10000, "isconcesstional": "N", "rt": 18, "iamt": 0, "camt": 900, "samt": 900, "csamt": 0 }
+          ]
+        },
+        "table18": {
+          "items": [
+            { "hsn_sc": "1203", "uqc": "BAL", "qty": 1, "txval": 10000, "isconcesstional": "N", "rt": 5, "iamt": 0, "camt": 250, "samt": 250, "csamt": 0 }
+          ]
+        }
+      }'
+      ```
+    </Accordion>
+
+    When successful, you'll receive:
+    - **reference_id** - Use this to check the save status
+
+    Save this `reference_id` for the next step.
+  </Step>
+
+  <Step title="Check Save Status" stepNumber={5} titleSize="h2">
+    Check the status of the save operation using the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint with the `reference_id` from the previous step.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/2024/12/status?reference_id=3f0b7b96-2c56-4e34-a025-03c3577a8468' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    Poll this endpoint every 10-15 seconds until `status_cd` is `P` (Processed).
+
+    When successful, the response includes:
+    - **status_cd** - `P` indicates processing complete
+    - **action** - The action that was processed (SAVE)
+
+    <Warning>
+    If the status shows validation errors, fix the data and save again before proceeding.
+    </Warning>
+  </Step>
+
+  <Step title="Get GSTR-9 Details" stepNumber={6} titleSize="h2">
+    Fetch the saved GSTR-9 details using the [**GSTR-9 Details**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details) endpoint. This data is required for the File GSTR-9 API to complete the filing.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-9?financial_year=FY%202023-24' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When successful, you'll receive the complete GSTR-9 data with checksums for all tables. Save this entire response as it needs to be passed in the File GSTR-9 request.
+  </Step>
+
+  <Step title="Proceed to File" stepNumber={7} titleSize="h2">
+    Mark the return as ready for filing using the [**Proceed to File**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-9/proceed) endpoint. After this step, EVC OTP can be generated for filing.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-9/2024/03/proceed' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "gstin": "29AAACQ3770E000",
+        "ret_period": "032024"
+      }'
+      ```
+    </Accordion>
+
+    When successful, you'll receive:
+    - **reference_id** - Use this to check the proceed status
+
+    Save this `reference_id` for the next step.
+  </Step>
+
+  <Step title="Check Proceed Status" stepNumber={8} titleSize="h2">
+    Verify the proceed operation completed successfully using the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/2024/12/status?reference_id=897c98eb-7877-4252-934d-46cb3a86c51a' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    Poll until `status_cd` is `P` (Processed). Once complete, the return is ready for filing.
+  </Step>
+
+  <Step title="Generate EVC OTP" stepNumber={9} titleSize="h2">
+    Generate an EVC (Electronic Verification Code) OTP using the [**Generate EVC OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint.
+
+    Provide the PAN of the authorized signatory associated with the taxpayer's GST registration.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/evc/otp?gstr=gstr-9' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pan": "AAACQ3770E"
+      }'
+      ```
+    </Accordion>
+
+    The OTP will be sent to the registered mobile number or email of the authorized signatory. You'll need this OTP in the next step.
+  </Step>
+
+  <Step title="File GSTR-9" stepNumber={10} titleSize="h2">
+    File your GSTR-9 using the [**File GSTR-9**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file) endpoint.
+
+    Include the financial year, PAN, and EVC OTP as query parameters. Pass the complete GSTR-9 details (obtained in Step 6) in the request body.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-9/file?financial_year=FY%202023-24&pan=AAACQ3770E&otp=575757' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "gstin": "29AAACQ3770E000",
+        "isnil": "N",
+        "fp": "032024",
+        "table4": { ... },
+        "table5": { ... },
+        "table6": { ... },
+        "table7": { ... },
+        "table8": { ... },
+        "table9": { ... },
+        "table10": { ... },
+        "table14": { ... },
+        "table15": { ... },
+        "table16": { ... },
+        "table17": { ... },
+        "table18": { ... }
+      }'
+      ```
+    </Accordion>
+
+    <Note>
+    Pass the complete GSTR-9 data from the Get GSTR-9 Details response (Step 6) in the request body. This includes all tables with their checksums.
+    </Note>
+
+    When successful, you'll receive:
+    - **ack_num** - Acknowledgment number confirming successful filing
+
+    Your GSTR-9 annual return has been successfully filed.
+  </Step>
+</Steps>

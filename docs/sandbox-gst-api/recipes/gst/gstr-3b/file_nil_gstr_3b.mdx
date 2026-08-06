@@ -1,0 +1,58 @@
+---
+title: "File Nil GSTR-3B"
+description: "Nil GSTR-3B is filed when a registered taxpayer has no outward or inward supplies, tax liability, or ITC to claim. Filing it is mandatory to maintain compliance. This recipe shows how to automate nil GSTR-3B filing."
+---
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before filing Nil GSTR-3B, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours.
+  </Step>
+
+  <Step title="Generate EVC OTP" stepNumber={2} titleSize="h2">
+    To file Nil GSTR-3B, you need to generate an EVC (Electronic Verification Code) OTP using the [**Generate EVC OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint.
+
+    Provide the PAN (Permanent Account Number) associated with the taxpayer's GST registration. The OTP will be sent to the registered mobile number or email.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/evc/otp?gstr=gstr-3b' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pan": "ABCCQ3123E"
+      }'
+      ```
+    </Accordion>
+
+    The OTP will be sent to the registered contact details. You'll need this OTP in the next step to complete the filing.
+  </Step>
+
+  <Step title="File Nil GSTR-3B" stepNumber={3} titleSize="h2">
+    Once you have the EVC OTP, file your Nil GSTR-3B using the [**File GSTR-3B**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/file) endpoint.
+
+    Include the PAN and OTP as query parameters, along with the return period, GSTIN, and `isNil` flag set to "Y" in the request body.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12/file?pan=AAACJ3770E&otp=123456' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "ret_period": "122023",
+        "gstin": "29AAACQ3770E000",
+        "isNil": "Y"
+      }'
+      ```
+    </Accordion>
+
+    Upon successful filing, the response will confirm that Nil GSTR-3B has been filed for the specified return period.
+  </Step>
+</Steps>

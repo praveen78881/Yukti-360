@@ -9,9 +9,11 @@
   # them into the browser bundle, so the scanner sees them and (wrongly) fails the
   # build. They are not secrets: the Supabase URL + anon key are meant to be public
   # (protected by RLS), and the Gemini model name is not sensitive. Exclude them.
-  # The ONLY real secret, GEMINI_API_KEY, is server-side (used by the Netlify
-  # function) and is NOT omitted here, so it stays protected and never bundled.
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_MODEL,VITE_GEMINI_API_KEY"
+  # GEMINI_API_KEY is server-side (used by the Netlify function) and is NOT omitted,
+  # so the scanner will BLOCK the deploy if it ever leaks into the client bundle.
+  # VITE_GEMINI_API_KEY is intentionally NOT listed — the client must never carry a
+  # Gemini key; if one reappears in the bundle the scanner should fail the build.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_MODEL"
 
 # Netlify serverless functions
 [functions]

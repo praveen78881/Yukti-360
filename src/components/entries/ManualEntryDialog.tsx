@@ -389,7 +389,8 @@ export function ManualEntryDialog({
   return (
     <>
       {/* ── Main Dialog ── */}
-      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={handleClose}>
+      {/* Backdrop deliberately has no close handler — the entry form closes only via the ✕ / Cancel buttons, so a stray click can't discard in-progress edits. */}
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col"
           onClick={e => e.stopPropagation()}

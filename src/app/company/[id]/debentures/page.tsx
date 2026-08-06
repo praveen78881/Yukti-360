@@ -48,22 +48,6 @@ export default function DebenturesPage() {
 
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
 
-  return (
-    <div className="space-y-4">
-      <PageHeader title="Debentures" description="Debenture accounts — issue, redemption, premium, discount" />
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="h-16 w-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-5">
-          <svg className="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-          </svg>
-        </div>
-        <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold uppercase tracking-wider mb-3">Under Modification</span>
-        <h3 className="text-sm font-bold text-gray-800 mb-2">Debentures — Coming Soon</h3>
-        <p className="text-xs text-gray-500 max-w-sm leading-relaxed">This module is currently under modification and will be unlocked with the trial version.</p>
-      </div>
-    </div>
-  );
-  // eslint-disable-next-line no-unreachable
   // Detail view
   if (selectedAccount) {
     const ledgerRows = computeLedger(entries, selectedAccount!);

@@ -20,7 +20,8 @@ export interface JournalizeOptions {
   bankAccountMeta: { primaryGroup: string; subGroup: string; nature: string };
   contraAccountName: string;
   contraAccountMeta: { primaryGroup: string; subGroup: string; nature: string };
-  voucherType: VoucherType;
+  /** 'AUTO' picks PMT/RCT per transaction direction; any VoucherType forces that type. */
+  voucherType: VoucherType | 'AUTO';
   bookPeriod: string;
 }
 
@@ -66,9 +67,9 @@ export async function journalizeTransactions(
       existingCodes.add(entryCode);
 
       // Determine voucher type based on direction if auto
-      const vt: VoucherType = voucherType !== 'JRN'
-        ? voucherType
-        : (isPayment ? 'PMT' : 'RCT');
+      const vt: VoucherType = voucherType === 'AUTO'
+        ? (isPayment ? 'PMT' : 'RCT')
+        : voucherType;
 
       const lines = isPayment
         ? [

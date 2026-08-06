@@ -341,6 +341,7 @@ textarea{resize:vertical;min-height:30px}
       <div class="itr"><div class="lbl">Return Type</div><div class="drillcol"></div>
         <div class="inlineval"><select id="f_rettype" onchange="computeAll()"><option>Original</option><option>Revised</option></select></div><div class="schtag"></div></div>
       <div class="itr"><div class="lbl">Representative Assessee, if any</div><div class="drillcol sf-open" data-sf="sf-repassessee">⋯</div><div class="st" id="st_repassessee"></div><div class="schtag"></div></div>
+      <div class="itr"><div class="lbl">Seventh Proviso to Section 139(1) — clause (iv)</div><div class="drillcol sf-open" data-sf="sf-seventhproviso">⋯</div><div class="st" id="st_seventhproviso"></div><div class="schtag"></div></div>
 
       <!-- Income related info. -->
       <div class="it-sub">Income related info.</div>
@@ -512,6 +513,19 @@ textarea{resize:vertical;min-height:30px}
       <div class="f span2"><label>Assessee Deceased?</label>
         <span class="yn-tabs" data-fld="rep_deceased"><button data-v="yes">Yes</button><button class="active" data-v="no">No</button></span></div>
     </div>
+  </div>
+</div>
+
+<!-- Seventh Proviso 139(1) — clause (iv) disclosures -->
+<div class="subform sf-wide" id="sf-seventhproviso">
+  <div class="sf-top"><div><h2>Seventh Proviso to Section 139(1)</h2><div class="sf-meta">A.Y. 2026-27 · clause (iv) mandatory-filing disclosures</div></div>
+    <div class="sf-actions"><button class="sf-btn" data-close>✓ Done</button></div></div>
+  <div class="sf-body">
+    <div class="sf-note">Fill only if you are otherwise not required to file a return but are filing under the seventh proviso to s.139(1) (e.g. high-value deposits / expenditure). Add one row per applicable clause-(iv) condition.</div>
+    <div class="sf-sectit">Clause (iv) disclosures<button class="addbtn" id="add7pBtn" style="margin-left:14px">+ Add row</button></div>
+    <table class="sf-tbl" style="max-width:640px"><colgroup><col class="c-txt"><col class="c-num"><col class="c-rm"></colgroup>
+      <thead><tr><th class="l">Nature of amount</th><th>Amount (₹)</th><th></th></tr></thead>
+      <tbody id="sp7-rows"></tbody></table>
   </div>
 </div>
 
@@ -776,6 +790,8 @@ const ESOP_YEARS=['2021-22','2022-23','2023-24','2024-25','2025-26'];
 
 /* ===== factories ===== */
 const newBankRow=()=>({name:'',acc:'',ifsc:'',type:'(Select)',refund:false});
+const SP7_NATURES=[{v:'',t:'(Select)'},{v:'1',t:'1 — Deposit > ₹1 crore in current account(s)'},{v:'2',t:'2 — Other prescribed condition'}];
+const new7pRow=()=>({nature:'',amount:''});
 const newSpiRow=()=>({name:'',pan:'',rel:'',head:'(Select)',amount:''});
 const newGstrRow=()=>({gstin:'',outward:''});
 const newCeDepRow=()=>({bank:'',bsr:'',date:'',challan:'',amount:''});
@@ -1010,7 +1026,7 @@ const FIXED_BREAKUP={
 const data={
   flags:{partner:'no',unlisted:'no',director:'no',rep_deceased:'no'},
   assessee:{}, verifier:{}, repassessee:{}, otherforms:{optearlier:'Yes',trp:false},
-  bank:[newBankRow()], spiMinor:[newSpiRow()], spiOther:[newSpiRow()], gstr:[newGstrRow()],
+  bank:[newBankRow()], seventhproviso:[new7pRow()], spiMinor:[newSpiRow()], spiOther:[newSpiRow()], gstr:[newGstrRow()],
   ceDeposit:[newCeDepRow()], esop:{years:{}, sold:false, soldRows:[newEsopSoldRow()]},
   director:[newDirectorRow()], unlisted:[newUnlistedRow()], pti:[newPtiRow()],
   nature:[newNatureRow()],
@@ -1032,7 +1048,7 @@ function bindRm(tb){
   tb.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{
     const m=b.dataset.rm.match(/^(.+)_(\d+)$/); if(!m)return;
     const key=m[1], idx=+m[2];
-    const map={bank:['bank',renderBank],spimin:['spiMinor',renderSpi],spioth:['spiOther',renderSpi],
+    const map={bank:['bank',renderBank],sp7:['seventhproviso',render7p],spimin:['spiMinor',renderSpi],spioth:['spiOther',renderSpi],
       gstr:['gstr',renderGstr],cedep:['ceDeposit',renderCeDeposit],esopsold:null,director:['director',renderDirector],unlisted:['unlisted',renderUnlisted],
       nat:['nature',renderNature],pti:['pti',renderPti],alfirm:['alFirm',renderAlFirm]};
     if(FA_COLS[key]){ if(data[key].length>1)data[key].splice(idx,1); renderFa(key); computeAll(); return; }
@@ -1051,6 +1067,12 @@ function renderBank(){const tb=$('bank-rows');if(!tb)return;tb.innerHTML='';
       <td class="l"><select id="bank_${i}_type">${ACCT_TYPES.map(o=>`<option ${o===r.type?'selected':''}>${o}</option>`).join('')}</select></td>
       <td style="text-align:center"><input type="checkbox" id="bank_${i}_refund" ${r.refund?'checked':''} style="width:15px;height:15px;accent-color:var(--blue)"></td>
       <td class="rm"><button class="bp-rm-tbl" data-rm="bank_${i}">✕</button></td>`;tb.appendChild(tr);});
+  bindRm(tb);}
+function render7p(){const tb=$('sp7-rows');if(!tb)return;tb.innerHTML='';
+  data.seventhproviso.forEach((r,i)=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l"><select id="sp7_${i}_nature">${SP7_NATURES.map(o=>`<option value="${o.v}" ${o.v===r.nature?'selected':''}>${o.t}</option>`).join('')}</select></td>
+      <td><input type="text" id="sp7_${i}_amount" value="${r.amount||''}"></td>
+      <td class="rm"><button class="bp-rm-tbl" data-rm="sp7_${i}">✕</button></td>`;tb.appendChild(tr);});
   bindRm(tb);}
 function renderSpi(){
   [['spi-minor-rows','spiMinor','spimin'],['spi-other-rows','spiOther','spioth']].forEach(([tbid,arr,pfx])=>{
@@ -1334,6 +1356,7 @@ function populate(sfId){
     setv('asr_secmobile',a.secmobile);setv('asr_secemail',a.secemail);setv('asr_aadhaar',a.aadhaar);setv('asr_aadhaareid',a.aadhaareid);setv('asr_44aa',a.acc44aa||'No');}
   else if(sfId==='sf-verifier'){const v=data.verifier;setv('vfr_name',v.name);setv('vfr_pan',v.pan);setv('vfr_capacity',v.capacity);setv('vfr_father',v.father);setv('vfr_place',v.place);}
   else if(sfId==='sf-repassessee'){const r=data.repassessee;setv('rep_name',r.name);setv('rep_email',r.email);setv('rep_contact',r.contact);setv('rep_cc',r.cc||'91');setYn('rep_deceased',data.flags.rep_deceased||'no');}
+  else if(sfId==='sf-seventhproviso')render7p();
   else if(sfId==='sf-bank')renderBank();
   else if(sfId==='sf-spi')renderSpi();
   else if(sfId==='sf-gstr')renderGstr();
@@ -1406,6 +1429,7 @@ function saveSubFormField(sfId,inp){const id=inp.id,v=inp.value;let m;
     if(id==='ofr_trp_amt'){data.otherforms.trpAmt=v;return;} return;}
   if(sfId==='sf-92ce'){if(id==='ce_amount'){data.ce_amount=v;return;}if(id==='ce_paid_b'){data.ce_paid_b=v;return;}}
   // grids
+  if(m=id.match(/^sp7_(\d+)_(nature|amount)$/)){data.seventhproviso[+m[1]][m[2]]=v;return;}
   if(m=id.match(/^bank_(\d+)_(name|acc|ifsc|type|refund)$/)){data.bank[+m[1]][m[2]]=(m[2]==='refund'?inp.checked:v);return;}
   if(m=id.match(/^(spimin|spioth)_(\d+)_(name|pan|rel|head|amount)$/)){(m[1]==='spimin'?data.spiMinor:data.spiOther)[+m[2]][m[3]]=v;return;}
   if(m=id.match(/^gstr_(\d+)_(gstin|outward)$/)){data.gstr[+m[1]][m[2]]=(m[2]==='gstin'?v.toUpperCase():v);return;}
@@ -1460,6 +1484,7 @@ function computeAll(){
   stDone('st_verifier', !!(data.verifier.name&&data.verifier.pan));
   stCnt('st_bank', bankN, 'account');
   stDone('st_repassessee', !!data.repassessee.name);
+  stDone('st_seventhproviso', data.seventhproviso.some(r=>r.nature||r.amount));
   stCnt('st_pti', data.pti.filter(r=>r.name||r.income).length, 'entry');
   stCnt('st_unlisted', unlN, 'company');
   stCnt('st_directorship', dirN, 'company');
@@ -1534,6 +1559,7 @@ function onFlagChange(fld,v){
 
 // add-row buttons
 [['addBankBtn',()=>{data.bank.push(newBankRow());renderBank();computeAll();}],
+ ['add7pBtn',()=>{data.seventhproviso.push(new7pRow());render7p();computeAll();}],
  ['addEsopSoldBtn',()=>{data.esop.soldRows.push(newEsopSoldRow());renderEsopSold();computeAll();}],
  ['add_director_Btn',()=>{data.director.push(newDirectorRow());renderDirector();computeAll();}],
  ['add_unlisted_Btn',()=>{data.unlisted.push(newUnlistedRow());renderUnlisted();computeAll();}],
@@ -1551,7 +1577,7 @@ function toast(msg){let t=$('__toast');if(!t){t=document.createElement('div');t.
 
 /* ===== init ===== */
 Object.entries(data.flags).forEach(([f,v])=>setYn(f,v));
-renderBank();renderEsop();renderEsopSold();renderDirector();renderUnlisted();renderPti();renderOtherForms();
+renderBank();render7p();renderEsop();renderEsopSold();renderDirector();renderUnlisted();renderPti();renderOtherForms();
 FA_KEYS.forEach(renderFa);
 computeAll();
 
@@ -1850,54 +1876,367 @@ function applyAisToCalc(ais){
 function trySetCalcInput(d,ids,val){ for(const id of ids){ const el=d.getElementById(id); if(el){ el.value=String(val); el.dispatchEvent(new Event('input',{bubbles:true})); return true; } } return false; }
 
 // Build the Chapter VI-A deduction object (all Section80* fields required by schema)
+/* ---- shared accessors: the drill-in data (bpData/hpData) lives in the calc iframe ---- */
+function _cw(){ return (typeof calcWin==='function'&&calcWin())||{}; }
+function _bp(){ return _cw().bpData||{}; }
+function _hp(){ const h=_cw().hpData; return Array.isArray(h)?h:[]; }
+function _arr(x){ return Array.isArray(x)?x:[]; }
+function _n(v){ if(typeof v==='number')return isFinite(v)?v:0; const x=parseFloat(String(v==null?'':v).replace(/[₹, ]/g,'')); return isFinite(x)?x:0; }
+function _rr(v){ return Math.round(_n(v)); }
+function _sumf(rows,f){ return _arr(rows).reduce((s,r)=>s+_n(r&&r[f]),0); }
+function _rowsOr(R,skel){ return R.length?R:[skel]; }
+function _loanRows(loans,intKey){
+  const R=_arr(loans).map(l=>({ LoanTknFrom:l.from||'', BankOrInstnName:l.bank||l.name||'',
+    LoanAccNoOfBankOrInstnRefNo:l.acctNo||l.acct||'', DateofLoan:l.sanctionDate||l.sanction||l.date||'',
+    TotalLoanAmt:_rr(l.totalLoan), LoanOutstndngAmt:_rr(l.closingBal), [intKey]:_rr(l.interest) }));
+  return _rowsOr(R,{LoanTknFrom:'',BankOrInstnName:'',LoanAccNoOfBankOrInstnRefNo:'',DateofLoan:'',TotalLoanAmt:0,LoanOutstndngAmt:0,[intKey]:0});
+}
+function _donees(rows,pct){
+  const R=_arr(rows).map(r=>{ const amt=_rr(r.amount); const cash=r.cash?amt:0,oth=r.cash?0:amt;
+    return {DoneeWithPanName:r.name||'', DoneePAN:r.pan||'', AddressDetail:{AddrDetail:r.address||'',CityOrTownOrDistrict:r.city||'',StateCode:r.state||'',PinCode:r.pin||''},
+      DonationAmtCash:cash, DonationAmtOtherMode:oth, DonationAmt:amt, EligibleDonationAmt:Math.round(amt*pct/100)}; });
+  return _rowsOr(R,{DoneeWithPanName:'',DoneePAN:'',AddressDetail:{AddrDetail:'',CityOrTownOrDistrict:'',StateCode:'',PinCode:''},DonationAmtCash:0,DonationAmtOtherMode:0,DonationAmt:0,EligibleDonationAmt:0});
+}
+function _dSum(dn,k){ return dn.reduce((s,d)=>s+_n(d[k]),0); }
+function _divDateRange(rows){
+  const dr={Upto15Of6:0,Upto15Of9:0,Up16Of9To15Of12:0,Up16Of12To15Of3:0,Up16Of3To31Of3:0};
+  _arr(rows).forEach(r=>{ const a=_rr(r.amount); const q=(r.quarter||'').slice(0,2);
+    if(q==='Q1')dr.Upto15Of6+=a; else if(q==='Q2')dr.Upto15Of9+=a; else if(q==='Q3')dr.Up16Of9To15Of12+=a; else dr.Up16Of12To15Of3+=a; });
+  return dr;
+}
+
 function chapVIA(total){
   const g=id=>Math.round(calcVal(id));
+  const D=(_bp().deductions)||{}; const ccd=D.s80ccd||{};
   return {
-    Section80C:g('it_80_c'), Section80CCC:g('it_80_ccc'), Section80CCDEmployeeOrSE:g('it_80_ccd1'),
-    Section80CCD1B:g('it_80_ccd1b'), Section80CCDEmployer:g('it_80_ccd2'),
-    Section80D:g('it_80_d'), Section80DD:g('it_80_dd'), Section80DDB:g('it_80_ddb'),
-    Section80E:g('it_80_e'), Section80EE:0, Section80EEA:0, Section80EEB:0,
-    Section80G:g('it_80_g'), Section80GG:g('it_80_gg'), Section80GGA:0, Section80GGC:0,
-    Section80U:g('it_80_u'), Section80TTA:g('it_80_tta'), Section80TTB:g('it_80_ttb'),
+    Section80C:g('it_80_ccccd'),
+    Section80CCC:_rr(_sumf(D.s80ccc&&D.s80ccc.rows,'amount')),
+    Section80CCDEmployeeOrSE:_rr(ccd.s80ccd1),
+    Section80CCD1B:Math.min(_rr(ccd.s80ccd1b),50000),
+    Section80CCDEmployer:_rr(ccd.s80ccd2Contrib),
+    Section80D:g('d80d_total'), Section80DD:g('it_80_dd'), Section80DDB:g('it_80_ddb'),
+    Section80E:g('d80e_total'), Section80EE:g('d80ee_ded'), Section80EEA:g('d80eea_ded'), Section80EEB:g('d80eeb_ded'),
+    Section80G:g('d80g_total'), Section80GG:g('d80gg_ded'), Section80GGA:g('d80gga_ded'), Section80GGC:g('d80ggc_ded'),
+    Section80U:g('d80u_ded'), Section80TTA:g('d80tta_ded'), Section80TTB:g('d80ttb_ded'),
     AnyOthSec80CCH:g('it_80_cch'), TotalChapVIADeductions:total
   };
 }
 
+/* Emit every REQUIRED Schedule* node from the already-captured drill-in data.
+   Empty grids still emit one schema-shaped skeleton row so the leaf paths are present. */
+function augmentItr1(j, ltcg){
+  const R=j.ITR.ITR1; const BP=_bp(); const D=BP.deductions||{}; const OTH=D.s80other||{};
+  const ay=(R.Form_ITR1&&R.Form_ITR1.AssessmentYear)||'2026'; const is2025=(ay==='2025');
+  const g=id=>Math.round(calcVal(id));
+
+  /* A: LTCG112A — rename TotLTCG112A→LongCap112A + sale/cost totals */
+  const l112=(BP.cg&&BP.cg.ltcg112a&&BP.cg.ltcg112a.rows)||[];
+  const totSale=_rr(_sumf(l112,'sale'));
+  R.LTCG112A={ TotSaleCnsdrn:totSale, TotCstAcqisn:Math.max(0,totSale-_rr(ltcg)), LongCap112A:_rr(ltcg) };
+
+  /* FilingStatus: real ReturnFileSec + Representative Assessee */
+  const secMap={'139(1)':11,'139(4)':12,'139(5)':13,'142(1)':14,'139(9)':15};
+  const fsel=($('f_section')&&$('f_section').value)||(BP.filing&&BP.filing.section)||'139(1)';
+  R.FilingStatus.ReturnFileSec=secMap[fsel]||11;
+  const rep=data.repassessee||{};
+  if(rep.name){ R.FilingStatus.AsseseeRepFlg='Y';
+    R.FilingStatus.AssesseeRep={ RepName:rep.name||'', RepEmailID:rep.email||'', CountryCodeRepMobileNo:rep.cc||'91', RepMobileNo:rep.contact||'' }; }
+  /* FilingStatus: 139(1) seventh-proviso clause-(iv) disclosures */
+  const sp7=_arr(data.seventhproviso).filter(r=>r.nature||_n(r.amount)).map(r=>({clauseiv7provisio139iNature:r.nature||'', clauseiv7provisio139iAmount:_rr(r.amount)}));
+  R.FilingStatus.clauseiv7provisio139iDtls=_rowsOr(sp7,{clauseiv7provisio139iNature:'',clauseiv7provisio139iAmount:0});
+
+  /* PersonalInfo: SecondaryAdd flag + AlternateAddress (mirrors primary) */
+  R.PersonalInfo.SecondaryAdd='N';
+  const pa=R.PersonalInfo.Address||{};
+  R.PersonalInfo.AlternateAddress={ ResidenceNo:pa.ResidenceNo||'', LocalityOrArea:pa.LocalityOrArea||'', CityOrTownOrDistrict:pa.CityOrTownOrDistrict||'', StateCode:pa.StateCode||'99' };
+
+  const ID=R.ITR1_IncomeDeductions;
+  ID.AllwncExemptUs10={ AllwncExemptUs10Dtls:[{SalNatureDesc:'', SalOthAmount:0}], TotalAllwncExemptUs10:0 };
+  ID.ExemptIncAgriOthUs10={ ExemptIncAgriOthUs10Dtls:[{NatureDesc:'', OthAmount:0}], ExemptIncAgriOthUs10Total:0 };
+
+  /* OthersInc: interest + dividends (with quarter → DateRange) */
+  const osi=[]; const INT=(BP.os&&BP.os.interest)||{};
+  [['sb','SAV'],['deposits','IFD'],['other','OTH']].forEach(function(kv){ _arr(INT[kv[0]]).forEach(r=>{ if(_n(r.amount)) osi.push({OthSrcNatureDesc:kv[1], OthSrcOthAmount:_rr(r.amount)}); }); });
+  _arr(BP.os&&BP.os.dividends&&BP.os.dividends.normal).forEach(r=>{ if(_n(r.amount)) osi.push({OthSrcNatureDesc:'DIV', OthSrcOthAmount:_rr(r.amount), DividendInc:{DateRange:_divDateRange([r])}}); });
+  if(!osi.length) osi.push({OthSrcNatureDesc:'', OthSrcOthAmount:0, DividendInc:{DateRange:_divDateRange([])}});
+  if(is2025){ const _z89={Upto15Of6:0,Upto15Of9:0,Up16Of9To15Of12:0,Up16Of12To15Of3:0,Up16Of3To31Of3:0};
+    osi.forEach(r=>{ r.NOT89A=[{NOT89ACountrycode:'',NOT89AAmount:0}]; r.NOT89AInc={DateRange:Object.assign({},_z89)}; }); }
+  ID.OthersInc={ OthersIncDtlsOthSrc:osi };
+
+  /* 80CCC pension identifiers (under UsrDeductUndChapVIA) */
+  const ccc=_arr(D.s80ccc&&D.s80ccc.rows).map(r=>({TypeofIdentifier:(r.retirementAcc?'PRAN':'OTH'), NameofIdentifier:r.pran||r.description||'', Amount:_rr(r.amount)}));
+  ID.UsrDeductUndChapVIA.PensionContribution80CCC=_rowsOr(ccc,{TypeofIdentifier:'',NameofIdentifier:'',Amount:0});
+
+  /* House Property — 2026 nested PropertyDetails[] / 2025 flat + top-level ScheduleUs24B */
+  const props=_hp();
+  if(is2025){
+    const p0=props[0]||{}; const loans=(p0.interest&&p0.interest.loans)||[];
+    ID.AnnualValue=g('hp_nav_0')||g('hp_gav_0'); ID.StandardDeduction=g('hp_sd_0'); ID.TotalIncomeOfHP=g('hp_inc_0')||Math.round(calcVal('it_hp_income'));
+    R.ScheduleUs24B={ ScheduleUs24BDtls:_loanRows(loans,'InterestUs24B'), TotalInterestUs24B:_rr(_sumf(loans,'interest')) };
+  } else {
+    const pd=props.map((p,i)=>{ const det=p.details||{}; const loans=(p.interest&&p.interest.loans)||[];
+      const gav=g('hp_gav_'+i), nav=g('hp_nav_'+i), sd=g('hp_sd_'+i), intv=g('hp_int_'+i), inc=g('hp_inc_'+i);
+      return { HPSNo:i+1,
+        AddressDetailWithZipCode:{ AddrDetail:[det.flat,det.road,det.locality].filter(Boolean).join(', ')||det.premises||'', CityOrTownOrDistrict:det.city||'', StateCode:det.state||'99', CountryCode:'91' },
+        PropertyOwner:'SE', PropCoOwnedFlg:'N', CoOwners:[{CoOwnersSNo:1, NameCoOwner:det.owner||''}],
+        ifLetOut:(p.type==='self-occupied'?'S':'L'), TenantDetails:[{TenantSNo:1, NameofTenant:''}],
+        Rentdetails:{ AnnualLetableValue:gav, TotalUnrealizedAndTax:0, BalanceALV:gav, AnnualOfPropOwned:nav||gav, ThirtyPercentOfBalance:sd, IntOnBorwCap:intv,
+          Section24B:{ Section24BDtls:_loanRows(loans,'InterestUs24B'), TotalInterestUs24B:_rr(_sumf(loans,'interest')) }, TotalDeduct:sd+intv, IncomeOfHP:inc } }; });
+    R.ITR1_IncomeDeductions.PropertyDetails = pd.length?pd:[{ HPSNo:1, AddressDetailWithZipCode:{AddrDetail:'',CityOrTownOrDistrict:'',StateCode:'99',CountryCode:'91'}, PropertyOwner:'SE', PropCoOwnedFlg:'N', CoOwners:[{CoOwnersSNo:1,NameCoOwner:''}], ifLetOut:'S', TenantDetails:[{TenantSNo:1,NameofTenant:''}], Rentdetails:{AnnualLetableValue:0,TotalUnrealizedAndTax:0,BalanceALV:0,AnnualOfPropOwned:0,ThirtyPercentOfBalance:0,IntOnBorwCap:0,Section24B:{Section24BDtls:_loanRows([],'InterestUs24B'),TotalInterestUs24B:0},TotalDeduct:0,IncomeOfHP:0} }];
+  }
+
+  /* Deduction proof schedules */
+  const c80=_arr(D.s80c&&D.s80c.rows).map(r=>({Amount:_rr(r.amount), IdentificationNo:r.accNo||''}));
+  R.Schedule80C={ Schedule80CDtls:_rowsOr(c80,{Amount:0,IdentificationNo:''}), TotalAmt:_rr(_sumf(D.s80c&&D.s80c.rows,'amount')) };
+  const s80d=D.s80d||{}; const bkt=o=>{o=o||{}; return {Sch80DInsDtls:[{InsurerName:o.co||'',PolicyNo:o.pol||'',HealthInsAmt:_rr(o.prem)}], TotalPayments:_rr(o.prem)};};
+  R.Schedule80D={ Sec80DSelfFamSrCtznHealth:{ SeniorCitizenFlag:(_n(s80d.sel_sc&&s80d.sel_sc.prem)?'Y':'N'), ParentsSeniorCitizenFlag:(_n(s80d.par_sc&&s80d.par_sc.prem)?'Y':'N'),
+    Sec80DSelfFamHIDtls:bkt(s80d.sel_ot), Sec80DSelfFamSrCtznHIDtls:bkt(s80d.sel_sc), Sec80DParentsHIDtls:bkt(s80d.par_ot), Sec80DParentsSrCtznHIDtls:bkt(s80d.par_sc), EligibleAmountOfDedn:g('d80d_total') } };
+  const dd=D.s80dd||{}; R.Schedule80DD={ NatureOfDisability:dd.type||'', TypeOfDisability:(dd.severe?'2':'1'), DeductionAmount:g('d80dd_ded'), DependentType:dd.relation||'' };
+  R.Schedule80U={ NatureOfDisability:OTH.u_type||'', TypeOfDisability:(OTH.u_severe?'2':'1'), DeductionAmount:g('d80u_ded') };
+  const e80=_arr(D.s80e&&D.s80e.loans);
+  R.Schedule80E={ Schedule80EDtls:_loanRows(e80,'Interest80E'), TotalInterest80E:_rr(_sumf(e80,'interest')) };
+  R.Schedule80EE={ Schedule80EEDtls:_loanRows(OTH.ee,'Interest80EE'), TotalInterest80EE:_rr(_sumf(OTH.ee,'interest')) };
+  R.Schedule80EEA={ PropStmpDtyVal:_rr(_arr(OTH.eea)[0]&&_arr(OTH.eea)[0].stampDuty), Schedule80EEADtls:_loanRows(OTH.eea,'Interest80EEA'), TotalInterest80EEA:_rr(_sumf(OTH.eea,'interest')) };
+  R.Schedule80EEB={ Schedule80EEBDtls:_loanRows(OTH.eeb,'Interest80EEB').map((x,ix)=>{ x.VehicleRegNo=(_arr(OTH.eeb)[ix]&&_arr(OTH.eeb)[ix].vehicleRegNo)||''; return x; }), TotalInterest80EEB:_rr(_sumf(OTH.eeb,'interest')) };
+  /* 80G — four buckets split by the "subject to ceiling" flag */
+  const g50=_arr(OTH.g50), g100=_arr(OTH.g100);
+  const b100=_donees(g100.filter(r=>!r.ceiling),100), b100a=_donees(g100.filter(r=>r.ceiling),100);
+  const b50n=_donees(g50.filter(r=>!r.ceiling),50),  b50a=_donees(g50.filter(r=>r.ceiling),50);
+  const allB=[b100,b100a,b50n,b50a]; const grand=k=>allB.reduce((s,b)=>s+_dSum(b,k),0);
+  R.Schedule80G={
+    Don100Percent:{ DoneeWithPan:b100, TotDon100PercentCash:_dSum(b100,'DonationAmtCash'), TotDon100PercentOtherMode:_dSum(b100,'DonationAmtOtherMode'), TotDon100Percent:_dSum(b100,'DonationAmt'), TotEligibleDon100Percent:_dSum(b100,'EligibleDonationAmt') },
+    Don50PercentNoApprReqd:{ DoneeWithPan:b50n, TotDon50PercentNoApprReqdCash:_dSum(b50n,'DonationAmtCash'), TotDon50PercentNoApprReqdOtherMode:_dSum(b50n,'DonationAmtOtherMode'), TotDon50PercentNoApprReqd:_dSum(b50n,'DonationAmt'), TotEligibleDon50Percent:_dSum(b50n,'EligibleDonationAmt') },
+    Don100PercentApprReqd:{ DoneeWithPan:b100a, TotDon100PercentApprReqdCash:_dSum(b100a,'DonationAmtCash'), TotDon100PercentApprReqdOtherMode:_dSum(b100a,'DonationAmtOtherMode'), TotDon100PercentApprReqd:_dSum(b100a,'DonationAmt'), TotEligibleDon100PercentApprReqd:_dSum(b100a,'EligibleDonationAmt') },
+    Don50PercentApprReqd:{ DoneeWithPan:b50a, TotDon50PercentApprReqdCash:_dSum(b50a,'DonationAmtCash'), TotDon50PercentApprReqdOtherMode:_dSum(b50a,'DonationAmtOtherMode'), TotDon50PercentApprReqd:_dSum(b50a,'DonationAmt'), TotEligibleDon50PercentApprReqd:_dSum(b50a,'EligibleDonationAmt') },
+    TotalDonationsUs80GCash:grand('DonationAmtCash'), TotalDonationsUs80GOtherMode:grand('DonationAmtOtherMode'), TotalDonationsUs80G:grand('DonationAmt'), TotalEligibleDonationsUs80G:grand('EligibleDonationAmt') };
+  const gga=_arr(OTH.gga).map(r=>{ const amt=_rr(r.amount); const cash=r.cash?amt:0,oth=r.cash?0:amt;
+    return {RelevantClauseUndrDedClaimed:r.clause||'', NameOfDonee:r.name||'', AddressDetail:{AddrDetail:r.address||'',CityOrTownOrDistrict:r.city||'',StateCode:r.state||'',PinCode:r.pin||''}, DoneePAN:r.pan||'', DonationAmtCash:cash, DonationAmtOtherMode:oth, DonationAmt:amt, EligibleDonationAmt:amt}; });
+  const ggaR=_rowsOr(gga,{RelevantClauseUndrDedClaimed:'',NameOfDonee:'',AddressDetail:{AddrDetail:'',CityOrTownOrDistrict:'',StateCode:'',PinCode:''},DoneePAN:'',DonationAmtCash:0,DonationAmtOtherMode:0,DonationAmt:0,EligibleDonationAmt:0});
+  R.Schedule80GGA={ DonationDtlsSciRsrchRuralDev:ggaR, TotalDonationAmtCash80GGA:_dSum(ggaR,'DonationAmtCash'), TotalDonationAmtOtherMode80GGA:_dSum(ggaR,'DonationAmtOtherMode'), TotalDonationsUs80GGA:_dSum(ggaR,'DonationAmt'), TotalEligibleDonationAmt80GGA:_dSum(ggaR,'EligibleDonationAmt') };
+  const ggc=_arr(OTH.ggc).map(r=>{ const amt=_rr(r.amount); const cash=r.cash?amt:0,oth=r.cash?0:amt;
+    return {DonationDate:r.date||'', DonationAmtCash:cash, DonationAmtOtherMode:oth, DonationAmt:amt, EligibleDonationAmt:amt}; });
+  const ggcR=_rowsOr(ggc,{DonationDate:'',DonationAmtCash:0,DonationAmtOtherMode:0,DonationAmt:0,EligibleDonationAmt:0});
+  R.Schedule80GGC={ Schedule80GGCDetails:ggcR, TotalDonationAmtCash80GGC:_dSum(ggcR,'DonationAmtCash'), TotalDonationAmtOtherMode80GGC:_dSum(ggcR,'DonationAmtOtherMode'), TotalDonationsUs80GGC:_dSum(ggcR,'DonationAmt'), TotalEligibleDonationAmt80GGC:_dSum(ggcR,'EligibleDonationAmt') };
+  R.ScheduleEA10_13A={ Placeofwork:'', ActlHRARecv:0, ActlRentPaid:0, DtlsSalUsSec171:0, BasicSalary:0, ActlRentPaid10Per:0, Sal40Or50Per:0, EligbleExmpAllwncUs13A:0 };
+
+  /* TDS / TCS / challans — from the TDS-TCS + Advance/Self-Assessment tax drills */
+  const T=BP.tdsTcs||{};
+  const tsal=_arr(T.salaryTds).map(r=>({EmployerOrDeductorOrCollectDetl:{TAN:r.tan||'',EmployerOrDeductorOrCollecterName:r.employerName||''}, IncChrgSal:_rr(r.grossSalary), TotalTDSSal:_rr(r.tdsClaimed||r.tdsDeducted)}));
+  const tsalR=_rowsOr(tsal,{EmployerOrDeductorOrCollectDetl:{TAN:'',EmployerOrDeductorOrCollecterName:''},IncChrgSal:0,TotalTDSSal:0});
+  R.TDSonSalaries={ TDSonSalary:tsalR, TotalTDSonSalaries:tsalR.reduce((s,x)=>s+_n(x.TotalTDSSal),0) };
+  const toth=_arr(T.form16A).map(r=>({EmployerOrDeductorOrCollectDetl:{TAN:r.tan||'',EmployerOrDeductorOrCollecterName:r.deductorName||''}, TDSSection:r.section||'', AmtForTaxDeduct:_rr(r.grossReceiptOffered||r.grossReceipts), DeductedYr:r.fyDeducted||'', TotTDSOnAmtPaid:_rr(r.tdsDeducted), ClaimOutOfTotTDSOnAmtPaid:_rr(r.tdsClaimedCY)}));
+  const tothR=_rowsOr(toth,{EmployerOrDeductorOrCollectDetl:{TAN:'',EmployerOrDeductorOrCollecterName:''},TDSSection:'',AmtForTaxDeduct:0,DeductedYr:'',TotTDSOnAmtPaid:0,ClaimOutOfTotTDSOnAmtPaid:0});
+  R.TDSonOthThanSals={ TDSonOthThanSal:tothR, TotalTDSonOthThanSals:tothR.reduce((s,x)=>s+_n(x.ClaimOutOfTotTDSOnAmtPaid),0) };
+  const tcs=_arr(T.tcs).map(r=>({EmployerOrDeductorOrCollectDetl:{TAN:r.tan||'',EmployerOrDeductorOrCollecterName:r.collectorName||''}, AmtTaxCollected:_rr(r.tcsCollected), CollectedYr:r.fyCollected||'', TotalTCS:_rr(r.tcsCollected), AmtTCSClaimedThisYear:_rr(r.tcsClaimedCY)}));
+  const tcsR=_rowsOr(tcs,{EmployerOrDeductorOrCollectDetl:{TAN:'',EmployerOrDeductorOrCollecterName:''},AmtTaxCollected:0,CollectedYr:'',TotalTCS:0,AmtTCSClaimedThisYear:0});
+  const tcsTot=tcsR.reduce((s,x)=>s+_n(x.AmtTCSClaimedThisYear),0);
+  R.ScheduleTCS={ TCS:tcsR, TotalSchTCS:tcsTot };
+  const t3=_arr(T.form16BCDE).map(r=>({PANofTenant:r.pan||'', TDSSection:r.section||'', NameOfTenant:r.deductorName||'', GrsRcptToTaxDeduct:_rr(r.grossReceiptOffered||r.grossReceipts), DeductedYr:r.fyDeducted||'', TDSDeducted:_rr(r.tdsDeducted), TDSClaimed:_rr(r.tdsClaimedCY)}));
+  const t3R=_rowsOr(t3,{PANofTenant:'',TDSSection:'',NameOfTenant:'',GrsRcptToTaxDeduct:0,DeductedYr:'',TDSDeducted:0,TDSClaimed:0});
+  R.ScheduleTDS3Dtls={ TDS3Details:t3R, TotalTDS3Details:t3R.reduce((s,x)=>s+_n(x.TDSClaimed),0) };
+  const chal=[]; _arr(BP.advTax&&BP.advTax.rows).forEach(r=>chal.push({BSRCode:r.bsr||'',DateDep:r.dateDeposit||'',SrlNoOfChaln:r.challanSlNo||'',Amt:_rr(r.amount)}));
+  _arr(BP.sat&&BP.sat.rows).forEach(r=>chal.push({BSRCode:r.bsr||'',DateDep:r.dateDeposit||'',SrlNoOfChaln:r.challanSlNo||'',Amt:_rr(r.amountPaid)}));
+  const chalR=_rowsOr(chal,{BSRCode:'',DateDep:'',SrlNoOfChaln:'',Amt:0});
+  R.TaxPayments={ TaxPayment:chalR, TotalTaxPayments:chalR.reduce((s,x)=>s+_n(x.Amt),0) };
+  if(R.TaxPaid&&R.TaxPaid.TaxesPaid) R.TaxPaid.TaxesPaid.TCS=tcsTot;
+
+  /* Bank refund flag + Tax Return Preparer */
+  const banks=_arr(data.bank).filter(b=>b.acc||b.ifsc).map(b=>({IFSCCode:b.ifsc||'',BankName:b.name||'',BankAccountNo:b.acc||'',AccountType:b.type||'SB',UseForRefund:!!b.refund}));
+  R.Refund.BankAccountDtls.AddtnlBankDetails=_rowsOr(banks,{IFSCCode:'',BankName:'',BankAccountNo:'',AccountType:'SB',UseForRefund:false});
+  const ofr=data.otherforms||{};
+  R.TaxReturnPreparer={ IdentificationNoOfTRP:ofr.trpId||'', NameOfTRP:ofr.trpName||'', ReImbFrmGov:_rr(ofr.trpAmt) };
+
+  /* AY2025-26 only: Sec 89A retirement-benefit income + Updated Return (ITR-U) machinery */
+  if(is2025){
+    const s89=_arr(data.sec89a).filter(r=>r.country||_n(r.amount)).map(r=>({NOT89ACountrycode:r.country||'',NOT89AAmount:_rr(r.amount)}));
+    ID.IncomeNotified89A=_rr(_sumf(_arr(data.sec89a),'amount'));
+    ID.IncomeNotified89AType=_rowsOr(s89,{NOT89ACountrycode:'',NOT89AAmount:0});
+    const itu=data.itru||{};
+    R.PartA_139_8A={ PAN:R.PersonalInfo.PAN, Name:(R.PersonalInfo.AssesseeName&&R.PersonalInfo.AssesseeName.SurNameOrOrgName)||'', AssessmentYear:'2025',
+      PreviouslyFiledForThisAY:itu.prevFiled||'N',
+      Applicable_139_8A:{ AcknowledgementNo:itu.origAck||'', OrigRetFiledDate:itu.origDate||'' },
+      LaidOutIn_139_8A:itu.laidOut||'',
+      ITRFormUpdatingInc:'ITR1',
+      UpdatingInc:{ ReasonsForUpdatingIncDtls:_rowsOr(_arr(itu.reasons).filter(r=>r.reason).map(r=>({ReasonsForUpdatingIncome:r.reason||''})),{ReasonsForUpdatingIncome:''}) },
+      UpdatedReturnDuringPeriod:itu.period||'',
+      RetrntoRedCarriedFL:{ UnabsorbedDepreciation:_rr(itu.unabsDep), UDYear:{ UnabsorbedDepreciationYearDtls:_rowsOr(_arr(itu.udYears).filter(r=>r.year).map(r=>({UnabsorbedDepreciationYear:r.year||''})),{UnabsorbedDepreciationYear:''}) } } };
+    const TC=R.ITR1_TaxComputation||{}; const TPd=(R.TaxPaid&&R.TaxPaid.TaxesPaid)||{};
+    const updInc=_rr(R.ITR1_IncomeDeductions.TotalIncome);
+    const netLiab=_rr(TC.NetTaxLiability)+_rr(TC.TotalIntrstPay);
+    const aggr=Math.max(0,netLiab-_rr(TPd.TotalTaxesPaid));
+    const addlPct=_n(itu.addlPct)||25; const addlTax=Math.round(aggr*addlPct/100); const netPay=aggr+addlTax;
+    const chalU=_arr(itu.challans).map(r=>({BSRCode:r.bsr||'',DateDep:r.date||'',SrlNoOfChaln:r.sl||'',Amt:_rr(r.amount)}));
+    const chalUR=_rowsOr(chalU,{BSRCode:'',DateDep:'',SrlNoOfChaln:'',Amt:0}); const chalTot=chalUR.reduce((s,x)=>s+_n(x.Amt),0);
+    R['PartB-ATI']={ UpdatedTotInc:updInc, AmtPayable:aggr, FeeIncUS234F:_rr(TC.IntrstPay&&TC.IntrstPay.LateFilingFee234F),
+      AggrLiabilityRefund:aggr, AggrLiabilityNoRefund:aggr, AddtnlIncTax:addlTax, NetPayable:netPay, TaxUS140B:netPay, TaxDue10_11:aggr, ReleifUS89:_rr(TC.Section89),
+      ScheduleIT1:{ TaxPayment1:{ ITTaxPayments:chalUR }, Total:chalTot },
+      ScheduleIT2:{ TaxPayment2:{ ITTaxPayments:chalUR.map(x=>Object.assign({},x)) }, Total:chalTot } };
+  }
+}
+
 /* ---------- JSON EXPORT + VALIDATION ---------- */
+// Extensible ITD Category-A/B/D rule engine. Append rules to ITR1_RULES.
+// Each rule: {slno, cat:'A'(hard reject)|'B'|'D'(warning), test:(j)=>falsy=pass|truthy=fail(string overrides msg), msg}
+// j = the built ITR-1 JSON (buildItr1Json()). Rules may also read outer globals (calcReady, data).
+// Context extractor: flattens the built JSON into the fields the rules reason over.
+// Computed ONCE per validation and passed to every rule as the 2nd arg (c).
+function _itrCtx(j){
+  const I=j.ITR.ITR1, PI=I.PersonalInfo||{}, AN=PI.AssesseeName||{}, AD=PI.Address||{},
+        FS=I.FilingStatus||{}, ID=I.ITR1_IncomeDeductions||{}, TC=I.ITR1_TaxComputation||{},
+        TP=I.TaxPaid||{}, TXP=TP.TaxesPaid||{}, RF=I.Refund||{}, VER=I.Verification||{},
+        D=ID.DeductUndChapVIA||{}, IP=TC.IntrstPay||{};
+  const n=v=>(+v||0);
+  const salary=n(ID.IncomeFromSal!=null?ID.IncomeFromSal:ID.GrossSalary), hp=n(ID.TotalIncomeChargeableUnHP), os=n(ID.IncomeOthSrc);
+  const gtiEx=n(ID.GrossTotIncome), gtiIn=n(ID.GrossTotIncomeIncLTCG112A), ltcg=n(ID.GrossTotIncomeIncLTCG112A)-n(ID.GrossTotIncome);
+  const ded=n(D.TotalChapVIADeductions), ti=n(ID.TotalIncome);
+  const banks=(RF.BankAccountDtls&&RF.BankAccountDtls.AddtnlBankDetails)||[];
+  return { I,PI,AN,AD,FS,ID,TC,TP,TXP,RF,VER,D,IP,n,banks,
+    salary,hp,os,gtiEx,gtiIn,ltcg,ded,ti,
+    old:FS.OptOutNewTaxRegime==='Y', neu:FS.OptOutNewTaxRegime==='N',
+    dob:PI.DOB||'', pan:(PI.PAN||'').toUpperCase() };
+}
+// ±1 rupee tolerance (CBDT rounding note) for "must equal" arithmetic checks.
+const _NE=(a,b)=>Math.abs((+a||0)-(+b||0))>1;
+// Extensible ITD Category-A/B/D rule engine. Append with ITR1_RULES.push(...).
+// Each rule: {slno, cat:'A'(hard reject)|'B'|'D'(warning), test:(j,c)=>falsy=pass|truthy=fail(string overrides msg), msg}
+// c = _itrCtx(j). slno + msg are carried verbatim from the CBDT AY2026-27 Category-A table
+// (docs/itd-validation-rules/ITR-1_ValidationRules_AY2026-27.md); 'F#' = portal upload prerequisite (not CBDT-numbered).
+const ITR1_RULES = [
+  /* ---- Foundational field-presence / format prerequisites (portal rejects on upload) ---- */
+  { slno:'F1', cat:'A', msg:'PAN is missing or not in the format ABCDE1234F.',
+    test:(j,c)=>!/^[A-Z]{5}\d{4}[A-Z]$/.test(c.pan) },
+  { slno:'F2', cat:'A', msg:'Name of assessee is required.',
+    test:(j,c)=>!((c.AN.FirstName||'').trim()) && !((c.AN.SurNameOrOrgName||'').trim()) },
+  { slno:'F3', cat:'A', msg:'Date of Birth is required (YYYY-MM-DD after conversion; enter DD/MM/YYYY).',
+    test:(j,c)=>!/^\d{4}-\d{2}-\d{2}$/.test(c.dob) },
+  { slno:'F4', cat:'A', msg:'PIN code is required and must be 6 digits.',
+    test:(j,c)=>!/^\d{6}$/.test(String(c.AD.PinCode||'')) },
+  { slno:'F5', cat:'A', msg:'State code is required in the address.',
+    test:(j,c)=>!/^\d{1,2}$/.test(String(c.AD.StateCode||'')) },
+  { slno:'F6', cat:'A', msg:'PAN at Verification must match the PAN in Personal Information.',
+    test:(j,c)=>{const v=(c.VER.Declaration&&c.VER.Declaration.AssesseeVerPAN||'').toUpperCase(); return v && c.pan && v!==c.pan;} },
+  { slno:'F7', cat:'B', msg:'Aadhaar number, if provided, must be 12 digits.',
+    test:(j,c)=>{const a=String(c.PI.AadhaarCardNo||'').replace(/\s/g,''); return a && !/^\d{12}$/.test(a);} },
+  { slno:'F8', cat:'B', msg:'A bank IFSC code is not in the valid format (AAAA0999999).',
+    test:(j,c)=>c.banks.some(b=>b.IFSCCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(String(b.IFSCCode).toUpperCase())) },
+  { slno:'F9', cat:'B', msg:'Refund is due but no bank account with a valid IFSC is entered for the credit.',
+    test:(j,c)=>c.n(c.RF.RefundDue)>0 && !c.banks.some(b=>b.BankAccountNo && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(String(b.IFSCCode||'').toUpperCase())) },
+  /* ---- Category A: cross-field arithmetic / disclosure consistency ---- */
+  { slno:18, cat:'A', msg:'Deductions claimed under Chapter VI-A should not be more than "Gross Total Income".',
+    test:(j,c)=>c.ded>c.gtiIn },
+  { slno:20, cat:'A', msg:'"Gross Total Income" should be more than zero if tax liability has been computed and paid.',
+    test:(j,c)=>c.n(c.TXP.TotalTaxesPaid)>0 && c.gtiIn<=0 },
+  { slno:21, cat:'A', msg:'"Income details" and "Tax computation" should be disclosed where "Taxes Paid" have been disclosed.',
+    test:(j,c)=>c.n(c.TXP.TotalTaxesPaid)>0 && c.gtiIn<=0 && c.n(c.TC.TotalTaxPayable)<=0 },
+  { slno:22, cat:'A', msg:'Old regime: Gross Total Income must equal Salary + House Property + Other Sources (+ LTCG u/s 112A).',
+    test:(j,c)=>c.old && _NE(c.gtiEx, c.salary+Math.max(0,c.hp)+c.os) },
+  { slno:24, cat:'A', msg:'Total income should be Gross Total Income minus Total deductions, or zero if that is negative.',
+    test:(j,c)=>_NE(c.ti, Math.max(0, c.gtiIn-c.ded)) },
+  { slno:25, cat:'A', msg:'"Tax after Rebate" should equal "Tax payable on total income" minus "Rebate u/s 87A".',
+    test:(j,c)=>_NE(c.TC.TaxPayableOnRebate, c.n(c.TC.TotalTaxPayable)-c.n(c.TC.Rebate87A)) },
+  { slno:26, cat:'A', msg:'"Total tax and Cess" should equal "Tax after Rebate" plus "Health & Education Cess".',
+    test:(j,c)=>_NE(c.TC.GrossTaxLiability, c.n(c.TC.TaxPayableOnRebate)+c.n(c.TC.EducationCess)) },
+  { slno:27, cat:'A', msg:'"Total Tax, Fees & Interest" should equal Total Tax & Cess + 234A + 234B + 234C + 234F - Relief u/s 89.',
+    test:(j,c)=>_NE(c.TC.TotTaxPlusIntrstPay, c.n(c.TC.GrossTaxLiability)+c.n(c.TC.TotalIntrstPay)-c.n(c.TC.Section89)) },
+  { slno:28, cat:'A', msg:'Total Interest, Fee Payable should equal Interest u/s 234A + 234B + 234C + Fee u/s 234F.',
+    test:(j,c)=>_NE(c.TC.TotalIntrstPay, c.n(c.IP.IntrstPayUs234A)+c.n(c.IP.IntrstPayUs234B)+c.n(c.IP.IntrstPayUs234C)+c.n(c.IP.LateFilingFee234F)) },
+  { slno:104, cat:'A', msg:'TDS + TCS + Advance Tax + Self-Assessment Tax should equal "Total Taxes Paid".',
+    test:(j,c)=>_NE(c.TXP.TotalTaxesPaid, c.n(c.TXP.TDS)+c.n(c.TXP.TCS)+c.n(c.TXP.AdvanceTax)+c.n(c.TXP.SelfAssessmentTax)) },
+  { slno:105, cat:'A', msg:'Refund claimed should equal "Total Taxes Paid" minus "Total Tax and Interest payable".',
+    test:(j,c)=>_NE(c.RF.RefundDue, Math.max(0, c.n(c.TXP.TotalTaxesPaid)-c.n(c.TC.TotTaxPlusIntrstPay))) },
+  { slno:106, cat:'A', msg:'Tax payable should equal "Total Tax and Interest payable" minus "Total Taxes Paid".',
+    test:(j,c)=>_NE(c.TP.BalTaxPayable, Math.max(0, c.n(c.TC.TotTaxPlusIntrstPay)-c.n(c.TXP.TotalTaxesPaid))) }
+];
+
+/* ---- Batch 2: eligibility / bounds + DOB-based + old-regime deduction ceilings (AY2026-27) ---- */
+ITR1_RULES.push(
+  { slno:117, cat:'A', msg:'Total income excluding LTCG C3(a)(iii) should not be greater than Rs 50 lakh — ITR-1 not applicable.',
+    test:(j,c)=>(c.gtiEx-c.ded)>5000000 },
+  { slno:217, cat:'A', msg:'Long term capital gains as per sec 112A (Exempt Income) should not be more than Rs 1,25,000 in ITR-1.',
+    test:(j,c)=>c.ltcg>125000 },
+  { slno:23, cat:'A', msg:'Old regime: Rebate u/s 87A cannot be claimed if Total income (including LTCG u/s 112A) exceeds Rs 5,00,000.',
+    test:(j,c)=>c.old && c.n(c.TC.Rebate87A)>0 && c.ti>500000 },
+  { slno:192, cat:'A', msg:'Old regime: Rebate u/s 87A can be claimed only up to Rs 12,500.',
+    test:(j,c)=>c.old && c.n(c.TC.Rebate87A)>12500 },
+  { slno:191, cat:'A', msg:'New regime: Rebate u/s 87A cannot be claimed if Total income excluding LTCG exceeds Rs 12,70,590.',
+    test:(j,c)=>c.neu && c.n(c.TC.Rebate87A)>0 && (c.ti-c.ltcg)>1270590 },
+  { slno:268, cat:'A', msg:'Individual with date of birth on or after 01/04/2008 is not allowed to file this return for AY 2026-27.',
+    test:(j,c)=>/^\d{4}-\d{2}-\d{2}$/.test(c.dob) && c.dob>='2008-04-01' },
+  { slno:13, cat:'A', msg:'Deduction u/s 80TTA cannot be claimed by a senior citizen (date of birth on or before 01.04.1966).',
+    test:(j,c)=>c.n(c.D.Section80TTA)>0 && /^\d{4}-\d{2}-\d{2}$/.test(c.dob) && c.dob<='1966-04-01' },
+  { slno:15, cat:'A', msg:'Deduction u/s 80TTB cannot be claimed by an assessee below 60 years (date of birth after 01.04.1966).',
+    test:(j,c)=>c.n(c.D.Section80TTB)>0 && /^\d{4}-\d{2}-\d{2}$/.test(c.dob) && c.dob>'1966-04-01' },
+  { slno:1, cat:'A', msg:'Old regime: sum of deductions u/s 80C, 80CCC & 80CCD(1) cannot be more than Rs 1,50,000.',
+    test:(j,c)=>c.old && (c.n(c.D.Section80C)+c.n(c.D.Section80CCC)+c.n(c.D.Section80CCDEmployeeOrSE))>150000 },
+  { slno:5, cat:'A', msg:'Old regime: deduction u/s 80DDB cannot exceed the maximum limit of Rs 1,00,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80DDB)>100000 },
+  { slno:11, cat:'A', msg:'Old regime: deduction u/s 80TTA is limited to Rs 10,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80TTA)>10000 },
+  { slno:14, cat:'A', msg:'Old regime: deduction u/s 80TTB is limited to Rs 50,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80TTB)>50000 },
+  { slno:115, cat:'A', msg:'Old regime: the maximum limit allowable u/s 80CCD(1B) is Rs 50,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80CCD1B)>50000 },
+  { slno:121, cat:'A', msg:'Old regime: deduction u/s 80EE cannot exceed the maximum limit of Rs 50,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80EE)>50000 },
+  { slno:122, cat:'A', msg:'Old regime: deduction u/s 80EEA cannot exceed the maximum limit of Rs 1,50,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80EEA)>150000 },
+  { slno:124, cat:'A', msg:'Old regime: deduction u/s 80EEB cannot be more than Rs 1,50,000.',
+    test:(j,c)=>c.old && c.n(c.D.Section80EEB)>150000 },
+  { slno:123, cat:'A', msg:'Only one of the deductions u/s 80EE / 80EEA is allowed; both cannot be greater than zero.',
+    test:(j,c)=>c.n(c.D.Section80EE)>0 && c.n(c.D.Section80EEA)>0 }
+);
+
 $('exportJsonBtn').addEventListener('click',()=>{
   switchMainTab('summary');
-  const {errors,warnings}=validateItr1();
+  const json=(()=>{try{return buildItr1Json();}catch(e){return null;}})();
+  const {errors,warnings}=validateItr1(json);
   renderValidation(errors,warnings);
-  if(errors.length===0){ doExportItr1(); }
+  if(errors.length){ showValidationPopup(errors,warnings); return; }
+  doExportItr1(json);
 });
+function validateItr1(json){
+  let j; try{ j=json||buildItr1Json(); }catch(e){ j=null; }
+  const errors=[],warnings=[];
+  if(!j){ errors.push({slno:0,cat:'A',msg:'Unable to build the ITR JSON — open the Computation tab and fill mandatory fields.'}); return {errors,warnings}; }
+  let ctx; try{ ctx=_itrCtx(j); }catch(e){ ctx={}; }
+  for(const r of ITR1_RULES){
+    let res; try{ res=r.test(j, ctx); }catch(e){ res=false; }
+    if(!res) continue;
+    const item={slno:r.slno,cat:r.cat,msg:(typeof res==='string')?res:r.msg};
+    if(r.cat==='A') errors.push(item); else warnings.push(item);
+  }
+  return {errors,warnings};
+}
 function renderValidation(errors,warnings){
   const p=$('validationPanel'); let html='';
-  errors.forEach(e=>html+=`<div class="val-item err"><span class="ico">✕</span><span>${e}</span></div>`);
-  warnings.forEach(w=>html+=`<div class="val-item warn"><span class="ico">⚠</span><span>${w}</span></div>`);
+  errors.forEach(e=>html+=`<div class="val-item err"><span class="ico">✕</span><span>Sl.No ${e.slno}: ${e.msg}</span></div>`);
+  warnings.forEach(w=>html+=`<div class="val-item warn"><span class="ico">⚠</span><span>Sl.No ${w.slno}: ${w.msg}</span></div>`);
   if(errors.length===0) html+=`<div class="val-item ok"><span class="ico">✓</span><span>No blocking errors. JSON exported${warnings.length?' (with warnings above)':''}.</span></div>`;
   html+=`<div class="val-summary">${errors.length} error(s), ${warnings.length} warning(s)</div>`;
   p.innerHTML=html;
 }
-function validateItr1(){
-  const errors=[],warnings=[];
-  const pan=($('cl_pan').value||'').toUpperCase().trim();
-  const name=($('cl_name').value||'').trim();
-  const dob=($('cl_dob').value||'').trim();
-  if(!/^[A-Z]{5}\d{4}[A-Z]$/.test(pan)) errors.push('PAN is missing or invalid (format ABCDE1234F).');
-  if(!name) errors.push('Name of Assessee is required.');
-  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dob)) warnings.push('Date of Birth should be DD/MM/YYYY (needed for correct age-based slab).');
-  const ti=calcVal('it_totalIncome');
-  if(ti>5000000) errors.push('Total Income exceeds ₹50 lakh — ITR-1 cannot be used; use ITR-2.');
-  const ltcg=calcVal('it_cg_112a');
-  if(ltcg>125000) errors.push('LTCG u/s 112A exceeds ₹1.25 lakh — not allowed in ITR-1; use ITR-2.');
-  // bank account presence (for refund)
-  const bal=calcVal('it_balancePayable');
-  if(bal<0){ const hasBank=(data.bank||[]).some(b=>b.acc&&b.ifsc); if(!hasBank) warnings.push('Refund due but no bank account with IFSC entered — add one for the refund to be credited.'); }
-  if(!calcReady) warnings.push('Open the Computation tab at least once so tax figures are available.');
-  return {errors,warnings};
+// Requested failure dialog: dismissible fixed overlay listing each numbered rule breach.
+function showValidationPopup(errors,warnings){
+  const ex=document.getElementById('itr1ValOverlay'); if(ex) ex.remove();
+  const ov=document.createElement('div'); ov.id='itr1ValOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center';
+  let body='';
+  errors.forEach(e=>body+=`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #eee;color:#b00020"><b>Sl.No ${e.slno}:</b><span>${e.msg}</span></div>`);
+  warnings.forEach(w=>body+=`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #eee;color:#8a6d00"><b>Sl.No ${w.slno}:</b><span>${w.msg}</span></div>`);
+  ov.innerHTML=`<div role="dialog" aria-modal="true" style="background:#fff;max-width:560px;width:92%;max-height:80vh;overflow:auto;border-radius:10px;padding:20px 22px;box-shadow:0 12px 40px rgba(0,0,0,.3);font:14px/1.5 system-ui,Segoe UI,Arial">
+    <div style="font-size:17px;font-weight:700;color:#b00020;margin-bottom:6px">Cannot export — ${errors.length} validation error(s)</div>
+    <div style="color:#555;margin-bottom:12px">Fix the following Category-A issue(s), then export again.${warnings.length?' Warnings are listed below them.':''}</div>
+    ${body}
+    <div style="text-align:right;margin-top:16px"><button id="itr1ValClose" style="background:#b00020;color:#fff;border:0;border-radius:6px;padding:8px 18px;font-weight:600;cursor:pointer">Close</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  document.getElementById('itr1ValClose').addEventListener('click',close);
+  document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ close(); document.removeEventListener('keydown',esc); } });
 }
-function doExportItr1(){
-  const json=buildItr1Json();
+function doExportItr1(prebuilt){
+  const json=prebuilt||buildItr1Json();
   const blob=new Blob([JSON.stringify(json,null,1)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const pan=($('cl_pan').value||'PAN').toUpperCase().trim();
@@ -1922,6 +2261,19 @@ function buildItr1Json(){
   const bal=Math.round(calcVal('it_balancePayable'));
   const prepaid=Math.max(0,tax-bal);
   const isNew=(()=>{const d=calcDoc();if(!d)return true;const r=d.getElementById('it_regime');return r?r.value==='New':true;})();
+  // Part B-TTI breakup from the calculator (real rebate/cess/relief/interest, not zeros).
+  const _B=(typeof calcWin==='function'&&calcWin()&&calcWin().__taxBreakup)?calcWin().__taxBreakup:{};
+  const rnd=v=>Math.round(v||0);
+  const reb87=rnd(_B.rebate87A), hec=rnd(_B.cess), taxBeforeSC=rnd(_B.taxBeforeSurcharge);
+  const sec89=rnd(_B.relief89), taxOnInc=taxBeforeSC+reb87;   // TotalTaxPayable = tax on TI before 87A
+  const taxAfterRebate=taxBeforeSC;                            // TaxPayableOnRebate (post-87A)
+  const grossTaxLiab=taxAfterRebate+hec;                       // + 4% HEC (ITR-1 has no surcharge: income ≤ 50L)
+  const netTaxLiab=Math.max(0, grossTaxLiab - sec89 - rnd(_B.relief90));
+  const i234a=rnd(calcVal('it_int_234a')), i234b=rnd(calcVal('it_int_234b')), i234c=rnd(calcVal('it_int_234c')), f234f=rnd(calcVal('it_fee_234f'));
+  const intTot=i234a+i234b+i234c+f234f;
+  const tdsPaid=rnd(_B.tdsTcs), advPaid=rnd(_B.advTax), satPaid=rnd(_B.sat);
+  const totPaid=tdsPaid+advPaid+satPaid;
+  const balF=(_B.balance!==undefined)?rnd(_B.balance):bal;
   const ay='2026-27';
   const A=data.assessee||{};
   const V=data.verifier||{};
@@ -1945,24 +2297,17 @@ function buildItr1Json(){
       UsrDeductUndChapVIA:chapVIA(ded), DeductUndChapVIA:chapVIA(ded), TotalIncome:ti
     },
     ITR1_TaxComputation:{
-      TotalTaxPayable:tax, Rebate87A:0, TaxPayableOnRebate:tax, EducationCess:0, GrossTaxLiability:tax,
-      Section89:0, NetTaxLiability:tax,
-      TotalIntrstPay:0, IntrstPay:{ IntrstPayUs234A:0, IntrstPayUs234B:0, IntrstPayUs234C:0, LateFilingFee234F:0 },
-      TotTaxPlusIntrstPay:tax
+      TotalTaxPayable:taxOnInc, Rebate87A:reb87, TaxPayableOnRebate:taxAfterRebate, EducationCess:hec, GrossTaxLiability:grossTaxLiab,
+      Section89:sec89, NetTaxLiability:netTaxLiab,
+      TotalIntrstPay:intTot, IntrstPay:{ IntrstPayUs234A:i234a, IntrstPayUs234B:i234b, IntrstPayUs234C:i234c, LateFilingFee234F:f234f },
+      TotTaxPlusIntrstPay:netTaxLiab+intTot
     },
-    TaxPaid:{ TaxesPaid:{ TDS:prepaid, TCS:0, AdvanceTax:window.__aisData?Math.round(window.__aisData.advanceTax):0, SelfAssessmentTax:0, TotalTaxesPaid:prepaid }, BalTaxPayable:Math.max(0,bal) },
-    Refund:{ RefundDue:Math.max(0,-bal), BankAccountDtls:{ AddtnlBankDetails:(data.bank||[]).filter(b=>b.acc).map(b=>({IFSCCode:b.ifsc||'',BankName:b.name||'',BankAccountNo:b.acc||'',AccountType:b.type||'SB'})) } },
+    TaxPaid:{ TaxesPaid:{ TDS:tdsPaid, TCS:0, AdvanceTax:advPaid, SelfAssessmentTax:satPaid, TotalTaxesPaid:totPaid }, BalTaxPayable:Math.max(0,balF) },
+    Refund:{ RefundDue:Math.max(0,-balF), BankAccountDtls:{ AddtnlBankDetails:(data.bank||[]).filter(b=>b.acc).map(b=>({IFSCCode:b.ifsc||'',BankName:b.name||'',BankAccountNo:b.acc||'',AccountType:b.type||'SB'})) } },
     Verification:{ Declaration:{ AssesseeVerName:name, FatherName:V.father||'', AssesseeVerPAN:pan }, Capacity:'S', Place:A.city||'', Date:new Date().toISOString().slice(0,10) }
   }}};
-  // LTCG 112A schedule if present
-  if(ltcg>0){ j.ITR.ITR1.LTCG112A={ TotLTCG112A:ltcg }; }
-  // TDS schedule from AIS if imported
-  if(window.__aisData && window.__aisData.tdsEntries.length){
-    const sal=window.__aisData.tdsEntries.filter(t=>t.section==='192');
-    const oth=window.__aisData.tdsEntries.filter(t=>t.section!=='192');
-    if(sal.length) j.ITR.ITR1.TDSonSalaries={ TDSonSalary:sal.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},IncChrgSal:t.amountPaid,TotalTDSSal:t.tds})) };
-    if(oth.length) j.ITR.ITR1.TDSonOthThanSals={ TDSonOthThanSal:oth.map(t=>({EmployerOrDeductorOrCollectDetl:{TAN:t.tan,EmployerOrDeductorOrCollecterName:t.deductor},AmtForTaxDeduct:t.amountPaid,TotTDSOnAmtPaid:t.tds})) };
-  }
+  // Emit every required Schedule* node from captured drill-in data
+  augmentItr1(j, ltcg);
   return j;
 }
 
@@ -12221,7 +12566,8 @@ function computeAll(){
               ? baseTaxWithAgri(slabBase, agriNet, isNew, currentAge)
               : baseTaxOnly(slabBase, isNew, currentAge);
   // 87A rebate: eligibility based on TI; cap by slab tax. NOT available against any special-rate tax.
-  slabTax = Math.max(0, slabTax - rebate87A(isNew, ti, slabTax));
+  const _reb87A = rebate87A(isNew, ti, slabTax);
+  slabTax = Math.max(0, slabTax - _reb87A);
   const taxBeforeSC = slabTax + cgRes.specialTax + osRes.osSpecialTax;
   // Surcharge: 15% cap on CG special tax only; full rate on slab + OS winnings tax
   let sc = (typeof surchargeWithCgCap==='function')
@@ -12258,6 +12604,17 @@ function computeAll(){
   const totalLiability = taxForLiability + intFeeTotal;
   const balance = totalLiability - prepaid;
   setTxt('it_balancePayable',balance);
+  // Expose the full tax breakup so the ITR JSON emitter can populate Part B-TTI with
+  // REAL figures (rebate/surcharge/cess/relief) instead of zeros. buildItr1Json reads
+  // this off the calc-frame window via calcWin().__taxBreakup.
+  window.__taxBreakup = {
+    rebate87A:_reb87A, taxBeforeSurcharge:taxBeforeSC, surcharge:sc, cess:cess, taxOnTI:taxOnTI,
+    relief89:(rel89.arrears+rel89.commute+rel89.comp+rel89.gratuity), relief90:rel90Val, reliefTotal:reliefTotal,
+    taxAfterRelief:taxAfterRelief, amt:(amtRes.amt||0), amtCreditUsed:(amtRes.credit_used||0),
+    taxForLiability:taxForLiability, intFeeTotal:intFeeTotal,
+    tdsTcs:tdsTcsTotal, advTax:advTaxTotal, sat:(satRes.taxTotal||0), satInterest:(satInterest||0),
+    prepaid:prepaid, balance:balance
+  };
   // Filing details / due date status — drives 234A/F
   if(typeof computeFilingStatus==='function') computeFilingStatus();
   // Schedule EI — aggregate exempt incomes for disclosure
@@ -12281,6 +12638,7 @@ $('addProperty').addEventListener('click',addProperty);
 $('it_regime').addEventListener('change',computeAll);
 // Expose bpData on window for external inspection (tests, console debugging, future Loss CFL dashboard)
 window.bpData = bpData;
+window.hpData = hpData;
 computeAll();
 <\/script>
 

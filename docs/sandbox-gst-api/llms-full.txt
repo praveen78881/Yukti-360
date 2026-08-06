@@ -1,0 +1,552 @@
+# Sandbox developer docs
+
+> Sandbox is a tax API stack for India that helps businesses automate compliance across KYC, GST, TDS, and Income Tax.
+
+Base URL: https://developer.sandbox.co.in/
+
+## Guides - Get Started
+- [Sandbox API Docs | Tax API Stack for India by Quicko](/): Here you'll find guides, references, and resources to build with Sandbox. Let's get you started. API stack for Businesses to automate KYC, GST, TDS & Income Tax.
+- [Quickstart](/guides/get-started/quickstart): Learn how to authenticate and make your first API call to Sandbox APIs in minutes.
+
+## Guides - Developer Resources
+- [Environments](/guides/developer-resources/environments): Understand test and production environments, their host URLs, and how to use separate API credentials for each.
+- [Versioning](/guides/developer-resources/versioning): Learn how Sandbox uses semantic versioning and how to specify API versions in your requests.
+- [Request & response structure](/guides/developer-resources/requests_and_responses): Learn about request formats, response structures, and HTTP headers used in Sandbox APIs.
+- [Sheet JSON](/guides/developer-resources/sheet_json)
+- [Errors](/guides/developer-resources/errors): Understand error responses, http status codes, and how to handle errors in Sandbox APIs.
+- [Rate limits](/guides/developer-resources/rate_limits): Understand API rate limits for test and production environments and how to handle rate limiting.
+- [Pagination](/guides/developer-resources/pagination): Learn how to retrieve paginated data using page_size and last_evaluated_key.
+- [POST for GET](/guides/developer-resources/post_for_get): Learn why Sandbox uses POST requests for data retrieval to protect sensitive information.
+- [Job-based API workflow](/guides/developer-resources/job_based_apis): Learn how to use Sandbox job-based APIs with asynchronous processing for large payloads and long-running operations.
+- [Response caching](/guides/developer-resources/response_caching): Learn how Sandbox caches API responses and how to control caching behavior.
+- [Webhooks](/guides/developer-resources/webhooks): Receive real-time notifications when events occur in your Sandbox account.
+- [Changelog](/guides/developer-resources/changelog): Stay informed about the latest features, enhancements, bug fixes, and improvements across Sandbox APIs.
+
+## Guides - Products
+- [KYC](/guides/products/kyc)
+- [GST](/guides/products/gst)
+- [TDS](/guides/products/tds)
+- [Income Tax](/guides/products/income_tax)
+
+## Guides - Billing & Invoicing
+- [Subscription](/guides/billing-and-invoicing/subscription): Learn about Sandbox subscription plans, quota management, and overdraft handling
+- [Wallet](/guides/billing-and-invoicing/wallet): Manage your Sandbox Wallet, add funds, and understand wallet charges for API usage
+- [Invoices](/guides/billing-and-invoicing/invoices): Understand Sandbox invoice types for subscriptions, wallet usage, and overdrafts
+
+## API Reference - Authentication - Auth
+- [Authenticate](/api-reference/authenticate): Pass your API Key and API Secret to generate a JWT access token which is required to use Sandbox APIs.
+
+## API Reference - KYC
+Confirm Identities with confidence.
+- [Overview](/api-reference/kyc/overview): Automate identity verification for individuals and businesses using government-authoritative data sources through Sandbox KYC APIs.
+
+## API Reference - KYC - Aadhaar
+- [Overview](/api-reference/kyc/aadhaar/overview): Aadhaar Verification API (Aadhaar OTP Verification) for digital KYC—generate OTP and verify OTP to fetch verified Aadhaar identity details for onboarding, compliance, and fraud prevention.
+- [Generate OTP](/api-reference/kyc/aadhaar/endpoints/generate_otp): Generate OTP on the individual's registered mobile number to verify their Aadhaar number.
+- [Verify OTP](/api-reference/kyc/aadhaar/endpoints/verify_otp): Verify the Aadhaar number by passing the OTP received on the individual's registered mobile number.
+
+## API Reference - KYC - Bank
+- [Overview](/api-reference/kyc/bank/overview): Instant Bank Account Verification API for KYC and payouts—IFSC verification, Penny Drop (₹1 micro-deposit), and Penny-Less account validation with beneficiary name match (name at bank).
+- [IFSC Verification](/api-reference/kyc/bank/endpoints/ifsc_verification): Verify the IFSC code and receive details of the associated bank branch.
+- [Penny Drop](/api-reference/kyc/bank/endpoints/penny_drop): Verify a bank account by dropping a penny into the beneficiary account.
+- [Penny-Less](/api-reference/kyc/bank/endpoints/penny_less): Verify a bank account without dropping a penny into the beneficiary account.
+
+## API Reference - KYC - DigiLocker
+- [Overview](/api-reference/kyc/digilocker/overview): Retrieve government-issued documents from DigiLocker via consent-based verification
+
+## API Reference - KYC - DigiLocker - APIs
+- [Initiate Session](/api-reference/kyc/digilocker/endpoints/initiate_session): The Initiate Session API returns a DigiLocker link that the user is redirected to, where they can provide consent for the requested documents.
+- [Session Status](/api-reference/kyc/digilocker/endpoints/session_status): Session Status API allows you to check the latest status of session and the list of consented documents if consent is received.
+- [Fetch Document](/api-reference/kyc/digilocker/endpoints/fetch_document): Pass the session id and the document type to fetch the document.
+
+## API Reference - KYC - DigiLocker - SDK
+- [Introduction](/api-reference/kyc/digilocker-sdk/getting-started/introduction): Integrate DigiLocker document retrieval into your application with client-side SDKs
+
+## API Reference - KYC - DigiLocker - SDK - Platforms
+- [Web](/api-reference/kyc/digilocker-sdk/getting-started/platforms/web): Integrate DigiLocker SDK into your web application using JavaScript
+- [Android](/api-reference/kyc/digilocker-sdk/getting-started/platforms/android): Integrate DigiLocker SDK into your Android application
+- [iOS](/api-reference/kyc/digilocker-sdk/getting-started/platforms/ios): Integrate DigiLocker SDK into your iOS application
+- [Flutter](/api-reference/kyc/digilocker-sdk/getting-started/platforms/flutter): Integrate DigiLocker SDK into your Flutter application
+
+## API Reference - KYC - DigiLocker - SDK - Endpoints
+- [Create Session](/api-reference/kyc/digilocker-sdk/endpoints/create-session)
+- [Get Session Status](/api-reference/kyc/digilocker-sdk/endpoints/get-session-status)
+- [Get Document](/api-reference/kyc/digilocker-sdk/endpoints/get-document)
+
+## API Reference - KYC - EntityLocker
+- [Overview](/api-reference/kyc/entitylocker/overview): Retrieve verified business documents from EntityLocker via consent-based verification
+
+## API Reference - KYC - EntityLocker - APIs
+- [Initiate Session](/api-reference/kyc/entitylocker/endpoints/initiate_session): The Initiate Session API returns a EntityLocker link that the user is redirected to, where they can provide consent for the requested documents.
+- [Session Status](/api-reference/kyc/entitylocker/endpoints/session_status): Session Status API allows you to check the latest status of session and the list of consented documents if consent is received.
+- [Fetch Document](/api-reference/kyc/entitylocker/endpoints/fetch_document): Pass the session id and the document type to fetch the document.
+- [Get Entity Details](/api-reference/kyc/entitylocker/endpoints/get_entity_details): Get Entity Details API returns the entity details used to access EntityLocker documents
+- [Get User Profile](/api-reference/kyc/entitylocker/endpoints/get_user_profile_details): Get User Profile API returns the user profile details used to access EntityLocker documents
+
+## API Reference - KYC - EntityLocker - SDK
+- [Introduction](/api-reference/kyc/entitylocker-sdk/getting-started/introduction): Integrate EntityLocker business document retrieval into your application with client-side SDKs
+
+## API Reference - KYC - EntityLocker - SDK - Platforms
+- [Web](/api-reference/kyc/entitylocker-sdk/getting-started/platforms/web): Integrate EntityLocker SDK into your web application using JavaScript
+- [Android](/api-reference/kyc/entitylocker-sdk/getting-started/platforms/android): Integrate EntityLocker SDK into your Android application
+- [iOS](/api-reference/kyc/entitylocker-sdk/getting-started/platforms/ios): Integrate EntityLocker SDK into your iOS application
+- [Flutter](/api-reference/kyc/entitylocker-sdk/getting-started/platforms/flutter): Integrate EntityLocker SDK into your Flutter application
+
+## API Reference - KYC - EntityLocker - SDK - Endpoints
+- [Create Session](/api-reference/kyc/entitylocker-sdk/endpoints/create_session)
+- [Get Session Status](/api-reference/kyc/entitylocker-sdk/endpoints/get_session_status)
+- [Fetch Document](/api-reference/kyc/entitylocker-sdk/endpoints/fetch_document)
+
+## API Reference - KYC - MCA
+- [Overview](/api-reference/kyc/mca/overview): Verify Indian companies and directors using MCA master data. Lookup CIN for company details and DIN for director profiles and directorships.
+- [Company Master Data](/api-reference/kyc/mca/company_master_data): API takes in the Corporate Identification Number (CIN) to identify and retrieve basic information about the company.
+- [Director Master Data](/api-reference/kyc/mca/director_master_data): Director Master Data API uses Director Identification Number (DIN) to provide details about the existing director of a company, or with the intention to be one.
+
+## API Reference - KYC - PAN
+- [Overview](/api-reference/kyc/pan/overview): PAN Verification API to validate PAN details (name/DOB match, PAN status) and check PAN–Aadhaar link status for KYC, onboarding, and fraud prevention.
+- [Verify PAN Details](/api-reference/kyc/pan/endpoints/verify_pan_details): API verifies the PAN number and the information of the holder.
+- [PAN Aadhaar Link Status](/api-reference/kyc/pan/endpoints/pan_aadhaar_link_status): API verifies the PAN Aadhaar Link for a user.
+
+## API Reference - KYC - Annexures
+- [Master Data](/api-reference/kyc/annexures/master_data)
+
+## API Reference - GST
+Simple and Secure GST Compliance.
+- [Overview](/api-reference/gst/overview): Overview of GST API by Sandbox - Tax API Stack for India by Quicko.
+
+## API Reference - GST - Analytics - GSTR-2A Reconciliation
+- [Overview](/api-reference/gst/analytics/guides/gstr-2a-reconciliation/overview): Learn how to automate GSTR-2A reconciliation with purchase ledgers using the GST Analytics API.
+- [Submit Job](/api-reference/gst/analytics/endpoints/gstr-2a-reconciliation/submit_job): Create GSTR-2A reconciliation job and get two signed URLs to upload GSTR-2A and purchase ledger.
+- [Poll Job](/api-reference/gst/analytics/endpoints/gstr-2a-reconciliation/poll_job): Fetch GSTR-2A reconciliation job status and download reconciliation report on job's successful completion.
+
+## API Reference - GST - Analytics - GSTR-2B Reconciliation
+- [Overview](/api-reference/gst/analytics/guides/gstr-2b-reconciliation/overview): Learn how to automate GSTR-2B reconciliation with purchase ledgers using the GST Analytics API.
+- [Submit Job](/api-reference/gst/analytics/endpoints/gstr-2b-reconciliation/submit_job): Submit GSTR-2B reconciliation job and get two signed URLs to upload GSTR-2B and purchase ledger.
+- [Poll Job](/api-reference/gst/analytics/endpoints/gstr-2b-reconciliation/poll_job): Poll GSTR-2B reconciliation job status and download reconciliation report on job's successful completion.
+
+## API Reference - GST - Compliance - Public
+- [Overview](/api-reference/gst/compliance/guides/public/overview): Verify GSTIN (GST verification), track GST return filing status, and find GSTINs by PAN + state code using Sandbox GST Public APIs.
+- [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin): Verify GST-registered businesses by passing their GSTIN.
+- [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs): Check compliance for a GST-registered business by passing the financial year and the GSTIN. Further, you can filter the list by passing the return type.
+- [Search GSTIN by PAN](/api-reference/gst/compliance/endpoints/public/search_pan_state_code): Verify a business registered under GST by passing the PAN and state code.
+
+## API Reference - GST - Compliance - Taxpayer - Authentication
+- [Enable API Access](/api-reference/gst/compliance/guides/taxpayer/authentication/enable_api_access): Enable API access on the GST Portal before generating a GST taxpayer access token.
+- [Generate OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp): Generate OTP to authenticate taxpayer.
+- [Verify OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp): Verify OTP to authenticate taxpayer. This API will start a session and provide access valid for 6 hrs. Returns date timestamp of expiry of session.
+- [Refresh Access Token](/api-reference/gst/compliance/endpoints/taxpayer/authentication/refresh_session): Extend access to data on behalf of taxpayer / tax consultant without user intervention.
+- [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp): Generate EVC OTP to authenticate taxpayer for filing returns.
+- [Logout](/api-reference/gst/compliance/endpoints/taxpayer/authentication/logout): Using this API, you can invalidate current taxpayer session.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-1
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/gstr-1/overview): File GSTR-1 returns programmatically using Sandbox APIs-manage outward supplies, amendments, and compliance
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-1 - GSTR-1 Documents
+- [GSTR-1 AT](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/at): Get advance tax details for a return period for authenticated taxpayer
+- [GSTR-1 ATA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ata): Get amended advance tax details for a return period for authenticated taxpayer
+- [GSTR-1 B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2b): Get all B2B invoices for a return period for authenticated taxpayer
+- [GSTR-1 B2BA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2ba): Get all B2B amended invoices for a return period for authenticated taxpayer
+- [GSTR-1 B2CL](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cl): Get all B2C Large invoices for a return period for authenticated taxpayer
+- [GSTR-1 B2CLA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cla): Get all B2C Large invoices with amendments for a return period for authenticated taxpayer
+- [GSTR-1 B2CS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cs): Get all B2C HSN invoices for a return period for authenticated taxpayer
+- [GSTR-1 B2CSA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2csa): Get all B2CS HSN invoices for a return period for authenticated taxpayer
+- [GSTR-1 CDNR](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnr): Get all credit/debit notes for a return period for registered user
+- [GSTR-1 CDNRA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnra): Get all amended credit/debit notes for a return period for registered user
+- [GSTR-1 CDNUR](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnur): Get all credit/debit notes for a return period for unregistered user
+- [GSTR-1 CDNURA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnura): Get all amended credit/debit notes for a return period for unregistered user
+- [GSTR-1 Document Issued](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/doc_issue): Get documents issued during tax period for taxpayer
+- [GSTR-1 EXP](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/exp): Get invoices related to supplies exported for a return period for authenticated taxpayer
+- [GSTR-1 EXPA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/expa): Get amended invoices related to supplies exported for a return period for authenticated taxpayer
+- [GSTR-1 HSN Summary](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn): Get HSN summary for GSTR-1 data
+- [GSTR-1 TXP](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/txp): Get tax payer details for a return period for authenticated taxpayer
+- [GSTR-1 TXPA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/txpa): Get tax payer amendment details for a return period for authenticated taxpayer
+- [GSTR-1 ECOM](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ecom): Get e-commerce details for a return period for authenticated taxpayer
+- [GSTR-1 ECOMA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ecoma): Get e-commerce amendment details for a return period for authenticated taxpayer
+- [GSTR-1 SUPECO](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/supeco): Get supplies through e-commerce details for a return period for authenticated taxpayer
+- [GSTR-1 SUPECOA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/supecoa): Get supplies through e-commerce amendment details for a return period for authenticated taxpayer
+- [Get GSTR-1 NIL Supplies](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/nil): Get liabilities such as 'Nil Rated', 'Exempted', and 'Non GST' supplies for a return period.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-1 - File GSTR-1
+- [Save GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/save): Authenticated taxpayer can save entire GSTR-1 invoices by uploading json to GST portal
+- [GST Return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status): Get GST Return status after saving return. Returns any errors and info in the return saved.
+- [New Proceed to File](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/new_proceed): Proceed to file generates the summary and marks the return ready for filing. Post this Summary can be fetched and EVC OTP can be generated for filing.
+- [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp): Generate EVC OTP to authenticate taxpayer for filing returns.
+- [File GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/file): File GSTR-1 return
+- [Reset GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/reset): Authenticated taxpayer can reset saved return.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-2A
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/gstr-2a/overview): Retrieve GSTR-2A inward supplies data - B2B invoices, credit/debit notes, imports, TDS/TCS for ITC reconciliation.
+- [GSTR-2A AMDHIST](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/amdhist): GSTR-2A AMDHIST
+- [GSTR-2A B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2b): Get all B2B invoices in GSTR-2A for a return period for authenticated taxpayer
+- [Get GSTR-2A B2BA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2ba): Get all amended B2B invoices in GSTR-2A for a return period for authenticated taxpayer
+- [GSTR-2A CDN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdn): Get all credit/debit notes in GSTR-2A for a return period for authenticated taxpayer
+- [GSTR-2A CDNA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdna): Get all amended credit/debit notes in GSTR-2A for a return period for authenticated taxpayer
+- [GSTR-2A Document](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/document): Get the complete GSTR2A document for a return period for authenticated taxpayer
+- [Get GSTR-2A ECOM](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/ecom): Get all ECOM details in GSTR-2A for a return period for authenticated taxpayer.
+- [Get GSTR-2A ECOMA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/ecoma): Get amended ECOM details in GSTR-2A for a return period for authenticated taxpayer.
+- [GSTR-2A IMPG](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/impg): Get all amended credit/debit notes in GSTR-2A for a return period for authenticated taxpayer
+- [GSTR-2A IMPGSEZ](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/impgsez): Get all amended credit/debit notes in GSTR-2A for a return period for authenticated taxpayer
+- [GSTR-2A ISD](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/isd): Get invoices in GSTR2A related to ISD credit for a return period for authenticated taxpayer
+- [GSTR-2A TCS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/tcs): Get invoices in GSTR2A related to TCS credit for a return period for authenticated taxpayer
+- [GSTR-2A TDS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/tds): Get invoices in GSTR2A related to TDS credit for a return period for authenticated taxpayer
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-2B
+- [GSTR-2B Document](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2b/document): Get purchase invoices and credit/debit notes in GSTR-2B for a return period for the authenticated taxpayer.
+- [Regenerate GSTR-2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2b/regenerate_gstr_2b): Seamlessly regenerate GSTR-2B on-demand with this API. Whenever actions are taken on invoices within the Invoice Management System (IMS), GSTR-2B needs to be regenerated per the latest invoice status (Accepted/Rejected/Pending).
+- [GSTR-2B Regeneration Status](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2b/gstr_2b_regeneration_status): Get status of the GSTR-2B regeneration.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-3B
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/gstr-3b/overview): Fetch GSTR-3B details, auto-calculate liability, save return data, offset liability with ITC and cash, and file GSTR-3B using EVC OTP on the GST portal.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-3B - File GSTR-3B
+- [Get GSTR-3B Details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/gstr_3b_details): Get all GSTR-3B details from GST portal for the authenticated taxpayer.
+- [Get GSTR-3B Liability Auto Calc](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/auto_liability_calc): Get auto-calculated liability details for GSTR-3B return for the authenticated taxpayer.
+- [Save GSTR-3B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/save): Authenticated tax payer can save entire GSTR-3B by uploading json to GST portal
+- [GST Return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status): Get GST Return status after saving return. Returns any errors and info in the return saved.
+- [Offset Liability](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/offset_liability): Offset liabilities and complete payment of tax as per GSTR-3B for the authenticated taxpayer
+- [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp): Generate EVC OTP to authenticate tax payer for filing returns.
+- [File GSTR-3B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/file): File GSTR-3B by passing the GSTR-3B Details response after offsetting liabilities for the authenticated taxpayer.
+
+## API Reference - GST - Compliance - Taxpayer - GSTR-9
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/gstr-9/overview): File GSTR-9 annual returns via API. Fetch summaries, review Section 8A ITC, save drafts, generate EVC OTP, and track filing status.
+- [GSTR-9 Auto Calculated Details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details): Fetch the auto-calculated table details in the GSTR-9 as available with the GST Department.
+- [Section 8A Details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details): Get invoices and notes from the table 8A section (inward supplies) of GSTR-9.
+- [Save GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save): Save the GSTR-9 with the required data across tables including outward supplies, input tax credits (ITC), and tax payments for the financial year with the GST department.
+- [GST Return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status): Get GST Return status after saving return. Returns any errors and info in the return saved.
+- [GSTR-9 Details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details): Fetch GSTR-9 details saved with the Save GSTR-9 API. This data needs to be passed in the File GSTR-9 API to complete the filing workflow.
+- [Proceed to file](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/proceed): Proceed to file marks the return ready for filing. Post this EVC OTP can be generated for filing.
+- [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp): Generate EVC OTP to authenticate taxpayer for filing returns.
+- [File GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file): File the GSTR-9 Return by passing the financial year, PAN, EVC OTP and GSTR-9 Details in the request
+
+## API Reference - GST - Compliance - Taxpayer - Filing Preference
+- [Get Filing Preference](/api-reference/gst/compliance/endpoints/taxpayer/common/get_filing_preference): Get filing preference for a return period for authenticated taxpayer
+- [Save Filing Preference](/api-reference/gst/compliance/endpoints/taxpayer/common/save_filing_preference): Save filing preference for a return period for authenticated taxpayer
+
+## API Reference - GST - Compliance - Taxpayer - Ledgers
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/ledgers/overview): Fetch electronic cash ledger, ITC credit ledger, and return liability ledger data for a GSTIN to reconcile GST payments and plan return set-off.
+- [Cash ITC Balance](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_itc_balance_ledger): Get balance for ITC and Cash as on date for authenticated taxpayer
+- [Cash Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_ledger): Get Cash Ledger for the specified period for authenticated taxpayer
+- [ITC Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/itc_ledger): Get ITC Ledger for the specified period for authenticated taxpayer
+- [Return Liability Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/return_liability_ledger): Get return related ledger for the specified date range.
+
+## API Reference - GST - Compliance - Taxpayer - E-Invoice
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/e-invoice/overview): Retrieve sales and purchase e-invoice lists from GST portal using async jobs with supply type filtering.
+- [Get e-Invoice by IRN](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/e_invoice): Fetch the e-Invoice by passing the invoice registration number (IRN). To fetch an e-Invoice, the authenticated taxpayer has to be a party in the transaction, either the seller or the buyer.
+- [List Purchase E-Invoices Job](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job): Submit a job to get list of purchase e-Invoice details for the specified return period.
+- [List Purchase E-Invoices Job Status](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job_status): Poll with job id to get a signed url to list of purchase e-Invoice details for the specified return period.
+- [List Sales E-Invoices Job](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job): Submit a job to get list of sales e-Invoice details for the specified return period.
+- [List Sales E-Invoices Job Status](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job_status): Poll with job id to get a signed url to list of sales e-Invoice details for the specified return period.
+
+## API Reference - GST - Compliance - Taxpayer - Invoice Management System (IMS)
+- [Overview](/api-reference/gst/compliance/guides/taxpayer/invoice-management-system/overview): Automate GST invoice actions with IMS APIs-fetch counts, save accept/reject/pending status, track processing, and monitor recipient responses for ITC compliance.
+- [Get Invoice Count](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoice_count): Fetch the count of documents for different sections with their respective status in real time.
+- [Get Invoices](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoices): Fetch the invoices for different sections with their respective status in real time.
+- [Save Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/save): Take actions and save new status for invoices in different sections on the IMS.
+- [Reset Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/reset): Reset status on invoices to no action taken status in different sections on the IMS.
+- [Check Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/status): Fetch the status for save or reset invoice status action in real time.
+
+## API Reference - GST - Compliance - E-Invoice
+- [Overview](/api-reference/gst/compliance/guides/e-invoice/overview): Generate GST e-Invoices with IRN, signed QR codes, and E-Way Bills via India's Invoice Registration Portal (IRP).
+- [Create API credentials](/api-reference/gst/compliance/guides/e-invoice/authentication/create_api_credentials): This guide helps you to create an API user for consuming E-Invoice APIs.
+- [e-Invoice Authentication](/api-reference/gst/compliance/endpoints/e-invoice/authenticate): e-Invoice Authentication API takes API credentials set on the e-Invoice portal (NIC) and gives the e-Invoice access token in response. If you have not created API credentials, follow the steps here to create them.
+- [Generate e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice): Generate e-Invoice by passing the invoice object and get the Invoice Reference Number (IRN) along with the signed invoice and signed QR code in response. E-Way Bill can be also created along with the e-Invoice in the same API call.
+- [Generate e-Invoice PDF](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf): Generate the PDF for the e-Invoice generated by passing the signed QR code and signed e-Invoice.
+- [Cancel e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/cancel_e_invoice): Cancel an e-Invoice by passing the invoice registration number (IRN).
+- [Get e-Invoice by IRN](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice): Fetch the e-Invoice by passing the invoice registration number (IRN). To fetch an e-Invoice, the authenticated taxpayer has to be a party in the transaction, either the seller or the buyer.
+- [Get e-Invoice by document data](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice_by_document_data): Fetch the e-Invoice by passing the document type, document number & document date. To fetch an e-Invoice, the authenticated taxpayer has to be a party in the transaction, either the seller or the buyer.
+- [Generate E-Way Bill by IRN](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_way_bill): Generate an E-Way Bill for an e-Invoice by passing the IRN and transportation details.
+- [Get E-Way Bill by IRN](/api-reference/gst/compliance/endpoints/e-invoice/get_e_way_bill): Fetch the E-Way Bill created by passing the invoice registration number (IRN).
+- [Search GSTIN Details](/api-reference/gst/compliance/endpoints/e-invoice/search_gstin): Search taxpayer details by GSTIN in the invoice registration portal (IRP) database. The response is from the IRP and not from the GST Network.
+
+## API Reference - GST - Compliance - E-Way Bill
+- [Overview](/api-reference/gst/compliance/guides/e-way-bill/overview): Generate, update, extend, and manage GST e-way bills. Programmatically track goods movement with consignor, consignee, and transporter APIs.
+- [Create API credentials](/api-reference/gst/compliance/guides/e-way-bill/authentication/create_api_credentials): This guide helps you to create an API user for consuming E-Way Bill APIs.
+- [E-Way Bill Authentication](/api-reference/gst/compliance/endpoints/e-way-bill/authenticate): E-Way Bill Authentication
+
+## API Reference - GST - Compliance - E-Way Bill - Consignor
+- [Generate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/generate_e_way_bill): Generate E-Way Bill by providing consignor, consignee, transporter and products details.
+- [Get E-Way Bills By Date](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/get_e_way_bill_by_date): Get E-Way Bills by generated date. Additionally, pass true in the rejected filter to fetch rejected E-Way Bills by generated date.
+- [Get E-Way Bills By Document Data](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/get_e_way_bill_by_document_data): Get E-Way Bill by passing document type and document number.
+- [Cancel E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/cancel_e_way_bill): Cancel E-Way Bill by passing E-Way Bill number and cancel reason code.
+- [Extend E-Way Bill Validity](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/extend_validity): With this API, businesses can extend validity of the E-Way Bill. You can extend an E-Way Bill up to eight hours before or after it expires. The validity extension will be based on the remaining distance to be traveled.
+- [Update Vehicle Details (Part B)](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_vehicle_details): Update the Vehicle details (Part B) in an E-Way Bill with this API.
+- [Update Transporter](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_transporter): Update the transporter details by providing the E-Way Bill number and Transporter Id.
+
+## API Reference - GST - Compliance - E-Way Bill - Consignor - Consolidated E-Way Bill
+- [Consolidate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/consolidate_e_way_bill): Consolidate multiple E-Way Bills under one bill
+- [Get Consolidated E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/get_consolidated_bill): API to get the consolidate E-Way Bill from GST servers.
+- [Regenerate Consolidated E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/regenerate_consolidated_bill): API to regenerate the consolidated E-Way Bill
+
+## API Reference - GST - Compliance  - E-Way Bill - Consignor - Multi-Vehicle Movement
+- [Initiate Multi-Vehicle Movement](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/initiate_multi_vehicle_movement): Initiate Multi-Vehicle Movement for an E-Way Bill
+- [Add Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/add_vehicle): Add vehicle to the bill after initiating multi-vehicle movement
+- [Update Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/update_vehicle): Update the Vehicle details in an E-Way Bill with multi-vehicle movement initiated.
+
+## API Reference - GST - Compliance - E-Way Bill - Consignee
+- [Get E-Way Bills By Date](/api-reference/gst/compliance/endpoints/e-way-bill/consignee/get_e_way_bills_by_date): Consignee can easily fetch E-Way Bills by generated date.
+- [Reject E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignee/reject_e_way_bill): Reject the E-Way Bill generated by consignor by providing the E-Way bill number.
+
+## API Reference - GST - Compliance - E-Way Bill - Transporter
+- [Get E-Way Bills By Date & State](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/get_e_way_bills_by_date_and_state): Get E-Way Bills by generated date and generator's state code. Optionally, fetch E-Way Bills for assigned date and generator's state code.
+- [List E-Way Bills by Generator](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/list_e_way_bills_by_generator): Pass generated date and generator's GSTIN to fetch E-Way Bills from the specified generator and date.
+- [Extend E-Way Bill Validity](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/extend_validity): With this API, businesses can extend validity of the E-Way Bill. You can extend an E-Way Bill up to eight hours before or after it expires. The validity extension will be based on the remaining distance to be traveled.
+- [Update Vehicle Details (Part B)](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/update_vehicle_details): Update the Vehicle details (Part B) in an E-Way Bill with this API.
+- [Update Transporter](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/update_transporter): Update the transporter details by providing the E-Way Bill number and Transporter Id.
+
+## API Reference - GST - Compliance - E-Way Bill - Transporter - Consolidated E-Way Bill
+- [Consolidate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/consolidate_e_way_bill): Consolidate multiple E-Way Bills under one bill
+- [Get Consolidated E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/get_consolidated_bill): API to get the consolidate E-Way Bill from GST servers.
+- [Regenerate Consolidated E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/regenerate_consolidated_bill): API to regenerate the consolidated E-Way Bill
+
+## API Reference - GST - Compliance - E-Way Bill - Transporter - Multi-Vehicle Movement
+- [Initiate Multi-Vehicle Movement](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/initiate_multi_vehicle_movement): Initiate Multi-Vehicle Movement for an E-Way Bill
+- [Add Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/add_vehicle): Add vehicle to the bill after initiating multi-vehicle movement
+- [Update Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/update_vehicle): Update the Vehicle details in an E-Way Bill with multi-vehicle movement initiated.
+
+## API Reference - GST - Compliance - E-Way Bill - Common
+- [Get E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_e_way_bill): Pass E-Way Bill Number to fetch E-Way Bill details.
+- [Get Error List](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_error_list): This method provides the list of errors thrown by E-Way Bill APIs.
+- [Get HSN Details](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_hsn_details): With this API, you can pass the HSN/SAC code and get information for goods and services.
+- [Search GSTIN](/api-reference/gst/compliance/endpoints/e-way-bill/common/search_gstin): Get taxpayer and transporter details by passing the GSTIN. The data is fetched from the IRP database and not GST Network database.
+- [Search Transporter Id](/api-reference/gst/compliance/endpoints/e-way-bill/common/search_transporter): Get transporter details by passing the Transporter Id.
+
+## API Reference - TDS
+Automate TDS on Salary & Non-Salary Payments.
+- [Overview](/api-reference/tds/overview): Overview of TDS API by Sandbox - Tax API Stack for India by Quicko.
+
+## API Reference - TDS - Calculator
+- [Overview](/api-reference/tds/calculator/overview): Calculate TDS for salary and non-salary payments using Sandbox APIs for Income Tax Act compliance.
+
+## API Reference - TDS - Calculator - TDS - Salary Payments
+- [Submit Job Salary](/api-reference/tds/calculator/tds-calculator/endpoints/submit_job_salary)
+- [Poll Job Salary](/api-reference/tds/calculator/tds-calculator/endpoints/poll_job_salary)
+
+## API Reference - TDS - Calculator - TDS
+- [Non Salary](/api-reference/tds/calculator/tds-calculator/endpoints/non_salary)
+- [Salary Sync](/api-reference/tds/calculator/tds-calculator/endpoints/salary_sync)
+
+## API Reference - TDS - Calculator - TCS
+- [Calculator](/api-reference/tds/calculator/tcs-calculator/endpoints/calculator)
+
+## API Reference - TDS - Analytics - TDS - Create Job
+- [Submit Job](/api-reference/tds/analytics/tds-analytics/endpoints/submit_job): Use this API to check and avoid any potential notice towards your TDS return
+- [Non Salary Payments](/api-reference/tds/analytics/tds-analytics/non_salary_payments)
+- [Salary Payments](/api-reference/tds/analytics/tds-analytics/salary_payments)
+- [NRI Payments](/api-reference/tds/analytics/tds-analytics/nri_payments)
+
+## API Reference - TDS - Analytics - TDS - Poll Job
+- [Poll Job](/api-reference/tds/analytics/tds-analytics/endpoints/poll_job)
+- [Potential Notices (Form 24Q)](/api-reference/tds/analytics/tds-analytics/external-links/form24q_workbook)
+- [Potential Notices (Form 26Q)](/api-reference/tds/analytics/tds-analytics/external-links/form26q_workbook)
+- [Potential Notices (Form 27Q)](/api-reference/tds/analytics/tds-analytics/external-links/form27q_workbook)
+
+## API Reference - TDS - Analytics - TDS
+- [Fetch Jobs](/api-reference/tds/analytics/tds-analytics/endpoints/fetch_jobs)
+
+## API Reference - TDS - Analytics - TCS - Create Job
+- [Submit Job](/api-reference/tds/analytics/tcs-analytics/endpoints/submit_job)
+- [TCS Payments](/api-reference/tds/analytics/tcs-analytics/tcs_payments)
+
+## API Reference - TDS - Analytics - TCS - Poll Job
+- [Poll Job](/api-reference/tds/analytics/tcs-analytics/endpoints/poll_job)
+- [Potential Notices (Form 27EQ)](/api-reference/tds/analytics/tcs-analytics/external-links/form27eq_workbook)
+
+## API Reference - TDS - Analytics - TCS
+- [Fetch Jobs](/api-reference/tds/analytics/tcs-analytics/endpoints/fetch_jobs)
+
+## API Reference - TDS - Reports
+- [Overview](/api-reference/tds/reports/overview): Generate TDS/TCS return TXT files asynchronously for Forms 24Q, 26Q, 27Q using job-based workflows for Indian Income Tax compliance.
+
+## API Reference - TDS - Reports - TDS - Create Job
+- [Submit Job](/api-reference/tds/reports/tds-reports/endpoints/submit_job): Create a job to generate the TXT file required to prepare your TDS return
+- [Non Salary Payments](/api-reference/tds/reports/tds-reports/non_salary_payments)
+- [Salary Payments](/api-reference/tds/reports/tds-reports/salary_payments)
+- [NRI Payments](/api-reference/tds/reports/tds-reports/nri_payments)
+
+## API Reference - TDS - Reports - TDS
+- [Poll Job](/api-reference/tds/reports/tds-reports/endpoints/poll_job)
+- [Fetch Jobs](/api-reference/tds/reports/tds-reports/endpoints/fetch_jobs)
+
+## API Reference - TDS - Reports - TCS - Create Job
+- [Submit Job](/api-reference/tds/reports/tcs-reports/endpoints/submit_job): Create a job to generate the TXT file required to prepare your TCS return
+- [TCS Payments](/api-reference/tds/reports/tcs-reports/tcs_payments)
+
+## API Reference - TDS - Reports - TCS
+- [Poll Job](/api-reference/tds/reports/tcs-reports/endpoints/poll_job)
+- [Fetch Jobs](/api-reference/tds/reports/tcs-reports/endpoints/fetch_jobs)
+
+## API Reference - TDS - Compliance
+- [Overview](/api-reference/tds/compliance/overview): Generate FVU files, e-file quarterly TDS returns, and create Form 16/16A certificates using job-based async APIs with webhooks.
+
+## API Reference - TDS - Compliance - Download Form16 - Create Job
+- [Submit Job](/api-reference/tds/compliance/certificate-form16(a)/endpoints/submit_job): Download Form 16 (Part A and Part B).
+- [Remember Credentials Preference](/api-reference/tds/compliance/certificate-form16(a)/credentials)
+
+## API Reference - TDS - Compliance - Download Form16
+- [Poll Job](/api-reference/tds/compliance/certificate-form16(a)/endpoints/poll_job)
+- [Fetch Job](/api-reference/tds/compliance/certificate-form16(a)/endpoints/fetch_job)
+
+## API Reference - TDS - Compliance - Generate FVU
+- [Submit Job](/api-reference/tds/compliance/generate-fvu/endpoints/submit_job): Create a job to generate the FVU file required for your TDS return
+- [Poll Job](/api-reference/tds/compliance/generate-fvu/endpoints/poll_job)
+- [Search Job](/api-reference/tds/compliance/generate-fvu/endpoints/search_job)
+
+## API Reference - TDS - Compliance - E-File
+- [Submit Job](/api-reference/tds/compliance/e-file/endpoints/submit_job): API to E-File your TDS return by uploading the zip of FVU and Form27A on a pre-signed URL
+- [Poll Job](/api-reference/tds/compliance/e-file/endpoints/poll_job)
+- [Search Job](/api-reference/tds/compliance/e-file/endpoints/search_job)
+
+## API Reference - TDS - Compliance - Download CSI
+- [Generate Otp](/api-reference/tds/compliance/download-csi/endpoints/generate_otp)
+- [Verify Otp](/api-reference/tds/compliance/download-csi/endpoints/verify_otp)
+
+## API Reference - TDS - Annexures
+- [TDS Annexures](/api-reference/tds/annexures/tds_annexures)
+- [Master Data](/api-reference/tds/annexures/master_data)
+
+## API Reference - Income Tax
+Direct tax compliance on auto-pilot.
+- [Overview](/api-reference/it/overview): Overview of Income Tax API by Sandbox - Tax API Stack for India by Quicko.
+
+## API Reference - Income Tax - Calculator - Tax P&L
+- [Overview](/api-reference/it/calculator/overview): Calculate profit & loss and capital gains tax across securities (domestic and foreign) and cryptocurrency transactions.
+
+## API Reference - Income Tax - Calculator - Tax P&L - Securities - Domestic
+- [Domestic Securities Tax P&L](/api-reference/it/calculator/tax_pnl/securities/domestic/overview): Calculate profit & loss for domestic equity, mutual funds, and derivatives with automatic tax classification.
+- [Job](/api-reference/it/calculator/tax_pnl/securities/domestic/endpoints/submit_job): Submit an async job that calculates domestic securities Tax P&L.
+- [PUT Request](/api-reference/it/calculator/tax_pnl/securities/domestic/endpoints/put_request): Once the job is successfully created, upload the payload using HTTP PUT method on generated presigned url.
+- [Job](/api-reference/it/calculator/tax_pnl/securities/domestic/endpoints/job_status): Check the processing status of a domestic securities Tax P&L job.
+
+## API Reference - Income Tax - Calculator - Tax P&L - Securities - Domestic - Annexures
+- [Tradebook](/api-reference/it/calculator/tax_pnl/securities/domestic/annexures/tradebook_domestic_securities)
+- [Tradewise Settlements](/api-reference/it/calculator/tax_pnl/securities/domestic/annexures/tradewise_settlement_domestic_securities)
+- [Tradewise Tax P&L](/api-reference/it/calculator/tax_pnl/securities/domestic/annexures/tradewise_tax_pnl_domestic)
+- [Nature of Settlements & Labels](/api-reference/it/calculator/tax_pnl/securities/domestic/annexures/labels)
+
+## API Reference - Income Tax - Calculator - Tax P&L - Securities - Foreign
+- [Foreign Securities Tax P&L](/api-reference/it/calculator/tax_pnl/securities/foreign/overview): Calculate profit & loss for international investments with currency conversion and special tax provisions.
+- [Job](/api-reference/it/calculator/tax_pnl/securities/foreign/endpoints/submit_job): Create a foreign securities Tax P&L job; send input/output, financial year, and auth headers to get the job_id plus presigned upload URL.
+- [PUT Request](/api-reference/it/calculator/tax_pnl/securities/foreign/endpoints/put_request): Once the job is successfully created, upload the payload using HTTP PUT method on generated presigned url.
+- [Job](/api-reference/it/calculator/tax_pnl/securities/foreign/endpoints/job_status): Poll a foreign securities Tax P&L job by job_id and auth headers to get its latest status and metadata.
+
+## API Reference - Income Tax - Calculator - Tax P&L - Securities - Foreign - Annexures
+- [Tradebook](/api-reference/it/calculator/tax_pnl/securities/foreign/annexures/tradebook_foreign)
+- [Tradewise Settlements](/api-reference/it/calculator/tax_pnl/securities/foreign/annexures/tradewise_settlement_foreign)
+- [Tradewise Tax P&L](/api-reference/it/calculator/tax_pnl/securities/foreign/annexures/tradewise_tax_pnl_foreign)
+- [Scripwise Tax P&L](/api-reference/it/calculator/tax_pnl/securities/foreign/annexures/scripwise_tax_pnl_foreign)
+
+## API Reference - Income Tax - Calculator - Tax P&L - Crypto - Tax P&L
+- [Crypto Tax P&L](/api-reference/it/calculator/tax_pnl/crypto/overview): Calculate profit & loss for cryptocurrency transactions with holding period classification and tax computation.
+- [Job](/api-reference/it/calculator/tax_pnl/crypto/endpoints/submit_job): Create a crypto Tax P&L calculation job by sending the report type, date window, and auth headers; the response returns a job_id, status, and the presigned tradebook_url you'll use to upload your payload before processing begins.
+- [PUT Request](/api-reference/it/calculator/tax_pnl/crypto/endpoints/put_request): Once the job is successfully created, upload the payload using HTTP PUT method on generated presigned url.
+- [Job](/api-reference/it/calculator/tax_pnl/crypto/endpoints/job_status): Poll the Crypto Tax P&L job you created via Submit Job. Pass the job_id you received earlier to retrieve its latest processing status plus any generated download links once the workbook is ready.
+
+## API Reference - Income Tax - Calculator - Tax P&L - Crypto - Tax P&L - Annexures
+- [Tradebook | Crypto](/api-reference/it/calculator/tax_pnl/crypto/annexures/tradebook_crypto)
+- [Tradewise Tax P&L | Crypto](/api-reference/it/calculator/tax_pnl/crypto/annexures/tradewise_tax_pnl_crypto)
+
+## API Reference - Income Tax - Reports - Tax P&L
+- [Overview](/api-reference/it/report/overview): Generate profit & loss reports for securities and cryptocurrency transactions.
+
+## API Reference - Income Tax - Reports - Tax P&L - Securities - Domestic
+- [Job](/api-reference/it/report/tax_pnl/securities/domestic/endpoints/submit_job): Submit a job to prepare Tax P&L Reports for tradebook and tradewise settlements.
+- [PUT Request](/api-reference/it/report/tax_pnl/securities/domestic/endpoints/put_request): Once the job is successfully created, upload the payload using HTTP PUT method on generated presigned url.
+- [Job Status](/api-reference/it/report/tax_pnl/securities/domestic/endpoints/job_status)
+
+## API Reference - Income Tax - Reports - Tax P&L - Securities - Domestic - Annexures
+- [Tradebook](/api-reference/it/report/tax_pnl/securities/domestic/annexures/tradebook_domestic)
+- [Tradewise Settlements](/api-reference/it/report/tax_pnl/securities/domestic/annexures/tradewise_domestic)
+
+## API Reference - Income Tax - OCR
+- [Overview](/api-reference/it/ocr/overview): Extract structured data from income tax documents like Form 16 and Form 26AS.
+
+## API Reference - Income Tax - OCR - Form 16
+- [Read Form 16](/api-reference/it/ocr/form_16/endpoints/read_form_16)
+
+## API Reference - Income Tax - OCR - Form 26AS
+- [Read Form 26As](/api-reference/it/ocr/form_26as/endpoints/read_form_26as)
+
+## API Reference - Bank - Virtual Account - Accounts
+- [Create Virtual Account](/api-reference/bank/virtual-account/accounts/endpoints/create_virtual_account): Create Virtual Account API allows you to create a virtual account
+- [Fetch Virtual Account](/api-reference/bank/virtual-account/accounts/endpoints/fetch_virtual_account): Fetch Virtual Account API allows you to get the virtual account by providing account number
+- [Fetch All Virtual Accounts](/api-reference/bank/virtual-account/accounts/endpoints/fetch_all_virtual_accounts): Fetch all Virtual Accounts API allows you to get all the virtual accounts created
+- [Fetch Virtual Account Balance](/api-reference/bank/virtual-account/accounts/endpoints/fetch_virtual_account_balance): Fetch Virtual Account Balance API allows you to get the balance of provided virtual account
+- [Patch Virtual Account](/api-reference/bank/virtual-account/accounts/endpoints/patch_virtual_account): Patch Virtual Account API allows you to patch external id onto virtual account
+- [Delete Virtual Account](/api-reference/bank/virtual-account/accounts/endpoints/delete_virtual_account): Delete Virtual Account API allows you to delete a virtual account
+
+## API Reference - Bank - Virtual Account - Statements
+- [Submit Virtual Account Statement Job](/api-reference/bank/virtual-account/statements/endpoints/submit_virtual_account_statement_job): Submit Virtual Account Statement Job API allows you to submit an account statement job for a virtual account
+- [Poll Virtual Account Statement Job](/api-reference/bank/virtual-account/statements/endpoints/poll_virtual_account_statement_job): Poll Virtual Account Statement Job API allows you to poll for account statement job for a virtual account
+
+## API Reference - Bank - Virtual Account - Payments
+- [Generate Static QR String](/api-reference/bank/virtual-account/payments/endpoints/generate_static_qr_string): Generate Static QR String API allows you to create a static QR code for a virtual account
+- [Generate Dynamic QR String](/api-reference/bank/virtual-account/payments/endpoints/generate_dynamic_qr_string): Generate Dynamic QR String API allows you to create a dynamic, one time QR code for a virtual account
+- [Generate UPI Collect Pay Request](/api-reference/bank/virtual-account/payments/endpoints/generate_upi_collect_pay_request): Generate UPI Collect Pay Request API allows you to initiate a UPI collect pay request for a virtual account
+- [Request Payout](/api-reference/bank/virtual-account/payments/endpoints/request_payout): Request Payout API allows you to initiate a payout request from a virtual account
+
+## API Reference - Bank - Virtual Account - Transactions
+- [Fetch Transaction](/api-reference/bank/virtual-account/transactions/endpoints/fetch_transaction): Fetch Transaction API allows you to get the details for a transaction
+- [Fetch All Transactions](/api-reference/bank/virtual-account/transactions/endpoints/fetch_all_transactions): Fetch all Transactions API allows you to get all transactions for a virtual account
+- [Cancel Transaction](/api-reference/bank/virtual-account/transactions/endpoints/cancel_transaction): Cancel Transaction API allows you to cancel a transaction
+
+## Recipes - KYC
+Quick recipes for fast, reliable identity checks.
+- [Overview](/recipes/kyc/introduction): Production-ready KYC API integration recipes for PAN verification, Aadhaar validation, and DigiLocker document retrieval. Step-by-step implementation guides with code samples.
+
+## Recipes - KYC - Aadhaar
+- [Aadhaar OTP authentication](/recipes/kyc/aadhaar/aadhaar_api_recipe): Authenticate Aadhaar holders using OTP generation and verification.
+
+## Recipes - KYC - DigiLocker
+- [Fetch Documents using DigiLocker](/recipes/kyc/digilocker/digilocker_api_recipe): This recipe provides a step-by-step process to integrate DigiLocker APIs into your application.
+
+## Recipes - KYC - EntityLocker
+- [Fetch Documents using EntityLocker](/recipes/kyc/entitylocker/entitylocker_api_recipe): Retrieve verified business documents through EntityLocker consent flow.
+
+## Recipes - GST
+Easy steps for smooth, error-free GST workflows.
+- [Overview](/recipes/gst/introduction): Production-ready GST API integration recipes for GSTR-1, GSTR-3B, GSTR-9, E-Invoice, and E-Way Bill. Step-by-step implementation guides with code samples.
+
+## Recipes - GST - Authentication
+- [Generate Taxpayer Session](/recipes/gst/authentication/generate_tax_payer_session): Enable GST Portal API access and complete OTP verification to create a GST taxpayer session. This recipe shows how to get a GST taxpayer access token.
+- [Generate E-Invoice Session](/recipes/gst/authentication/generate_e_invoice_session): To automate e-Invoicing using APIs, an E-Invoice session needs to be created with API credentials created on the portal. This recipe takes you through the steps to get a GST E-Invoice access token.
+- [Generate E-Way Bill Session](/recipes/gst/authentication/generate_e_way_bill_session): To automate E-Way Billing using APIs, an E-Way Bill session needs to be created with API credentials created on the portal. This recipe takes you through the steps to get a GST E-Way Bill access token.
+
+## Recipes - GST - GSTR-1
+- [File GSTR-1](/recipes/gst/gstr-1/file_gstr_1): All outward supplies, including taxable, exempt, zero-rated sales, debit/credit notes, and amendments are reported with the GSTR-1. This recipe shows how to automate GSTR-1 filing.
+- [File Nil GSTR-1](/recipes/gst/gstr-1/file_nil_gstr_1): Registered taxpayers with no outward supplies must file a Nil GSTR-1 to ensure full compliance. This recipe shows how to automate Nil GSTR-1 filing.
+
+## Recipes - GST - GSTR-3B
+- [File GST Return-3B](/recipes/gst/gstr-3b/file_gstr_3b): GSTR-3B is a self-declaration return where taxpayers summarize their sales, purchases, and liabilities. It's used to setoff liabilities and claim input tax credits (ITC) for the latest return period. This recipe shows how to automate GSTR-3B filing.
+- [File Nil GSTR-3B](/recipes/gst/gstr-3b/file_nil_gstr_3b): Nil GSTR-3B is filed when a registered taxpayer has no outward or inward supplies, tax liability, or ITC to claim. Filing it is mandatory to maintain compliance. This recipe shows how to automate nil GSTR-3B filing.
+
+## Recipes - GST - GSTR-9
+- [File GSTR-9](/recipes/gst/gstr-9/file_gstr_9): GSTR-9 is an annual GST return summarizing a taxpayer's filings, including supplies, taxes paid, ITC, and adjustments for the financial year. This recipe guides you through the complete GSTR-9 filing workflow.
+
+## Recipes - GST - E-Invoice
+- [Generate E-Invoice](/recipes/gst/e-invoice/generate_e_invoice): An e-invoice is a GST-compliant invoice with a unique IRN. This recipe guides you through generating e-invoices and downloading their PDF copies using Sandbox APIs.
+- [Fetch E-Invoice](/recipes/gst/e-invoice/get_e_invoice_using_taxpayer_api): With GST Taxpayer session, E-Invoices generated within the last 6 months can be fetched. This recipe shows the steps to fetch an E-Invoice from GST portal using Invoice Reference Number (IRN).
+
+## Recipes - TDS
+Guides to set up seamless, automated TDS.
+- [Overview](/recipes/tds/introduction): API recipes for preparing and filing TDS Forms 24Q and 26Q, plus generating Form 16 and Form 16A certificates.
+
+## Recipes - TDS - Form 24Q
+- [Prepare Form 24Q TDS Return](/recipes/tds/form-24q/prepare_form_24q): Prepare Form 24Q TDS returns by checking potential notices, uploading Sheet JSON data, generating the TXT file, and getting ready for e-filing.
+- [File Form 24Q TDS Returns](/recipes/tds/form-24q/file_form_24q): File Form 24Q TDS returns by downloading CSI using OTP, generating FVU, e-filing the return, and generating Form 16 certificates.
+
+## Recipes - TDS - Form 16
+- [Generate Form 16 Certificates](/recipes/tds/form-16/generate_form_16_certificates): Generate and download Form 16 salary TDS certificates once Form 24Q TDS returns are filed.
+- [Generate Form 16A Certificates](/recipes/tds/form-16a/generate-form-16a-certificates): Generate and download Form 16A TDS certificates after filing Form 26Q or 27Q returns.
+
+## Recipes - Income Tax
+Ready flows to automate your Income tax tasks.
+- [Overview](/recipes/it/introduction): Production-ready Income Tax API integration recipes for ITR filing, tax computation, and compliance automation. Step-by-step implementation guides with code samples.
+
+## Changelog
+- [Changelog](/changelog): Changelog for Sandbox APIs
+
+## Resources
+- [Postman Collections](https://www.postman.com/in-co-sandbox/sandbox-api)
+- [SDKs & Clients](https://github.com/in-co-sandbox)
+- [Status](https://status.api.sandbox.co.in/)
+- [Customer Stories](https://sandbox.co.in/customers)

@@ -1,0 +1,159 @@
+---
+title: "Overview"
+description: "File GSTR-9 annual returns via API. Fetch summaries, review Section 8A ITC, save drafts, generate EVC OTP, and track filing status."
+---
+
+# GSTR-9 API
+
+GSTR-9 is the GST annual return filed once per financial year for each GSTIN. It reports consolidated purchases, sales, input tax credit (ITC), and tax paid. Use these APIs to fetch GSTN-prepared summaries, review Section 8A ITC, save a draft, proceed to filing, generate an EVC OTP, submit the return, and track status on the GST portal.
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Auto-calculated annual totals" icon="database">
+    Fetch GSTN-prepared annual summaries for reconciliation of purchases, sales, and tax liability.
+  </Card>
+  <Card title="Section 8A ITC review" icon="file-invoice">
+    Review portal-populated ITC figures used for annual input tax credit reporting.
+  </Card>
+  <Card title="Draft save and proceed workflow" icon="paper-plane">
+    Save prepared values as a GSTN draft, then run portal validations before filing.
+  </Card>
+  <Card title="EVC OTP filing and status tracking" icon="shield-check">
+    Generate an EVC OTP, submit the annual return, and poll return status until confirmation.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Initiate taxpayer session">
+    Authenticate and start a taxpayer session using the [Generate Taxpayer Session](/recipes/gst/authentication/generate_tax_payer_session) recipe.
+  </Step>
+  <Step title="Fetch current GSTR-9 draft">
+    Get the latest draft for the target financial year using [Get GSTR-9 details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details).
+  </Step>
+  <Step title="Fetch auto-calculated annual totals">
+    Retrieve GSTN auto-calculated values using [Get auto-calculated details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details).
+  </Step>
+  <Step title="Fetch Section 8A details">
+    Review portal-populated ITC figures using [Get Section 8A details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details).
+  </Step>
+  <Step title="Prepare HSN mapping (if needed)">
+    Use [Get HSN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn) to build and validate HSN/SAC summaries when required for annual reporting.
+  </Step>
+  <Step title="Save draft">
+    Submit prepared values with [Save GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save) to store the return as a draft.
+  </Step>
+  <Step title="Proceed to filing">
+    Run GSTN validations with [Proceed GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/proceed).
+  </Step>
+  <Step title="Generate EVC OTP, file, and track status">
+    Request [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp), submit [File GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file), then poll [Get GST return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status).
+  </Step>
+</Steps>
+
+## Recipes and guides
+
+<CardGroup cols={2}>
+  <Card title="File GSTR-9" icon="file-circle-check" href="/recipes/gst/gstr-9/file_gstr_9">
+    Step-by-step recipe to file GSTR-9 using the full API workflow.
+  </Card>
+  <Card title="Error handling guide" icon="triangle-exclamation" href="/guides/developer-resources/errors">
+    Handle GSTN errors, retries, and common validation failures across all GST APIs.
+  </Card>
+  <Card title="Track GST return status" icon="circle-check" href="/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status">
+    Poll return status to confirm filing or identify pending actions.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="Draft and summaries" icon="database" href="/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details">
+    Fetch the current draft and auto-calculated annual totals for reconciliation.
+    - [Get GSTR-9 details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details)
+    - [Get auto-calculated details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details)
+  </Card>
+  <Card title="ITC and Section 8A" icon="file-invoice" href="/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details">
+    Review portal-populated ITC figures for annual input tax credit reporting.
+    - [Get Section 8A details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details)
+  </Card>
+  <Card title="Filing actions" icon="paper-plane" href="/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save">
+    Save drafts, proceed to filing, generate an EVC OTP, and submit the annual return.
+    - [Save GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save)
+    - [Proceed GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/proceed)
+    - [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp)
+    - [File GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file)
+  </Card>
+  <Card title="Status and utilities" icon="server" href="/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status">
+    Track filing status and look up HSN codes for summary preparation.
+    - [Get GST return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status)
+    - [Get HSN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn)
+  </Card>
+</CardGroup>
+
+## API reference
+
+### Draft and summary endpoints
+
+| API | Purpose |
+|:----|:--------|
+| [Get GSTR-9 details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/gstr_9_details) | Fetch the current GSTR-9 draft for a financial year |
+| [Get auto-calculated details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details) | Retrieve GSTN auto-calculated annual totals for reconciliation |
+| [Get Section 8A details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details) | Fetch portal-populated ITC figures under Section 8A |
+
+### Filing action endpoints
+
+| API | Purpose |
+|:----|:--------|
+| [Save GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save) | Save prepared values as a draft on the GST portal |
+| [Proceed GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/proceed) | Trigger GSTN validations and proceed to filing |
+| [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) | Request EVC OTP for electronic verification |
+| [File GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file) | Submit the GSTR-9 annual return to GSTN |
+
+### Status and utility endpoints
+
+| API | Purpose |
+|:----|:--------|
+| [Get GST return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) | Poll return status until filing confirmation |
+| [Get HSN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn) | Look up HSN codes for building HSN-level summaries |
+
+## Common use cases
+
+Use the GSTR-9 API when you need to:
+
+- Consolidate FY sales and purchases in your ERP, then draft and file GSTR-9 for each GSTIN.
+- File GSTR-9 in bulk for many GSTINs with a consistent draft-save-proceed-file flow and audit logs.
+- Compare auto-calculated values and Section 8A ITC against internal books to spot variances before filing.
+- Build a filing timeline UI that polls return status and alerts users when GSTR-9 is filed or needs action.
+- Validate HSN codes and build HSN-level summaries using HSN utilities to reduce classification errors.
+
+## FAQs
+
+<AccordionGroup>
+  <Accordion title="What is GSTR-9 and who needs to file it?">
+    GSTR-9 is the GST annual return that consolidates purchases, sales, input tax credit, and tax paid for a financial year. Regular taxpayers registered under GST must file it annually unless exempted by government notification. Some taxpayer categories have different annual return requirements or may be exempt. You can file once all periodic returns for the financial year are complete. See [File GSTR-9](/recipes/gst/gstr-9/file_gstr_9) for the API workflow.
+  </Accordion>
+  <Accordion title="How does the GSTR-9 API filing flow work end-to-end?">
+    Start a taxpayer session for the GSTIN. Fetch the current draft and auto-calculated annual totals from GSTN. Review Section 8A ITC details and prepare HSN mappings if needed. Save the draft with [Save GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/save), then run validations. Generate an EVC OTP with [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp), file the return, and poll [GST return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) until confirmation.
+  </Accordion>
+  <Accordion title="What are auto-calculated details and how should I use them?">
+    Auto-calculated details are GSTN-prepared annual summaries based on periodic returns filed during the year. The GSTR-9 API retrieves these values as a reconciliation baseline. Compare them with your internal books to identify discrepancies before populating the draft. Access them via [Get auto-calculated details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/auto_calculated_details).
+  </Accordion>
+  <Accordion title="What is Section 8A and why does it matter for ITC in GSTR-9?">
+    Section 8A contains ITC figures auto-populated by the GST portal from supplier returns for the financial year. GSTR-9 reporting depends on these values for annual ITC reconciliation. Review Section 8A details using [Get Section 8A details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/section_8a_details) and compare with claimed ITC to identify mismatches before filing.
+  </Accordion>
+  <Accordion title="What do I do if filing is submitted but not showing as filed?">
+    Filing can take time to reflect on the GST portal while GSTN processes it. Poll [Get GST return status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) until the status confirms filing. If the status stays pending beyond expected timeframes, check for GSTN errors in the response and consult the [error handling guide](/guides/developer-resources/errors).
+  </Accordion>
+  <Accordion title="How does EVC OTP filing work for GSTR-9?">
+    EVC (Electronic Verification Code) OTP filing requires generating an OTP sent to the registered mobile number or email of the authorized signatory. Call [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp), then pass the OTP to [File GSTR-9](/api-reference/gst/compliance/endpoints/taxpayer/gstr-9/file) to submit the return.
+  </Accordion>
+  <Accordion title="What validations should I run before saving or proceeding?">
+    Make sure all tables are populated and HSN codes match the GST tariff using [Get HSN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn). Ensure auto-calculated values and Section 8A ITC reconcile with internal records. Before proceeding, confirm that no mandatory fields are missing. GSTN will reject the proceed step if validations fail. See the [error handling guide](/guides/developer-resources/errors) for common validation errors.
+  </Accordion>
+  <Accordion title="How should I handle GSTN errors and retries?">
+    GSTN errors can occur due to portal downtime, session expiry, or validation failures. The GSTR-9 API returns standardized error codes. Retry transient errors (5xx, timeouts) with exponential backoff. For validation errors (4xx), parse the error details and correct the request payload. Refer to the [error handling guide](/guides/developer-resources/errors) for error code mappings and recommended retry strategies.
+  </Accordion>
+</AccordionGroup>

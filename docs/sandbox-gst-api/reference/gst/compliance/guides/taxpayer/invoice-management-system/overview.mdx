@@ -1,0 +1,157 @@
+---
+title: "Overview"
+description: "Automate GST invoice actions with IMS APIs—fetch counts, save accept/reject/pending status, track processing, and monitor recipient responses for ITC compliance."
+---
+
+# Invoice Management System (IMS) API
+
+Invoice Management System (IMS) is a GST portal workflow that lets recipient taxpayers accept, reject, or mark invoices as pending. Automate invoice actions, track processing status, and monitor recipient responses for Input Tax Credit compliance with this API.
+
+IMS is part of GST compliance and impacts Input Tax Credit (ITC) through GSTR-2B behavior—when recipients take no action within the filing period, the system deems invoices accepted.
+
+## Recipient view
+
+Recipient view allows buyers to manage inward invoices reported by their suppliers. Recipients can accept, reject, or mark invoices as pending to control their Input Tax Credit claims.
+
+<CardGroup cols={2}>
+  <Card title="Invoice status management" icon="file-circle-check" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/save">
+    Accept, reject, or mark invoices as pending directly through API calls.
+  </Card>
+  <Card title="Real-time invoice counts" icon="calculator" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoice_count">
+    Fetch invoice counts by section and status to identify workload and prioritize reviews.
+  </Card>
+  <Card title="Async status tracking" icon="clock-rotate-left" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/status">
+    Track processing status of IMS actions using reference IDs for reliable workflows.
+  </Card>
+  <Card title="Bulk reset capability" icon="rotate-left" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/reset">
+    Reset invoice actions back to "no action taken" when corrections are needed.
+  </Card>
+</CardGroup>
+
+## Supplier view
+
+Supplier view shows recipient actions on invoices you reported via GSTR-1, GSTR-1A, or IFF. Use this data to identify reconciliation issues early and follow up on rejected or pending invoices before filing deadlines.
+
+<CardGroup cols={2}>
+  <Card title="Get sales invoices" icon="file-invoice" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/sales">
+    Retrieve sales invoices with recipient action statuses (Accepted, Rejected, Pending, No Action) for a specific return period.
+  </Card>
+  <Card title="Added back liabilities" icon="file-circle-plus" href="/api-reference/gst/compliance/endpoints/taxpayer/invoices/added-back-liabilities">
+    Fetch invoices that were rejected by recipients but added back for liability consideration.
+  </Card>
+</CardGroup>
+
+### Recipient action statuses
+
+| Status | Meaning | Supplier action |
+|:-------|:--------|:----------------|
+| **Accepted** | Recipient has accepted the invoice in IMS | No action needed—invoice is reconciled |
+| **Rejected** | Recipient has rejected the invoice due to mismatch | Review and correct in GSTR-1A if needed |
+| **Pending** | Recipient has kept it pending for later decision | Follow up with customer for high-value invoices |
+| **No Action** | Recipient has not acted yet | Monitor and follow up if necessary |
+
+<Note>
+**Recipients take actions in IMS.** Supplier View is for visibility and follow-up only—suppliers cannot accept or reject invoices through IMS. Use this data to monitor recipient responses, identify issues early, and amend incorrect invoices via GSTR-1A.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate as a taxpayer">
+    Obtain authentication tokens and prepare required headers (`x-api-key`, `x-api-version`, `authorization`) for IMS API requests. Follow the [Generate Taxpayer Session](/recipes/gst/authentication/generate_tax_payer_session) recipe to get your taxpayer access token.
+  </Step>
+  <Step title="Get invoice counts by type">
+    Call [Get Invoice Count](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoice_count) with `type_of_goods` (imports, inward_supplies, others) to retrieve counts by section (B2B, B2BA, B2BCN, B2BDN, ECOM, etc.) and status (noaction, accept, reject, pending).
+  </Step>
+  <Step title="Fetch invoice lists">
+    Call [Get Invoices](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoices) with `section` (B2B, B2BA, CN, etc.) and optional `status` filter (accepted, rejected, pending, no_action_taken) to retrieve invoice details including supplier GSTIN, invoice number, tax values, and current action status.
+  </Step>
+  <Step title="Save invoice status actions">
+    Call [Save Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/save) with `invdata` containing invoice arrays by section (b2b, b2ba, b2bdn, b2bdna, b2bcn, b2bcna, ecom, ecoma) with `action` set to A (Accept), R (Reject), or P (Pending). API returns a `reference_id` for status tracking.
+  </Step>
+  <Step title="Check processing status">
+    Call [Check Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/status) with the `reference_id` to get processing status (`status_cd`: P for processing, S for success), transaction type (`transTypCd`: SAV or RST), and processed count (`proc_cnt`).
+  </Step>
+  <Step title="Reset status when needed">
+    Call [Reset Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/reset) with `reqtyp: RESET` and invoice data to revert actions back to "no action taken" status.
+  </Step>
+</Steps>
+
+### Recipient view APIs
+
+#### Read APIs
+
+| API | Method | Path | Description |
+|:----|:-------|:-----|:------------|
+| [Get Invoice Count](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoice_count) | `GET` | `/gst/compliance/tax-payer/invoices/count` | Fetch count of documents for different sections with their respective status |
+| [Get Invoices](/api-reference/gst/compliance/endpoints/taxpayer/invoices/invoices) | `GET` | `/gst/compliance/tax-payer/invoices` | Fetch invoices for different sections with their respective status |
+
+#### Write APIs
+
+| API | Method | Path | Description |
+|:----|:-------|:-----|:------------|
+| [Save Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/save) | `POST` | `/gst/compliance/tax-payer/invoices/status/save` | Take actions and save new status for invoices in different sections |
+| [Reset Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/reset) | `POST` | `/gst/compliance/tax-payer/invoices/status/reset` | Reset status on invoices to no action taken status |
+
+#### Status APIs
+
+| API | Method | Path | Description |
+|:----|:-------|:-----|:------------|
+| [Check Invoice Status](/api-reference/gst/compliance/endpoints/taxpayer/invoices/status) | `GET` | `/gst/compliance/tax-payer/invoices/status` | Fetch status for save or reset invoice status action |
+
+### Supplier view APIs
+
+| API | Method | Path | Description |
+|:----|:-------|:-----|:------------|
+| [Get Sales Invoices](/api-reference/gst/compliance/endpoints/taxpayer/invoices/sales) | `GET` | `/gst/compliance/tax-payer/invoices/{year}/{month}/sales` | Fetch sales invoices with recipient action statuses for a return period |
+| [Get Added Back Liability Records](/api-reference/gst/compliance/endpoints/taxpayer/invoices/added-back-liabilities) | `GET` | `/gst/compliance/tax-payer/invoices/added-back-liabilities/{year}/{month}` | Fetch invoices added back for liability after recipient rejection |
+
+
+## Common use cases
+
+Use IMS APIs when you need to:
+
+**Recipient View:**
+- Build an "IMS pending invoices" dashboard using invoice counts and invoice lists
+- Automate accept/reject/pending decisions using business rules (vendor allowlist, mismatch checks, thresholds)
+- Bulk reset incorrect actions back to "no action taken" after internal review
+- Track async processing of IMS actions and alert teams when status is pending or failed
+
+**Supplier View:**
+- Monitor which customers have accepted or rejected your invoices in real-time
+- Follow up on high-value invoices where recipients haven't taken action
+- Use recipient actions as a reconciliation checkpoint to identify discrepancies early
+- Identify rejected invoices quickly and correct them in GSTR-1A to prevent compliance issues
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What is the Invoice Management System (IMS)?">
+    Invoice Management System (IMS) is a GST portal feature that allows recipient taxpayers to manage inward invoices by accepting, rejecting, or marking them as pending. IMS was launched on October 1, 2024, and became operational for user actions from October 14, 2024.
+  </Accordion>
+  <Accordion title="What is Supplier view in IMS?">
+    Supplier view allows suppliers to see the status of actions taken by recipients (buyers) on invoices reported via GSTR-1, GSTR-1A, or IFF. It answers the question: "Did my customer accept, reject, or keep my invoice pending?" Supplier view is for visibility and follow-up only—suppliers cannot take accept/reject actions through IMS.
+  </Accordion>
+  <Accordion title="What do the recipient action statuses mean in Supplier view?">
+    Recipient action statuses in Supplier view indicate how buyers responded to your invoices:
+    - **Accepted**: Recipient has accepted the invoice in IMS.
+    - **Rejected**: Recipient has rejected the invoice due to mismatch or incorrect details.
+    - **Pending**: Recipient has kept it pending for later decision.
+    - **No Action**: Recipient has not acted yet, or the record is not actionable in IMS for certain cases like RCM or ineligible ITC.
+  </Accordion>
+  <Accordion title="What should I do if a recipient rejects my invoice?">
+    When a recipient rejects your invoice in IMS, review the invoice details and correct any errors or mismatches. You can amend the invoice in GSTR-1A or the next relevant return filing. Use Supplier View to monitor which invoices are rejected and prioritize follow-up for high-value transactions.
+  </Accordion>
+  <Accordion title="How does IMS affect Input Tax Credit (ITC)?">
+    IMS directly impacts Input Tax Credit through GSTR-2B behavior. Invoices that are accepted flow into GSTR-2B for ITC claims. Invoices with no action taken are "deemed accepted" and also included in GSTR-2B. Rejected invoices are excluded from ITC claims.
+  </Accordion>
+  <Accordion title="What happens if I don't take any action on an invoice?">
+    Invoices with no action taken are automatically considered "deemed accepted" by the GST portal. These invoices are included in the recipient's GSTR-2B for Input Tax Credit claims at the end of the filing period.
+  </Accordion>
+  <Accordion title="Can I reset an invoice action after saving it?">
+    Yes, IMS APIs provide a Reset Invoice Status endpoint that allows you to reset invoice actions back to "no action taken" status. This is useful when corrections are needed after an incorrect accept, reject, or pending action was saved.
+  </Accordion>
+  <Accordion title="How do I track the status of my IMS actions?">
+    IMS actions are processed asynchronously. After saving or resetting invoice status, use the Check Invoice Status endpoint with the `reference_id` returned by the Save or Reset API. The response includes `status_cd` (P for processing, S for success), `transTypCd` (SAV or RST), and `proc_cnt` (number of invoices processed).
+  </Accordion>
+</AccordionGroup>

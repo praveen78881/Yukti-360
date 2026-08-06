@@ -6,7 +6,6 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TAccountFormat } from '@/components/formats/TAccountFormat';
 import { VerticalStatementFormat } from '@/components/formats/VerticalStatementFormat';
-import { ProfitLossNotesStrip } from '@/components/financials/ProfitLossNotesStrip';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { exportElementAsImagePDF } from '@/components/export/exportUtils';
@@ -19,6 +18,7 @@ import { computeTradingAccount } from '@/lib/accounting/tradingAccountCompute';
 import { computeProfitLoss, computeScheduleIIIPL } from '@/lib/accounting/profitLossCompute';
 import type { EntityType } from '@/types/company';
 import { listJournalEntries } from '@/lib/offlineDb';
+import { loadPyValues, savePyValues, pyNum, type PyValues } from '@/lib/accounting/pyOverrides';
 
 /** Maps note number → scheduleIII group strings for the P&L drill-down drawer */
 const PL_NOTE_GROUPS: Record<string, string[]> = {
@@ -41,6 +41,27 @@ export default function ProfitLossPage() {
   const [manualCurrentTax, setManualCurrentTax] = useState('');
   const [manualDeferredTax, setManualDeferredTax] = useState('');
   const statementRef = useRef<HTMLDivElement | null>(null);
+
+  // Previous-year column: directly typed per line (blank = NIL), persisted per FY.
+  // Derived rows (totals, profit lines) auto-compute from the typed leaf figures.
+  const fyStartYear = fromDate.slice(0, 4);
+  const [pyVals, setPyVals] = useState<PyValues>({});
+  useEffect(() => {
+    if (companyId) setPyVals(loadPyValues(companyId, 'pl', fyStartYear));
+  }, [companyId, fyStartYear]);
+  const setPy = (label: string, v: string) => {
+    setPyVals(prev => {
+      const next = { ...prev, [label]: v };
+      if (companyId) savePyValues(companyId, 'pl', fyStartYear, next);
+      return next;
+    });
+  };
+  const pyN = (label: string) => pyNum(pyVals, label);
+  const pyEdit = (label: string) => ({
+    previousYear: pyN(label),
+    prevEditValue: pyVals[label] ?? '',
+    onPrevEdit: (v: string) => setPy(label, v),
+  });
 
   const { entries, loading } = useJournalEntries({
     companyId: companyId || '',
@@ -88,20 +109,10 @@ export default function ProfitLossPage() {
     { header: 'Amount (₹)', key: 'amount', align: 'right' as const, isMono: true },
   ];
 
-  const exportData = isScheduleIII
-    ? [
-        { side: 'Revenue', name: 'Revenue from operations', amount: scheduleIII.revenueFromOperations },
-        { side: 'Revenue', name: 'Other income', amount: scheduleIII.otherIncome },
-        { side: 'Revenue', name: 'Total Revenue', amount: scheduleIII.totalRevenue },
-        { side: 'Expense', name: 'Total Expenses', amount: scheduleIII.totalExpenses },
-        { side: 'Profit', name: 'Profit before tax', amount: scheduleIII.profitBeforeTax },
-        { side: 'Profit', name: 'Tax expense', amount: scheduleIII.taxExpense },
-        { side: 'Profit', name: 'Profit after tax', amount: scheduleIII.profitAfterTax },
-      ]
-    : [
-        ...profitLoss.debitItems.map(i => ({ side: 'Dr', name: i.name, amount: i.amount })),
-        ...profitLoss.creditItems.map(i => ({ side: 'Cr', name: i.name, amount: i.amount })),
-      ];
+  const exportData = [
+    ...profitLoss.debitItems.map(i => ({ side: 'Dr', name: i.name, amount: i.amount })),
+    ...profitLoss.creditItems.map(i => ({ side: 'Cr', name: i.name, amount: i.amount })),
+  ];
 
   const balancedTotal = Math.max(
     profitLoss.debitItems.reduce((s, i) => s + i.amount, 0),
@@ -118,6 +129,101 @@ export default function ProfitLossPage() {
   const effTotalCI = effProfitAfterTax + pl.oci;
   const hasManualTax = manualCurrentTax !== '' || manualDeferredTax !== '';
 
+  // Previous-year derived rows — computed from whatever leaves the CA typed (NIL default).
+  const PY_EXPENSE_LABELS = [
+    'Cost of materials consumed', 'Purchases of stock-in-trade',
+    'Changes in inventories of finished goods, WIP & stock-in-trade',
+    'Employee benefits expense', 'Finance costs',
+    'Depreciation and amortisation expense', 'Other expenses',
+  ];
+  const pyTotalRevenue = pyN('Revenue from operations (Net)') + pyN('Other income');
+  const pyTotalExpenses = PY_EXPENSE_LABELS.reduce((s, l) => s + pyN(l), 0);
+  const pyPBET = pyTotalRevenue - pyTotalExpenses;
+  const pyPBT = pyPBET - pyN('Exceptional items');
+  const pyTax = pyN('(a) Current Tax') + pyN('(b) Deferred Tax') + pyN('(c) Other Tax');
+  const pyPAT = pyPBT - pyTax;
+  const pyOci = pl.ociBreakdown.length > 0
+    ? pl.ociBreakdown.reduce((s, o) => s + pyN(o.name), 0)
+    : pyN('Other Comprehensive Income');
+  const pyTCI = pyPAT + pyOci;
+
+  // Full Schedule III export (Excel/CSV): EVERY statement line plus its
+  // account-level sub-particulars (note breakdowns), section headings, totals
+  // and spacer rows — mirroring the vertical statement. ' ' cells keep spacing
+  // (truly empty cells print as '-').
+  const s3ExportColumns = [
+    { header: 'Particulars', key: 'particulars' },
+    { header: 'Note', key: 'note' },
+    { header: 'Current Year (₹)', key: 'cy', align: 'right' as const, isMono: true },
+    { header: 'Previous Year (₹)', key: 'py', align: 'right' as const, isMono: true },
+  ];
+  type XRow = { particulars: string; note: string; cy: number | string; py: number | string };
+  const s3ExportData: XRow[] = (() => {
+    const rows: XRow[] = [];
+    const heading = (t: string) => rows.push({ particulars: t, note: ' ', cy: ' ', py: ' ' });
+    const spacer = () => rows.push({ particulars: ' ', note: ' ', cy: ' ', py: ' ' });
+    const line = (label: string, note: string, cy: number, py: number) =>
+      rows.push({ particulars: `    ${label}`, note: note || ' ', cy, py });
+    const total = (label: string, cy: number, py: number) =>
+      rows.push({ particulars: label, note: ' ', cy, py });
+    const sub = (arr: { name: string; amount: number }[]) =>
+      arr.forEach(b => rows.push({ particulars: `        · ${b.name}`, note: ' ', cy: b.amount, py: ' ' }));
+
+    heading('I. REVENUE FROM OPERATIONS');
+    line('Revenue from operations (Net)', '1', pl.revenueFromOperations, pyN('Revenue from operations (Net)'));
+    sub(pl.revenueFromOperationsBreakdown);
+    spacer();
+    heading('II. OTHER INCOME');
+    line('Other income', '2', pl.otherIncome, pyN('Other income'));
+    sub(pl.otherIncomeBreakdown);
+    spacer();
+    total('III. TOTAL REVENUE (I + II)', pl.totalRevenue, pyTotalRevenue);
+    spacer();
+    heading('IV. EXPENSES');
+    line('Cost of materials consumed', '3', pl.costOfMaterials, pyN('Cost of materials consumed'));
+    sub(pl.costOfMaterialsBreakdown);
+    line('Purchases of stock-in-trade', '', pl.purchasesOfStockInTrade, pyN('Purchases of stock-in-trade'));
+    sub(pl.purchasesOfStockInTradeBreakdown);
+    line('Changes in inventories of finished goods, WIP & stock-in-trade', '4', pl.changesInInventories, pyN('Changes in inventories of finished goods, WIP & stock-in-trade'));
+    sub(pl.changesInInventoriesBreakdown);
+    line('Employee benefits expense', '5', pl.employeeBenefits, pyN('Employee benefits expense'));
+    sub(pl.employeeBenefitsBreakdown);
+    line('Finance costs', '6', pl.financeCosts, pyN('Finance costs'));
+    sub(pl.financeCostsBreakdown);
+    line('Depreciation and amortisation expense', '7', pl.depreciationAmortisation, pyN('Depreciation and amortisation expense'));
+    sub(pl.depreciationAmortisationBreakdown);
+    line('Other expenses', '8', pl.otherExpenses, pyN('Other expenses'));
+    sub(pl.otherExpensesBreakdown);
+    total('TOTAL EXPENSES (IV)', pl.totalExpenses, pyTotalExpenses);
+    spacer();
+    total('V. PROFIT BEFORE EXCEPTIONAL ITEMS AND TAX (III - IV)', pl.profitBeforeExceptionalAndTax, pyPBET);
+    spacer();
+    heading('VI. EXCEPTIONAL ITEMS');
+    line('Exceptional items', '', pl.exceptionalItems, pyN('Exceptional items'));
+    sub(pl.exceptionalItemsBreakdown);
+    spacer();
+    total('VII. PROFIT BEFORE TAX (V - VI)', pl.profitBeforeTax, pyPBT);
+    spacer();
+    heading('VIII. TAX EXPENSE');
+    line('(a) Current Tax', '', effCurrentTax, pyN('(a) Current Tax'));
+    line('(b) Deferred Tax', '', effDeferredTax, pyN('(b) Deferred Tax'));
+    if (pl.otherTaxExpense !== 0) line('(c) Other Tax', '', pl.otherTaxExpense, pyN('(c) Other Tax'));
+    sub(pl.taxExpenseBreakdown);
+    spacer();
+    total('IX. PROFIT / (LOSS) FOR THE YEAR (VII - VIII)', effProfitAfterTax, pyPAT);
+    spacer();
+    heading('X. OTHER COMPREHENSIVE INCOME');
+    if (pl.ociBreakdown.length > 0) {
+      pl.ociBreakdown.forEach(o => line(o.name, '', o.amount, pyN(o.name)));
+      total('Total OCI', pl.oci, pyOci);
+    } else {
+      line('Other Comprehensive Income', '', pl.oci, pyN('Other Comprehensive Income'));
+    }
+    spacer();
+    total('XI. TOTAL COMPREHENSIVE INCOME (IX + X)', effTotalCI, pyTCI);
+    return rows;
+  })();
+
   return (
     <div>
       <PageHeader
@@ -131,8 +237,8 @@ export default function ProfitLossPage() {
             companyName={company.name}
             entityType={entityLabel}
             dateRange={`${fromDate} to ${toDate}`}
-            columns={exportColumns}
-            data={exportData}
+            columns={isScheduleIII ? s3ExportColumns : exportColumns}
+            data={isScheduleIII ? s3ExportData : exportData}
             onPdf={() =>
               exportElementAsImagePDF({
                 element: statementRef.current,
@@ -177,8 +283,8 @@ export default function ProfitLossPage() {
                     label: 'Revenue from operations (Net)',
                     noteNo: '1',
                     currentYear: pl.revenueFromOperations,
-                    previousYear: null,
                     isBold: true,
+                    ...pyEdit('Revenue from operations (Net)'),
                   }],
                 },
                 {
@@ -188,7 +294,7 @@ export default function ProfitLossPage() {
                     label: 'Other income',
                     noteNo: '2',
                     currentYear: pl.otherIncome,
-                    previousYear: null,
+                    ...pyEdit('Other income'),
                   }],
                 },
                 {
@@ -197,7 +303,7 @@ export default function ProfitLossPage() {
                   items: [{
                     label: 'Total Revenue',
                     currentYear: pl.totalRevenue,
-                    previousYear: null,
+                    previousYear: pyTotalRevenue,
                     isBold: true,
                     isTotal: true,
                   }],
@@ -206,14 +312,14 @@ export default function ProfitLossPage() {
                   heading: 'IV. EXPENSES',
                   indent: 0,
                   items: [
-                    { label: 'Cost of materials consumed', noteNo: '3', currentYear: pl.costOfMaterials, previousYear: null },
-                    { label: 'Purchases of stock-in-trade', currentYear: pl.purchasesOfStockInTrade, previousYear: null },
-                    { label: 'Changes in inventories of finished goods, WIP & stock-in-trade', noteNo: '4', currentYear: pl.changesInInventories, previousYear: null },
-                    { label: 'Employee benefits expense', noteNo: '5', currentYear: pl.employeeBenefits, previousYear: null },
-                    { label: 'Finance costs', noteNo: '6', currentYear: pl.financeCosts, previousYear: null },
-                    { label: 'Depreciation and amortisation expense', noteNo: '7', currentYear: pl.depreciationAmortisation, previousYear: null },
-                    { label: 'Other expenses', noteNo: '8', currentYear: pl.otherExpenses, previousYear: null },
-                    { label: 'TOTAL EXPENSES (IV)', currentYear: pl.totalExpenses, previousYear: null, isBold: true, isTotal: true },
+                    { label: 'Cost of materials consumed', noteNo: '3', currentYear: pl.costOfMaterials, ...pyEdit('Cost of materials consumed') },
+                    { label: 'Purchases of stock-in-trade', currentYear: pl.purchasesOfStockInTrade, ...pyEdit('Purchases of stock-in-trade') },
+                    { label: 'Changes in inventories of finished goods, WIP & stock-in-trade', noteNo: '4', currentYear: pl.changesInInventories, ...pyEdit('Changes in inventories of finished goods, WIP & stock-in-trade') },
+                    { label: 'Employee benefits expense', noteNo: '5', currentYear: pl.employeeBenefits, ...pyEdit('Employee benefits expense') },
+                    { label: 'Finance costs', noteNo: '6', currentYear: pl.financeCosts, ...pyEdit('Finance costs') },
+                    { label: 'Depreciation and amortisation expense', noteNo: '7', currentYear: pl.depreciationAmortisation, ...pyEdit('Depreciation and amortisation expense') },
+                    { label: 'Other expenses', noteNo: '8', currentYear: pl.otherExpenses, ...pyEdit('Other expenses') },
+                    { label: 'TOTAL EXPENSES (IV)', currentYear: pl.totalExpenses, previousYear: pyTotalExpenses, isBold: true, isTotal: true },
                   ],
                 },
                 {
@@ -222,7 +328,7 @@ export default function ProfitLossPage() {
                   items: [{
                     label: 'Profit before exceptional items and tax',
                     currentYear: pl.profitBeforeExceptionalAndTax,
-                    previousYear: null,
+                    previousYear: pyPBET,
                     isBold: true,
                     isTotal: true,
                   }],
@@ -230,7 +336,7 @@ export default function ProfitLossPage() {
                 {
                   heading: 'VI. Exceptional Items',
                   indent: 0,
-                  items: [{ label: 'Exceptional items', currentYear: pl.exceptionalItems, previousYear: null }],
+                  items: [{ label: 'Exceptional items', currentYear: pl.exceptionalItems, ...pyEdit('Exceptional items') }],
                 },
                 {
                   heading: 'VII. PROFIT BEFORE TAX (V - VI)',
@@ -238,7 +344,7 @@ export default function ProfitLossPage() {
                   items: [{
                     label: 'Profit before tax',
                     currentYear: pl.profitBeforeTax,
-                    previousYear: null,
+                    previousYear: pyPBT,
                     isBold: true,
                     isTotal: true,
                   }],
@@ -247,9 +353,9 @@ export default function ProfitLossPage() {
                   heading: 'VIII. Tax Expense',
                   indent: 0,
                   items: [
-                    { label: '(a) Current Tax', currentYear: effCurrentTax, previousYear: null, editValue: manualCurrentTax, onEdit: (v: string) => setManualCurrentTax(v) },
-                    { label: '(b) Deferred Tax', currentYear: effDeferredTax, previousYear: null, editValue: manualDeferredTax, onEdit: (v: string) => setManualDeferredTax(v) },
-                    ...(pl.otherTaxExpense !== 0 ? [{ label: '(c) Other Tax', currentYear: pl.otherTaxExpense, previousYear: null }] : []),
+                    { label: '(a) Current Tax', currentYear: effCurrentTax, editValue: manualCurrentTax, onEdit: (v: string) => setManualCurrentTax(v), ...pyEdit('(a) Current Tax') },
+                    { label: '(b) Deferred Tax', currentYear: effDeferredTax, editValue: manualDeferredTax, onEdit: (v: string) => setManualDeferredTax(v), ...pyEdit('(b) Deferred Tax') },
+                    ...(pl.otherTaxExpense !== 0 ? [{ label: '(c) Other Tax', currentYear: pl.otherTaxExpense, ...pyEdit('(c) Other Tax') }] : []),
                   ],
                 },
                 {
@@ -258,7 +364,7 @@ export default function ProfitLossPage() {
                   items: [{
                     label: effProfitAfterTax >= 0 ? 'Profit for the year' : 'Loss for the year',
                     currentYear: effProfitAfterTax,
-                    previousYear: null,
+                    previousYear: pyPAT,
                     isBold: true,
                     isTotal: true,
                   }],
@@ -268,10 +374,10 @@ export default function ProfitLossPage() {
                   indent: 0,
                   items: pl.ociBreakdown.length > 0
                     ? [
-                        ...pl.ociBreakdown.map(o => ({ label: o.name, currentYear: o.amount, previousYear: null })),
-                        { label: 'Total OCI', currentYear: pl.oci, previousYear: null, isBold: true, isTotal: true },
+                        ...pl.ociBreakdown.map(o => ({ label: o.name, currentYear: o.amount, ...pyEdit(o.name) })),
+                        { label: 'Total OCI', currentYear: pl.oci, previousYear: pyOci, isBold: true, isTotal: true },
                       ]
-                    : [{ label: 'Other Comprehensive Income', currentYear: pl.oci, previousYear: null }],
+                    : [{ label: 'Other Comprehensive Income', currentYear: pl.oci, ...pyEdit('Other Comprehensive Income') }],
                 },
                 {
                   heading: 'XI. TOTAL COMPREHENSIVE INCOME (IX + X)',
@@ -279,7 +385,7 @@ export default function ProfitLossPage() {
                   items: [{
                     label: 'Total Comprehensive Income',
                     currentYear: effTotalCI,
-                    previousYear: null,
+                    previousYear: pyTCI,
                     isBold: true,
                     isTotal: true,
                   }],
@@ -288,8 +394,8 @@ export default function ProfitLossPage() {
                   heading: 'XII. Earnings Per Share',
                   indent: 0,
                   items: [
-                    { label: 'Basic EPS (₹)', currentYear: 0, previousYear: null },
-                    { label: 'Diluted EPS (₹)', currentYear: 0, previousYear: null },
+                    { label: 'Basic EPS (₹)', currentYear: 0, ...pyEdit('Basic EPS (₹)') },
+                    { label: 'Diluted EPS (₹)', currentYear: 0, ...pyEdit('Diluted EPS (₹)') },
                   ],
                 },
               ]}
@@ -319,25 +425,8 @@ export default function ProfitLossPage() {
         </div>
       )}
 
-      {/* Notes to Accounts — below the statement (Schedule III only) */}
-      {!loading && isScheduleIII && (
-        <ProfitLossNotesStrip
-          companyId={companyId || ''}
-          visible={true}
-          companyName={company.name}
-          entityLabel={entityLabel}
-          period={`${fromDate} to ${toDate}`}
-          revenueFromOperations={pl.revenueFromOperations}
-          revenueBreakdown={pl.revenueFromOperationsBreakdown}
-          otherIncomeBreakdown={pl.otherIncomeBreakdown}
-          costOfMaterialsBreakdown={pl.costOfMaterialsBreakdown}
-          changesInInventoriesBreakdown={pl.changesInInventoriesBreakdown}
-          employeeBenefitsBreakdown={pl.employeeBenefitsBreakdown}
-          financeCostsBreakdown={pl.financeCostsBreakdown}
-          depreciationBreakdown={pl.depreciationAmortisationBreakdown}
-          otherExpensesBreakdown={pl.otherExpensesBreakdown}
-        />
-      )}
+      {/* Notes strip below the statement removed — notes open by clicking a
+          particular in the statement itself (BsNotesDrawer). */}
 
       {/* P&L drill-down drawer */}
       {openPLNote && (

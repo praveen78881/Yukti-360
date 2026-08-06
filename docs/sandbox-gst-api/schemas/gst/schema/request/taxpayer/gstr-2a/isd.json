@@ -1,0 +1,86 @@
+{
+
+  "properties": {
+    "isd": {
+      "items": {
+        "properties": {
+         "cfs": {
+            "description": "counter party GSTR6 filing status", 
+            "type": "string"
+          }, 
+          "ctin": {
+            "description": "ISD gstin", 
+            "type": "string"
+          }, 
+          "doclist": {
+            "items": {
+              "properties": {
+                "camt": {
+                  "description": "ISD received as CGST", 
+                  "type": "number"
+                }, 
+                "chksum": {
+                  "description": "checksum", 
+                  "type": "string"
+                }, 
+                "cess": {
+                  "description": "ISD received as CESS", 
+                  "type": "number"
+                },
+                "docdt": {
+                  "description": "Document Date", 
+                  "type": "string"
+                }, 
+                "docnum": {
+                  "description": "Document number", 
+                  "type": "string"
+                },
+                "aspd": {
+					"description":"Return period in which amended or Original period in which reported",
+        			"type": "string"
+		        }, 
+		        "atyp": {
+		     		  "description":"flag to determine type of amendment",
+			          "type": "string"
+			    },                 
+                "iamt": {
+                  "description": "ISD received as IGST", 
+                  "type": "number"
+                }, 
+                "isd_docty": {
+                  "description": "document type", 
+                  "type": "string"
+                }, 
+                "itc_elg": {
+                  "description": "Eligible for ITC", 
+                  "type": "string"
+                }, 
+                "samt": {
+                  "description": "ISD received as SGST", 
+                  "type": "number"
+                }
+              },
+                 "required": [
+				"chksum",
+				"isd_docty",
+				"docnum",
+				"docdt",
+				"samt"	
+			],			  
+              "type": "object"
+            }, 
+            "type": "array"
+          }
+        }, 
+		
+		"required": [
+				"ctin",
+				"doclist"
+			],
+        "type": "object"
+      }, 
+      "type": "array"
+    }
+  }, 
+  "type": "object"
+}

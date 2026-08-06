@@ -1,0 +1,701 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "enum": [
+        "reconciliation_report_workbook"
+      ]
+    },
+    "@entity": {
+      "type": "string",
+      "enum": [
+        "workbook"
+      ]
+    },
+    "sheets": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "invoice_sheet"
+                ]
+              },
+              "@entity": {
+                "type": "string",
+                "enum": [
+                  "sheet"
+                ]
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "enum": [
+                            "purchase_invoice_table"
+                          ]
+                        },
+                        "@entity": {
+                          "type": "string",
+                          "enum": [
+                            "table"
+                          ]
+                        },
+                        "header": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "supplier_name"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "supplier_gstin"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "invoice_number"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "invoice_date_epoch"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "irn"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "place_of_supply"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "sub_total"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "gst_rate"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "cgst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "sgst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "igst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "cess"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "total"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "match_type"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "remarks"
+                              ]
+                            }
+                          ],
+                          "additionalItems": false,
+                          "minItems": 15,
+                          "maxItems": 15
+                        },
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": [
+                              {
+                                "type": "string",
+                                "minLength": 3,
+                                "maxLength": 100,
+                                "examples": [
+                                  "BHARTI  AIRTEL LTD."
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 15,
+                                "maxLength": 15,
+                                "pattern": "^(([0-9]{2}[0-9A-Z]{13})|URP)$",
+                                "examples": [
+                                  "24AAACB2894G1ZT"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 16,
+                                "pattern": "^([a-zA-Z1-9]{1}[a-zA-Z0-9/-]{0,15})$",
+                                "examples": [
+                                  "HT2424I001485717"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "minLength": 13,
+                                "maxLength": 13,
+                                "examples": [
+                                  "1702837800000"
+                                ]
+                              },
+                              {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 64,
+                                "maxLength": 64,
+                                "examples": [
+                                  "a2sc8rhd55b3ceed1dbsc8rh29ada8d103sc8rha8e5d92sc8rhae75641369580"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "org-quicko-gst-state-code"
+                                ],
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "3999"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "org-quicko-gst-rate"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "examples": [
+                                  "complete_match"
+                                ]
+                              },
+                              {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "examples": [
+                                  "50"
+                                ]
+                              }
+                            ],
+                            "additionalItems": false,
+                            "minItems": 15,
+                            "maxItems": 15
+                          }
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "@entity",
+                        "header",
+                        "rows"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "@entity",
+              "blocks"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "summary_sheet"
+                ]
+              },
+              "@entity": {
+                "type": "string",
+                "enum": [
+                  "sheet"
+                ]
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "enum": [
+                            "invoice_reconciliation_summary_list"
+                          ]
+                        },
+                        "@entity": {
+                          "type": "string",
+                          "enum": [
+                            "list"
+                          ]
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "complete_match": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "partial_match": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "missing_in_gstr-2b": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "missing_in_purchase_ledger": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "@entity",
+                        "items"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "enum": [
+                            "note_reconciliation_summary_list"
+                          ]
+                        },
+                        "@entity": {
+                          "type": "string",
+                          "enum": [
+                            "list"
+                          ]
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "complete_match": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "partial_match": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "missing_in_gstr-2b": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              },
+                              "missing_in_purchase_ledger": {
+                                "type": "number",
+                                "examples": [
+                                  "19"
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "@entity",
+                        "items"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "@entity",
+              "blocks"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "note_sheet"
+                ]
+              },
+              "@entity": {
+                "type": "string",
+                "enum": [
+                  "sheet"
+                ]
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "enum": [
+                            "debit_note_table"
+                          ]
+                        },
+                        "@entity": {
+                          "type": "string",
+                          "enum": [
+                            "table"
+                          ]
+                        },
+                        "header": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "supplier_name"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "supplier_gstin"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "note_number"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "note_date_epoch"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "irn"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "place_of_supply"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "sub_total"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "gst_rate"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "cgst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "sgst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "igst"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "cess"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "total"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "match_type"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "remarks"
+                              ]
+                            }
+                          ],
+                          "additionalItems": false,
+                          "minItems": 15,
+                          "maxItems": 15
+                        },
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": [
+                              {
+                                "type": "string",
+                                "minLength": 3,
+                                "maxLength": 100,
+                                "examples": [
+                                  "AWS INDIA PRIVATE LIMITED"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 15,
+                                "maxLength": 15,
+                                "pattern": "^(([0-9]{2}[0-9A-Z]{13})|URP)$",
+                                "examples": [
+                                  "07AAJCA9880A1ZL"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 16,
+                                "pattern": "^([a-zA-Z1-9]{1}[a-zA-Z0-9/-]{0,15})$",
+                                "examples": [
+                                  "ACN2324000103340"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "minLength": 13,
+                                "maxLength": 13,
+                                "examples": [
+                                  "1702405800000"
+                                ]
+                              },
+                              {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 64,
+                                "maxLength": 64,
+                                "examples": [
+                                  "723024781f7f4kr7799229784bd7e98f577f4kr58f5cb674f534617f4krfde51"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "org-quicko-gst-state-code"
+                                ],
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "org-quicko-gst-rate"
+                                ],
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "number",
+                                "examples": [
+                                  "50"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "examples": [
+                                  "complete_match"
+                                ]
+                              },
+                              {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "examples": [
+                                  "50"
+                                ]
+                              }
+                            ],
+                            "additionalItems": false,
+                            "minItems": 15,
+                            "maxItems": 15
+                          }
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "@entity",
+                        "header",
+                        "rows"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "@entity",
+              "blocks"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "@entity",
+    "sheets"
+  ]
+}

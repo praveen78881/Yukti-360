@@ -1,0 +1,44 @@
+---
+title: "Response caching"
+description: "Learn how Sandbox caches API responses and how to control caching behavior."
+keywords: ["caching", "cache", "X-Accept-Cache", "X-Cache", "performance"]
+---
+
+Sandbox caches API responses for frequently requested data. Cached responses are stored for 24 hours and served without additional charges to your wallet.
+
+<Note>
+  Cached responses do not incur wallet charges.
+</Note>
+
+## Controlling cache behavior
+
+Use the `X-Accept-Cache` header to control whether you want cached or fresh data:
+
+<ParamField header="X-Accept-Cache" type="boolean">
+  Controls cache behavior for the request:
+  - `true` — Return cached response if available
+  - `false` — Bypass cache and fetch fresh data from origin
+  
+  **Default**: If omitted, returns fresh data from origin
+</ParamField>
+
+```bash
+curl -X POST 'https://api.sandbox.co.in/endpoint' \
+     -H 'x-api-key: YOUR_API_KEY' \
+     -H 'authorization: YOUR_ACCESS_TOKEN' \
+     -H 'X-Accept-Cache: true'
+```
+
+## Cache status header
+
+The `X-Cache` response header indicates the caching status:
+
+| **X-Cache value** | **Description** |
+| :---------------- | :-------------- |
+| `Hit from Cloudfront` | Response served from cache |
+| `Miss from Cloudfront` | Fresh response, now cached for future requests |
+| `Error from Cloudfront` | Non-2XX response, not cached |
+
+<Warning>
+  Cache propagation across servers may take a moment. The response might not be cached immediately after the first successful request.
+</Warning>

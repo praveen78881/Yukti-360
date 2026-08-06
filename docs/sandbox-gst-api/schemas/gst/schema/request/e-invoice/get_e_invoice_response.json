@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get e-Invoice response",
+  "description": "NIC e-Invoice payload returned at data.Data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "AckDt": {
+      "type": "string",
+      "description": "Date and time when the Invoice Registration Portal acknowledged the invoice."
+    },
+    "AckNo": {
+      "type": "number",
+      "description": "Acknowledgement number assigned by the Invoice Registration Portal."
+    },
+    "EwbDt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Date and time when the E-Way Bill was generated, if available."
+    },
+    "EwbNo": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "E-Way Bill number associated with the IRN, if available."
+    },
+    "EwbValidTill": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Date and time until which the associated E-Way Bill is valid."
+    },
+    "Irn": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "description": "Invoice Registration Number assigned to the e-Invoice."
+    },
+    "Remarks": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Additional information returned by the Invoice Registration Portal."
+    },
+    "SignedInvoice": {
+      "type": "string",
+      "description": "Invoice payload digitally signed by the Invoice Registration Portal."
+    },
+    "SignedQRCode": {
+      "type": "string",
+      "description": "QR code payload digitally signed by the Invoice Registration Portal."
+    },
+    "Status": {
+      "type": "string",
+      "description": "Current status of the IRN, such as ACT for active or CNL for cancelled."
+    }
+  }
+}

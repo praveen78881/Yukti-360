@@ -61,17 +61,19 @@ export function computeDepreciation(
     const grossValue = asset.total_debit;
     const disposals = asset.total_credit;
     const netValue = grossValue - disposals;
-    const depreciableBase = method === 'SLM' ? netValue * (1 - residualFraction) : netValue;
-    let depAmount = method === 'SLM'
-      ? (depreciableBase * rate) / 100
-      : (netValue * rate) / 100;
-    if (halfYearRule) depAmount = depAmount / 2;
 
     const accDepAccount = balances.find(b =>
       ACCUM_DEP_SUBGROUPS.includes(b.account_group) &&
       b.account_name.toLowerCase().includes(asset.account_name.toLowerCase().split(' ')[0].replace(/[—–-]/g, '').toLowerCase())
     );
     const accDep = accDepAccount ? accDepAccount.balance : 0;
+
+    // SLM: charge on cost less residual. WDV: charge on opening written-down value (cost − accumulated depreciation).
+    const depreciableBase = method === 'SLM'
+      ? netValue * (1 - residualFraction)
+      : Math.max(0, netValue - accDep);
+    let depAmount = (depreciableBase * rate) / 100;
+    if (halfYearRule) depAmount = depAmount / 2;
 
     rows.push({
       assetName: asset.account_name,

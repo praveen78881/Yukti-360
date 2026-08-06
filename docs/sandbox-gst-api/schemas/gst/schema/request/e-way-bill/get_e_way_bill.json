@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get E-Way Bill response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "VehiclListDetails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "enteredDate": {
+            "type": "string"
+          },
+          "fromPlace": {
+            "type": "string"
+          },
+          "fromState": {
+            "type": "number"
+          },
+          "groupNo": {
+            "type": "string"
+          },
+          "transDocDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transDocNo": {
+            "type": "string"
+          },
+          "transMode": {
+            "type": "string"
+          },
+          "tripshtNo": {
+            "type": "number"
+          },
+          "updMode": {
+            "type": "string"
+          },
+          "userGSTINTransin": {
+            "type": "string"
+          },
+          "vehicleNo": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actFromStateCode": {
+      "type": "number"
+    },
+    "actToStateCode": {
+      "type": "number"
+    },
+    "actualDist": {
+      "type": "number"
+    },
+    "cessNonAdvolValue": {
+      "type": "number"
+    },
+    "cessValue": {
+      "type": "number"
+    },
+    "cgstValue": {
+      "type": "number"
+    },
+    "docDate": {
+      "type": "string"
+    },
+    "docNo": {
+      "type": "string"
+    },
+    "docType": {
+      "type": "string"
+    },
+    "ewayBillDate": {
+      "type": "string"
+    },
+    "ewbNo": {
+      "type": "number"
+    },
+    "extendedTimes": {
+      "type": "number"
+    },
+    "fromAddr1": {
+      "type": "string"
+    },
+    "fromAddr2": {
+      "type": "string"
+    },
+    "fromGstin": {
+      "type": "string"
+    },
+    "fromPincode": {
+      "type": "number"
+    },
+    "fromPlace": {
+      "type": "string"
+    },
+    "fromStateCode": {
+      "type": "number"
+    },
+    "fromTrdName": {
+      "type": "string"
+    },
+    "genMode": {
+      "type": "string"
+    },
+    "igstValue": {
+      "type": "number"
+    },
+    "itemList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cessNonAdvol": {
+            "type": "number"
+          },
+          "cessRate": {
+            "type": "number"
+          },
+          "cgstRate": {
+            "type": "number"
+          },
+          "hsnCode": {
+            "type": "number"
+          },
+          "igstRate": {
+            "type": "number"
+          },
+          "itemNo": {
+            "type": "number"
+          },
+          "productDesc": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "number"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "qtyUnit": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "sgstRate": {
+            "type": "number"
+          },
+          "taxableAmount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "noValidDays": {
+      "type": "number"
+    },
+    "otherValue": {
+      "type": "number"
+    },
+    "rejectStatus": {
+      "type": "string"
+    },
+    "sgstValue": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string"
+    },
+    "subSupplyType": {
+      "type": "string"
+    },
+    "supplyType": {
+      "type": "string"
+    },
+    "toAddr1": {
+      "type": "string"
+    },
+    "toAddr2": {
+      "type": "string"
+    },
+    "toGstin": {
+      "type": "string"
+    },
+    "toPincode": {
+      "type": "number"
+    },
+    "toPlace": {
+      "type": "string"
+    },
+    "toStateCode": {
+      "type": "number"
+    },
+    "toTrdName": {
+      "type": "string"
+    },
+    "totInvValue": {
+      "type": "number"
+    },
+    "totalValue": {
+      "type": "number"
+    },
+    "transactionType": {
+      "type": "number"
+    },
+    "transporterId": {
+      "type": "string"
+    },
+    "transporterName": {
+      "type": "string"
+    },
+    "userGstin": {
+      "type": "string"
+    },
+    "validUpto": {
+      "type": "string"
+    },
+    "vehicleType": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Search GSTIN Details response",
+  "description": "NIC taxpayer payload returned at data.Data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "AddrBnm": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registered building name."
+    },
+    "AddrBno": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registered building number."
+    },
+    "AddrFlno": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registered floor number."
+    },
+    "AddrLoc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registered locality."
+    },
+    "AddrPncd": {
+      "type": "number",
+      "description": "PIN code of the registered address."
+    },
+    "AddrSt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registered street name."
+    },
+    "BlkStatus": {
+      "type": "string",
+      "description": "Status indicating whether invoice or E-Way Bill generation is blocked for the GSTIN."
+    },
+    "DtDReg": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GST registration cancellation date, if applicable."
+    },
+    "DtReg": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GST registration date, if available."
+    },
+    "Gstin": {
+      "type": "string",
+      "minLength": 15,
+      "maxLength": 15,
+      "description": "GSTIN for which taxpayer details were requested."
+    },
+    "LegalName": {
+      "type": "string",
+      "description": "Legal name registered against the GSTIN."
+    },
+    "StateCode": {
+      "type": "number",
+      "description": "GST state code associated with the registered address."
+    },
+    "Status": {
+      "type": "string",
+      "description": "GST registration status, such as ACT for active."
+    },
+    "TradeName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Trade name registered against the GSTIN, if available."
+    },
+    "TxpType": {
+      "type": "string",
+      "description": "Taxpayer registration type."
+    }
+  }
+}

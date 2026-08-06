@@ -1,8 +1,27 @@
 -- ============================================================================
--- CA Studio — Supabase schema for journal data
--- Run this in Supabase → SQL Editor (once) before enabling the Supabase backend.
--- Mirrors the app's localStorage model so computeAllBalances() works unchanged.
+-- CA Studio — LEGACY single-user schema.  ⚠️ DO NOT RUN ON A REAL DEPLOYMENT.
+--
+-- SUPERSEDED by supabase/migrations/0001_core.sql (multi-tenant, per-user RLS
+-- scoped to auth.uid()). This file predates auth and its tables/policies would
+-- grant the public anon key full access to ALL tenants' data. The guard below
+-- aborts if the real multi-tenant schema is already present.
+--
+-- Kept only for local single-user experimentation. Prefer the migrations.
 -- ============================================================================
+
+-- Abort if the multi-tenant journal_entries (has a user_id column) already exists,
+-- so this legacy file can never attach permissive policies to the real table.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'journal_entries'
+      and column_name = 'user_id'
+  ) then
+    raise exception 'Refusing to run legacy schema.sql: multi-tenant schema detected. Use supabase/migrations instead.';
+  end if;
+end $$;
 
 -- ── Chart of accounts (per company) ─────────────────────────────────────────
 create table if not exists public.accounts (
@@ -70,17 +89,15 @@ create trigger je_set_updated_at before update on public.journal_entries
   for each row execute function public.set_updated_at();
 
 -- ── Row Level Security ──────────────────────────────────────────────────────
+-- RLS is ENABLED with NO permissive policy → default-deny for the anon key.
+-- The dangerous `anon all ... using(true)` policies have been REMOVED: they
+-- exposed every user's rows to any holder of the public anon key. If you truly
+-- need local single-user access, add auth.uid()-scoped policies against a
+-- user_id column instead (see supabase/migrations/0001_core.sql).
 alter table public.accounts        enable row level security;
 alter table public.journal_entries enable row level security;
 alter table public.journal_lines   enable row level security;
 
--- WARNING: the app currently has no real per-user auth (offline stub), so these
--- policies grant the anon key full access. That is acceptable for a single-user /
--- local setup ONLY. Before any multi-tenant/production use, replace these with
--- policies scoped to auth.uid() and a company-ownership table.
 drop policy if exists "anon all" on public.accounts;
 drop policy if exists "anon all" on public.journal_entries;
 drop policy if exists "anon all" on public.journal_lines;
-create policy "anon all" on public.accounts        for all using (true) with check (true);
-create policy "anon all" on public.journal_entries for all using (true) with check (true);
-create policy "anon all" on public.journal_lines   for all using (true) with check (true);

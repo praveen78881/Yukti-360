@@ -30,9 +30,9 @@ import {
   BarChart3,
   BookOpen
 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { getIcon } from '@/lib/constants/entityIcons';
 
-type Tab = 'general' | 'financial-year' | 'chart-of-accounts' | 'book-closing' | 'export' | 'ai-rules';
+type Tab = 'general' | 'gst-portal' | 'financial-year' | 'chart-of-accounts' | 'book-closing' | 'export' | 'ai-rules';
 
 // ── COA Tab ──────────────────────────────────────────────────────────────────
 
@@ -347,7 +347,7 @@ const Field = ({ label, error, children, span2 }: { label: string; error?: strin
   <div className={span2 ? 'sm:col-span-2' : ''}>
     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">{label}</label>
     {children}
-    {error && <p className="text-red-500 text-[10.5px] mt-1.5 font-medium flex items-center gap-1"><LucideIcons.AlertCircle className="w-3 h-3" />{error}</p>}
+    {error && <p className="text-red-500 text-[10.5px] mt-1.5 font-medium flex items-center gap-1"><AlertCircle className="w-3 h-3" />{error}</p>}
   </div>
 );
 
@@ -363,6 +363,12 @@ export default function SettingsPage() {
   const [pan, setPan] = useState('');
   const [gstin, setGstin] = useState('');
   const [disclosureLevel, setDisclosureLevel] = useState<'I' | 'II' | 'III' | 'IV' | ''>('');
+
+  // GST & e-Way Bill portal credentials (captured once, used silently)
+  const [portalUsername, setPortalUsername] = useState('');
+  const [ewbUsername, setEwbUsername] = useState('');
+  const [ewbPassword, setEwbPassword] = useState('');
+  const [gstSaveStatus, setGstSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // Financial Year
   const [fyStartMonth, setFyStartMonth] = useState('4'); // April
@@ -392,6 +398,9 @@ export default function SettingsPage() {
     setGstin(company.gst_details?.gstin || '');
     const level = (company.entity_details as { disclosureLevel?: 'I' | 'II' | 'III' | 'IV' } | undefined)?.disclosureLevel;
     setDisclosureLevel(level || '');
+    setPortalUsername(company.gst_details?.portalUsername || '');
+    setEwbUsername(company.gst_details?.ewbUsername || '');
+    setEwbPassword(company.gst_details?.ewbPassword || '');
   }, [company?.id]);
 
   const handleSaveGeneral = useCallback(async () => {
@@ -404,10 +413,16 @@ export default function SettingsPage() {
         pan: pan || undefined,
         ...(disclosureLevel ? { disclosureLevel: disclosureLevel as 'I' | 'II' | 'III' | 'IV' } : {}),
       };
+      const trimmedGstin = gstin.trim();
+      // Adding a valid GSTIN to an unregistered company registers it, so the GST
+      // Command Center opens (default scheme "regular"; switch to composition below).
+      const promotedStatus = trimmedGstin.length === 15 && company.gst_status === 'unregistered'
+        ? 'regular' as const : company.gst_status;
       await updateCompany({
         name: companyName.trim() || company.name,
         entity_details: entityDetails,
-        gst_details: { ...company.gst_details, gstin: gstin.trim() || undefined },
+        gst_status: promotedStatus,
+        gst_details: { ...company.gst_details, gstin: trimmedGstin || undefined },
       });
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -416,6 +431,33 @@ export default function SettingsPage() {
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   }, [companyId, company, companyName, address, pan, gstin, disclosureLevel, updateCompany]);
+
+  const handleSaveGst = useCallback(async () => {
+    if (!companyId || !company) return;
+    setGstSaveStatus('saving');
+    try {
+      const trimmedGstin = gstin.trim();
+      // Saving a valid GSTIN on an unregistered company registers it so the GST
+      // Command Center becomes available (default scheme "regular").
+      const promotedStatus = trimmedGstin.length === 15 && company.gst_status === 'unregistered'
+        ? 'regular' as const : company.gst_status;
+      await updateCompany({
+        gst_status: promotedStatus,
+        gst_details: {
+          ...company.gst_details,
+          gstin: trimmedGstin || undefined,
+          portalUsername: portalUsername.trim() || undefined,
+          ewbUsername: ewbUsername.trim() || undefined,
+          ewbPassword: ewbPassword.trim() || undefined,
+        },
+      });
+      setGstSaveStatus('saved');
+      setTimeout(() => setGstSaveStatus('idle'), 2000);
+    } catch {
+      setGstSaveStatus('error');
+      setTimeout(() => setGstSaveStatus('idle'), 3000);
+    }
+  }, [companyId, company, gstin, portalUsername, ewbUsername, ewbPassword, updateCompany]);
 
   const EXPORT_PREFS_KEY = 'ca_export_prefs_';
   useEffect(() => {
@@ -489,11 +531,12 @@ export default function SettingsPage() {
 
   const tabs: { key: Tab; label: string; icon: string; isLocked?: boolean }[] = [
     { key: 'general', label: 'General', icon: 'Settings' },
+    { key: 'gst-portal', label: 'GST & e-Way Bill', icon: 'Landmark' },
     { key: 'financial-year', label: 'Financial Year', icon: 'Calendar' },
     { key: 'chart-of-accounts', label: 'Chart of Accounts', icon: 'Table' },
-    { key: 'book-closing', label: 'Book Closing', icon: 'FolderClosed', isLocked: true },
+    { key: 'book-closing', label: 'Book Closing', icon: 'FolderClosed' },
     { key: 'export', label: 'Export & Print', icon: 'Printer' },
-    { key: 'ai-rules', label: 'AI Rules', icon: 'Sparkles', isLocked: true },
+    { key: 'ai-rules', label: 'AI Rules', icon: 'Sparkles' },
   ];
 
   return (
@@ -506,7 +549,7 @@ export default function SettingsPage() {
         <nav className="w-full md:w-64 shrink-0 space-y-2.5 bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm shadow-slate-100/50">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1.5 mb-3">Settings Categories</p>
           {tabs.map(tab => {
-            const Icon = (LucideIcons as any)[tab.icon] || Settings;
+            const Icon = getIcon(tab.icon);
             const active = activeTab === tab.key;
             return (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)} 
@@ -619,6 +662,54 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* GST & e-Way Bill Tab */}
+          {activeTab === 'gst-portal' && (
+            <div className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm shadow-slate-200/50 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-20" />
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shadow-sm border border-blue-100">
+                  <FileCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">GST &amp; e-Way Bill Access</h2>
+                  <p className="text-xs text-slate-500">Enter these once. The software uses them to connect to the GST and e-Way Bill portals automatically — no logging in each time.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Field label="GSTIN">
+                  <input type="text" value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} className={`${inp} font-mono uppercase`} />
+                </Field>
+                <Field label="GST Portal Username">
+                  <input type="text" value={portalUsername} onChange={e => setPortalUsername(e.target.value)} placeholder="GST portal login username" className={inp} />
+                </Field>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-150">
+                <h4 className="text-sm font-bold text-slate-900 mb-1">e-Way Bill &amp; e-Invoice API Credentials</h4>
+                <p className="text-xs text-slate-500 mb-4">One GSP registration powers both e-Way Bill and e-Invoicing. Create it on ewaybillgst.gov.in → Registration → <b>For GSP</b> → add <b>&quot;Quicko Infosoft Pvt. Ltd.&quot;</b> and set a username &amp; password.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Field label="GSP API Username">
+                    <input type="text" value={ewbUsername} onChange={e => setEwbUsername(e.target.value)} placeholder="API username" className={inp} />
+                  </Field>
+                  <Field label="GSP API Password">
+                    <input type="password" value={ewbPassword} onChange={e => setEwbPassword(e.target.value)} placeholder="API password" className={inp} />
+                  </Field>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-6 border-t border-slate-100 mt-6">
+                <button type="button" onClick={handleSaveGst} disabled={gstSaveStatus === 'saving'}
+                  className="inline-flex items-center gap-2 h-11 px-7 text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:scale-[1.01] transition-all disabled:opacity-60">
+                  {gstSaveStatus === 'saving' ? (<><div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving…</>) : (<>Save Credentials</>)}
+                </button>
+                {gstSaveStatus === 'saved' && <span className="text-sm font-semibold text-green-600 flex items-center gap-1.5 animate-in fade-in duration-300"><Check className="h-4 w-4" /> Saved.</span>}
+                {gstSaveStatus === 'error' && <span className="text-sm font-semibold text-red-600 flex items-center gap-1.5 animate-in fade-in duration-300"><AlertCircle className="h-4 w-4" /> Could not save.</span>}
+              </div>
+            </div>
+          )}
+
           {/* Financial Year Tab */}
           {activeTab === 'financial-year' && (
             <div className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm shadow-slate-200/50 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
@@ -678,55 +769,40 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Premium Lock Banner */}
-              <div className="mb-6 bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex items-start gap-4 shadow-sm shadow-slate-100/50">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
-                  <Lock className="h-5 w-5" />
+              {/* Automatic-closing explainer */}
+              <div className="mb-6 bg-emerald-50/50 border border-emerald-200 rounded-2xl p-5 flex items-start gap-4 shadow-sm shadow-emerald-100/40">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200/60">
+                  <Check className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800">Closing Entries Generation Locked</h4>
+                  <h4 className="text-sm font-bold text-slate-800">Year-end closing is automatic</h4>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Year-end closing journal generation is locked under your organization's current plan. You can view closing parameters below, but automated closure is disabled.
+                    CA Studio computes your financial statements live from journal entries. Revenue and expense
+                    balances flow into the Trading / P&amp;L statement automatically, and the resulting net profit
+                    is carried into Capital &amp; Reserves on the Balance Sheet — with no manual closing journal to
+                    post. Just set the financial year boundary below and open a fresh year; opening balances carry
+                    forward on their own.
                   </p>
-                </div>
-              </div>
-
-              <div className="bg-amber-50/40 border border-amber-200 rounded-2xl p-5 text-sm text-amber-800 flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">Closing accounts warning</p>
-                  <p className="text-xs text-amber-700/95 mt-1 leading-relaxed">Book closing consolidates Nominal Ledger accounts and creates closing entries that transfer net profit/loss into Capital & Reserves. Perform this operation only after validating all ledger and journal entries.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-6">
                 <Field label="Closing Date">
-                  <input type="date" value={closingDate} onChange={e => setClosingDate(e.target.value)} disabled className={`${inp} bg-slate-50 text-slate-400 cursor-not-allowed`} />
+                  <input type="date" value={closingDate} onChange={e => setClosingDate(e.target.value)} className={inp} />
                 </Field>
                 <Field label="Narration Description">
-                  <input type="text" value={closingNarration} onChange={e => setClosingNarration(e.target.value)} disabled className={`${inp} bg-slate-50 text-slate-400 cursor-not-allowed`} />
+                  <input type="text" value={closingNarration} onChange={e => setClosingNarration(e.target.value)} className={inp} />
                 </Field>
               </div>
 
               <div className="mt-6 space-y-2 bg-slate-50/40 border border-slate-200/60 rounded-2xl p-5">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Summary of generated transactions</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">What happens at year-end (automatically)</p>
                 <ul className="text-xs text-slate-600 space-y-2.5 mt-2 list-none">
-                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Transfer revenue account balances to Trading / P&L Account</li>
-                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Transfer expense account balances to Trading / P&L Account</li>
-                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Transfer final calculated net profit/loss to Capital/Reserves</li>
-                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Reset and lock nominal ledger balances</li>
+                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Revenue account balances flow into the Trading / P&amp;L statement</li>
+                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Expense account balances flow into the Trading / P&amp;L statement</li>
+                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Net profit/loss is carried into Capital / Reserves on the Balance Sheet</li>
+                  <li className="flex items-center gap-2 font-medium"><Check className="h-3.5 w-3.5 text-emerald-500" /> Opening balances roll forward when you open the next financial year</li>
                 </ul>
-              </div>
-
-              <div className="flex gap-3 pt-6 border-t border-slate-100 mt-6">
-                <button disabled className="inline-flex items-center gap-2 h-11 px-6 text-sm font-bold bg-slate-100 text-slate-400 border border-slate-200 rounded-xl cursor-not-allowed shadow-none">
-                  <Lock className="h-4 w-4 shrink-0 text-slate-450" />
-                  Generate Closing Entries (Locked)
-                </button>
-                <button disabled className="inline-flex items-center gap-2 h-11 px-6 text-sm font-bold bg-slate-50 text-slate-400 border border-slate-200 rounded-xl cursor-not-allowed shadow-none">
-                  <Lock className="h-4 w-4 shrink-0 text-slate-450" />
-                  Preview First (Locked)
-                </button>
               </div>
             </div>
           )}
@@ -809,19 +885,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Premium Lock Banner */}
-              <div className="mb-6 bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex items-start gap-4 shadow-sm shadow-slate-100/50">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
-                  <Lock className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-800">CARP AI Configuration Locked</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Custom AI directives configuration is locked under your organization's current plan. You can view the guidelines and examples below, but saving custom rules is disabled.
-                  </p>
-                </div>
-              </div>
-
               <div className="bg-blue-50/40 border border-blue-150 rounded-2xl p-5 text-sm text-blue-805">
                 <p className="font-bold flex items-center gap-1.5 mb-2"><Sparkles className="h-4 w-4 text-blue-600 animate-pulse" /> Custom Directive Examples</p>
                 <ul className="text-xs text-blue-700/95 space-y-1 list-disc list-inside leading-relaxed">
@@ -839,31 +902,32 @@ export default function SettingsPage() {
                   value={aiRules}
                   onChange={e => setAiRules(e.target.value)}
                   rows={8}
-                  disabled
                   placeholder="Enter custom directives here (one per line)..."
-                  className="w-full px-4 py-3.5 text-sm border border-slate-200 rounded-2xl bg-slate-50 text-slate-400 cursor-not-allowed font-mono resize-y shadow-inner leading-relaxed"
+                  className="w-full px-4 py-3.5 text-sm border border-slate-200 rounded-2xl bg-white text-slate-700 font-mono resize-y shadow-inner leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
                 />
+                <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">These directives are injected into the CARP AI's instructions for this workspace, so the assistant follows your firm's conventions when posting entries.</p>
               </div>
 
               <div className="flex items-center gap-3 pt-6 border-t border-slate-100 mt-6">
                 <button
                   type="button"
-                  disabled
-                  className="inline-flex items-center gap-2 h-11 px-7 text-sm font-bold bg-slate-150 text-slate-400 border border-slate-200 rounded-xl cursor-not-allowed shadow-none"
+                  onClick={handleSaveAiRules}
+                  disabled={aiRulesSaveStatus === 'saving'}
+                  className="inline-flex items-center gap-2 h-11 px-7 text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:scale-[1.01] transition-all disabled:opacity-60"
                 >
-                  <Lock className="h-4 w-4 shrink-0 text-slate-450" />
-                  Save Rules (Locked)
+                  {aiRulesSaveStatus === 'saving' ? 'Saving…' : 'Save Rules'}
                 </button>
                 {aiRules && (
                   <button
                     type="button"
-                    disabled
-                    className="inline-flex items-center h-11 px-5 text-sm font-bold bg-white border border-slate-200 text-slate-450 rounded-xl cursor-not-allowed shadow-none"
+                    onClick={() => setAiRules('')}
+                    className="inline-flex items-center h-11 px-5 text-sm font-bold bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
                   >
-                    <Lock className="h-4 w-4 shrink-0 mr-1.5 text-slate-450" />
                     Clear Rules
                   </button>
                 )}
+                {aiRulesSaveStatus === 'saved' && <span className="text-sm font-semibold text-green-600 flex items-center gap-1.5 animate-in fade-in duration-300"><Check className="h-4 w-4" /> Rules saved.</span>}
+                {aiRulesSaveStatus === 'error' && <span className="text-sm font-semibold text-red-600">Could not save. Try again.</span>}
               </div>
             </div>
           )}

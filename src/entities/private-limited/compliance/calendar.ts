@@ -44,7 +44,9 @@ function addDays(date: string, days: number): string {
 }
 
 function iso(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Format from local date parts — toISOString() converts to UTC, which shifts
+  // local-midnight dates one day earlier for timezones ahead of UTC (e.g. IST).
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function fyStartDate(fyEnd: string): string {
@@ -149,7 +151,8 @@ export function generateComplianceCalendar(
     id: nextId(), code: 'MSME-1-H2', name: 'MSME-1 (Apr–Sep)',
     description: 'Dues to micro/small vendors overdue >45 days — half year 2',
     statute: 'Sec 405', frequency: 'half_yearly',
-    dueDate: `${calYear}-10-31`,
+    // Apr–Sep half of this FY ends Sep of calYear-1; return due 31 Oct of that same calendar year.
+    dueDate: `${calYear - 1}-10-31`,
     category: 'roc_filing', status: 'pending',
   });
 

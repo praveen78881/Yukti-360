@@ -13,12 +13,13 @@ export interface B2BItem {
 export interface B2BInvoice {
   id: string;
   ctin: string;
-  inv_typ: 'R' | 'SEWP' | 'SEWOP' | 'DE';
+  inv_typ: 'R' | 'SEWP' | 'SEWOP' | 'DE' | 'CBW';
   inum: string;
   idt: string; // DD-MM-YYYY
   val: number;
   pos: string;
   rchrg: 'Y' | 'N';
+  diff_percent?: number;   // applicable % of tax rate (differential)
   itms: B2BItem[];
   isAmended?: boolean;
   origInvNum?: string;
@@ -40,6 +41,8 @@ export interface B2CLInvoice {
 export interface B2CSSummary {
   id: string;
   sply_ty: 'INTRA' | 'INTER';
+  typ?: 'OE' | 'E';      // GSTN required: OE = ordinary, E = via e-commerce operator. Gen defaults 'OE'.
+  etin?: string;         // e-com operator GSTIN — required when typ === 'E'
   pos: string;
   rt: number;
   txval: number;
@@ -47,7 +50,9 @@ export interface B2CSSummary {
   camt?: number;
   samt?: number;
   csamt?: number;
+  diff_percent?: number;
   isAmended?: boolean;
+  omon?: string;         // B2CSA: original month (MMYYYY) being amended
 }
 
 export interface EXPInvoice {
@@ -59,8 +64,10 @@ export interface EXPInvoice {
   sbnum?: string;
   sbdt?: string;
   sbpcode?: string;
-  itms: Array<{ txval: number; rt: number; iamt?: number }>;
+  itms: Array<{ txval: number; rt: number; iamt?: number; csamt?: number }>;
   isAmended?: boolean;
+  origInvNum?: string;   // EXPA: oinum — original invoice being amended
+  origInvDt?: string;    // EXPA: oidt
 }
 
 export interface CDNRNote {
@@ -71,6 +78,12 @@ export interface CDNRNote {
     ntnum: string;
     ntdt: string; // DD-MM-YYYY
     val: number;
+    pos?: string;                                         // Place of Supply
+    inv_typ?: 'R' | 'DE' | 'SEWP' | 'SEWOP' | 'CBW';      // note supply type
+    rchrg?: 'Y' | 'N';                                    // reverse charge
+    p_gst?: 'Y' | 'N';                                    // pre-GST-regime note
+    ont_num?: string;                                     // CDNRA: original note number being amended
+    ont_dt?: string;                                      // CDNRA: original note date
     itms: B2BItem[];
   }>;
   isAmended?: boolean;
@@ -84,6 +97,10 @@ export interface CDNURNote {
   ntdt: string;
   val: number;
   pos: string;
+  inv_typ?: 'R' | 'DE' | 'SEWP' | 'SEWOP' | 'CBW';        // note supply type
+  p_gst?: 'Y' | 'N';                                      // pre-GST-regime note
+  ont_num?: string;                                       // CDNURA: original note number being amended
+  ont_dt?: string;                                        // CDNURA: original note date
   itms: B2BItem[];
   isAmended?: boolean;
 }
@@ -110,15 +127,36 @@ export interface TXPDAdjustment {
   itms: Array<{ rt: number; ad_amt: number; iamt?: number; camt?: number; samt?: number; csamt?: number }>;
 }
 
+// Advance amendments (Table 11(II)) — an AT/TXPD row amended for a prior month.
+// Identical shape to AT/TXPD plus `omon` (the original MMYYYY being amended).
+export interface ATAAmendment {
+  id: string;
+  omon: string;          // original month (MMYYYY) being amended
+  pos: string;
+  sply_ty: 'INTRA' | 'INTER';
+  itms: Array<{ rt: number; ad_amt: number; iamt?: number; camt?: number; samt?: number; csamt?: number }>;
+}
+
+export interface TXPDAAmendment {
+  id: string;
+  omon: string;          // original month (MMYYYY) being amended
+  pos: string;
+  sply_ty: 'INTRA' | 'INTER';
+  itms: Array<{ rt: number; ad_amt: number; iamt?: number; camt?: number; samt?: number; csamt?: number }>;
+}
+
 export interface HSNSummary {
   id: string;
   num: number;
   hsn_sc: string;
   desc: string;
+  user_desc?: string;   // free-text description the CA enters (GSTN `user_desc`)
   uqc: string;
   qty: number;
   val: number;
   txval: number;
+  rt?: number;                    // tax rate — GSTN HSN schema is rate-wise (required per row)
+  supplyClass?: 'B2B' | 'B2C';    // routes the row into hsn_b2b vs hsn_b2c (defaults B2C)
   iamt: number;
   camt: number;
   samt: number;
@@ -165,8 +203,35 @@ export interface GSTR1Filing {
   expa: EXPInvoice[];
   cdnra: CDNRNote[];
   cdnura: CDNURNote[];
+  ata?: ATAAmendment[];      // advance-received amendments (Table 11(II))
+  txpda?: TXPDAAmendment[];  // advance-adjusted amendments
+  // Table 14/15 — supplies through e-commerce operators.
+  supeco?: { clttx: SupecoTx[]; paytx: SupecoTx[] };
   // RCM overrides: entry id → 'Y'|'N' (for toggling RCM on auto-populated rows)
   rcm_overrides: Record<string, 'Y' | 'N'>;
+  // Return-level aggregate turnover — CA must enter actual values; do NOT file with an estimate.
+  gt?: number;      // gross turnover of the previous financial year
+  cur_gt?: number;  // turnover for April to the current return period
+  // Post-filing record — set once GSTN returns an ARN. Its presence LOCKS the period
+  // (fully read-only) and survives reload/navigation. Amendments go to future periods.
+  filed?: {
+    arn: string;
+    filedAt: string;   // ISO timestamp
+    bodyHash: string;  // content hash of the filed return
+  };
+}
+
+// ── Table 14/15 — supplies through an e-commerce operator (supeco) ──
+// clttx = supplies on which the ECO collects tax (u/s 52); paytx = supplies on
+// which the ECO pays tax (u/s 9(5)). One row per operator GSTIN (etin).
+export interface SupecoTx {
+  id: string;
+  etin: string;      // e-commerce operator GSTIN
+  suppval: number;   // net value of supplies
+  igst: number;
+  cgst: number;
+  sgst: number;
+  cess: number;
 }
 
 export type Gstr1Section = 'b2b' | 'b2cl' | 'b2cs' | 'exp' | 'cdnr' | 'cdnur' | 'nil' | 'at' | 'txpd' | 'hsn' | 'doc_issue';

@@ -1,0 +1,139 @@
+---
+title: "Overview"
+description: "Generate GST e-Invoices with IRN, signed QR codes, and E-Way Bills via India's Invoice Registration Portal (IRP)."
+---
+
+# GST e-Invoice API
+
+GST e-Invoice is a GST-compliant invoice registered with the Invoice Registration Portal (IRP) and assigned an IRN (Invoice Reference Number). Use this API to generate IRNs, receive the IRP-signed invoice JSON and QR code, download PDFs, cancel or fetch e-Invoices, and create or retrieve E-Way Bills linked to the IRN.
+
+This API integrates with India's Invoice Registration Portal (IRP) for GST e-invoicing. API credentials are created on the e-Invoice portal and mapped to your GSP.
+
+<Note>
+Sandbox supports dual-IRP routing via the `x-source` header. Route e-Invoice calls to either [NIC 1](https://einvoice1.gst.gov.in/) (`primary`) or [NIC 2](https://einvoice2.gst.gov.in/) (`secondary`). Retry the alternate IRP if one is unavailable.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Dual-IRP routing" icon="shuffle" href="/api-reference/gst/compliance/endpoints/e-invoice/authenticate">
+    Route requests to [NIC 1](https://einvoice1.gst.gov.in/) or [NIC 2](https://einvoice2.gst.gov.in/) using the `x-source` header. Retry with the alternate IRP if one is unavailable.
+  </Card>
+  <Card title="Complete e-Invoice lifecycle" icon="file-invoice" href="/recipes/gst/e-invoice/generate_e_invoice">
+    Generate, fetch, cancel e-invoices, and create/retrieve E-Way Bills linked to IRN.
+  </Card>
+  <Card title="Signed invoice & QR code" icon="signature" href="/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice">
+    Receive IRP-signed invoice and QR code for compliance and audit requirements.
+  </Card>
+  <Card title="PDF generation" icon="file-pdf" href="/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf">
+    Generate e-Invoice PDFs using the signed invoice and QR code data.
+  </Card>
+</CardGroup>
+
+<Note>
+**Prerequisites:** To use GST e-Invoice API, you need: (1) API credentials created on the [e-Invoice portal](https://einvoice1.gst.gov.in/), (2) credentials mapped to your GSP, and (3) a Sandbox API key for PDF generation.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Create API credentials on e-Invoice portal">
+    Register on the e-Invoice portal and create API credentials. Map these credentials to your GSP (Goods and Services Tax Suvidha Provider). See [Create API credentials](/api-reference/gst/compliance/guides/e-invoice/authentication/create_api_credentials) for detailed instructions.
+  </Step>
+  
+  <Step title="Authenticate with Sandbox">
+    Call the [Sandbox authentication endpoint](/api-reference/authenticate) to obtain a Sandbox access token (JWT). This token is used for Sandbox-specific operations like PDF generation.
+  </Step>
+  
+  <Step title="Authenticate with e-Invoice IRP">
+    Call the [e-Invoice authentication endpoint](/api-reference/gst/compliance/endpoints/e-invoice/authenticate) with your e-Invoice credentials. Set the `x-source` header to `primary` ([NIC 1](https://einvoice1.gst.gov.in/)) to route to the primary IRP. This returns an e-Invoice session token valid for the IRP. See the [Generate e-Invoice session recipe](/recipes/gst/authentication/generate_e_invoice_session) for implementation details.
+  </Step>
+  
+  <Step title="Handle IRP failover (if needed)">
+    If the primary IRP is unavailable or times out, retry the e-Invoice authentication with `x-source: secondary` to route to [NIC 2](https://einvoice2.gst.gov.in/). Use the same approach for all subsequent taxpayer API calls.
+  </Step>
+  
+  <Step title="Generate e-Invoice">
+    Post your invoice object to the [Generate e-Invoice endpoint](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice). On success, receive the IRN, signed invoice JSON, and signed QR code. Optionally generate an E-Way Bill in the same call. See the [Generate e-Invoice recipe](/recipes/gst/e-invoice/generate_e_invoice) for a complete walkthrough.
+  </Step>
+  
+  <Step title="Generate e-Invoice PDF">
+    Call the [Generate PDF endpoint](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf) with the IRN, signed invoice, and signed QR code. This endpoint uses your Sandbox JWT (not the e-Invoice token) since PDF generation is a Sandbox service.
+  </Step>
+  
+  <Step title="Fetch e-Invoice">
+    Retrieve an e-Invoice by IRN using [Get e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice) or by document type, number, and date using [Get e-Invoice by document data](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice_by_document_data). See the [Get e-Invoice recipe](/recipes/gst/e-invoice/get_e_invoice_using_taxpayer_api) for examples.
+  </Step>
+  
+  <Step title="Cancel e-Invoice (if needed)">
+    [Cancel an e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/cancel_e_invoice) by IRN within the cancellation window when required.
+  </Step>
+  
+  <Step title="Generate E-Way Bill for transportation">
+    [Generate](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_way_bill) or [fetch E-Way Bills](/api-reference/gst/compliance/endpoints/e-invoice/get_e_way_bill) linked to the IRN for logistics and transportation compliance.
+  </Step>
+</Steps>
+
+## API endpoints
+
+### Authentication
+
+| API | Purpose |
+|:----|:--------|
+| <Tooltip tip="POST /authenticate">[Sandbox Authentication](/api-reference/authenticate)</Tooltip> | Obtain Sandbox JWT for PDF generation and other Sandbox services |
+| <Tooltip tip="POST /gst/compliance/e-invoice/tax-payer/authenticate">[e-Invoice Authentication](/api-reference/gst/compliance/endpoints/e-invoice/authenticate)</Tooltip> | Obtain e-Invoice session token from IRP. Supports `x-source` header |
+
+### e-Invoice operations
+
+| API | Purpose |
+|:----|:--------|
+| <Tooltip tip="POST /gst/compliance/e-invoice/tax-payer/invoice">[Generate e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice)</Tooltip> | Generate IRN with signed invoice and QR code. Supports `x-source` header |
+| <Tooltip tip="GET /gst/compliance/e-invoice/tax-payer/invoice/{irn}">[Get e-Invoice by IRN](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice)</Tooltip> | Fetch e-Invoice details by IRN. Supports `x-source` header |
+| <Tooltip tip="GET /gst/compliance/e-invoice/tax-payer/invoice">[Get e-Invoice by document data](/api-reference/gst/compliance/endpoints/e-invoice/get_e_invoice_by_document_data)</Tooltip> | Fetch e-Invoice by document type, number, and date. Supports `x-source` header |
+| <Tooltip tip="POST /gst/compliance/e-invoice/tax-payer/invoice/{irn}/cancel">[Cancel e-Invoice](/api-reference/gst/compliance/endpoints/e-invoice/cancel_e_invoice)</Tooltip> | Cancel an e-Invoice by IRN. Supports `x-source` header |
+| <Tooltip tip="POST /gst/compliance/e-invoice/pdf/generate">[Generate e-Invoice PDF](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf)</Tooltip> | Generate PDF from signed invoice and QR. Uses Sandbox JWT |
+| <Tooltip tip="POST /gst/compliance/e-invoice/tax-payer/gstin/search">[Search GSTIN](/api-reference/gst/compliance/endpoints/e-invoice/search_gstin)</Tooltip> | Look up GSTIN details in IRP database (not GSTN) |
+
+### E-Way Bill (from e-Invoice)
+
+| API | Purpose |
+|:----|:--------|
+| <Tooltip tip="POST /gst/compliance/e-invoice/tax-payer/invoice/{irn}/e-way-bill">[Generate E-Way Bill](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_way_bill)</Tooltip> | Generate E-Way Bill linked to IRN. Supports `x-source` header |
+| <Tooltip tip="GET /gst/compliance/e-invoice/tax-payer/invoice/{irn}/e-way-bill">[Get E-Way Bill](/api-reference/gst/compliance/endpoints/e-invoice/get_e_way_bill)</Tooltip> | Retrieve E-Way Bill details by IRN. Supports `x-source` header |
+
+## Common use cases
+
+Use GST e-Invoice API when you need to:
+
+- Generate GST e-invoices (IRN) and store signed invoice + QR for compliance and audit
+- Provide "Download invoice PDF" functionality to customers and finance teams
+- Cancel wrongly issued e-invoices by IRN within the cancellation window
+- Fetch e-invoices by IRN or by document reference for reconciliation and support
+- Generate and retrieve E-Way Bills linked to IRN for logistics and transportation
+- Validate GSTIN details via IRP lookup before invoicing
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What is GST e-Invoice?">
+    GST e-Invoice is a GST-compliant invoice registered with India's Invoice Registration Portal (IRP). Each e-Invoice receives a unique Invoice Reference Number (IRN) and is digitally signed by the IRP. The signed invoice and QR code serve as proof of registration for compliance and audit purposes. See [Create API credentials](/api-reference/gst/compliance/guides/e-invoice/authentication/create_api_credentials) to get started.
+  </Accordion>
+
+  <Accordion title="How does GST e-Invoice API work end-to-end?">
+    The workflow is: create e-Invoice API credentials and map them to your GSP, authenticate with Sandbox for a JWT, authenticate with the IRP for a session token, submit invoice data to generate the IRN with signed invoice and QR code, then optionally generate a PDF and manage fetch, cancel, or E-Way Bill actions. All taxpayer endpoints support dual-IRP routing via `x-source`. See the [Generate e-Invoice recipe](/recipes/gst/e-invoice/generate_e_invoice) for a complete example.
+  </Accordion>
+
+  <Accordion title="What is the x-source header in Sandbox e-Invoice APIs?">
+    The `x-source` header enables dual-IRP routing in Sandbox e-Invoice APIs. Set `x-source: primary` to route requests to [NIC 1](https://einvoice1.gst.gov.in/) (the primary IRP) or `x-source: secondary` to route to [NIC 2](https://einvoice2.gst.gov.in/) (the secondary IRP). If omitted, requests default to `primary`. This header is supported on all taxpayer endpoints, including [authentication](/api-reference/gst/compliance/endpoints/e-invoice/authenticate), generate, fetch, cancel, and E-Way Bill operations.
+  </Accordion>
+
+  <Accordion title="What credentials are required to call e-Invoice Authentication?">
+    e-Invoice Authentication requires credentials created on the e-Invoice portal: your GSTIN, username, and password. These credentials must be mapped to your GSP (Goods and Services Tax Suvidha Provider). The [Create API credentials guide](/api-reference/gst/compliance/guides/e-invoice/authentication/create_api_credentials) provides step-by-step instructions for setting up these credentials.
+  </Accordion>
+
+  <Accordion title="Why does e-Invoice PDF generation use Sandbox JWT instead of the e-Invoice token?">
+    e-Invoice PDF generation is a Sandbox service, not an IRP service. The IRP provides the signed invoice JSON and QR code data, but does not offer PDF generation. Sandbox renders the PDF from this data, so the [Generate e-Invoice PDF](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf) endpoint requires a Sandbox JWT for authentication rather than the IRP session token.
+  </Accordion>
+
+  <Accordion title="Can I generate an E-Way Bill from an e-Invoice IRN?">
+    Yes, GST e-Invoice API supports generating E-Way Bills linked to an existing IRN. Use the [Generate E-Way Bill](/api-reference/gst/compliance/endpoints/e-invoice/generate_e_way_bill) endpoint with the IRN to create an E-Way Bill for transportation. You can also [retrieve E-Way Bill details](/api-reference/gst/compliance/endpoints/e-invoice/get_e_way_bill) by IRN. Both endpoints support dual-IRP routing via the `x-source` header.
+  </Accordion>
+</AccordionGroup>

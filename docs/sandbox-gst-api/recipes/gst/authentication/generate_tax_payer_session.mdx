@@ -1,0 +1,114 @@
+---
+title: "Generate Taxpayer Session"
+description: "Enable GST Portal API access and complete OTP verification to create a GST taxpayer session. This recipe shows how to get a GST taxpayer access token."
+---
+
+<Warning>
+  **Prerequisites:**
+  - You must have an active GST account and access to the [GST Portal](https://www.gst.gov.in/).
+  - Before requesting OTP, enable API access for the GST user from **View Profile** > **Manage API Access** on the GST Portal. For the full portal walkthrough, see [**Enable API Access**](../../../api-reference/gst/compliance/guides/taxpayer/authentication/enable_api_access).
+</Warning>
+
+<Steps>
+  <Step title="Enable API access on the GST Portal" stepNumber={1} titleSize="h2">
+    GST taxpayer OTP APIs work only after API access is enabled for the GST user on the GST Portal. Sign in to [gst.gov.in](https://www.gst.gov.in/), go to **View Profile** > **Manage API Access**, set **Enable API Request** to **Yes**, and choose the required duration such as **30 days**.
+
+    If you want the screen-by-screen walkthrough, follow the [**Enable API Access**](../../../api-reference/gst/compliance/guides/taxpayer/authentication/enable_api_access) guide before moving to the API steps below.
+  </Step>
+
+  <Step title="Authenticate" stepNumber={2} titleSize="h2">
+    To begin the GST Taxpayer workflow, your application must first authenticate using the [**Authenticate**](../../../api-reference/authenticate) endpoint to obtain the **Sandbox JWT access token**.
+
+    This endpoint requires your API Key and API Secret, and returns a JWT access token that's valid for 24 hours. This token is required for all subsequent API calls.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/authenticate \
+        --header 'accept: application/json' \
+        --header 'x-api-key: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-secret: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When authentication is successful, you'll receive the **Sandbox JWT access token** in the response. This token must be used in the `authorization` header (without the `Bearer` prefix) for all subsequent API calls.
+  </Step>
+
+  <Step title="Request OTP" stepNumber={3} titleSize="h2">
+    Once you have the Sandbox JWT access token, request an OTP using the [**Generate OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp) endpoint.
+
+    You need to provide the taxpayer's **username** (typically their registered email) and **GSTIN** (15-character GST Identification Number).
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/gst/compliance/tax-payer/otp \
+        --header 'accept: application/json' \
+        --header 'authorization: {sandbox-access-token}' \
+        --header 'content-type: application/json' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'x-source: primary' \
+        --data '{
+        "username": "acme.com",
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    This will send an OTP to the taxpayer's registered mobile number or email address, depending on the configuration.
+  </Step>
+
+  <Step title="Verify OTP" stepNumber={4} titleSize="h2">
+    After receiving the OTP, verify it using the [**Verify OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp) endpoint.
+
+    Include the OTP as a query parameter and provide the same **username** and **GSTIN** in the request body. Upon successful verification, this will initiate a taxpayer session and return a **Taxpayer access token** that's valid for 6 hours.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/otp/verify?otp=575757' \
+        --header 'accept: application/json' \
+        --header 'authorization: {sandbox-access-token}' \
+        --header 'content-type: application/json' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'x-source: primary' \
+        --data '{
+        "username": "acme.com",
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    The response will include a **Taxpayer access token** which you'll use for GST taxpayer-specific API calls, along with the session expiry timestamp (`session_expiry` and `token_expiry`). The token is valid for **6 hours** from the time of generation.
+
+    <Info>
+    **Token Validity:** The Taxpayer access token is valid for 6 hours. You can check the `token_expiry` timestamp in the response to know when the token will expire. If your workflow exceeds 6 hours, use the refresh session endpoint before expiry.
+    </Info>
+  </Step>
+
+  <Step title="Refresh Taxpayer Session" stepNumber={5} titleSize="h2">
+    Once you have a Taxpayer access token, you can extend the session without user intervention using the [**Refresh Session**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/refresh_session) endpoint.
+
+    This endpoint allows you to refresh the taxpayer session and extend access for another 6 hours, enabling seamless automation without requiring the user to authenticate again. You can refresh the token multiple times until the maximum session duration set on the GST Portal is reached.
+
+    <Warning>
+    **Important:** After the maximum session duration set on the GST Portal has passed, or if the token is not refreshed before expiry, you'll need to complete the OTP verification process again to get a new authenticated session.
+    </Warning>
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/gst/compliance/tax-payer/session/refresh \
+        --header 'accept: application/json' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    The refreshed token can be used to make GST taxpayer API calls such as filing GSTR returns, accessing ledgers, and managing invoices.
+  </Step>
+</Steps>

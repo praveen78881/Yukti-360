@@ -1,0 +1,35 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"additionalProperties": false,
+
+	"properties": {
+		"gstin": {
+			"type": "string"
+		},
+		"stateCode": {
+			"type": "string"
+		},
+		"stateName": {
+			"type": "string"
+		},
+		"status": {
+			"type": "string"
+		},
+		"legalName": {
+			"type": "string"
+		},
+		"pan": {
+			"type": "string"
+		},
+		"bussNature": {
+			"type": "string"
+		},
+		"regStartDate": {
+			"type": "string"
+		},
+		"validGstin": {
+			"type": "boolean"
+		}
+	}
+}

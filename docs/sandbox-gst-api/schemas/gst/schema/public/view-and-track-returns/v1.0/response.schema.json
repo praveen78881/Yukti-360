@@ -1,0 +1,70 @@
+{ 
+   "$schema": "http://json-schema.org/draft-07/schema#", 
+   "type": "object", 
+   "properties": {
+     "EFiledlist": {
+       "type": "array", 
+       "items": {        
+         "type": "object", 
+         "properties": {
+           "valid": {            
+             "type": "string", 
+             "title": "The Valid Schema ", 
+             "default": "", 
+             "examples": [
+               "Y"
+             ]
+           }, 
+           "mof": {
+             "type": "string", 
+             "title": "The Mof Schema ", 
+             "default": "", 
+             "examples": [
+               "ONLINE"
+             ]
+           }, 
+           "dof": {
+             "type": "string", 
+             "title": "The Dof Schema ", 
+             "default": "", 
+             "examples": [
+               "16-01-2018"
+             ]
+           }, 
+           "ret_prd": {
+             "type": "string", 
+             "title": "The Ret_prd Schema ", 
+             "default": "", 
+             "examples": [
+               "062017"
+             ]
+           }, 
+           "rtntype": {
+             "type": "string", 
+             "title": "The Rtntype Schema ", 
+             "default": "", 
+             "examples": [
+               "GSTR3B"
+             ]
+           }, 
+           "arn": {
+             "type": "string", 
+             "title": "The Arn Schema ", 
+             "default": "", 
+             "examples": [
+               "AA080617000247D"
+             ]
+           }, 
+           "status": {
+             "type": "string", 
+             "title": "The Status Schema ", 
+             "default": "", 
+             "examples": [
+               "Filed"
+             ]
+           }
+         }
+       }
+     }
+   }
+ }

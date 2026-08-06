@@ -1,0 +1,41 @@
+---
+title: "Fetch E-Invoice"
+description: "With GST Taxpayer session, E-Invoices generated within the last 6 months can be fetched. This recipe shows the steps to fetch an E-Invoice from GST portal using Invoice Reference Number (IRN)."
+---
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before fetching an E-Invoice using the Taxpayer API, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours. Unlike the regular E-Invoice API which can only fetch invoices generated within the last 3 days, the Taxpayer API allows you to fetch E-Invoices generated within the **last 6 months**.
+  </Step>
+
+  <Step title="Fetch E-Invoice by IRN" stepNumber={2} titleSize="h2">
+    Once you have the Taxpayer access token, you can fetch an E-Invoice using the [**Get E-Invoice by IRN**](../../../api-reference/gst/compliance/endpoints/taxpayer/e-invoice/e_invoice) endpoint.
+
+    Provide the **Invoice Reference Number (IRN)** as a path parameter. The authenticated taxpayer must be a party in the transaction (either the seller or the buyer) to fetch the E-Invoice.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url https://api.sandbox.co.in/gst/compliance/tax-payer/e-invoice/1043b7fa87bee9c9d82c6771b64034c247430dbf423ecb7ba28a34e157cf8720 \
+        --header 'accept: application/json' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    When the E-Invoice is fetched successfully, the response will include:
+    - **IRN** (Invoice Reference Number) - The unique identifier for the E-Invoice
+    - **SignedInvoice** - The digitally signed invoice in JWT format
+    - **SignedQRCode** - The signed QR code containing invoice summary details
+    - **AckDt** - Acknowledgment date
+    - **AckNo** - Acknowledgment number
+    - **Status** - Current status of the invoice (e.g., "ACT" for active)
+
+    <Info>
+      **Important:** This endpoint can fetch E-Invoices that are up to **6 months old**, making it ideal for retrieving invoices that are older than the 3-day limit of the regular E-Invoice API.
+    </Info>
+  </Step>
+</Steps>

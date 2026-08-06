@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "List E-Way Bills by generator response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "delPinCode": {
+        "type": "number"
+      },
+      "delPlace": {
+        "type": "string"
+      },
+      "delStateCode": {
+        "type": "number"
+      },
+      "docDate": {
+        "type": "string"
+      },
+      "docNo": {
+        "type": "string"
+      },
+      "ewbDate": {
+        "type": "string"
+      },
+      "ewbNo": {
+        "type": "number"
+      },
+      "extendedTimes": {
+        "type": "number"
+      },
+      "genGstin": {
+        "type": "string"
+      },
+      "rejectStatus": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "validUpto": {
+        "type": "string"
+      }
+    }
+  }
+}

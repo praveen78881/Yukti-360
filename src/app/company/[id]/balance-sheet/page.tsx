@@ -8,6 +8,7 @@ import { TAccountFormat } from '@/components/formats/TAccountFormat';
 import { VerticalStatementFormat } from '@/components/formats/VerticalStatementFormat';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
+import { exportElementAsImagePDF } from '@/components/export/exportUtils';
 import { getCurrentFY } from '@/lib/utils/dateUtils';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
@@ -18,6 +19,7 @@ import { computeBalanceSheet, computeScheduleIIIBalanceSheet } from '@/lib/accou
 import { BsNotesDrawer } from '@/components/financials/BsNotesDrawer';
 import type { EntityType } from '@/types/company';
 import { listJournalEntries } from '@/lib/offlineDb';
+import { loadPyValues, savePyValues, type PyValues } from '@/lib/accounting/pyOverrides';
 
 /** Maps each BS Schedule III label → scheduleIII group strings for the notes drawer */
 const BS_NOTE_GROUPS: Record<string, string[]> = {
@@ -244,38 +246,97 @@ function ScheduleIIIView({
   entityLabel: string;
 }) {
   const [openNote, setOpenNote] = useState<{ label: string; groups: string[] } | null>(null);
+  const statementRef = useRef<HTMLDivElement | null>(null);
 
   const handleItemClick = (label: string) => {
     const groups = BS_NOTE_GROUPS[label];
     if (groups) setOpenNote({ label, groups });
   };
 
+  // Previous-year column: any line can be typed directly (blank = use the
+  // computed prior-year figure, which is NIL when last year's books are absent).
+  // Persisted per company + FY; totals sum the effective (typed-or-computed) values.
+  const [ty, tm] = toDate.split('-').map(Number);
+  const fyStartYear = String(tm <= 3 ? ty - 1 : ty);
+  const [pyVals, setPyVals] = useState<PyValues>({});
+  useEffect(() => {
+    if (companyId) setPyVals(loadPyValues(companyId, 'bs', fyStartYear));
+  }, [companyId, fyStartYear]);
+  const setPy = (label: string, v: string) => {
+    setPyVals(prev => {
+      const next = { ...prev, [label]: v };
+      if (companyId) savePyValues(companyId, 'bs', fyStartYear, next);
+      return next;
+    });
+  };
+  const pyEff = (label: string, computed: number): number => {
+    const raw = pyVals[label];
+    if (raw === undefined || raw.trim() === '') return computed;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const pyEdit = (label: string, computed: number) => ({
+    previousYear: pyEff(label, computed),
+    prevEditValue: pyVals[label] ?? '',
+    onPrevEdit: (v: string) => setPy(label, v),
+  });
+
   const bs = useMemo(
     () => computeScheduleIIIBalanceSheet(entries, netProfit, prevEntries),
     [entries, netProfit, prevEntries],
   );
 
+  // Excel / CSV export mirrors the on-screen Schedule III VERTICAL statement:
+  // side headings, section headings, indented lines, section totals, grand
+  // totals, and blank spacer rows between sections. ' ' (space) cells keep the
+  // spacing intact (empty cells would print as '-').
   const exportColumns = [
-    { header: 'Section', key: 'section' },
-    { header: 'Particulars', key: 'label' },
-    { header: 'Note', key: 'noteRef' },
-    { header: 'Current Year (₹)', key: 'currentYear', align: 'right' as const, isMono: true },
-    { header: 'Previous Year (₹)', key: 'previousYear', align: 'right' as const, isMono: true },
+    { header: 'Particulars', key: 'particulars' },
+    { header: 'Note', key: 'note' },
+    { header: `As at ${toDate} (₹)`, key: 'cy', align: 'right' as const, isMono: true },
+    { header: `As at ${prevToDate} (₹)`, key: 'py', align: 'right' as const, isMono: true },
   ];
 
-  const exportData = [
-    ...bs.equityAndLiabilities.flatMap(sec =>
-      sec.subheadings.map(sh => ({ section: sec.heading, label: sh.label, noteRef: sh.noteRef || '', currentYear: sh.currentYear, previousYear: sh.previousYear }))
-    ),
-    ...bs.assets.flatMap(sec =>
-      sec.subheadings.map(sh => ({ section: sec.heading, label: sh.label, noteRef: sh.noteRef || '', currentYear: sh.currentYear, previousYear: sh.previousYear }))
-    ),
-  ];
+  const exportData = (() => {
+    type XRow = { particulars: string; note: string; cy: number | string; py: number | string };
+    const rows: XRow[] = [];
+    const heading = (t: string) => rows.push({ particulars: t, note: ' ', cy: ' ', py: ' ' });
+    const spacer = () => rows.push({ particulars: ' ', note: ' ', cy: ' ', py: ' ' });
+    const side = (
+      sideTitle: string,
+      secs: typeof bs.equityAndLiabilities,
+      grandLabel: string,
+      grandCy: number,
+    ) => {
+      heading(sideTitle);
+      spacer();
+      let grandPy = 0;
+      secs.forEach(sec => {
+        const prevTotal = sec.subheadings.reduce((s, sh) => s + pyEff(sh.label, sh.previousYear), 0);
+        grandPy += prevTotal;
+        heading(sec.heading);
+        sec.subheadings.forEach(sh => rows.push({
+          particulars: `    ${sh.label}`,
+          note: sh.noteRef || ' ',
+          cy: sh.currentYear,
+          py: pyEff(sh.label, sh.previousYear),
+        }));
+        rows.push({ particulars: `    Total ${sec.heading}`, note: ' ', cy: sec.total, py: prevTotal });
+        spacer();
+      });
+      rows.push({ particulars: grandLabel, note: ' ', cy: grandCy, py: grandPy });
+      spacer();
+      spacer();
+    };
+    side('EQUITY AND LIABILITIES', bs.equityAndLiabilities, 'TOTAL EQUITY AND LIABILITIES', bs.totalEquityLiabilities);
+    side('ASSETS', bs.assets, 'TOTAL ASSETS', bs.totalAssets);
+    return rows;
+  })();
 
   // Compute previous year section totals from subheading previousYear values
   const sections = [
     ...bs.equityAndLiabilities.map(sec => {
-      const prevTotal = sec.subheadings.reduce((s, sh) => s + sh.previousYear, 0);
+      const prevTotal = sec.subheadings.reduce((s, sh) => s + pyEff(sh.label, sh.previousYear), 0);
       return {
         heading: sec.heading,
         indent: 1,
@@ -284,8 +345,8 @@ function ScheduleIIIView({
             label: sh.label,
             noteNo: sh.noteRef,
             currentYear: sh.currentYear,
-            previousYear: sh.previousYear,
             indent: 1,
+            ...pyEdit(sh.label, sh.previousYear),
           })),
           {
             label: `Total ${sec.heading}`,
@@ -304,14 +365,14 @@ function ScheduleIIIView({
         label: 'Total',
         currentYear: bs.totalEquityLiabilities,
         previousYear: bs.equityAndLiabilities.reduce(
-          (sum, sec) => sum + sec.subheadings.reduce((s, sh) => s + sh.previousYear, 0), 0,
+          (sum, sec) => sum + sec.subheadings.reduce((s, sh) => s + pyEff(sh.label, sh.previousYear), 0), 0,
         ),
         isBold: true,
         isTotal: true,
       }],
     },
     ...bs.assets.map(sec => {
-      const prevTotal = sec.subheadings.reduce((s, sh) => s + sh.previousYear, 0);
+      const prevTotal = sec.subheadings.reduce((s, sh) => s + pyEff(sh.label, sh.previousYear), 0);
       return {
         heading: sec.heading,
         indent: 1,
@@ -320,8 +381,8 @@ function ScheduleIIIView({
             label: sh.label,
             noteNo: sh.noteRef,
             currentYear: sh.currentYear,
-            previousYear: sh.previousYear,
             indent: 1,
+            ...pyEdit(sh.label, sh.previousYear),
           })),
           {
             label: `Total ${sec.heading}`,
@@ -340,7 +401,7 @@ function ScheduleIIIView({
         label: 'Total',
         currentYear: bs.totalAssets,
         previousYear: bs.assets.reduce(
-          (sum, sec) => sum + sec.subheadings.reduce((s, sh) => s + sh.previousYear, 0), 0,
+          (sum, sec) => sum + sec.subheadings.reduce((s, sh) => s + pyEff(sh.label, sh.previousYear), 0), 0,
         ),
         isBold: true,
         isTotal: true,
@@ -361,18 +422,34 @@ function ScheduleIIIView({
       )}
 
       <div className="mb-4 flex justify-end">
-        <ExportButtons title="Balance Sheet (Schedule III)" companyName={company.name} entityType={entityLabel} dateRange={`As at ${toDate}`} columns={exportColumns} data={exportData} />
+        <ExportButtons
+          title="Balance Sheet (Schedule III)"
+          companyName={company.name}
+          entityType={entityLabel}
+          dateRange={`As at ${toDate}`}
+          columns={exportColumns}
+          data={exportData}
+          onPdf={() =>
+            exportElementAsImagePDF({
+              element: statementRef.current,
+              title: 'Balance Sheet',
+              orientation: 'portrait',
+            })
+          }
+        />
       </div>
 
-      <VerticalStatementFormat
-        title="Balance Sheet"
-        companyName={company.name}
-        period={`As at ${toDate}`}
-        sections={sections}
-        showPreviousYear={true}
-        signatureBlock={true}
-        onItemClick={handleItemClick}
-      />
+      <div ref={statementRef}>
+        <VerticalStatementFormat
+          title="Balance Sheet"
+          companyName={company.name}
+          period={`As at ${toDate}`}
+          sections={sections}
+          showPreviousYear={true}
+          signatureBlock={true}
+          onItemClick={handleItemClick}
+        />
+      </div>
 
       {openNote && (
         <BsNotesDrawer
@@ -381,6 +458,13 @@ function ScheduleIIIView({
           groups={openNote.groups}
           entries={entries}
           onClose={() => setOpenNote(null)}
+          // Reserves & Surplus includes the current-year P&L surplus, which is a
+          // derived figure (not a ledger account) — surface it as its own note row.
+          extraRows={
+            openNote.label === 'Reserves and Surplus' && netProfit !== 0
+              ? [{ name: 'Surplus — Profit/(Loss) for the year', amount: netProfit }]
+              : undefined
+          }
         />
       )}
     </>

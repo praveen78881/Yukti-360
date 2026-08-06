@@ -1,0 +1,678 @@
+<title>ITR Structure Map — Forms · Particulars · Drill-ins · Heads</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --ground:#f6f8fc; --surface:#ffffff; --surface-2:#f0f4fb;
+    --ink:#16203a; --muted:#5b6b86; --faint:#8695ac;
+    --line:#dce4f1; --line-strong:#c4d1e6;
+    --accent:#2f52c9; --accent-deep:#1d3a8f; --accent-soft:#e7edfb;
+    --drill:#b4690e; --drill-soft:#fbf0dd;
+    --ready:#0e7a5f; --ready-soft:#e4f3ee;
+    --form:#1d3a8f;
+    --shadow:0 1px 2px rgba(22,32,58,.06),0 8px 24px rgba(22,32,58,.06);
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono","Consolas",monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0c1120; --surface:#131a2c; --surface-2:#182238;
+      --ink:#e8edf7; --muted:#9fb0cc; --faint:#6f809e;
+      --line:#26314b; --line-strong:#33425f;
+      --accent:#7b95f2; --accent-deep:#9db3fb; --accent-soft:#1a2542;
+      --drill:#e0a martes; --drill:#e6a856; --drill-soft:#33260f;
+      --ready:#4bc9a2; --ready-soft:#0f2b23;
+      --form:#9db3fb;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#f6f8fc; --surface:#ffffff; --surface-2:#f0f4fb; --ink:#16203a; --muted:#5b6b86; --faint:#8695ac;
+    --line:#dce4f1; --line-strong:#c4d1e6; --accent:#2f52c9; --accent-deep:#1d3a8f; --accent-soft:#e7edfb;
+    --drill:#b4690e; --drill-soft:#fbf0dd; --ready:#0e7a5f; --ready-soft:#e4f3ee; --form:#1d3a8f;
+    --shadow:0 1px 2px rgba(22,32,58,.06),0 8px 24px rgba(22,32,58,.06);
+  }
+  :root[data-theme="dark"]{
+    --ground:#0c1120; --surface:#131a2c; --surface-2:#182238; --ink:#e8edf7; --muted:#9fb0cc; --faint:#6f809e;
+    --line:#26314b; --line-strong:#33425f; --accent:#7b95f2; --accent-deep:#9db3fb; --accent-soft:#1a2542;
+    --drill:#e6a856; --drill-soft:#33260f; --ready:#4bc9a2; --ready-soft:#0f2b23; --form:#9db3fb;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+  /* ── header ── */
+  header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .hwrap{max-width:1120px;margin:0 auto;padding:14px 20px 12px}
+  .htop{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.2px}
+  h1 .tag{color:var(--accent);font-weight:800}
+  .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .search{position:relative;flex:1;min-width:200px}
+  .search input{width:100%;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 12px 8px 32px;font-size:13.5px;font-family:var(--sans)}
+  .search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint)}
+  button.btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  button.btn:hover{background:var(--surface-2);border-color:var(--accent)}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chip{border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:var(--sans)}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.on .cn{color:rgba(255,255,255,.8)}
+  .cn{color:var(--faint);font-weight:600;margin-left:5px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;font-size:11.5px;color:var(--muted)}
+  .lg{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* ── tree ── */
+  main{max-width:1120px;margin:0 auto;padding:18px 20px 80px}
+  .form{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+  .form.hide{display:none}
+  .frow{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+  .frow:hover{background:var(--surface-2)}
+  .fnum{flex:none;width:44px;height:44px;border-radius:11px;background:linear-gradient(145deg,var(--accent-deep),var(--accent));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;line-height:1;box-shadow:0 4px 10px color-mix(in srgb,var(--accent) 35%,transparent)}
+  .fnum small{font-size:8px;font-weight:700;opacity:.8;letter-spacing:.5px;margin-bottom:2px}
+  .fnum b{font-size:17px}
+  .ftext{flex:1;min-width:0}
+  .ftitle{font-weight:750;font-size:15.5px}
+  .ftitle .short{color:var(--accent);font-weight:800;margin-right:7px}
+  .fnote{color:var(--muted);font-size:12px;margin-top:1px}
+  .fmeta{flex:none;display:flex;align-items:center;gap:8px}
+  .pill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap}
+  .pill.pend{color:var(--drill);background:var(--drill-soft);border-color:transparent}
+  .pill.ready{color:var(--ready);background:var(--ready-soft);border-color:transparent}
+  .chev{flex:none;color:var(--faint);transition:transform .18s ease}
+  .open>.frow .chev,.open>.node>.chev,.node.open>.chev{transform:rotate(90deg)}
+
+  .kids{display:none;padding:0 0 10px}
+  .form.open>.kids{display:block}
+
+  /* generic node (group / particular / head) */
+  .node{position:relative}
+  .nrow{display:flex;align-items:center;gap:9px;padding:5px 10px;border-radius:8px;cursor:default}
+  .nrow.can:hover{background:var(--surface-2)}
+  .nrow.can{cursor:pointer;user-select:none}
+  .chev-s{flex:none;width:14px;color:var(--faint);transition:transform .16s ease;font-size:11px;text-align:center}
+  .node.open>.nrow .chev-s{transform:rotate(90deg)}
+  .node>.kids2{display:none}
+  .node.open>.kids2{display:block}
+
+  /* indentation guides */
+  .lvl{margin-left:20px;border-left:1px solid var(--line);padding-left:4px}
+  .lvl>.node>.nrow::before{content:"";position:absolute;left:-4px;top:16px;width:12px;height:1px;background:var(--line)}
+  .node>.nrow{position:relative}
+
+  .glyph{flex:none;width:16px;height:16px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .g-group{background:var(--accent-soft);color:var(--accent-deep)}
+  .g-part{background:transparent;color:var(--faint)}
+  .g-part::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--line-strong)}
+  .g-head{background:var(--accent);color:#fff;border-radius:4px}
+
+  .label{flex:1;min-width:0;font-size:13.5px}
+  .label .lawcode{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .grp .label{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .headnode>.nrow .label{font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent-deep)}
+  .ct{flex:none;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+  .drillbadge{flex:none;display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--drill);background:var(--drill-soft);border-radius:999px;padding:2px 7px;letter-spacing:.3px}
+  .drillbadge b{font-size:12px;line-height:.6;letter-spacing:1px}
+
+  /* ready particulars — the leaf rows */
+  .ready-wrap{margin-left:20px;border-left:1px solid var(--line);padding:4px 0 4px 12px;display:flex;flex-wrap:wrap;gap:5px 6px}
+  .rchip{font-family:var(--mono);font-size:11.5px;color:var(--ready);background:var(--ready-soft);border:1px solid color-mix(in srgb,var(--ready) 22%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .headnode .ready-wrap{border-left-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+
+  mark{background:color-mix(in srgb,var(--accent) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+  .empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:14px}
+  footer{max-width:1120px;margin:0 auto;padding:0 20px 50px;color:var(--faint);font-size:11.5px;line-height:1.6}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="hwrap">
+    <div class="htop">
+      <div>
+        <h1><span class="tag">ITR</span> Structure Map</h1>
+        <div class="sub">Every income-tax return form → its particulars → drill-in forms (<b>⋯</b>) → column heads → ready particulars. Click any row to expand.</div>
+      </div>
+      <button class="btn" id="theme">◐ Theme</button>
+    </div>
+    <div class="tools">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Search particulars, drill-ins, heads, sections (e.g. 44AD, 80C, capital gains, verifier)…" autocomplete="off">
+      </label>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="collapse">Collapse all</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="legend">
+      <span class="lg"><span class="swatch" style="background:var(--accent-deep)"></span> Form</span>
+      <span class="lg"><span class="swatch" style="background:var(--accent-soft);border:1px solid var(--accent)"></span> Group</span>
+      <span class="lg"><span class="swatch" style="background:var(--line-strong)"></span> Particular</span>
+      <span class="lg"><b style="color:var(--drill)">⋯</b> Drill-in form</span>
+      <span class="lg"><span class="swatch" style="background:var(--accent)"></span> Column head</span>
+      <span class="lg"><span class="swatch" style="background:var(--ready-soft);border:1px solid var(--ready)"></span> Ready particular</span>
+    </div>
+  </div>
+</header>
+
+<main id="tree"></main>
+<footer id="foot"></footer>
+
+<script>
+/* ── DATA ──────────────────────────────────────────────────────────────────
+   Node grammar (compact):
+   form: {n, s:'ITR-1', t:'Sahaj', d:'note', status?, g:[group]}
+   group: {G:'Basic info', i:[item]}
+   item:  {p:'particular', drill?:true, r?:['ready','vals'], h?:[head]}
+   head:  {H:'Column head', r?:['ready row', ...]}
+   Ready values (r) are the pre-filled particulars / options / columns.
+*/
+const D=[
+{n:1,s:"ITR-1",t:"Sahaj",d:"Resident individual · salary, one house property, other sources · total income ≤ ₹50 L",g:[
+ {G:"Basic info",i:[
+   {p:"Assessee info",drill:true,h:[
+     {H:"Identity",r:["Name","PAN","Status (Individual/HUF)","Date of Birth","Gender","Father's Name","Residential Status"]},
+     {H:"Primary Address",r:["Flat/Door/Block","Premises/Building/Village","Road/Street/PO","Area/Locality","Town/City","State","Country","PIN Code"]},
+     {H:"Contact",r:["Mobile","STD code","Landline","Country code","e-Mail","District","Secondary address same?"]},
+     {H:"Secondary contact",r:["Secondary mobile","Secondary e-Mail"]},
+     {H:"Other",r:["Aadhaar No.","Aadhaar Enrolment ID","Liable to maintain accounts u/s 44AA?"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN","Capacity","Father's Name","Place"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account Number","IFS Code","Type of Account","For refund?"]}]}]},
+ {G:"ITR filing info",i:[
+   {p:"Section under which return is filed",r:["139(1)","139(4)","139(5)","139(9)","142(1)"]},
+   {p:"Return Type",r:["Original","Revised"]},
+   {p:"Representative Assessee",drill:true,h:[{H:"Fields",r:["Name","e-Mail","Contact","Country code","Assessee Deceased?"]}]}]},
+ {G:"Income related info",i:[
+   {p:"Pass Through Income u/s 115U/115UA/115UB (Sch PTI)",drill:true,h:[{H:"Columns",r:["Entity u/s","Name","PAN","Head","Amount","TDS"]}]}]},
+ {G:"Other info",i:[
+   {p:"Partner in a Firm during PY?",r:["Yes","No"]},
+   {p:"Held Unlisted Shares in PY?",r:["Yes","No"]},
+   {p:"Unlisted Equity Shares",drill:true,h:[{H:"Columns",r:["Company","PAN","Opening Qty","Closing Qty","Details"]}]},
+   {p:"Director in a company during PY?",r:["Yes","No"]},
+   {p:"Directorship details",drill:true,h:[{H:"Columns",r:["Company name","DIN","Shares listed?"]}]},
+   {p:"Tax deferred on Sweat Equity (ESOP)",drill:true,h:[{H:"Columns",r:["A.Y.","Tax deferred B/F","Tax attributed to sale","Date of Cessation","Tax payable CY","Balance C/F"]}]},
+   {p:"Other Forms filed",drill:true,h:[{H:"Fields",r:["Form 10-IEA opted-out earlier? (Yes/No/NA)","TRP id","TRP name","TRP amount"]}]}]},
+ {G:"Foreign Assets & Incomes (Sch FA)",i:[
+   {p:"Do you have foreign assets / signing authority?",r:["Yes","No"]},
+   {p:"Foreign Depository/Custodial accounts",drill:true},
+   {p:"Foreign Equity & Debt interest",drill:true},
+   {p:"Foreign Insurance / Annuity",drill:true},
+   {p:"Financial Interest in any entity",drill:true},
+   {p:"Immovable Property abroad",drill:true},
+   {p:"Other Capital Assets abroad",drill:true},
+   {p:"Signing authority in any account",drill:true},
+   {p:"Trustee/Beneficiary/Settlor of foreign trust",drill:true},
+   {p:"Other foreign income",drill:true}]},
+ {G:"Income entry — Salary (Computation)",i:[
+   {p:"Salaries (per employer)",drill:true,h:[
+     {H:"Employer",r:["Nature of Employment","Employer name","TAN","Address"]},
+     {H:"Salary detail",r:["Salary break-up","Monthly table","Form 16","Sec 89A"]},
+     {H:"Deductions",r:["Standard deduction 16(ia)","Professional tax 16(iii)"]}]},
+   {p:"House Property (per property)",drill:true,h:[{H:"Columns",r:["Gross Annual Value","Municipal tax","24(a) std deduction 30%","24(b) interest (SOP cap ₹2 L)","25A arrears/unrealised rent","Co-owner share %"]}]}]},
+ {G:"Income entry — Other Sources",i:[
+   {p:"Interest income",drill:true},{p:"Dividends",drill:true},{p:"DTAA income (NR)",drill:true},
+   {p:"Family pension",drill:true},{p:"Gifts 56(2)(x)",drill:true},{p:"Income at special rates",drill:true},
+   {p:"KVP interest",drill:true},{p:"Minor child income 64(1A)",drill:true},{p:"NSC interest",drill:true},
+   {p:"Other person's income (clubbing)",drill:true},{p:"Rental (land/building/P&M)",drill:true},
+   {p:"Sec 89A retirement account",drill:true},{p:"Taxable u/s 58/59",drill:true},
+   {p:"Winnings (115BB/115BBJ, flat 30%)",drill:true},{p:"Other income"},{p:"Brought-forward losses set-off",drill:true}]},
+ {G:"Chapter VI-A deductions",i:[
+   {p:"80C / 80CCC / 80CCD bundle",drill:true,h:[
+     {H:"80C table",r:["Category","A/c-Doc-Receipt No.","Amount","Date"]},
+     {H:"80CCD",r:["Employee/SE contribution","80CCD(1)","80CCD(1B) +₹50k","Employer 80CCD(2)"]},
+     {H:"Cap",r:["80CCE limit ₹1.5 L (live)"]}]},
+   {p:"80CCH (Agniveer)",drill:true},{p:"80D (health insurance)",drill:true},{p:"80DD",drill:true},
+   {p:"80DDB",drill:true},{p:"80E (education loan)",drill:true},
+   {p:"Other VI-A",drill:true,h:[{H:"Sections",r:["80U","80G","80GGA","80GGC","80GG","80TTA","80TTB","80EE","80EEA","80EEB","80-IA/IB/IE"]}]}]},
+ {G:"Computation outputs",i:[
+   {p:"Total Income"},{p:"Tax regime",r:["New (115BAC) — default","Old"]},{p:"Tax on total income"},
+   {p:"Rebate 87A",r:["New: up to ₹60,000 if TI ≤ ₹12 L","Old: ₹12,500 if TI ≤ ₹5 L"]},
+   {p:"Relief u/s 89 (Form 10E)"},{p:"Relief u/s 90/91 (Form 67)"},
+   {p:"AMT 115JC / credit 115JD (old regime)"},{p:"TDS/TCS"},{p:"Advance Tax"},{p:"Self-Assessment Tax"},
+   {p:"Interest 234A / 234B / 234C"},{p:"Late fee 234F"},{p:"Balance tax payable / refund"}]}
+]},
+
+{n:2,s:"ITR-2",t:"",d:"Individual / HUF · capital gains, multiple house properties, foreign assets · no business income",g:[
+ {G:"Basic info",i:[
+   {p:"Assessee info",drill:true,h:[
+     {H:"Identity",r:["Name","PAN","Status","DOB","Gender","Father's Name","Residential Status"]},
+     {H:"Address",r:["Flat","Premises","Road","Area","City","State","Country","PIN"]},
+     {H:"Contact",r:["Mobile","STD","Landline","Country code","e-Mail","District"]},
+     {H:"Other",r:["Aadhaar","Aadhaar EID","Liable 44AA?"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN","Capacity","Father's Name","Place"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account Number","IFS Code","Type","For refund?"]}]},
+   {p:"Residential status info",drill:true,h:[{H:"Tests",r:["182 days 6(1)(a)","Citizen/PIO > ₹15 L","60+365 days 6(1)(c)"]}]}]},
+ {G:"ITR filing info",i:[
+   {p:"Section under which return is filed",r:["139(1)","139(4)","139(5)","139(9)","142(1)"]},
+   {p:"Return Type",r:["Original","Revised"]},{p:"Representative Assessee",drill:true}]},
+ {G:"Income related info",i:[
+   {p:"Pass Through Income 115U/UA/UB (Sch PTI)",drill:true},
+   {p:"Income of other persons included (Sch SPI)",drill:true,h:[{H:"Columns",r:["Name","PAN/Aadhaar","Relationship","Head","Amount"]}]}]},
+ {G:"Other info",i:[
+   {p:"Partner in a Firm?",r:["Yes","No"]},{p:"Held Unlisted Shares?",r:["Yes","No"]},{p:"Unlisted shares",drill:true},
+   {p:"Director in a company?",r:["Yes","No"]},{p:"Directorship",drill:true},
+   {p:"Tax deferred ESOP",drill:true},{p:"Other Forms filed",drill:true}]},
+ {G:"Foreign Assets & Incomes (Sch FA)",i:[
+   {p:"Have foreign assets? (held during calendar 2025)",r:["Yes","No"]},
+   {p:"Depository/Custodial",drill:true},{p:"Equity & Debt",drill:true},{p:"Insurance/Annuity",drill:true},
+   {p:"Financial Interest",drill:true},{p:"Immovable Property",drill:true},{p:"Other Capital Assets",drill:true},
+   {p:"Signing authority",drill:true},{p:"Trusts",drill:true},{p:"Other income",drill:true}]},
+ {G:"Assets & Liabilities (Sch AL, if TI > ₹1 cr)",i:[
+   {p:"Have AL to report?",r:["Yes","No"]},
+   {p:"Immovable property",r:["direct input"]},{p:"Cash in hand",r:["direct input"]},
+   {p:"Bank balances",drill:true},{p:"Shares & securities",drill:true},{p:"Insurance policies",drill:true},
+   {p:"Loans & advances given",drill:true},{p:"Jewellery/bullion",drill:true},{p:"Archaeological/paintings",drill:true},
+   {p:"Vehicles/yachts/aircraft",drill:true},{p:"Liabilities",drill:true}]},
+ {G:"Income heads (Computation)",i:[
+   {p:"Salaries (+Add employer)",drill:true},
+   {p:"House Property (+Add property, multiple)",drill:true,h:[{H:"Columns",r:["GAV","Municipal tax","NAV","24(a)","24(b) interest","Arrears 25A","Co-owner share %"]}]},
+   {p:"Capital Gains — LTCG-1",drill:true},
+   {p:"Capital Gains — LTCG u/s 112A",drill:true,h:[{H:"Columns",r:["Qty","Date of transfer","Sale consideration","Selling expenses","Net consideration","Actual cost","Acquired before 01/02/2018?","FMV 55(2)(ac)/share","Total FMV","Cost deductible","LTCG","ISIN"]},{H:"Rule",r:["Exempt ₹1.25 L","Rate 12.5%","§54F option"]}]},
+   {p:"STT-paid shares (111A + 112A combined)",drill:true},
+   {p:"Capital Gains — STCG-1 / other assets",drill:true,h:[{H:"Columns",r:["Type","Dates","Is LTCG?","Sale","Sell exp","Net","Cost","STCG","LTCG","Loss ignored 94(7)/(8)","Head"]}]},
+   {p:"Auto-classification STCG/LTCG",drill:true},
+   {p:"Schedule CFL — capital losses (Sec 74)",drill:true,h:[{H:"Columns",r:["A.Y. of loss","Amount B/F","Set-off CY","Balance C/F","Status"]}]}]},
+ {G:"Other Sources",i:[
+   {p:"Interest",drill:true},{p:"Dividends",drill:true},{p:"DTAA income (NR)",drill:true},{p:"Family pension",drill:true},
+   {p:"Gifts 56(2)(x)",drill:true},{p:"Income at special rates (10/20/60%)",drill:true},{p:"Rental (land/building/P&M)",drill:true},
+   {p:"Sec 89A",drill:true},{p:"Winnings 115BB/115BBJ (30% flat)",drill:true},{p:"Other",r:["direct"]},{p:"BF losses set-off",drill:true}]},
+ {G:"Schedule EI — Exempt income",i:[
+   {p:"Salary exemptions 10(...)",drill:true,h:[{H:"Items",r:["HRA","LTA","Gratuity","Commutation","Leave encashment","VRS"]}]},
+   {p:"Investment exemptions",drill:true,h:[{H:"Items",r:["PPF/EPF 10(11)/(12)","Sukanya","PF withdrawal","Dividend","Legacy 10(38)"]}]},
+   {p:"Other exempt",drill:true,h:[{H:"Items",r:["10(2A)","Sec 86","Agriculture","DTAA foreign","10(34A)","Awards","10(10D)"]}]}]},
+ {G:"Chapter VI-A (Sch VIA)",i:[
+   {p:"80CCH",drill:true},{p:"80D",drill:true},{p:"80DD",drill:true},{p:"80DDB",drill:true},{p:"80E",drill:true},
+   {p:"80C/CCC/CCD bundle",drill:true},{p:"Other VI-A (80U/G/TTA/TTB)",drill:true}]},
+ {G:"Computation outputs",i:[
+   {p:"Total Income"},{p:"Tax regime",r:["New (115BAC)","Old"]},{p:"Tax on total income"},{p:"Rebate 87A"},
+   {p:"Relief 89 / 90 / 91"},{p:"AMT 115JC/115JD"},{p:"TDS/TCS · Advance · SAT"},
+   {p:"Interest 234A/B/C + 234F"},{p:"Balance tax payable / refund"}]}
+]},
+
+{n:3,s:"ITR-3",t:"",d:"Individual / HUF · income from business or profession (regular books — P&L, Balance Sheet)",g:[
+ {G:"Basic info",i:[
+   {p:"Assessee info",drill:true,h:[
+     {H:"Identity",r:["Name","PAN","Status","DOB","Gender","Father's Name","Residential Status"]},
+     {H:"Address & Contact",r:["Flat/Premises/Road/Area/City/State/Country/PIN","Mobile/STD/Landline/e-Mail/District"]},
+     {H:"Other",r:["Aadhaar","Aadhaar EID","Liable to maintain accounts u/s 44AA?"]}]},
+   {p:"Verifier info",drill:true},{p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account Number","IFS Code","Type","For refund?"]}]},
+   {p:"Residential status",drill:true}]},
+ {G:"ITR filing info",i:[{p:"Section under which return filed",r:["139(1)","139(4)","139(5)","139(9)","142(1)"]},{p:"Return Type",r:["Original","Revised"]},{p:"Representative Assessee",drill:true}]},
+ {G:"Income related info",i:[{p:"Pass Through Income (Sch PTI)",drill:true},{p:"Income of other persons (Sch SPI)",drill:true}]},
+ {G:"Audit related details (u/s 44AB)",i:[
+   {p:"Liable for audit u/s 44AB?",r:["Yes","No"]},
+   {p:"44AB Tax Audit details",drill:true,h:[
+     {H:"Report",r:["Date of furnishing","Acknowledgement no."]},
+     {H:"Closing-stock valuation",r:["Raw material","Finished goods","Change in valuation"]},
+     {H:"Duties outstanding (Part A-OI)",r:["CGST","SGST","IGST","UTGST","Excise","Service tax","VAT","Other tax"]}]},
+   {p:"Other Audits (excl. 44AB)",drill:true,h:[
+     {H:"Under Income-Tax Act",r:["10AA","115JC","50B","44DA","80-IA/IAB/IB/IE","80JJAA","92E"]},
+     {H:"Under other Acts",r:["Date","Section","Furnished date (13 Acts)"]}]}]},
+ {G:"Business related info",i:[
+   {p:"Nature of Business/Profession",drill:true,h:[{H:"Columns",r:["Sector","Sub-Sector","Code","Trade name 1","Trade name 2"]}]},
+   {p:"Turnover/Gross Receipts reported in GSTR",drill:true,h:[{H:"Columns",r:["GSTIN","Outward supplies"]}]},
+   {p:"Business/Profession start date"},
+   {p:"Tax paid u/s 92CE",drill:true,h:[{H:"Fields",r:["Amount","Additional tax 18%","Surcharge 12%","Cess 4%","Deposit table"]}]}]},
+ {G:"Other info",i:[{p:"Partner in a Firm?",r:["Yes","No"]},{p:"Held Unlisted Shares?",r:["Yes","No"]},{p:"Unlisted shares",drill:true},{p:"Director?",r:["Yes","No"]},{p:"Directorship",drill:true},{p:"ESOP deferred tax",drill:true},{p:"Other Forms filed (10-IEA / TRP)",drill:true}]},
+ {G:"Foreign Assets (Sch FA) / Assets-Liabilities (Sch AL) / Books-not-maintained",i:[
+   {p:"Foreign Assets — 9 tables",drill:true},
+   {p:"Schedule AL (TI > ₹1 cr)",drill:true,h:[{H:"Asset classes",r:["Immovable","Bank","Shares","Insurance","Loans","Cash","Jewellery","Paintings","Vehicles","Firm interest","Liabilities"]}]},
+   {p:"Books not maintained",r:["Creditors","Stock","Debtors","Cash"]}]},
+ {G:"Balance Sheet (ITR B/S tab)",i:[
+   {p:"Liabilities",drill:true,h:[{H:"Heads",r:["Proprietor's capital","Reserves","Secured loans","Unsecured loans","Deferred tax liability","Advances","Current liabilities","Provisions"]}]},
+   {p:"Assets",drill:true,h:[{H:"Heads",r:["Fixed assets (gross/dep/CWIP)","Investments (LT/ST)","Inventories","Trade debtors","Cash & bank","Loans & advances","Misc/DTA"]}]}]},
+ {G:"Manufacturing / Trading / P&L (ITR P&L tab)",i:[
+   {p:"Manufacturing A/c",drill:true,h:[{H:"Lines",r:["Opening stock RM/WIP","Purchases","Direct wages","Direct expenses","Factory overheads","Closing stock","Cost of Production"]}]},
+   {p:"Trading A/c",drill:true,h:[{H:"Lines",r:["Sale of goods/services","Other operating revenue","Duties","Closing stock FG","Purchases","Gross Profit","Intraday","F&O"]}]},
+   {p:"Profit & Loss A/c",drill:true,h:[{H:"~30 expense lines",r:["Advertisement","Audit","Bad debts","Commission","Depreciation","Interest","Salaries","Rents","Repairs","Taxes","Travelling","Other → PBIT → PBT → PAT"]}]}]},
+ {G:"Schedule BP — Business/Profession adjustments",i:[
+   {p:"Business-1: Net Profit → adjustments",drill:true,h:[
+     {H:"Add-backs",r:["Depreciation (books)","36 disallowance","37","40","40A (+40A(3)/(3A) cash)","43B","Deemed income 41/33AB/43CA","ICDS/145A","Expenses other heads","Income not credited"]},
+     {H:"Deductions",r:["35 to 35E / 33AB / 33ABA","Exempt income","IT refund","Incomes considered separately","Other deductions"]}]},
+   {p:"Profession-1: Net Profit → adjustments",drill:true},
+   {p:"Depreciation as per IT Act",drill:true,h:[{H:"Blocks",r:["Opening WDV","Additions ≤ 03-Oct half-rate","Additional depreciation 20%","Personal-use disallowance","Land record"]}]}]},
+ {G:"Presumptive / special business",i:[
+   {p:"44AD presumptive business",drill:true,h:[{H:"Columns",r:["Receipts Mode","Turnover/Receipts","% (6%/8%)","Profit"]}]},
+   {p:"44ADA presumptive profession",drill:true,h:[{H:"Columns",r:["Mode","Gross Receipts","% (50%)","Profit"]}]},
+   {p:"44AE transport",drill:true,h:[{H:"Columns",r:["Vehicle","Months","Tonnage","Type","Income","Reg No.","Ownership"]}]},
+   {p:"35AD specified business",drill:true},{p:"Commission/Agency (no books)",drill:true},{p:"F&O (no books)",drill:true},
+   {p:"Income from partnership firm",drill:true},{p:"Non-specified profession (no books)",drill:true},{p:"Speculation business",drill:true}]},
+ {G:"Capital Gains",i:[{p:"LTCG",drill:true},{p:"STCG",drill:true},{p:"LTCG 112A (grandfathering, +54F)",drill:true},{p:"Auto-classification (shares/MF/VDA)",drill:true},{p:"BF capital losses (Sec 74)",drill:true}]},
+ {G:"Other Sources",i:[{p:"Interest",drill:true},{p:"Dividends",drill:true},{p:"DTAA",drill:true},{p:"Family pension",drill:true},{p:"Gifts",drill:true},{p:"Special-rate income",drill:true},{p:"Winnings",drill:true},{p:"Other",drill:true}]},
+ {G:"Chapter VI-A",i:[{p:"80C/CCC/CCD (cap ₹1.5 L +50k(1B) +employer(2))",drill:true},{p:"80CCH",drill:true},{p:"80D",drill:true},{p:"80DD",drill:true},{p:"80DDB",drill:true},{p:"80E",drill:true},{p:"Other VI-A (80U/G/GGA/GGC/GG/TTA/TTB/EE/EEA/EEB/IA/IB/IE)",drill:true}]},
+ {G:"Computation outputs",i:[{p:"Total Income (no ceiling)"},{p:"Tax regime",r:["New (115BAC)","Old"]},{p:"Tax on TI"},{p:"Relief 89/90/91"},{p:"AMT 115JC/JD"},{p:"TDS/TCS · Advance · SAT"},{p:"Interest 234A/B/C + 234F"},{p:"Balance tax payable / refund"}]}
+]},
+
+{n:4,s:"ITR-4",t:"Sugam",d:"Presumptive business/profession u/s 44AD / 44ADA / 44AE · total income ≤ ₹50 L",g:[
+ {G:"ITR Information",i:[
+   {p:"Assessee info",drill:true,h:[{H:"Fields",r:["STD/landline","Country code","e-Mail","District","Secondary address","Liable 44AA?","Old name","Aadhaar"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN","Capacity","Father's Name","Place"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account Number","IFSC","Type","For refund?"]}]},
+   {p:"Section under which return filed",r:["139(1)","139(4)","139(5)","139(9)","142(1)"]},
+   {p:"Return Type",r:["Original","Revised"]},
+   {p:"Tax regime",r:["New 115BAC","Old (via Form 10-IEA)"]},
+   {p:"Representative Assessee",drill:true},
+   {p:"Pass Through Income 115U/UA/UB",drill:true},
+   {p:"Nature of Business/Profession",drill:true,h:[{H:"Columns",r:["Sector","Sub-Sector","Code","Trade name (×3 activity types: 44AD/44ADA/44AE)"]}]},
+   {p:"Turnover/Gross Receipts reported in GSTR",drill:true,h:[{H:"Columns",r:["GSTIN","Outward supplies"]}]},
+   {p:"Earning business income for first time?",r:["Yes","No"]},
+   {p:"Partner in a Firm?",r:["Yes","No"]},
+   {p:"Held Unlisted Shares?",r:["Yes","No"]},{p:"Unlisted shares",drill:true},
+   {p:"Director in a company?",r:["Yes","No"]},{p:"Directorship",drill:true},
+   {p:"Tax deferred on Sweat Equity (ESOP)",drill:true},
+   {p:"Other Forms filed",drill:true}]},
+ {G:"Foreign Assets & Incomes (Sch FA)",i:[
+   {p:"Have foreign assets?",r:["Yes","No"]},{p:"Depository/Custodial",drill:true},{p:"Equity/Debt",drill:true},
+   {p:"Insurance/Annuity",drill:true},{p:"Financial Interest",drill:true},{p:"Immovable Property",drill:true},
+   {p:"Other Capital Assets",drill:true},{p:"Signing authority",drill:true},{p:"Trusts",drill:true},{p:"Other income",drill:true}]},
+ {G:"Financial particulars of the Business (Sch BP)",i:[
+   {p:"Disclose financial particulars?",r:["Yes","No"]},
+   {p:"Capital & Liabilities",drill:true,h:[{H:"Heads",r:["Partners'/Members' capital","Secured loans","Unsecured loans","Advances","Sundry creditors *","Other liabilities"]}]},
+   {p:"Assets",drill:true,h:[{H:"Heads",r:["Fixed assets","Investments","Inventory *","Sundry debtors *","Bank *","Cash *","Loans & advances","Other assets"]}]}]},
+ {G:"Presumptive income entry",i:[
+   {p:"44AD business",drill:true,h:[{H:"Columns",r:["Receipts Mode","Turnover/Receipts","% (A/c payee 6% / else 8%)","Profit"]},{H:"Ceiling note",r:["≤5% cash → ₹3 cr","else → ₹2 cr"]}]},
+   {p:"44ADA profession",drill:true,h:[{H:"Columns",r:["Mode","Gross Receipts","% (50%)","Profit"]},{H:"Ceiling note",r:["≤5% cash → ₹75 L","else → ₹50 L"]}]},
+   {p:"44AE goods carriage",drill:true,h:[{H:"Columns",r:["Description","No. of months","Weight (Tonnes)","Vehicle type (HGV/Other)","Income","Registration No.","Ownership (Owned/Leased/Hired)"]},{H:"Deemed profit",r:["HGV: ₹1,000 × tonnes × months","Other: ₹7,500 × months"]}]},
+   {p:"Salary (per employer)",drill:true},{p:"House Property (SOP cap ₹2 L)",drill:true},
+   {p:"Other Sources heads",drill:true},
+   {p:"Chapter VI-A",drill:true,h:[{H:"Sections",r:["80CCH","80D","80DD","80DDB","80E","80C/CCC/CCD combined","Other (80G/GG/TTA/TTB/U)"]}]}]},
+ {G:"Computation outputs",i:[{p:"Total Income (≤ ₹50 L)"},{p:"Tax regime",r:["New","Old"]},{p:"Tax on TI"},{p:"Rebate 87A"},{p:"AMT 115JC/JD"},{p:"TDS/TCS · Advance · SAT"},{p:"Interest 234A/B/C + 234F"},{p:"Balance tax payable / refund"}]}
+]},
+
+{n:5,s:"ITR-5",t:"",d:"Firms · LLP · AOP/BOI · Local Authority · Co-operative Society · AJP",g:[
+ {G:"Client bar",i:[{p:"Master identity",r:["Name","PAN","Status (Firm/AOP/BOI/LLP/Local Authority/Co-op/PACS/AJP)","Residential Status","Date of formation"]}]},
+ {G:"ITR Info — Basic",i:[
+   {p:"Assessee info",drill:true,h:[{H:"Fields",r:["STD code","Landline","Country code","e-Mail","District","Secondary address","Liable 44AA?","Old name"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN (individual)","Capacity","Father's Name","Place"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account No.","IFSC","Type","For refund?"]}]},
+   {p:"Partners / Members details",drill:true,h:[{H:"Columns",r:["Name","Remuneration","% share","Admitted","Retired","Interest rate on capital","PAN","Aadhaar","Address","Status"]}]},
+   {p:"Recognised as Startup by DPIIT?",r:["Yes","No"]},
+   {p:"Recognised as MSME (MSMED 2006)?",r:["Yes","No"]}]},
+ {G:"ITR filing info",i:[
+   {p:"Section under which return filed",r:["139(1)","139(4)","139(5)","139(8A)","139(9)","142(1)","148","153A","153C","119(2)(b)"]},
+   {p:"Return Type",r:["Original","Revised","Updated","Defective"]},{p:"Representative Assessee",drill:true}]},
+ {G:"Income / Audit / Business info",i:[
+   {p:"Pass Through Income 115U/UA/UB",drill:true},
+   {p:"Liable for audit u/s 44AB?",r:["checkbox"]},{p:"Other Audits (IT Act + other Acts)",drill:true},
+   {p:"Nature of Business/Profession",drill:true,h:[{H:"4 activity tables",r:["44AD","44ADA","44AE","Other"]}]},
+   {p:"Turnover reported in GSTR",drill:true},{p:"Business/Profession start date"},
+   {p:"Tax paid u/s 92CE (secondary adjustment)",drill:true}]},
+ {G:"Other info",i:[
+   {p:"Partner in any other Firm?",r:["Yes","No"]},{p:"Other firms",drill:true},
+   {p:"Held Unlisted Shares?",r:["Yes","No"]},{p:"Unlisted equity shares",drill:true,h:[{H:"Columns",r:["Opening","Acquired","Transferred","Closing"]}]},
+   {p:"Legal Entity Identifier (refund ≥ ₹50 Cr)",drill:true,h:[{H:"Fields",r:["LEI (20-char)","Valid up to"]}]}]},
+ {G:"Foreign Assets (Sch FA)",i:[{p:"Have foreign assets?",r:["Yes","No"]},{p:"9 FA tables (depository/equity/insurance/interest/immovable/other-cap/signing/trusts/other)",drill:true,h:[{H:"Each captures",r:["Country","Institution","Investment/income","Income offered in this return"]}]}]},
+ {G:"Books not maintained cases",i:[{p:"Financial particulars",r:["Sundry creditors","Stock-in-trade","Sundry debtors","Cash balance"]},{p:"Profit particulars",r:["Gross receipts","Gross profit","Expenses","Net profit"]}]},
+ {G:"Balance Sheet (ITR B/S)",i:[
+   {p:"Liabilities",drill:true,h:[{H:"Heads",r:["Partners' capital","Reserves (general/other)","P&L Cr","Secured loans","Unsecured loans","Deferred tax liability","Advances","Trade creditors","Provision for IT","Other provisions"]}]},
+   {p:"Assets",drill:true,h:[{H:"Heads",r:["Fixed assets (gross/dep/CWIP)","Long-term investments","Deferred tax assets","Loans & advances","Short-term investments","Inventories (RM/FG/WIP/other)","Trade debtors","Cash (bank/hand/other)","Other current assets","Misc"]}]}]},
+ {G:"Manufacturing / Trading / P&L (ITR P&L)",i:[
+   {p:"Manufacturing A/c",drill:true},{p:"Trading A/c (incl. intraday & F&O)",drill:true},
+   {p:"Profit & Loss A/c",drill:true,h:[{H:"~35 expense lines",r:["Advertisement","Audit","Bad debts","Commission","Remuneration to Partners","Interest to Partners","Salaries","Rents","Repairs","Royalty","Taxes","Depreciation → PBIDTA → PBT → PAT"]}]}]},
+ {G:"Computation — schedules (registry, ~90 drill-ins)",i:[
+   {p:"House Property (per property)",drill:true},
+   {p:"Schedule BP add-backs",drill:true,h:[{H:"Sections",r:["36","37","40","40A","43B","Deemed 41","ICDS","Not credited","Other additions"]}]},
+   {p:"BP deductions",drill:true,h:[{H:"Sections",r:["35 to 35E","Exempt","Considered separately","Other deductions"]}]},
+   {p:"Interest & remuneration to partners → add-back",drill:true},
+   {p:"s.40(b) allowable ceiling → deduction",drill:true},
+   {p:"Depreciation as per IT Act",drill:true},
+   {p:"Presumptive 44AD / 44ADA / 44AE / 35AD / speculation",drill:true},
+   {p:"Capital Gains (STCG 111A / STCG-oth / LTCG 112A / LTCG 112)",drill:true,h:[{H:"Per transaction + 54-series deduction",r:["Consideration","Cost","Improvement","Expenses","54-series"]}]},
+   {p:"Other Sources (interest/dividend/rent/winnings/115BBE/VDA/other)",drill:true},
+   {p:"Brought-forward losses set-off",drill:true},
+   {p:"Chapter VI-A (firm)",drill:true,h:[{H:"Sections",r:["80G","80GGA","80GGC","80-IA..80-IE","80JJA","80JJAA","80LA","80P","80PA"]}]},
+   {p:"Schedule EI — Exempt income",drill:true},
+   {p:"AMT u/s 115JC",drill:true},{p:"Tax at special rates",drill:true},
+   {p:"Relief 90/90A/91 (FTC)",drill:true},
+   {p:"TDS + TCS credits",drill:true},{p:"Advance tax challans",drill:true},{p:"Self-assessment tax challans",drill:true},
+   {p:"Interest 234A/B/C + fee 234F",drill:true}]},
+ {G:"Computation outputs",i:[{p:"Gross Total Income → Total Income (round 288A)"},{p:"Tax @ 30% (firm rate)"},{p:"Surcharge 12% over ₹1 cr (marginal relief)"},{p:"Health & Education Cess 4%"},{p:"AMT compare (115JC 18.5% if ATI > ₹20 L)"},{p:"Balance tax payable / refund"}]}
+]},
+
+{n:6,s:"ITR-6",t:"⚠ Pending",d:"Companies (other than those claiming exemption u/s 11) — working shell; JSON totals-only for A.Y. 2026-27",g:[
+ {G:"ITR Info",i:[
+   {p:"Client bar",r:["Company Name","PAN","Status (CO_KIND)","Residential status","Date of Incorporation"]},
+   {p:"Assessee info",drill:true,h:[{H:"Fields",r:["STD/landline","e-Mail","CIN","Liable 44AA?","Status","Unlisted?","Old name"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN","Capacity","Father's Name","Place"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank Name","Account No.","IFSC","Type","For refund?"]}]},
+   {p:"Directors (management)",drill:true,h:[{H:"Columns",r:["Name","DIN","PAN","Designation","Shares held"]}]},
+   {p:"Shareholders",drill:true},{p:"Holding/Subsidiary",drill:true},{p:"Registered/Demerger info",drill:true},
+   {p:"Representative Assessee",drill:true},{p:"Pass Through Income (PTI)",drill:true},
+   {p:"44AB audit details",drill:true},{p:"Other audits",drill:true},
+   {p:"Nature of Business (NIC codes)",drill:true},{p:"GST turnover",drill:true},
+   {p:"Foreign Depository (FD)",drill:true},{p:"Tax paid u/s 92CE (TPSA)",drill:true},
+   {p:"Unincorporated entities",drill:true},{p:"LEI",drill:true}]},
+ {G:"Sheet sections",i:[
+   {p:"Assets / Liabilities (AL-1)",drill:true},
+   {p:"Accreted income u/s 115TD",drill:true},
+   {p:"Foreign Assets & Incomes (FA)",drill:true},
+   {p:"Receipt & Payment A/c — Liquidation (Part A-OL)",drill:true},
+   {p:"Balance Sheet (Part A-BS)",drill:true,h:[{H:"Detail popups",r:["Share capital & other reserves","Long/short-term borrowings","Trade creditors","Non-current/current investments","Long/short-term loans & advances","Trade debtors","Other current assets"]}]},
+   {p:"Manufacturing, Trading & P&L",drill:true,h:[{H:"Lines",r:["Mfg (mfg_*)","Trading (tr_*, intraday & F&O)","P&L (other income/insurance/provisions/salaries/tax rates/other expenses)"]}]},
+   {p:"Part A-OI disallowances",drill:true,h:[{H:"Sections",r:["36","37","40","40A","43B"]}]}]},
+ {G:"Computation",i:[
+   {p:"Schedule BP",drill:true,h:[{H:"Popups",r:["Income credited","Income exempt","Expenses debited","Depreciation u/s 32 (bp_depit)","Deemed income","35 ESR","Presumptive","Speculative","35AD specified business"]}]},
+   {p:"Schedule HP / CG / OS",drill:true},
+   {p:"Part B-TI drill-downs",drill:true,h:[{H:"Schedules",r:["CYLA","BFLA","Chapter VI-A (ti_via)","10AA","SI (special income)","CFL","EI"]}]},
+   {p:"Part B-TTI — Tax liability",drill:true,h:[{H:"Lines",r:["Normal/special tax","Surcharge","Marginal relief","Cess 4%","MAT u/s 115JB (book profit)","MAT credit 115JAA","234A/B/C + 234F","Refund"]}]},
+   {p:"Taxes paid — challans",drill:true,h:[{H:"Types",r:["Advance tax","Self-assessment tax","TDS","TCS"]}]}]},
+ {G:"⚠ Pending gap (to become filing-ready)",i:[
+   {p:"JSON is rolled-up totals, not CBDT-schema detail",r:["No PARTA_PL / Mfg / Trading node","BS totals only","CG/OS/HP totals only","No ScheduleVIA/SI/EI/CYLA/BFLA/CFL/UD","No ScheduleIT/TDS/TCS challans","No FA/AL/SH/GST/FD/PTI/115TD/FSI/TR"]},
+   {p:"Granular schedules absent (in the 2025-26 backup, not current)",r:["Depreciation DPM/DOA/DEP/DCG","Schedule UD/ICDS/QD","BBS (115QA)/FSI/TR","CG 112A/115AD/VDA","80G/80-IA/IB/IC/IAC/M/LA","Ind AS BS/Mfg/Trading/P&L"]},
+   {p:"Validation thin (26 rules vs 387 in backup)",r:["Cross-schedule tie-outs missing","MAT applicability not enforced"]},
+   {p:"Port backup forward + re-base to A.Y. 2026-27 CBDT schema"}]}
+]},
+
+{n:7,s:"ITR-7",t:"",d:"Trusts · societies · Section-8 · institutions filing u/s 139(4A)–(4D)",g:[
+ {G:"Client bar",i:[{p:"Master identity",r:["Name of Trust/Institution","PAN","Date of formation","Residential Status"]}]},
+ {G:"ITR Info — Basic",i:[
+   {p:"Assessee info",drill:true,h:[{H:"Fields",r:["Name","PAN","Office","Full address","Contact"]}]},
+   {p:"Verifier info",drill:true,h:[{H:"Verifier",r:["Name","PAN (individual)","Designation","Father's Name","Capacity","Place","Date"]}]},
+   {p:"Bank Accounts",drill:true,h:[{H:"Columns",r:["Bank","Account no.","IFSC","Type","For refund?"]}]}]},
+ {G:"Trust info",i:[
+   {p:"Is a Venture Capital Fund?",r:["Yes","No"]},
+   {p:"Trustees & related persons",drill:true,h:[{H:"Groups",r:["Trustees/authors","Beneficial owners","Substantial contributors 13(3)(b)","Relatives"]}]},
+   {p:"Registrations / Approvals",drill:true,h:[{H:"Under IT Act",r:["11(1)(c)","12A/12AA/12AB","10(23C)(iv/v/vi/via)","10(21)/(22B)/(23A/B)/(24)/(46)/(47)","13A","13B","35(1)(ii)/(iia)/(iii)","80G(5)","Other"]},{H:"Columns",r:["Section","Date","Reg/Approval no.","Authority","Effective date"]}]},
+   {p:"Projects / Institutions",drill:true},
+   {p:"Section 13(10) applicable? (auto)",drill:true,h:[{H:"Derived from",r:["Violation flags","Books","Audit","ITR timeliness"]}]},
+   {p:"Other Info",drill:true,h:[{H:"Fields",r:["GPU object?","Change in objects?","First return?"]}]}]},
+ {G:"ITR filing info",i:[
+   {p:"Section under which return filed",r:["139(4A)","139(4B)","139(4C)","139(4D)"]},
+   {p:"Return Type",r:["Original","Revised","Modified"]},{p:"Representative Assessee",drill:true}]},
+ {G:"Income related info",i:[
+   {p:"Accumulation u/s 11(2) → Sch I, IA",drill:true,h:[{H:"6-FY grid",r:["Accumulated","Applied specified/other","Credited","Invested 11(5)/other","Not-utilised","Deemed income 11(3)"]}]},
+   {p:"Deemed Application Expln.1 to 11(1) → Sch D, DA",drill:true,h:[{H:"7-FY grid",r:["Deemed application","11(1B) taxed"]}]},
+   {p:"Pass Through Income 115U/UA/UB",drill:true}]},
+ {G:"Audit / Business info",i:[{p:"Audits (IT Act + other Acts)",drill:true},{p:"Nature of Business → Sch OA",drill:true},{p:"Other business details → Sch OA",drill:true},{p:"First-time business income?",r:["Yes","No"]}]},
+ {G:"Funds & Investments info",i:[
+   {p:"Corpus fund → J(A1), R",drill:true,h:[{H:"Per-purpose grid",r:["Opening balance","Received","Applied","Invested","Closing","Taxed"]}]},
+   {p:"Loans & Borrowings → J(A2)",drill:true},
+   {p:"Corpus invested u/s 11(5) → J(B)",drill:true},
+   {p:"Investment in 13(3) substantial-interest concern → J(C)",drill:true},
+   {p:"Other investments → J(D)",drill:true},
+   {p:"Voluntary contributions in kind not per 11(5) → J(E)",drill:true}]},
+ {G:"Other info",i:[{p:"Partner in Firm?",r:["Yes","No"]},{p:"Held Unlisted Shares?",r:["Yes","No"]},{p:"LEI (refund > ₹50 Cr)",drill:true}]},
+ {G:"Accreted income u/s 115TD",i:[{p:"115TD block",drill:true,h:[{H:"Fields",r:["FMV of total assets","Less total liability","Net value","Less FMV of assets","Accreted income","Additional tax at MMR","Interest 115TE","Tax & interest paid"]}]}]},
+ {G:"Foreign Assets (Sch FA)",i:[{p:"Have foreign assets?",r:["Yes","No"]},{p:"9 FA tables",drill:true}]},
+ {G:"Income details",i:[
+   {p:"Donations — Domestic (Sch VC)",drill:true,h:[{H:"Corpus",r:["80G(2)(b) renovation","Other corpus"]},{H:"Other than corpus",r:["Govt grants","CSR","Other specific grants","Other"]},{H:"Anonymous",r:["Anonymous donations"]}]},
+   {p:"Foreign Contribution",drill:true,h:[{H:"Fields",r:["Purpose","Anonymous","Corpus 80G","Other corpus","Other"]}]},
+   {p:"Income other than donation (Sch AI)",drill:true,h:[{H:"Heads",r:["Main objects","Incidental objects","Rent","Commission","Dividend","Interest","Net consideration on transfer","Other income","Agriculture (exempt)"]}]}]},
+ {G:"Application of income (Sch A)",i:[
+   {p:"A. Expenditure",drill:true,h:[{H:"Charitable heads (Revenue/Capital)",r:["Relief of poor","Education","Yoga","Medical","Environment","Monuments","General Public Utility"]},{H:"Also",r:["Non-corpus donation to 12AB/10(23C) (85% application)","Cost of new asset 11(1A)","Other expenses"]}]},
+   {p:"B. Expenditure not allowed as application",drill:true,h:[{H:"Items",r:["Donations to 12AB/10(23C) (corpus/accum/not-same-objects)","Applied outside India approved/not-approved 11(1)(c)","Applied for other than objects","Others"]}]},
+   {p:"C. Sources of Fund",drill:true,h:[{H:"Items",r:["Income of PY (excl corpus)","Earlier 11(2) accumulation","Deemed application","Earlier 15%","Corpus","Borrowed","Other sources"]}]},
+   {p:"D. Net (A−B−Cii) → Amount allowed as application",drill:true}]},
+ {G:"Forms 10B / 10BB",i:[
+   {p:"Form 10B (annexure + schedules)",drill:true,h:[{H:"Clauses",r:["SP-a…SP-h specified-person violations","269SS/ST/T","40(a)(ia)","40A(3)","115BBI"]}]},
+   {p:"Form 10BB (annexure + schedules)",drill:true}]},
+ {G:"Computation",i:[
+   {p:"House Property / Business / Capital Gains / Other Sources",drill:true},
+   {p:"Taxable Income u/s 11 to 13 (sf-1113)",drill:true,h:[{H:"Less",r:["Application (rev/cap/loan)","Corpus donations","11(2) accumulation","15% accumulation","15% of non-corpus donations"]},{H:"Additions",r:["Corpus not invested 11(5)","40(a)(ia)/40A(3)","11(1B)/11(3)/12(2)","13(1)(c)/13(1)(d)","115BBI","115BBC"]}]},
+   {p:"Chapter VI-A → Total Income"},
+   {p:"Tax = AOP rates + 115BBI 30% + 115BBC 30%",drill:true},
+   {p:"Surcharge + Cess 4% + AMT 115JC/JD"},
+   {p:"Relief 90/91 · TDS/TCS · Advance · SAT · Interest 234A/B/C+F"},
+   {p:"Balance tax payable / refund"}]}
+]}
+];
+
+/* ── RENDER ─────────────────────────────────────────────────────────────── */
+const tree=document.getElementById('tree');
+const CHEV='<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>';
+const CHEVS='<span class="chev-s">▸</span>';
+
+function countLeaves(f){ // particulars + heads + ready under a form
+  let p=0,d=0;
+  f.g.forEach(gr=>gr.i.forEach(it=>{p++; if(it.drill)d++;}));
+  return {p,d};
+}
+function readyWrap(rows){
+  if(!rows||!rows.length) return '';
+  return '<div class="ready-wrap">'+rows.map(r=>'<span class="rchip">'+esc(r)+'</span>').join('')+'</div>';
+}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function headNode(hd){
+  const hasR=hd.r&&hd.r.length;
+  return `<div class="node headnode ${hasR?'':'leaf'}">
+    <div class="nrow ${hasR?'can':''}">${hasR?CHEVS:'<span class="chev-s"></span>'}
+      <span class="glyph g-head">H</span>
+      <span class="label">${esc(hd.H)}</span>
+      ${hasR?`<span class="ct">${hd.r.length}</span>`:''}
+    </div>${hasR?readyWrap(hd.r):''}</div>`;
+}
+function itemNode(it){
+  const hasH=it.h&&it.h.length, hasR=it.r&&it.r.length, can=hasH||hasR;
+  let inner='';
+  if(hasH) inner='<div class="lvl">'+it.h.map(headNode).join('')+'</div>';
+  else if(hasR) inner=readyWrap(it.r);
+  return `<div class="node ${can?'':'leaf'}">
+    <div class="nrow ${can?'can':''}">${can?CHEVS:'<span class="chev-s"></span>'}
+      <span class="glyph g-part"></span>
+      <span class="label">${esc(it.p)}</span>
+      ${it.drill?'<span class="drillbadge"><b>⋯</b> drill-in</span>':''}
+      ${hasH?`<span class="ct">${it.h.length} heads</span>`:''}
+    </div>${can?`<div class="kids2">${inner}</div>`:''}</div>`;
+}
+function groupNode(gr){
+  return `<div class="node grp">
+    <div class="nrow can">${CHEVS}
+      <span class="glyph g-group">▤</span>
+      <span class="label">${esc(gr.G)}</span>
+      <span class="ct">${gr.i.length}</span>
+    </div>
+    <div class="kids2"><div class="lvl">${gr.i.map(itemNode).join('')}</div></div>
+  </div>`;
+}
+function formNode(f){
+  const c=countLeaves(f);
+  const pend=f.t==='⚠ Pending';
+  return `<section class="form" data-form="${f.n}">
+    <div class="frow">
+      <div class="fnum"><small>ITR</small><b>${f.n}</b></div>
+      <div class="ftext">
+        <div class="ftitle"><span class="short">ITR-${f.n}${f.t&&!pend?' '+esc(f.t):''}</span>${esc(f.d)}</div>
+      </div>
+      <div class="fmeta">
+        ${pend?'<span class="pill pend">⚠ Pending</span>':''}
+        <span class="pill">${f.g.length} groups</span>
+        <span class="pill">${c.p} particulars</span>
+        <span class="pill ready">${c.d} drill-ins</span>
+      </div>
+      ${CHEV}
+    </div>
+    <div class="kids"><div style="padding:2px 14px 4px">${f.g.map(groupNode).join('')}</div></div>
+  </section>`;
+}
+tree.innerHTML=D.map(formNode).join('');
+
+/* counts for chips */
+const chips=document.getElementById('chips');
+let chipHtml='<button class="chip on" data-f="all">All forms</button>';
+D.forEach(f=>chipHtml+=`<button class="chip" data-f="${f.n}">ITR-${f.n}<span class="cn">${f.g.reduce((a,g)=>a+g.i.length,0)}</span></button>`);
+chips.innerHTML=chipHtml;
+
+/* ── INTERACTION ─── */
+tree.addEventListener('click',e=>{
+  const fr=e.target.closest('.frow');
+  if(fr){fr.parentElement.classList.toggle('open');return;}
+  const nr=e.target.closest('.nrow.can');
+  if(nr){nr.parentElement.classList.toggle('open');}
+});
+document.getElementById('expand').onclick=()=>document.querySelectorAll('.form,.node').forEach(n=>{if(n.querySelector(':scope>.kids,:scope>.kids2,:scope>.nrow.can,:scope>.frow'))n.classList.add('open')});
+document.getElementById('collapse').onclick=()=>{document.querySelectorAll('.form,.node').forEach(n=>n.classList.remove('open'));};
+
+/* chips scope */
+chips.addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b)return;
+  chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); b.classList.add('on');
+  const f=b.dataset.f;
+  document.querySelectorAll('.form').forEach(s=>{
+    const show=f==='all'||s.dataset.form===f; s.classList.toggle('hide',!show);
+    if(f!=='all'&&show) s.classList.add('open');
+  });
+});
+
+/* search */
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{
+  const term=q.value.trim().toLowerCase();
+  // reset marks
+  document.querySelectorAll('mark').forEach(m=>{m.replaceWith(document.createTextNode(m.textContent));});
+  if(!term){
+    document.querySelectorAll('.form,.node').forEach(n=>{n.classList.remove('open');n.style.display='';});
+    // re-apply active chip scope
+    chips.querySelector('.chip.on').click();
+    document.getElementById('empty-msg')?.remove();
+    return;
+  }
+  let anyForm=false;
+  document.querySelectorAll('.form').forEach(form=>{
+    form.classList.remove('hide');
+    let hit=false;
+    form.querySelectorAll('.label,.rchip').forEach(el=>{
+      const t=el.textContent.toLowerCase();
+      if(t.includes(term)){
+        hit=true;
+        // open ancestors
+        let p=el.closest('.node')||el.closest('.form');
+        while(p){p.classList.add('open'); p=p.parentElement.closest('.node,.form');}
+        // highlight
+        const idx=el.textContent.toLowerCase().indexOf(term);
+        if(idx>=0&&!el.querySelector('mark')){
+          const orig=el.textContent;
+          el.innerHTML=esc(orig.slice(0,idx))+'<mark>'+esc(orig.slice(idx,idx+term.length))+'</mark>'+esc(orig.slice(idx+term.length));
+        }
+      }
+    });
+    // also match form header text
+    const fd=form.querySelector('.ftitle').textContent.toLowerCase();
+    if(fd.includes(term)) {hit=true; form.classList.add('open');}
+    form.style.display=hit?'':'none';
+    if(hit)anyForm=true;
+  });
+  document.getElementById('empty-msg')?.remove();
+  if(!anyForm){tree.insertAdjacentHTML('beforeend','<div class="empty" id="empty-msg">No particular, drill-in or head matches “'+esc(term)+'”.</div>');}
+});
+
+/* theme toggle */
+const root=document.documentElement;
+document.getElementById('theme').onclick=()=>{
+  const cur=root.getAttribute('data-theme')|| (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+};
+
+/* footer */
+document.getElementById('foot').innerHTML='Structure extracted read-only from the ITR utilities in <code>public/tax-utilities/</code> (A.Y. 2026-27). '+
+ 'Forms ITR-1..4 also ship A.Y. 2025-26; ITR-5/6/7 ship A.Y. 2026-27 only. '+
+ '<b>⋯ drill-in</b> = a particular that opens its own form with column heads &amp; ready particulars. '+
+ 'ITR-6 is marked <b>pending</b> — its on-screen shell exists but the JSON is totals-only. See <code>docs/itr/</code> for the field-level mapping &amp; validation rules.';
+
+/* open ITR-1 by default */
+document.querySelector('.form').classList.add('open');
+</script>

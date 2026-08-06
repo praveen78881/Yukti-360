@@ -1,0 +1,154 @@
+{
+    "type": "object",
+    "properties": {
+      "ecom": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ctin": {
+                    "description":"Counter party GSTIN [ECOM]",
+                    "type":"string",
+                    "maxLength":15,
+                    "minLength":15,
+                    "pattern":"^[a-zA-Z0-9]+$"
+            },
+              "cfs": {
+              "description": "R1_Fil_Status",
+              "type": "string"
+            },
+              "cfs3b": {
+              "description": "R3B_Fil_Status",
+              "type": "string"
+            },
+              "dtcancel": {
+              "description": "Date of cancellation of supplier",
+              "type": "string"
+            },
+              "fldtr1": {
+              "description": "Date of filing GSTR1/5 of supplier",
+              "type": "string"
+            },
+              "flprdr1": {
+              "description": "Filing period of GSTR1/5 of supplier",
+              "type": "string"
+            },
+            "inv": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {             
+                  "chksum": {
+                    "description":"checksum value",
+                    "type": "string"
+                  },
+                  "inum": {
+                    "type": "string",
+                    "description":"Supplier Invoice Number",
+                    "pattern":"^[a-zA-Z0-9-/]+$"
+                  },
+                  "idt": {
+                    "description":"Supplier Invoice Date",
+                    "type":"string",
+                    "pattern":"^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))*$"
+                  },              
+                  "val": {
+                    "description":"Supplier Invoice Value",
+                    "type": "number"
+                  },
+                  "pos": {
+                    "description":"Maintained in GST System common database POS as provided in law / actual provision of service.",
+                    "type": "string"
+                  },
+                  "rchrg": {
+					  "description":"Reverse Charge",
+	                  "type": "string"
+               	  },
+               	  "aspd": {
+					  "description":"Return period in which invoice is amended",
+	                  "type": "string"
+               	  }, 
+	              "atyp": {
+					  "description":"flag to determine type of amendment",
+	                  "type": "string"
+	              },
+                  "inv_typ": {
+                    "description":"flag to determine if it is sez or deemed in case of B2B else in case of C2B it would simply have (-)",
+                    "type": "string"
+                  }, 
+                  "itms": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "num": {
+                          "description":"row numer",
+                          "type": "integer"
+                        },                                         
+                        "itm_det": {
+                          "type": "object",
+                          "description":"details of the items of invoice",
+                          "properties": {          
+                            "txval": {
+                              "description":"Taxable value of Goods or Service as per invoice",
+                              "type": "number"
+                            },              
+                            "iamt": {
+                              "description":"tax amount for igst",
+                              "type": "number"
+                            },                 
+                            "camt": {
+                              "description":"tax amount for cgst",
+                              "type": "number"
+                            },                    
+                            "samt": {
+                              "description":"tax amount for sgst",
+                              "type": "number"
+                            },
+                            "csamt": {
+                              "description":"tax amount for cess",
+                              "type": "number"
+                            },
+                            "rt": {
+                               "description":"Tax Rate",
+                                 "type": "number"
+                            }
+                          },
+                          "required": [
+                              "txval",
+                               "rt"							
+                          ]
+                        }
+                      },
+                      "required": [
+                        "num",
+                        "itm_det"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "chksum",
+                  "inum",
+                  "idt",
+                  "val",
+                  "pos",
+                  "rchrg",
+                  "inv_typ",             
+                  "itms"
+               ]
+              }
+            }
+          },
+          "required": [
+            "ctin",
+            "cfs",
+            "inv"
+          ]
+        }
+      }
+    },
+    "required": [
+      "ecom"
+    ]
+  }

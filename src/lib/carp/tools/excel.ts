@@ -41,8 +41,8 @@ export const excelDeclarations: ToolDeclaration[] = [
 ];
 
 export const excelExecutors: Record<string, ToolExecutor> = {
-  read_excel(args) {
-    const wb = getUploadedWorkbook();
+  read_excel(args, companyId) {
+    const wb = getUploadedWorkbook(companyId);
 
     if (!wb) {
       return {

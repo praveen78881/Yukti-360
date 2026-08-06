@@ -1,0 +1,233 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"additionalProperties": false,
+	"definitions": {},
+	"id": "http://example.com/example.json",
+	"properties": {
+	"adadr": {
+       	  "items": {
+         "properties": {
+          "addr": {
+          "properties": {
+              "bnm": {
+                "type": "string",
+                "description": "Building Name"
+              }, 
+              "bno": {
+                "type": "string",
+                "description": "Building Number"
+              }, 
+              "flno": {
+                "type": "string",
+                "description": "Floor number"
+              }, 
+              "lg": {
+                "type": "string",
+                "description": "longitude"
+              }, 
+              "loc": {
+                "type": "string",
+                "description": "location"
+              }, 
+              "lt": {
+                "type": "string",
+                "description": "lattitude"
+              }, 
+              "pncd": {
+                "type": "string",
+                "description": "Pincode"
+              }, 
+              "st": {
+                "type": "string",
+                "description": "Street Name"
+              }, 
+              "stcd": {
+                "type": "string",
+                "description": "State Name"
+              }
+            }, 
+            "required": [
+              "loc", 
+              "lg", 
+              "pncd", 
+              "stcd", 
+              "st", 
+              "lt", 
+              "bno", 
+              "bnm", 
+              "flno"
+            ], 
+            "type": "object"
+          }, 
+          
+          "ntr": {
+              "items": {
+              "type": "string",
+              "description":"Nature of Additional place of business"
+            }, 
+            "type": "array"
+          }
+        }, 
+        "required": [          
+          "ntr", 
+          "addr"          
+        ], 
+        "type": "object"
+      }, 
+      "type": "array"
+    }, 
+	 "pradr": {
+      "properties": {
+         "addr": {
+     	  "properties": {
+             "bnm": {
+               "type": "string",
+               "description": "Building Name"
+             }, 
+             "bno": {
+               "type": "string",
+               "description": "Building Number"
+             }, 
+             "flno": {
+               "type": "string",
+               "description": "Floor Number"
+             }, 
+             "lg": {
+               "type": "string",
+               "description": "longitude"
+             }, 
+             "loc": {
+               "type": "string",
+               "description": "Location"
+             }, 
+             "lt": {
+               "type": "string",
+               "description": "lattitude"
+             }, 
+             "pncd": {
+               "type": "string",
+               "description": "Pincode"
+             }, 
+             "st": {
+               "type": "string",
+               "description": "Street Name"
+             }, 
+             "stcd": {
+               "type": "string",
+               "description": "State Name"
+             }
+           }, 
+           "required": [
+             "loc", 
+             "lg", 
+             "pncd", 
+             "stcd", 
+             "st", 
+             "lt", 
+             "bno", 
+             "bnm", 
+             "flno"
+           ], 
+           "type": "object"
+         },         
+         "ntr": {
+          "items": {
+             "type": "string",
+             "description":"Nature of pricipal place of Business"
+           }, 
+           "type": "array"
+         }
+       }, 
+       "required": [        
+         "ntr", 
+         "addr"         
+       ], 
+       "type": "object"
+     }, 
+
+
+
+
+		"ctb": {
+			"type": "string",
+			"description": "Constitution of Business"
+		},
+		"ctj": {
+			"type": "string",
+			"description": "Center Jurisdiction"
+		},
+        	"ctjCd": {
+			"type": "string",
+			"description": "Center Jurisdiction Code"
+		},
+		"cxdt": {
+			"type": "string",
+			"description": "Date Of Cancellation"
+		},
+		"dty": {
+			"type": "string",
+			"description": "TaxPayer type"
+		},
+		"gstin": {
+			"type": "string",
+			"description": "GST Identification Number"
+		},
+		"einvoiceStatus": {
+			"type": "string",
+			"description": "eInvoice enablement status for GSTIN"
+		},
+		"lgnm": {
+			"type": "string"
+		},
+		"nba": {
+			"type": "array",
+			"description": "Nature of Business Activity",
+			"items": {
+				"type": "string"
+			}
+		},
+		"rgdt": {
+			"type": "string",
+			"description": "Date of Registration"
+		},
+		"stj": {
+			"type": "string",
+			"description": "State Jurisdiction"
+		},
+        "stjCd": {
+			"type": "string",
+			"description": "State Jurisdiction Code"
+		},
+		"sts": {
+			"type": "string",
+			"description": "GSTN status"
+		},
+        "lstupdt": {
+			"type": "string",
+			"description": "Last Updated Date"
+		},
+        "tradeNam": {
+			"type": "string",
+			"description": "trade Name"
+		}
+	},
+	"required": [
+		"stj",
+		"dty",
+		"rgdt",
+		"ctb",
+		"sts",
+		"gstin",
+		"lgnm",
+		"nba",
+		"ctj",
+		"cxdt",
+        	"stjCd",
+        	"ctjCd",
+		"lstupdt",
+        	"tradeNam",
+		"pradr",
+		"adadr"
+	],
+	"type": "object"
+}

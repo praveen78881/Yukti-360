@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "gstin": {
+      "type": "string",
+      "description": "GSTIN of the taxpayer "
+    },
+    "ret_period": {
+      "type": "string",
+      "description": "Return Period "
+    },
+		"ref_id": {
+			"description": "Intra Reference Id",
+			"type": "string"
+		}
+  },
+  "required": [
+    "gstin",
+    "ret_period"
+  ]
+}

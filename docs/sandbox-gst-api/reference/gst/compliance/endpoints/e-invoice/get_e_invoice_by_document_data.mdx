@@ -1,0 +1,18 @@
+---
+title: 'Get e-Invoice by document data'
+description: "Fetch the e-Invoice by passing the document type, document number & document date. To fetch an e-Invoice, the authenticated taxpayer has to be a party in the transaction, either the seller or the buyer."
+openapi: '/api-reference/gst/compliance/openapi.json GET /gst/compliance/e-invoice/tax-payer/invoice'
+---
+
+#### Response schema
+
+For successful responses, this resource describes the NIC payload at `data.Data`.
+
+<Card
+  title="View JSON schema"
+  icon="code"
+  href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-invoice/get_e_invoice_response.json"
+  arrow="true"
+  horizontal
+>
+</Card>

@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "IRN Details schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "data": {
+      "description": "E-Invoice data",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "AckNo": {
+          "description": "IRN acknowledgment number",
+          "$ref": "#/definitions/AckNo"
+        },
+        "AckDt": {
+          "description": "IRN acknowledgment date",
+          "$ref": "#/definitions/Date"
+        },
+        "Irn": {
+          "description": "IRN number",
+          "$ref": "#/definitions/Irn"
+        },
+        "SignedInvoice": {
+          "description": "Signed Invoice",
+          "$ref": "#/definitions/SignedInvoice"
+        },
+        "SignedQRCode": {
+          "description": "Signed QR Code",
+          "$ref": "#/definitions/SignedQRCode"
+        },
+        "Status": {
+          "description": "IRN Status",
+          "$ref": "#/definitions/Status"
+        },
+        "EwbNo": {
+          "description": "E Way Bill Number",
+          "$ref": "#/definitions/EwbNo"
+        },
+        "EwbDt": {
+          "description": "E Way Bill Date",
+          "$ref": "#/definitions/Date"
+        },
+        "EwbValidTill": {
+          "description": "E Way Bill validity date",
+          "$ref": "#/definitions/Date"
+        },
+        "Cnldt": {
+          "description": "IRN cancellation Date",
+          "$ref": "#/definitions/Date"
+        },
+        "CnlRsn": {
+          "description": "Cancellation Reason",
+          "$ref": "#/definitions/Remarks"
+        },
+        "CnlRem": {
+          "description": "Cancellation Remarks",
+          "$ref": "#/definitions/Remarks"
+        },
+        "Remarks": {
+          "description": "Remarks",
+          "$ref": "#/definitions/Remarks"
+        }
+      },
+      "required": [
+        "AckNo",
+        "AckDt",
+        "Irn",
+        "SignedInvoice",
+        "Status"
+      ]
+    },
+    "RequestDate": {
+      "description": "Request Date",
+      "$ref": "#/definitions/Date"
+    }
+  },
+  "required": [
+    "data",
+    "RequestDate"
+  ],
+  "definitions": {
+    "AckNo": {
+      "type": "integer"
+    },
+    "Irn": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "SignedInvoice": {
+      "type": "string"
+    },
+    "SignedQRCode": {
+      "type": "string"
+    },
+    "Status": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3,
+      "pattern": "^(CNL|ACT)$"
+    },
+    "EwbNo": {
+      "type": "integer"
+    },
+    "Remarks": {
+      "type": "string"
+    },
+    "Date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])\\s(0[0-9]|1[0-9]|2[123]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$"
+    }
+  }
+}

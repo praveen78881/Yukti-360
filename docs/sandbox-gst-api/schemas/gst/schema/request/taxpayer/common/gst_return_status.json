@@ -1,0 +1,814 @@
+{
+  "id": "GET-RETURN-STATUS",
+  "properties": {
+    "error_report": {
+      "properties": {
+        "at": {
+          "items": {
+            "properties": {
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "itms": {
+                "items": {
+                  "properties": {
+                    "ad_amt": {
+                      "type": "number"
+                    },
+                    "csamt": {
+                      "type": "number"
+                    },
+                    "iamt": {
+                      "type": "number"
+                    },
+                    "rt": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "rt",
+                    "iamt",
+                    "ad_amt",
+                    "csamt"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "pos": {
+                "type": "string"
+              },
+              "sply_ty": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sply_ty",
+              "itms",
+              "error_cd",
+              "error_msg",
+              "pos"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "b2b": {
+          "items": {
+            "properties": {
+              "ctin": {
+                "type": "string"
+              },
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "inv": {
+                "items": {
+                  "properties": {
+                    "etin": {
+                      "type": "string"
+                    },
+                    "idt": {
+                      "type": "string"
+                    },
+                    "inum": {
+                      "type": "string"
+                    },
+                    "inv_typ": {
+                      "type": "string"
+                    },
+                    "itms": {
+                      "items": {
+                        "properties": {
+                          "itm_det": {
+                            "properties": {
+                              "csamt": {
+                                "type": "number"
+                              },
+                              "iamt": {
+                                "type": "number"
+                              },
+                              "rt": {
+                                "type": "number"
+                              },
+                              "txval": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "rt",
+                              "iamt",
+                              "txval",
+                              "csamt"
+                            ],
+                            "type": "object"
+                          },
+                          "num": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "itm_det",
+                          "num"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "pos": {
+                      "type": "string"
+                    },
+                    "rchrg": {
+                      "type": "string"
+                    },
+                    "val": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "etin",
+                    "inv_typ",
+                    "val",
+                    "rchrg",
+                    "idt",
+                    "itms",
+                    "pos",
+                    "inum"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "ctin",
+              "inv",
+              "error_cd",
+              "error_msg"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "b2cl": {
+          "items": {
+            "properties": {
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "inv": {
+                "items": {
+                  "properties": {
+                    "etin": {
+                      "type": "string"
+                    },
+                    "idt": {
+                      "type": "string"
+                    },
+                    "inum": {
+                      "type": "string"
+                    },
+                    "itms": {
+                      "items": {
+                        "properties": {
+                          "itm_det": {
+                            "properties": {
+                              "csamt": {
+                                "type": "number"
+                              },
+                              "iamt": {
+                                "type": "number"
+                              },
+                              "rt": {
+                                "type": "number"
+                              },
+                              "txval": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "rt",
+                              "iamt",
+                              "txval",
+                              "csamt"
+                            ],
+                            "type": "object"
+                          },
+                          "num": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "itm_det",
+                          "num"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "val": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "idt",
+                    "itms",
+                    "etin",
+                    "val",
+                    "inum"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "pos": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "inv",
+              "error_cd",
+              "error_msg",
+              "pos"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "b2cs": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "csamt": {
+                "type": "number"
+              },
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "etin": {
+                "type": "string"
+              },
+              "iamt": {
+                "type": "number"
+              },
+              "pos": {
+                "type": "string"
+              },
+              "rt": {
+                "type": "number"
+              },
+              "sply_ty": {
+                "type": "string"
+              },
+              "txval": {
+                "type": "number"
+              },
+              "typ": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rt",
+              "sply_ty",
+              "etin",
+              "error_cd",
+              "pos",
+              "csamt",
+              "iamt",
+              "txval",
+              "typ",
+              "error_msg"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "cdnr": {
+          "items": {
+            "properties": {
+              "ctin": {
+                "type": "string"
+              },
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "nt": {
+                "items": {
+                  "properties": {
+                    "idt": {
+                      "type": "string"
+                    },
+                    "inum": {
+                      "type": "string"
+                    },
+                    "itms": {
+                      "items": {
+                        "properties": {
+                          "itm_det": {
+                            "properties": {
+                              "csamt": {
+                                "type": "number"
+                              },
+                              "iamt": {
+                                "type": "number"
+                              },
+                              "rt": {
+                                "type": "number"
+                              },
+                              "txval": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "rt",
+                              "iamt",
+                              "txval",
+                              "csamt"
+                            ],
+                            "type": "object"
+                          },
+                          "num": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "itm_det",
+                          "num"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "nt_dt": {
+                      "type": "string"
+                    },
+                    "nt_num": {
+                      "type": "string"
+                    },
+                    "ntty": {
+                      "type": "string"
+                    },
+                    "p_gst": {
+                      "type": "string"
+                    },
+                    "rsn": {
+                      "type": "string"
+                    },
+                    "val": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "rsn",
+                    "itms",
+                    "val",
+                    "nt_num",
+                    "idt",
+                    "ntty",
+                    "nt_dt",
+                    "p_gst",
+                    "inum"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "ctin",
+              "nt",
+              "error_cd",
+              "error_msg"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "cdnur": {
+          "items": {
+            "properties": {
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "idt": {
+                "type": "string"
+              },
+              "inum": {
+                "type": "string"
+              },
+              "itms": {
+                "items": {
+                  "properties": {
+                    "itm_det": {
+                      "properties": {
+                        "csamt": {
+                          "type": "number"
+                        },
+                        "iamt": {
+                          "type": "number"
+                        },
+                        "rt": {
+                          "type": "number"
+                        },
+                        "txval": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "rt",
+                        "iamt",
+                        "txval",
+                        "csamt"
+                      ],
+                      "type": "object"
+                    },
+                    "num": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "itm_det",
+                    "num"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nt_dt": {
+                "type": "string"
+              },
+              "nt_num": {
+                "type": "string"
+              },
+              "ntty": {
+                "type": "string"
+              },
+              "p_gst": {
+                "type": "string"
+              },
+              "rsn": {
+                "type": "string"
+              },
+              "typ": {
+                "type": "string"
+              },
+              "val": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "rsn",
+              "error_cd",
+              "itms",
+              "val",
+              "nt_num",
+              "idt",
+              "inum",
+              "nt_dt",
+              "p_gst",
+              "ntty",
+              "typ",
+              "error_msg"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "doc_issue": {
+          "properties": {
+            "doc_det": {
+              "items": {
+                "properties": {
+                  "doc_num": {
+                    "type": "number"
+                  },
+                  "docs": {
+                    "items": {
+                      "properties": {
+                        "cancel": {
+                          "type": "number"
+                        },
+                        "from": {
+                          "type": "string"
+                        },
+                        "net_issue": {
+                          "type": "number"
+                        },
+                        "num": {
+                          "type": "number"
+                        },
+                        "to": {
+                          "type": "string"
+                        },
+                        "totnum": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "totnum",
+                        "from",
+                        "to",
+                        "num",
+                        "cancel",
+                        "net_issue"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "docs",
+                  "doc_num"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "error_cd": {
+              "type": "string"
+            },
+            "error_msg": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "doc_det",
+            "error_cd",
+            "error_msg"
+          ],
+          "type": "object"
+        },
+        "exp": {
+          "items": {
+            "properties": {
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "exp_typ": {
+                "type": "string"
+              },
+              "inv": {
+                "items": {
+                  "properties": {
+                    "idt": {
+                      "type": "string"
+                    },
+                    "inum": {
+                      "type": "string"
+                    },
+                    "itms": {
+                      "items": {
+                        "properties": {
+                          "iamt": {
+                            "type": "number"
+                          },
+                          "rt": {
+                            "type": "number"
+                          },
+                          "txval": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "rt",
+                          "iamt",
+                          "txval"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sbdt": {
+                      "type": "string"
+                    },
+                    "sbnum": {
+                      "type": "number"
+                    },
+                    "sbpcode": {
+                      "type": "string"
+                    },
+                    "val": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "val",
+                    "idt",
+                    "itms",
+                    "sbdt",
+                    "sbnum",
+                    "inum",
+                    "sbpcode"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "exp_typ",
+              "inv",
+              "error_cd",
+              "error_msg"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "hsn": {
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "items": {
+                "properties": {
+                  "csamt": {
+                    "type": "number"
+                  },
+                  "desc": {
+                    "type": "string"
+                  },
+                  "hsn_sc": {
+                    "type": "string"
+                  },
+                  "iamt": {
+                    "type": "number"
+                  },
+                  "num": {
+                    "type": "number"
+                  },
+                  "qty": {
+                    "type": "number"
+                  },
+                  "txval": {
+                    "type": "number"
+                  },
+                  "uqc": {
+                    "type": "string"
+                  },
+                  "val": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "txval",
+                  "val",
+                  "hsn_sc",
+                  "qty",
+                  "csamt",
+                  "num",
+                  "iamt",
+                  "uqc",
+                  "desc"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "error_cd": {
+              "type": "string"
+            },
+            "error_msg": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data",
+            "error_cd",
+            "error_msg"
+          ],
+          "type": "object"
+        },
+        "nil": {
+          "properties": {
+            "error_cd": {
+              "type": "string"
+            },
+            "error_msg": {
+              "type": "string"
+            },
+            "inv": {
+              "items": {
+                "properties": {
+                  "expt_amt": {
+                    "type": "number"
+                  },
+                  "ngsup_amt": {
+                    "type": "number"
+                  },
+                  "nil_amt": {
+                    "type": "number"
+                  },
+                  "sply_ty": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expt_amt",
+                  "sply_ty",
+                  "ngsup_amt",
+                  "nil_amt"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "inv",
+            "error_cd",
+            "error_msg"
+          ],
+          "type": "object"
+        },
+        "txpd": {
+          "items": {
+            "properties": {
+              "error_cd": {
+                "type": "string"
+              },
+              "error_msg": {
+                "type": "string"
+              },
+              "itms": {
+                "items": {
+                  "properties": {
+                    "ad_amt": {
+                      "type": "number"
+                    },
+                    "csamt": {
+                      "type": "number"
+                    },
+                    "iamt": {
+                      "type": "number"
+                    },
+                    "rt": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "rt",
+                    "iamt",
+                    "ad_amt",
+                    "csamt"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "pos": {
+                "type": "string"
+              },
+              "sply_ty": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sply_ty",
+              "itms",
+              "error_cd",
+              "error_msg",
+              "pos"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+     
+      "type": "object"
+    },
+    "form_typ": {
+      "type": "string"
+    },
+    "status_cd": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "status_cd",
+    "form_typ"
+  ],
+  "type": "object"
+}

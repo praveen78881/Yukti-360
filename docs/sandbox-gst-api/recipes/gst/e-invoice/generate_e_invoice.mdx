@@ -1,0 +1,183 @@
+---
+title: "Generate E-Invoice"
+description: "An e-invoice is a GST-compliant invoice with a unique IRN. This recipe guides you through generating e-invoices and downloading their PDF copies using Sandbox APIs."
+---
+
+<Steps>
+  <Step title="Authenticate and Get E-Invoice Session" stepNumber={1} titleSize="h2">
+    Before generating an e-invoice, you must authenticate and create an E-Invoice session. Follow the steps in the [**Generate E-Invoice Session**](../authentication/generate_e_invoice_session) recipe to obtain an **E-Invoice access token**.
+
+    This access token is required for all E-Invoice API calls and is valid for the duration specified in the authentication response.
+  </Step>
+
+  <Step title="Generate E-Invoice" stepNumber={2} titleSize="h2">
+    Once you have the E-Invoice access token, you can generate an e-invoice using the [**Generate E-Invoice**](../../../api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice) endpoint.
+
+    Provide the complete invoice details including seller and buyer information, item list, transaction details, and valuation details. Upon successful generation, you'll receive an **Invoice Reference Number (IRN)**, a **signed invoice**, and a **signed QR code**.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/gst/compliance/e-invoice/tax-payer/invoice \
+        --header 'authorization: {e-invoice-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "Version": "1.1",
+        "TranDtls": {
+          "TaxSch": "GST",
+          "SupTyp": "B2B",
+          "RegRev": "Y",
+          "EcmGstin": null,
+          "IgstOnIntra": "N"
+        },
+        "DocDtls": {
+          "Typ": "INV",
+          "No": "DOC/113",
+          "Dt": "01/01/2024"
+        },
+        "SellerDtls": {
+          "Gstin": "29AAACQ3770E000",
+          "LglNm": "Acme Industries Private Limited",
+          "TrdNm": "Acme Industries Private Limited",
+          "Addr1": "5th block, kuvempu layout",
+          "Addr2": "kuvempu layout",
+          "Loc": "BANGALORE",
+          "Pin": 560091,
+          "Stcd": "29",
+          "Ph": "9000000000",
+          "Em": "abc@gmail.com"
+        },
+        "BuyerDtls": {
+          "Gstin": "29AWGPV7107B1Z1",
+          "LglNm": "XYZ company pvt ltd",
+          "TrdNm": "XYZ Industries",
+          "Pos": "12",
+          "Addr1": "7th block, kuvempu layout",
+          "Addr2": "kuvempu layout",
+          "Loc": "GANDHINAGAR",
+          "Pin": 562160,
+          "Stcd": "29",
+          "Ph": "91111111111",
+          "Em": "xyz@yahoo.com"
+        },
+        "ItemList": [
+          {
+            "SlNo": "1",
+            "PrdDesc": "Rice",
+            "IsServc": "N",
+            "HsnCd": "1001",
+            "Barcde": "123456",
+            "Qty": 100.345,
+            "FreeQty": 10,
+            "Unit": "BAG",
+            "UnitPrice": 99.545,
+            "TotAmt": 9988.84,
+            "Discount": 10,
+            "PreTaxVal": 1,
+            "AssAmt": 9978.84,
+            "GstRt": 12.0,
+            "IgstAmt": 1197.46,
+            "CgstAmt": 0,
+            "SgstAmt": 0,
+            "CesRt": 5,
+            "CesAmt": 498.94,
+            "CesNonAdvlAmt": 10,
+            "StateCesRt": 12,
+            "StateCesAmt": 1197.46,
+            "StateCesNonAdvlAmt": 5,
+            "OthChrg": 10,
+            "TotItemVal": 12897.7,
+            "OrdLineRef": "3256",
+            "OrgCntry": "AG",
+            "PrdSlNo": "12345"
+          }
+        ],
+        "ValDtls": {
+          "AssVal": 9978.84,
+          "CgstVal": 0,
+          "SgstVal": 0,
+          "IgstVal": 1197.46,
+          "CesVal": 508.94,
+          "StCesVal": 1202.46,
+          "Discount": 10,
+          "OthChrg": 20,
+          "RndOffAmt": 0.3,
+          "TotInvVal": 12908,
+          "TotInvValFc": 12897.7
+        },
+        "DispDtls": {
+          "Nm": "ABC company pvt ltd",
+          "Addr1": "7th block, kuvempu layout",
+          "Addr2": "kuvempu layout",
+          "Loc": "Banagalore",
+          "Pin": 562160,
+          "Stcd": "29"
+        },
+        "ShipDtls": {
+          "Gstin": "29AWGPV7107B1Z1",
+          "LglNm": "CBE company pvt ltd",
+          "TrdNm": "kuvempu layout",
+          "Addr1": "7th block, kuvempu layout",
+          "Addr2": "kuvempu layout",
+          "Loc": "Banagalore",
+          "Pin": 562160,
+          "Stcd": "29"
+        },
+        "ExpDtls": {
+          "ShipBNo": "A-248",
+          "ShipBDt": "01/08/2020",
+          "Port": "INABG1",
+          "RefClm": "N",
+          "ForCur": "AED",
+          "CntCode": "AE",
+          "ExpDuty": null
+        },
+        "EwbDtls": {
+          "TransId": "12AWGPV7107B1Z1",
+          "TransName": "XYZ EXPORTS",
+          "Distance": 5,
+          "TransDocNo": "DOC01",
+          "TransDocDt": "05/01/2024",
+          "VehNo": "ka123456",
+          "VehType": "R",
+          "TransMode": "1"
+        }
+      }'
+      ```
+    </Accordion>
+
+    When the e-invoice is generated successfully, the response will include:
+    - **IRN** (Invoice Reference Number) - A unique identifier for the e-invoice
+    - **SignedInvoice** - The digitally signed invoice in JWT format
+    - **SignedQRCode** - The signed QR code containing invoice summary details
+
+    Save these values as they are required for generating the PDF in the next step.
+  </Step>
+
+  <Step title="Generate E-Invoice PDF" stepNumber={3} titleSize="h2">
+    After successfully generating the e-invoice, you can generate a PDF using the [**Generate E-Invoice PDF**](../../../api-reference/gst/compliance/endpoints/e-invoice/generate_e_invoice_pdf) endpoint.
+
+    You need to provide the **signed QR code**, **IRN**, and **signed invoice** from the previous step's response. The PDF generation uses the Sandbox JWT access token (not the E-Invoice access token).
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url https://api.sandbox.co.in/gst/compliance/e-invoice/pdf/generate \
+        --header 'authorization: {sandbox-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "@entity": "in.co.sandbox.gst.compliance.e-invoice.pdf.request",
+        "signed_qr_code": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE1MTNCODIxRUU0NkM3NDlBNjNCODZFMzE4QkY3MTEwOTkyODdEMUYiLCJ4NXQiOiJGUk80SWU1R3gwbW1PNGJqR0w5eEVKa29mUjgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJOSUMgU2FuZGJveCIsImRhdGEiOiJ7XCJTZWxsZXJHc3RpblwiOlwiMjlBQUFDUTM3NzBFMDAwXCIsXCJCdXllckdzdGluXCI6XCIyOUFXR1BWNzEwN0IxWjFcIixcIkRvY05vXCI6XCJET0MvOTk5XCIsXCJEb2NUeXBcIjpcIklOVlwiLFwiRG9jRHRcIjpcIjA2LzEyLzIwMjRcIixcIlRvdEludlZhbFwiOjE2OTk5LFwiSXRlbUNudFwiOjEsXCJNYWluSHNuQ29kZVwiOlwiOTk3MzMxXCIsXCJJcm5cIjpcImUwNWJlYWFlNjNjM2VkNmU2ZTE5YjIyNGM1Yzk1NDc1ZTlhZWI5YmU2MGE3ODczYTlkZDRhYzRmZjc0MGFiYmNcIixcIklybkR0XCI6XCIyMDI0LTEyLTA2IDE5OjAzOjAwXCJ9In0.2IVYpGwSlk8H-6Bc7u038crGCuAQ176o47oIlJkjE1JvMT5vFdQTK3RX8KDH3JP9ALFndkxH8UxI1mUgNLtgOkQBQEaSf7isSB_A293ROjhDcjZJXCK0fYQdVXL2gPu3EeB72Tl6yZNUx0qlTEqNenfCgvIXPbOTrbR-xjPWS7qyXTSsxNT3ocgYlkUaqSpwrTp2XSDdt2pwog0JJCPQ2tTI6-IFvRtDCQUJdevfgdTCxTTUilseZTB4fGd2uplQ75cZVsIafFFas2_SDE1KNiXQ0VFSB67DmFRSgQ1mai_z4kxgGUQVYrImpgNVVrorz1JXi9gksaAFtQUhz_UmaA",
+        "irn": "e05beaae63c3ed6e6e19b224c5c95475e9aeb9be60a7873a9dd4ac4ff740abbc",
+        "signed_invoice": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE1MTNCODIxRUU0NkM3NDlBNjNCODZFMzE4QkY3MTEwOTkyODdEMUYiLCJ4NXQiOiJGUk80SWU1R3gwbW1PNGJqR0w5eEVKa29mUjgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJOSUMgU2FuZGJveCIsImRhdGEiOiJ7XCJBY2tOb1wiOjIxMjQxMDAwMDAzMjAzNixcIkFja0R0XCI6XCIyMDI0LTEyLTA2IDE5OjAzOjAwXCIsXCJJcm5cIjpcImUwNWJlYWFlNjNjM2VkNmU2ZTE5YjIyNGM1Yzk1NDc1ZTlhZWI5YmU2MGE3ODczYTlkZDRhYzRmZjc0MGFiYmNcIixcIlZlcnNpb25cIjpcIjEuMVwiLFwiVHJhbkR0bHNcIjp7XCJUYXhTY2hcIjpcIkdTVFwiLFwiU3VwVHlwXCI6XCJCMkJcIixcIlJlZ1JldlwiOlwiWVwiLFwiSWdzdE9uSW50cmFcIjpcIk5cIn0sXCJEb2NEdGxzXCI6e1wiVHlwXCI6XCJJTlZcIixcIk5vXCI6XCJET0MvOTk5XCIsXCJEdFwiOlwiMDYvMTIvMjAyNFwifSxcIlNlbGxlckR0bHNcIjp7XCJHc3RpblwiOlwiMjlBQUFDUTM3NzBFMDAwXCIsXCJMZ2xObVwiOlwiU2FuZGJveCBGaW5hbmNpYWwgVGVjaG5vbG9naWVzIFB2dCBMVGRcIixcIlRyZE5tXCI6XCJTYW5kYm94IEZpbmFuY2lhbCBUZWNobm9sb2dpZXMgUHZ0IExUZFwiLFwiQWRkcjFcIjpcIkJlbmdhbHVydVwiLFwiQWRkcjJcIjpcIkJlbmdhbHVydSwgS2FybmF0YWthXCIsXCJMb2NcIjpcIkJFTkdBTFVSVVwiLFwiUGluXCI6NTYwMDgzLFwiU3RjZFwiOlwiMjlcIixcIlBoXCI6XCI5OTk5OTQ0NDQ0XCIsXCJFbVwiOlwiYXV0b21hdGV0YXhlc0BzYW5kYm94LmNvLmluXCJ9LFwiQnV5ZXJEdGxzXCI6e1wiR3N0aW5cIjpcIjI5QVdHUFY3MTA3QjFaMVwiLFwiTGdsTm1cIjpcIkZpbmFuY2UgQm9va3MgUHZ0IEx0ZFwiLFwiVHJkTm1cIjpcIkZpbmFuY2UgQm9va3MgUHZ0IEx0ZFwiLFwiUG9zXCI6XCIyOVwiLFwiQWRkcjFcIjpcIkJlbmdhbHVydVwiLFwiTG9jXCI6XCJCRU5HQUxVUlVcIixcIlBpblwiOjU2MDA4MyxcIlBoXCI6XCI4ODg4ODMzMzMzXCIsXCJFbVwiOlwiYWNjb3VudHNAZmluYW5jZS5ib29rc1wiLFwiU3RjZFwiOlwiMjlcIn0sXCJJdGVtTGlzdFwiOlt7XCJJdGVtTm9cIjowLFwiU2xOb1wiOlwiMVwiLFwiSXNTZXJ2Y1wiOlwiWVwiLFwiUHJkRGVzY1wiOlwiQVBJIFN1YnNjcmlwdGlvblwiLFwiSHNuQ2RcIjpcIjk5NzMzMVwiLFwiUXR5XCI6MSxcIkZyZWVRdHlcIjowLFwiVW5pdFwiOlwicGNzXCIsXCJVbml0UHJpY2VcIjoxNjk5OSxcIlRvdEFtdFwiOjE0NDA1LjkyLFwiRGlzY291bnRcIjowLFwiQXNzQW10XCI6MTQ0MDUuOTIsXCJHc3RSdFwiOjE4LFwiSWdzdEFtdFwiOjAsXCJDZ3N0QW10XCI6MTI5Ni41NCxcIlNnc3RBbXRcIjoxMjk2LjU0LFwiQ2VzUnRcIjowLFwiQ2VzQW10XCI6MCxcIkNlc05vbkFkdmxBbXRcIjowLFwiU3RhdGVDZXNSdFwiOjAsXCJTdGF0ZUNlc0FtdFwiOjAsXCJTdGF0ZUNlc05vbkFkdmxBbXRcIjowLFwiT3RoQ2hyZ1wiOjAsXCJUb3RJdGVtVmFsXCI6MTY5OTl9XSxcIlZhbER0bHNcIjp7XCJBc3NWYWxcIjoxNDQwNS45MixcIkNnc3RWYWxcIjoxMjk2LjU0LFwiU2dzdFZhbFwiOjEyOTYuNTQsXCJJZ3N0VmFsXCI6MCxcIkNlc1ZhbFwiOjAsXCJTdENlc1ZhbFwiOjAsXCJEaXNjb3VudFwiOjAsXCJPdGhDaHJnXCI6MCxcIlJuZE9mZkFtdFwiOjAsXCJUb3RJbnZWYWxcIjoxNjk5OX19In0.s8uga45NjUHBWOzDgXpOysLCZzmA90MOR7A6uttEeszfpdSl_RBC4X4EXQj-pb69xIRM6lO-iAFjSdrMN0ZjxK8hjPKNaG5u6YJZmie8B_pTUrSoMhjLNHVHGjsun0PjON4Wm2kmBVju_aI9LIacX9OaWt14RH4ehkqhO5qmCorX0TsPlV-949EmCUY4OSGzngieMbqs92qo_hrtKqOYTDzk1D2na8gsgJuWy043k0OTWEfeWwptdRdi8hNw6X2_agxjhSf0rvUiMFBKhLVDaA1Ah74-L_sV8ZPYBAUr32CIuNrTW7IBBug6wkX0TX24gnIuKfvtOnP3hghA_2_BjA"
+      }'
+      ```
+    </Accordion>
+
+    The response will contain a signed URL to download the PDF. This URL is valid for a limited time, so download the PDF promptly.
+  </Step>
+</Steps>

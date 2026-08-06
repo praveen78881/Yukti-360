@@ -1,0 +1,24 @@
+---
+title: "Poll Job"
+description: "Poll GSTR-2B reconciliation job status and download reconciliation report on job's successful completion."
+openapi: "/api-reference/gst/analytics/openapi.json GET /gst/analytics/gstr-2b-reconciliation"
+---
+
+When the job succeeds, this endpoint returns a signed URL for the reconciliation report workbook.
+
+#### Reconciliation report schema
+
+Use this workbook schema to inspect or validate the downloaded report.
+
+<Card
+  title="View reconciliation report schema"
+  icon="file-spreadsheet"
+  href="https://sheet-tools.quicko.org.in/sheet-schema-builder?schema_url=https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/analytics/reconciliation/reconciliation_report_workbook.schema.json"
+  arrow="true"
+  horizontal
+>
+</Card>
+
+<Note>
+If the job fails validation, use the `validation_report_url` from the poll response to review the issues in the uploaded files.
+</Note>

@@ -1,0 +1,162 @@
+---
+title: "File GSTR-1"
+description: "All outward supplies, including taxable, exempt, zero-rated sales, debit/credit notes, and amendments are reported with the GSTR-1. This recipe shows how to automate GSTR-1 filing."
+---
+
+## Workflow Overview
+
+The GSTR-1 filing process follows this sequence:
+
+1. **Authenticate** - Create a taxpayer session (valid for 6 hours)
+2. **Save Data** - Upload your GSTR-1 data to the GST portal for validation
+3. **Initialize Filing** - Process and validate the saved data
+4. **Get Summary** - Retrieve section summaries and checksum required for filing
+5. **Generate EVC OTP** - Get Electronic Verification Code OTP
+6. **File Return** - Submit the return with OTP verification
+
+<Tip>
+**Status Polling:** Check the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) every 10-15 seconds after saving or proceeding to file. Processing typically completes within 1-2 minutes. If status shows validation errors, fix the data and save again before proceeding.
+</Tip>
+
+<Warning>
+**Prerequisites:** Ensure you have filed all previous period returns before filing the current period. Also ensure your Taxpayer access token is valid (6-hour validity) throughout the filing process.
+</Warning>
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before filing GSTR-1, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours.
+  </Step>
+
+  <Step title="Save GSTR-1 Data" stepNumber={2} titleSize="h2">
+    Once you have the Taxpayer access token, save your GSTR-1 data using the [**Save GSTR-1**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/save) endpoint.
+
+    Provide all outward supply details including B2B invoices, B2CL invoices, exports, credit/debit notes, HSN summary, and other required sections. The data will be saved on the GST portal for review before filing.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "fp": "112023",
+        "gstin": "29AAACQ3770E000",
+        "gt": 3782969.01,
+        "cur_gt": 3782969.01,
+        "b2b": [...],
+        "b2ba": [...],
+        "b2cl": [...],
+        "b2cla": [...],
+        "cdnr": [...],
+        "cdnra": [...],
+        "b2cs": [...],
+        "b2csa": [...],
+        "exp": [...],
+        "expa": [...],
+        "hsn": {...},
+        "nil": {...},
+        "txpd": [...],
+        "txpda": [...],
+        "at": [...],
+        "ata": [...],
+        "doc_issue": {...},
+        "cdnur": [...],
+        "cdnura": [...]
+      }'
+      ```
+    </Accordion>
+
+    The response will include a `reference_id` which you can use to check the status of the save operation. You can optionally poll the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint using this reference ID.
+  </Step>
+
+  <Step title="Proceed to File" stepNumber={3} titleSize="h2">
+    After saving your GSTR-1 data, proceed to file using the [**New Proceed**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/new_proceed) endpoint with `is_nil=N` to indicate this is not a nil return.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12/new-proceed?is_nil=N' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "gstin": "29AAACQ3770E000",
+        "ret_period": "122023"
+      }'
+      ```
+    </Accordion>
+
+    The response will include a `reference_id` that you can use to track the filing initialization status. You can periodically check the status using the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint until it's ready for filing.
+  </Step>
+
+  <Step title="Get GSTR-1 Summary" stepNumber={4} titleSize="h2">
+    After initializing the filing, retrieve the GSTR-1 summary using the [**GSTR-1 Summary**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/save) endpoint (GET method) to verify the data and obtain the section summaries (`sec_sum`) and checksum (`chksum`) required for filing.
+
+    The summary includes table-wise data validation results and the checksum that will be used in the filing request. You can optionally use the `summary_type=long` query parameter to get a detailed summary.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12?summary_type=long' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    The response will contain the complete GSTR-1 data with section summaries and checksum. Extract the `sec_sum` array and `chksum` value from the response as they are required for the filing request in the next step.
+  </Step>
+
+  <Step title="Generate EVC OTP" stepNumber={5} titleSize="h2">
+    To file GSTR-1, you need to generate an EVC (Electronic Verification Code) OTP using the [**Generate EVC OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint.
+
+    Provide the PAN (Permanent Account Number) associated with the taxpayer's GST registration. The OTP will be sent to the registered mobile number or email.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/evc/otp?gstr=gstr-1' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pan": "ABCCQ3123E"
+      }'
+      ```
+    </Accordion>
+
+    The OTP will be sent to the registered contact details. You'll need this OTP in the next step to complete the filing.
+  </Step>
+
+  <Step title="File GSTR-1" stepNumber={6} titleSize="h2">
+    Once you have the EVC OTP, file your GSTR-1 using the [**File GSTR-1**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/file) endpoint.
+
+    Include the PAN and OTP as query parameters, along with the return period and section summaries in the request body. The section summaries include checksums for data validation.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12/file?pan=AAACJ3770E&otp=123456' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "ret_period": "122023",
+        "newSumFlag": true,
+        "sec_sum": [...],
+        "gstin": "29AAACQ3770E000",
+        "chksum": "dacc6e65dd4342f36377e25d6408a6c59cdd518e9512bb84b1f4103bfa42a26c"
+      }'
+      ```
+    </Accordion>
+
+    Upon successful filing, the response will confirm that GSTR-1 has been filed for the specified return period.
+  </Step>
+</Steps>

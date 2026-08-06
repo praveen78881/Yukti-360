@@ -10589,6 +10589,18 @@ function computeAll(){
   const totalLiability = taxForLiability + intFeeTotal;
   const balance = totalLiability - prepaid;
   setTxt('it_balancePayable',balance);
+  /* ITR-7: publish the full PartB-TTI tax breakup for the parent emitter (buildITR7Json) */
+  window.itr7.out={
+    ti:ti, normalTax:slabTax, specialTax:(cgRes.specialTax+osRes.osSpecialTax),
+    bbiTax:r0((r1113.bbi||0)*0.30), bbcTax:r0((r1113.bbc||0)*0.30),
+    taxOnTotInc:taxBeforeSC, sc25SI:(osRes.bbeSurcharge||0),
+    scOnTax:Math.max(0,sc-(osRes.bbeSurcharge||0)), totalSurcharge:sc, cess:cess,
+    grossTax:taxOnTI, rel90:rel90Val, totRelief:reliefTotal, netTax:taxForLiability,
+    int234a:num(($('it_int_234a')||{}).textContent), int234b:num(($('it_int_234b')||{}).textContent),
+    int234c:num(($('it_int_234c')||{}).textContent), fee234f:num(($('it_fee_234f')||{}).textContent),
+    intTotal:intFeeTotal, aggregate:totalLiability,
+    advTax:advTaxTotal, tds:tdsTcsTotal, sat:(satRes.taxTotal||0), prepaid:prepaid, balance:balance
+  };
   // Filing details / due date status — drives 234A/F
   if(typeof computeFilingStatus==='function') computeFilingStatus();
   // Schedule EI — aggregate exempt incomes for disclosure
@@ -10664,6 +10676,19 @@ computeAll();
   w.computeAll();
  }
  window.__bridge=bridge;
+ /* Ensure the (isolated) computation frame is built + fed, then return its window.
+    Inline document.write scripts run synchronously, so itr7.out is ready on return.
+    Used by buildITR7Json to source the PartB-TTI tax breakup with real values. */
+ window.__ensureComp=function(){
+  var fr=document.getElementById('compFrame'); if(!fr)return null;
+  if(!loaded){
+   loaded=true;
+   var doc=fr.contentDocument||fr.contentWindow.document;
+   doc.open();doc.write(document.getElementById('calcdoc').textContent.replace(/<\\\/script>/g,'<\/script>'));doc.close();
+  }
+  try{bridge();}catch(e){}
+  return fr.contentWindow;
+ };
  function showComp(){
   document.body.classList.add('compmode');
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
@@ -10672,7 +10697,7 @@ computeAll();
   if(!loaded){
    loaded=true;
    var doc=fr.contentDocument||fr.contentWindow.document;
-   doc.open();doc.write(document.getElementById('calcdoc').textContent);doc.close();
+   doc.open();doc.write(document.getElementById('calcdoc').textContent.replace(/<\\\/script>/g,'<\/script>'));doc.close();
    fr.contentWindow.addEventListener('load',function(){setTimeout(bridge,0);});
    setTimeout(bridge,60);
   }else bridge();
@@ -10761,6 +10786,18 @@ function nFaOth(){return{country:'',zip:'',pname:'',paddr:'',derived:0,nature:''
 function nDesc(){return{d:'',a:0};}
 function nOca(){return{part:'',amt:0};}
 function nOwnF(l,na){return{lbl:l,amt:0,na:!!na};}
+/* ---- Taxes paid (Action D: ScheduleIT / TDS2 / TDS3 / TCS) ---- */
+function nSIT(){return{bsr:'',date:'',chno:'',amt:0};}
+function nTds2(){return{cname:'S',tan:'',sec:'',gross:0,claim:0,cf:0,head:''};}
+function nTds3(){return{cname:'S',pan:'',sec:'',gross:0,claim:0,cf:0,head:''};}
+function nTcs(){return{tan:'',coll:0,claim:0,cf:0};}
+/* ---- ScheduleHP (Action D: house property) ---- */
+function nHP(){return{addr:'',city:'',state:'',country:'India',owner:'SE',coowned:'NO',share:100,coname:'',coshare:0,letout:'D',tenant:'',alv:0,unreal:0,localtax:0,intcap:0,loanfrom:'',bankname:'',loanacc:'',loandate:'',loanamt:0,loanoutstd:0,int24b:0};}
+/* ---- ScheduleCG (Action D: capital gains — STCG/LTCG/112A/VDA) ---- */
+function nCgSt(){return{asset:'',rate:'App',cons:0,cost:0,imp:0,exp:0,ded54:0};}
+function nCgLt(){return{asset:'',rate:'12.5',cons:0,cost:0,imp:0,exp:0,ded54:0};}
+function nCg112A(){return{cons:0,cost:0,fmv:0,exp:0};}
+function nVda(){return{asset:'',cons:0,cost:0,date:''};}
 
 /* ============ state ============ */
 var FY6=['2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'];
@@ -12018,6 +12055,113 @@ function validateITR7(){
   var hasReg=(S.regIT||[]).some(function(r){return nz(r.sec)||nz(r.rno);});
   if(!hasReg) W('Registrations / Approvals','No registration / approval entered — a trust claiming exemption u/s 11 normally needs 12A/12AB or 10(23C) details.','sf-reg');
 
+  /* =====================================================================
+     BACKGROUND ITD VALIDATION — CATEGORY-A GATING RULES
+     Source: docs/itd-validation-rules/ITR-7_ValidationRules_AY2026-27_V1.0.md
+     (cross-referenced with ..._AY2025-26_V1.0.md — identical structure).
+     Runs silently on every edit + at export. Category-A defects => sev 'E'
+     (portal HARD-REJECT, export blocked, all reasons listed in the popup with
+     their Sl.No + rule wording). Category-B/D advisory defects => sev 'W'.
+     -------------------------------------------------------------------------
+     COVERAGE (HONEST): the doc lists 250+ numbered Category-A scenarios. The
+     overwhelming majority target schedules/fields this single-Section-11
+     AY2026-27 build does NOT expose (Sch CG/HP/PP/ET/IE1-4, co-owner & 24(b)
+     loan tables, LEI, secondary address, A23/A26 %-of-receipts, Form 10B/10BB
+     tally) and therefore cannot be checked deterministically here. The block
+     below encodes the 11 rule-objects (covering 15 numbered scenarios + one
+     substantive 85%-application check) whose inputs DO exist in this build's
+     data model, spanning these classes:
+        • enum/format            — Sl.No 2 (mobile 10-digit when India)
+        • conditional-required   — Sl.No 7 & 41 (Sec 11 => 12A/12AB furnished)
+        • date-ordering          — Sl.No 4,5,46,47 (ITA reg/effective dates)
+        •                          Sl.No 22 & 48, 23 & 49 (other-law dates)
+        • eligibility            — Sl.No 25/26/27 (139(4B/4C/4D) vs Sec 11)
+        • date-floor             — Sl.No 55 (audit report >= 01-04-2026)
+        • cross-field arithmetic — Sec 11(1)/(2) application >=85% OR accumulated
+     The ITR7_CATA_RULES array is EXTENSIBLE: append {sl,cat,where,sf,rule,check}
+     entries as more schedules are surfaced; check() returns [] to pass or an
+     array of per-instance detail strings (one popup line each).
+     ===================================================================== */
+  (function(){
+    var Aa=S.assessee||{}, Vv=S.verifier||{};
+    var filingISO=toISO(Vv.date);                 /* date of signing == filing date proxy */
+    var formISO  =toISO(S.dof);
+    var mobDigits=nz(Aa.mobile).replace(/[^0-9]/g,'');
+    var isIndia  =(!nz(Aa.country)||countryCode(Aa.country)==='91');
+    var regRows  =(S.regIT||[]).filter(function(r){return nz(r.sec)||nz(r.rno)||nz(r.dor)||nz(r.eff);});
+    var regOthRows=(S.regOth||[]).filter(function(r){return nz(r.act)||nz(r.rno)||nz(r.dor)||nz(r.from);});
+    var has12A   =regRows.some(function(r){return /12A/i.test(nz(r.sec));});
+    /* This build always claims exemption under Section 11 (SecExemptionClaimed:'11'). */
+    var exemptSec11=true;
+    /* ---- income-application figures (replicated verbatim from buildITR7Json) ---- */
+    var _v=S.vc||{}, _f=S.fc||{}, _fcOn=!!_f.on;
+    var _locTot=(_v.c80g||0)+(_v.coth||0)+(_v.gov||0)+(_v.csr||0)+(_v.spec||0)+(_v.oth||0)+(_v.anon||0);
+    var _forTot=_fcOn?((_f.c80g||0)+(_f.coth||0)+(_f.other||0)+(_f.anon||0)):0;
+    var _totContrib=_locTot+_forTot;
+    var _ai=S.ai||{};
+    var _ptiT=(S.pti||[]).reduce(function(x,r){return x+(r.income||0);},0);
+    var _oiT =(S.othinc||[]).reduce(function(x,r){return x+(r.a||0);},0);
+    var _aiTot=(_ai.main||0)+(_ai.inc||0)+(_ai.rent||0)+(_ai.comm||0)+(_ai.div||0)+(_ai.int||0)+(_ai.cons||0)+_ptiT+_oiT;
+    var _agg=_totContrib+_aiTot;
+    var _Ap=S.ap||{}, _ncA=(S.noncorp&&S.noncorp.a)||[0,0];
+    var _nc0=(_ncA[0]||0)-Math.round((_ncA[0]||0)*0.15), _nc1=(_ncA[1]||0)-Math.round((_ncA[1]||0)*0.15);
+    var _oeR=(S.othexp_r||[]).reduce(function(x,r){return x+(r.a||0);},0);
+    var _oeC=(S.othexp_c||[]).reduce(function(x,r){return x+(r.a||0);},0);
+    var _ar=_nc0+_oeR, _ac=_nc1+_oeC+(_Ap.asset||0);
+    ['rel','poor','edu','yoga','med','env','mon','gpu'].forEach(function(k){if(_Ap[k]){_ar+=(_Ap[k][0]||0);_ac+=(_Ap[k][1]||0);}});
+    var _applied=_ar+_ac;
+    var _accum =(S.accum||[]).reduce(function(x,r){return x+(r.amt||0);},0);
+    var _deemed=(S.deem ||[]).reduce(function(x,r){return x+(r.amt||0);},0);
+    function afterFiling(iso){return iso&&filingISO&&iso>filingISO;}
+    function beforeForm(iso){return iso&&formISO&&iso<formISO;}
+
+    var ITR7_CATA_RULES=[
+      {sl:'2',cat:'A',where:'Assessee info.',sf:'sf-assessee',
+       rule:'Where country is India, the mobile number must be exactly 10 digits.',
+       check:function(){return (isIndia&&mobDigits&&mobDigits.length!==10)?['entered '+mobDigits.length+' digits']:[];}},
+      {sl:'7 & 41',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Section 11 is claimed as the exemption, so 12A / 12AB registration details must be furnished under "Details of registration/approval under the Income-tax Act".',
+       check:function(){return (exemptSec11&&!has12A)?['no 12A/12AB registration row found']:[];}},
+      {sl:'4',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Date of registration/approval under the Income-tax Act must not be after the date of filing of the return.',
+       check:function(){var o=[];regRows.forEach(function(r,i){if(afterFiling(toISO(r.dor)))o.push('row '+(i+1)+' reg date '+nz(r.dor)+' is after filing date');});return o;}},
+      {sl:'5',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Date of registration/approval under the Income-tax Act must not be earlier than the date of formation/incorporation.',
+       check:function(){var o=[];regRows.forEach(function(r,i){if(beforeForm(toISO(r.dor)))o.push('row '+(i+1)+' reg date '+nz(r.dor)+' precedes formation date');});return o;}},
+      {sl:'46',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Effective date of registration/approval under the Income-tax Act must not be after the date of filing of the return.',
+       check:function(){var o=[];regRows.forEach(function(r,i){if(afterFiling(toISO(r.eff)))o.push('row '+(i+1)+' effective date '+nz(r.eff)+' is after filing date');});return o;}},
+      {sl:'47',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Effective date of registration/approval under the Income-tax Act must not be earlier than the date of formation/incorporation.',
+       check:function(){var o=[];regRows.forEach(function(r,i){if(beforeForm(toISO(r.eff)))o.push('row '+(i+1)+' effective date '+nz(r.eff)+' precedes formation date');});return o;}},
+      {sl:'22 & 48',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Date of registration/effective date under any law other than the Income-tax Act must be before the date of filing the return.',
+       check:function(){var o=[];regOthRows.forEach(function(r,i){if(afterFiling(toISO(r.dor)))o.push('row '+(i+1)+' date '+nz(r.dor)+' is after filing date');if(afterFiling(toISO(r.from)))o.push('row '+(i+1)+' effective-from '+nz(r.from)+' is after filing date');});return o;}},
+      {sl:'23 & 49',cat:'A',where:'Registrations / Approvals',sf:'sf-reg',
+       rule:'Date of registration/effective date under any law other than the Income-tax Act must not be earlier than the date of formation/incorporation.',
+       check:function(){var o=[];regOthRows.forEach(function(r,i){if(beforeForm(toISO(r.dor)))o.push('row '+(i+1)+' date '+nz(r.dor)+' precedes formation date');if(beforeForm(toISO(r.from)))o.push('row '+(i+1)+' effective-from '+nz(r.from)+' precedes formation date');});return o;}},
+      {sl:'25/26/27',cat:'A',where:'ITR filing info.',sf:null,
+       rule:'Return furnished u/s 139(4B)/(4C)/(4D) requires the exemption to be a section other than 11 — this build claims exemption u/s 11, which is valid only with 139(4A).',
+       check:function(){var s=nz(S.sec);return (exemptSec11&&s&&s!=='139(4A)')?[s+' selected while exemption is Section 11']:[];}},
+      {sl:'55',cat:'A',where:'Audit information',sf:null,
+       rule:'Date of audit / date of audit report / date of furnishing the audit report must not be prior to 01-04-2026.',
+       check:function(){var o=[];(S.auditIT||[]).forEach(function(r,i){var d=toISO(r.fdate);if(d&&d<'2026-04-01')o.push('audit row '+(i+1)+' report date '+nz(r.fdate)+' is before 01-04-2026');});return o;}},
+      {sl:'Sec 11(1)/(2)',cat:'A',where:'Application of income',sf:'sf-app',
+       rule:'At least 85% of income must be applied to charitable/religious purposes, or the shortfall must be accumulated u/s 11(2) / deemed applied. Application below 85% with no accumulation is a hard defect.',
+       check:function(){if(_agg<=0)return [];var need=Math.round(0.85*_agg);return ((_applied+_accum+_deemed)<need)?['applied '+(F(_applied)||'0')+' + accumulated/deemed '+(F(_accum+_deemed)||'0')+' < 85% of income '+(F(need)||'0')+' (aggregate '+(F(_agg)||'0')+')']:[];}}
+    ];
+    /* expose for automated verification / future extension */
+    try{window.__itr7CatARuleCount=ITR7_CATA_RULES.length;}catch(_e){}
+
+    ITR7_CATA_RULES.forEach(function(R){
+      var hits=[]; try{hits=R.check()||[];}catch(_e){hits=[];}
+      hits.forEach(function(d){
+        var msg='[Sl.No '+R.sl+'] '+R.rule+(d?(' — '+d):'');
+        if(R.cat==='A') E(R.where,msg,R.sf); else W(R.where,msg,R.sf);
+      });
+    });
+  })();
+
   return e;
 }
 
@@ -12073,6 +12217,275 @@ function buildITR7Json(){
 
   var banks=(S.bank||[]).filter(function(b){return nz(b.bank)||nz(b.acno)||nz(b.ifsc);});
 
+  /* ===== live tax breakup from the computation frame (Action B: PartB-TTI) ===== */
+  var _CW=(typeof window!=='undefined'&&typeof window.__ensureComp==='function')?window.__ensureComp():null;
+  var _O=(_CW&&_CW.itr7&&_CW.itr7.out)||{};
+  function _o(k){return I(_O[k]||0);}
+
+  /* Other reserves (PARTA_BS) — schema wants an array {Nature,Amount} */
+  var _othRes=I((S.ownf[5]||{}).amt);
+
+  /* ===== helpers for itemised schedules (Action C) ===== */
+  function _sy(fy){var m=String(fy||'').match(/(\d{4})/);return m?m[1]:'';}
+  function _cc(nm){return countryCode(nm)||'1001';}
+  function _own(v){v=nz(v).toUpperCase();if(v==='BENEFICIAL OWNER'||v==='BENEFICIAL_OWNER')return 'BENEFICIAL_OWNER';if(v==='BENEFICIARY'||v==='BENIFICIARY')return 'BENIFICIARY';if(v==='DIRECT')return 'DIRECT';return 'OWNER';}
+  function _dir(v){v=nz(v).toUpperCase();if(v.indexOf('BENEF')===0)return 'BENEFICIAL_OWNER';if(v.indexOf('BENI')===0)return 'BENIFICIARY';return 'DIRECT';}
+  function _sch(v){v=nz(v).toUpperCase();return /^(HP|BU|CG|OS|EI|NI)$/.test(v)?v:'NI';}
+  function AB(p){p=p||[0,0];var r=I(p[0]),c=I(p[1]);return{Revenue:r,Capital:c,Total:r+c};}
+  function ABsum(list){var r=0,c=0;list.forEach(function(b){r+=b.Revenue;c+=b.Capital;});return{Revenue:r,Capital:c,Total:r+c};}
+
+  /* ---- ScheduleA : application of income ---- */
+  var _aRows=[AB(Ap.rel),AB(Ap.poor),AB(Ap.edu),AB(Ap.yoga),AB(Ap.med),AB(Ap.env),AB(Ap.mon),AB(Ap.gpu),AB(Ap.doth),AB([nc85[0],nc85[1]]),{Revenue:0,Capital:I(Ap.asset),Total:I(Ap.asset)}];
+  var _aTot=ABsum(_aRows);
+  var _expRows=[AB(S.bdon.corpus),AB(S.bdon.accum),AB(S.bdon.notsame),{Revenue:oeR,Capital:oeC,Total:oeR+oeC}];
+  var _expTot=ABsum(_expRows);
+  var _osrcR=(S.othsrc_r||[]).reduce(function(x,r){return x+I(r.a);},0);
+  var _osrcC=(S.othsrc_c||[]).reduce(function(x,r){return x+I(r.a);},0);
+  var _srcRows=[AB(Ap.ci),AB(Ap.acc),AB(Ap.deem),AB(Ap.p15),AB(Ap.corp),AB(Ap.bor),{Revenue:_osrcR,Capital:_osrcC,Total:_osrcR+_osrcC}];
+  var _srcTot=ABsum(_srcRows);
+  var _othIncDtls=[];
+  (S.othsrc_r||[]).forEach(function(r,i){var cc=(S.othsrc_c||[])[i]||{};if(nz(r.d)||I(r.a)||I(cc.a))_othIncDtls.push({OthNatOfInc:nz(r.d)||nz(cc.d),OthRevAmount:I(r.a),OthCapAmount:I(cc.a)});});
+  var _schA={
+    AppTowExpTrstInst:{
+      OtherThanCorpus:AB(S.noncorp.a),OtherThanCorpus85:AB([nc85[0],nc85[1]]),
+      Religious:_aRows[0],ReliefOfPoor:_aRows[1],Educational:_aRows[2],Yoga:_aRows[3],
+      MedicalRelief:_aRows[4],PreservationOfEnvrmnt:_aRows[5],PreservationOfMonumentsEtc:_aRows[6],
+      GeneralPublicUtility:_aRows[7],AppCantBeSpecIdentAbov:_aRows[8],CostNewAssetUs11_1A:_aRows[10],
+      TotalA1toA11:_aTot
+    },
+    ExpNotAllowedApplication:{
+      DonFormingPartCorpusFund:_expRows[0],DonationTowardsOtherThanCorpus:_expRows[1],
+      DonationNotSameObject:_expRows[2],DonationOtherThanTrust:AB(),ApplctnOutIndiaApprvlObtnd:AB(Ap.appr),
+      ApplctnOutIndiaApprvlNotObtnd:AB(Ap.nappr),AppliedBeyondObject:AB(Ap.obj),
+      AnyOthrDisallowableExpenditure:_expRows[3],TotExpNotAllowedApplication:_expTot
+    },
+    SrcRevCapApplctn:{
+      IncDerFrmPrprty:_srcRows[0],IncAccumulatedEarlierYr:_srcRows[1],IncDeemdPrcdngYr:_srcRows[2],
+      EarlierYrIncUpto15Per:_srcRows[3],Corpus:_srcRows[4],BorrowedFund:_srcRows[5],
+      OthersInc:{OthersIncDtls:_othIncDtls,TotOthersInc:{Revenue:_osrcR,Capital:_osrcC,Total:_osrcR+_osrcC}},
+      TotSrcRevCapApplctn:_srcTot
+    },
+    TotAmtAppDrngPrevYr:_aTot,
+    AmountNotPaidPY:AB(Ap.np),
+    AmountPaidPY:AB(Ap.addacc),
+    TotAmountAllowedApplication:{Revenue:_aTot.Revenue-_expTot.Revenue,Capital:_aTot.Capital-_expTot.Capital,Total:_aTot.Total-_expTot.Total}
+  };
+
+  /* ---- ITRScheduleJ ---- */
+  var _corp=(S.corpus||[]);
+  var _cj={n:function(a){return a.reduce(function(s,r){return s+I(r);},0);}};
+  var _schJ_A1=(_corp).map(function(r){return {
+    CorpusDonation:nz(r.purp),OpeningBlc:I(r.ob),ReceivedCorpus:I(r.recd),AppliedPY:I(r.applied),
+    AmtDepositedBack:I(r.invearlier),TotAmtDepositedBack:I(r.invearlier)+I(r.invoth),
+    ClosingBlc:I(r.cb),Investment_11_5:I(r.i115),AmtTxdAssYr22_23:I(r.taxed),Investment_11_5_Other:I(r.ioth)
+  };});
+  function _sumK(arr,k){return arr.reduce(function(s,r){return s+I(r[k]);},0);}
+  var _loans=(S.loans||[]);
+  var _schJ_A2=_loans.map(function(r){return {
+    OpeningBlc:I(r.ob),LoanBorrow:I(r.borrow),AppliedPY:I(r.applied),Repayment:I(r.repearlier),
+    TotRepOfLoan:I(r.repearlier)+I(r.repoth),ClosingBlc:I(r.cb)
+  };});
+  var _cinv=(S.cinv||[]).filter(function(r){return I(r.amt)||nz(r.mode)||nz(r.src);});
+  var _subst=(S.subst||[]).filter(function(r){return nz(r.name)||I(r.nom)||I(r.income);});
+  var _othinv=(S.othinv||[]).filter(function(r){return nz(r.name)||I(r.nom);});
+  var _vck=(S.vckind||[]).filter(function(r){return nz(r.name)||I(r.amt);});
+  var _schJ={
+    ScheduleJ_A1:{ScheduleJ_A1Dtls:_schJ_A1,
+      TotOpeningBlc:_sumK(_schJ_A1,'OpeningBlc'),TotReceivedCorpus:_sumK(_schJ_A1,'ReceivedCorpus'),
+      TotAppliedPY:_sumK(_schJ_A1,'AppliedPY'),TotAmtDepositedBack:_sumK(_schJ_A1,'AmtDepositedBack'),
+      TotTotAmtDepositedBack:_sumK(_schJ_A1,'TotAmtDepositedBack'),TotClosingBlc:_sumK(_schJ_A1,'ClosingBlc'),
+      TotAmtTxdAssYr22_23:_sumK(_schJ_A1,'AmtTxdAssYr22_23'),TotInvestment_11_5:_sumK(_schJ_A1,'Investment_11_5'),
+      TotInvestment_11_5_Other:_sumK(_schJ_A1,'Investment_11_5_Other')},
+    ScheduleJ_A2:{ScheduleJ_A2Dtls:_schJ_A2,
+      TotOpeningBlc:_sumK(_schJ_A2,'OpeningBlc'),TotLoanBorrow:_sumK(_schJ_A2,'LoanBorrow'),
+      TotAppliedPY:_sumK(_schJ_A2,'AppliedPY'),TotRepayment:_sumK(_schJ_A2,'Repayment'),
+      TotTotRepOfLoan:_sumK(_schJ_A2,'TotRepOfLoan'),TotClosingBlc:_sumK(_schJ_A2,'ClosingBlc')},
+    ScheduleJUs11_5:{ScheduleJUs11_5Dtls:_cinv.map(function(r){return {InvestementOutOff:nz(r.src),ModeOfInvestment:nz(r.mode),AmtOfInvestment:I(r.amt)};}),
+      TotalInvestmentAmt:_cinv.reduce(function(s,r){return s+I(r.amt);},0)},
+    ScheduleJUs13_3:{ScheduleJUs13_3Dtls:_subst.map(function(r){return {NameAndAddress:(nz(r.name)+' '+nz(r.addr)).trim(),ConcernIsCompany:nz(r.isco),NoOfSharesHeld:I(r.nos),ClassOfSharesHeld:nz(r.cls),NominalaValueOfInvestment:I(r.nom),IncFromInvestment:I(r.income),PercentOfCapitalConcern:nz(r.exceed)};}),
+      TotalNoOfShares:_subst.reduce(function(s,r){return s+I(r.nos);},0),TotalValueOfInvestment:_subst.reduce(function(s,r){return s+I(r.nom);},0),TotalIncFromInvestment:_subst.reduce(function(s,r){return s+I(r.income);},0)},
+    ScheduleJOtherInvstmts:{ScheduleJOtherInvstmtsDtls:_othinv.map(function(r){return {NameAndAddress:nz(r.name),ConcernIsCompany:nz(r.isco),ClassOfSharesHeld:nz(r.cls),NoOfSharesHeld:I(r.nos),NominalaValueOfInvestment:I(r.nom)};}),
+      TotalNoOfShares:_othinv.reduce(function(s,r){return s+I(r.nos);},0),TotalValueOfInvestment:_othinv.reduce(function(s,r){return s+I(r.nom);},0)},
+    ScheduleJVoluntaryContribution:{ScheduleJVoluntaryContributionDtls:_vck.map(function(r){return {NameAndAddress:nz(r.name),ValueOfContribution:I(r.amt),ValueOfContributionObj:I(r.applied),AmtInvestedUs11:I(r.invested),BalIncUs11:I(r.treat)};}),
+      TotalValueOfContribution:_vck.reduce(function(s,r){return s+I(r.amt);},0),TotalValOfContrbnAppdTwrdsObj:_vck.reduce(function(s,r){return s+I(r.applied);},0),TotalAmtInvestedUs11:_vck.reduce(function(s,r){return s+I(r.invested);},0),TotalBalIncUs11:_vck.reduce(function(s,r){return s+I(r.treat);},0)}
+  };
+
+  /* ---- ITRScheduleI : accumulation u/s 11(2) ---- */
+  var _accR=(S.accum||[]).map(function(r){
+    var bal=I(r.amt)-I(r.appspec);var avail=bal-I(r.taxed);
+    return {AccumlatedYear:_sy(r.fy),AmountAccumlated:I(r.amt),AccumulationPurpose:nz(r.purp),
+      AmountAppliedPreviousYear:I(r.appspec),BalanceAfterPY:bal,AmtTxdErlAssYr:I(r.taxed),BalAvailApp:avail,
+      AmountAppliedDuringYear:I(r.apspec),AmountAppliedDuringYearOtherPurpose:I(r.apoth),
+      AmountCreditedTrust:I(r.apcred),BalanceAmount:avail-I(r.apspec)-I(r.apoth)-I(r.apcred),
+      AmountInvested:I(r.inv115),AmountInvestedInOtherMode:I(r.invoth),AmountNotUtilized:I(r.notutil),AmountDeemedUs11:0};});
+  function _tI(k){return _accR.reduce(function(s,r){return s+I(r[k]);},0);}
+  var _schI={ScheduleI:_accR,
+    TotAmountAccumlated:_tI('AmountAccumlated'),TotAmountAppliedPreviousYear:_tI('AmountAppliedPreviousYear'),
+    TotBalanceAfterPY:_tI('BalanceAfterPY'),TotAmtTxdErlAssYr:_tI('AmtTxdErlAssYr'),TotBalAvailApp:_tI('BalAvailApp'),
+    TotAmountAppliedDuringYear:_tI('AmountAppliedDuringYear'),TotAmountAppliedDuringYearOtherPurpose:_tI('AmountAppliedDuringYearOtherPurpose'),
+    TotAmountCreditedTrust:_tI('AmountCreditedTrust'),TotBalanceAmount:_tI('BalanceAmount'),
+    TotAmountInvested:_tI('AmountInvested'),TotAmountInvestedInOtherMode:_tI('AmountInvestedInOtherMode'),
+    TotAmountNotUtilized:_tI('AmountNotUtilized'),TotAmountDeemedUs11:_tI('AmountDeemedUs11')};
+
+  /* ---- ITRScheduleD : deemed application ---- */
+  var _deR=(S.deem||[]).map(function(r,i){
+    var notApp=I(r.remain)-I(r.appcy);
+    return {AppliedYear:String(Math.min(i+1,6)),AmountAppliedPY:I(r.amt),
+      DeemedApplicationReason:(nz(r.reason)==='2'?'2':'1'),ReasonDesc:nz(r.reason),
+      OutOfDeemedAmtReqApp:I(r.reqcy),AmtTxdErlAssYr:I(r.taxed),AmountToBeApplied:I(r.remain),
+      AmountAppliedCurrAY:I(r.appcy),AmountNotAppliedCurrAY:notApp,BalanceAmount:notApp};});
+  function _tD(k){return _deR.reduce(function(s,r){return s+I(r[k]);},0);}
+  var _schD={ScheduleD:_deR,
+    TotOutOfDeemedAmtReqApp:_tD('OutOfDeemedAmtReqApp'),TotAmtTxdErlAssYr:_tD('AmtTxdErlAssYr'),
+    TotAmountAppliedPY:_tD('AmountAppliedPY'),TotAmountToBeApplied:_tD('AmountToBeApplied'),
+    TotAmountAppliedCurrAY:_tD('AmountAppliedCurrAY'),TotAmountNotAppliedCurrAY:_tD('AmountNotAppliedCurrAY'),
+    TotBalanceAmount:_tD('BalanceAmount')};
+
+  /* ---- ITRScheduleDA / IA (accum taxed in earlier years, per-year) ---- */
+  function _perYr(arr){return (arr||[]).map(function(r){var a=r.a||[];var tot=a.reduce(function(s,x){return s+I(x);},0);return {row:r,tot:tot};});}
+  var _daRows=_perYr(S.accum_tax);
+  var _schDA={YrOfAccumDtls:_daRows.map(function(o,i){return {YrOfAccumulationDA:(i===0?'PriorToAY':FY5[i]?_sy(FY5[i]):'2020-21'),AssYrPriorToAY:I((o.row.a||[])[0]),AssYr22_23:I((o.row.a||[])[1]),AssYr23_24:I((o.row.a||[])[2]),AssYr24_25:I((o.row.a||[])[3]),AssYr25_26:I((o.row.a||[])[4]),Total:o.tot};}),
+    GrandTotal:_daRows.reduce(function(s,o){return s+o.tot;},0)};
+  var _iaRows=_perYr(S.deem_tax);
+  var _schIA={YrOfAccDtls:_iaRows.map(function(o,i){return {YrOfAccumulationIA:(['2020-21','2021-22','2022-23','2023-24'][i]||'2020-21'),AssYr22_23:I((o.row.a||[])[1]),AssYr23_24:I((o.row.a||[])[2]),AssYr24_25:I((o.row.a||[])[3]),AssYr25_26:I((o.row.a||[])[4]),Total:o.tot};}),
+    GrandTotal:_iaRows.reduce(function(s,o){return s+o.tot;},0)};
+
+  /* ---- ITRScheduleR : corpus reconciliation ---- */
+  var _cr0=(S.corp_rec&&S.corp_rec[0]&&S.corp_rec[0].a)||[0,0,0];
+  var _cr1=(S.corp_rec&&S.corp_rec[1]&&S.corp_rec[1].a)||[0,0,0];
+  var _schR={
+    ClosngBalSchJ:{CorpOutOf80G2b:I(_cr0[0]),OthCorpReceived:I(_cr0[1]),CorpOthThan:I(_cr0[2])},
+    ClosngBalBalSheet:{CorpOutOf80G2b:I(_cr1[0]),OthCorpReceived:I(_cr1[1]),CorpOthThan:I(_cr1[2])}
+  };
+
+  /* ---- Schedule115TD challans ---- */
+  var _chln=(S.challan||[]).filter(function(r){return nz(r.bsr)||I(r.amt)||nz(r.chno);});
+  var _sch115TD=_chln.length?{DepositofTaxAccInc:{DepositofTaxAccIncDtls:_chln.map(function(r){return {DateDep:toISO(r.date),NameBankBranch:nz(r.bank),BSRCode:nz(r.bsr),SrlNoOfChaln:I(r.chno),Amount:I(r.amt)};})}}:null;
+
+  /* ---- Taxes paid: ScheduleIT / TDS2 / TDS3 / TCS (Action D) — REAL rows from the computation frame (bpData) ---- */
+  var _bp=(_CW&&_CW.bpData)||{};
+  function _iso(x){x=nz(x);if(/^\d{4}-\d{2}-\d{2}$/.test(x))return x;return toISO(x);}
+  function _fy4(x){var m=String(x||'').match(/(20\d\d)/);var y=m?m[1]:'';return /^(2024|2023|2022|2021|2020|2019)$/.test(y)?y:'';}
+  function _tdsSec(x){var s=nz(x).toUpperCase().replace(/[^0-9A-Z]/g,'');
+    if(s==='193')return '193';
+    if(/^(194BB|94BB|4BB)$/.test(s))return '4BB';
+    if(/^(194BA|94BA)$/.test(s))return '94BA';
+    if(/^(194B|94B)$/.test(s))return '94B';
+    if(/^(194A|94A)$/.test(s))return '94A';
+    return '194';}
+  var _HEADMAP={'House Property':'HP','Business / Profession':'BP','Capital Gains':'CG','Other Sources':'OS','Salary':'AI','Exempt income':'IE1'};
+  function _head(x,dflt){return _HEADMAP[nz(x)]||dflt;}
+  function _rowsOf(o,k){return (o&&o[k])?o[k]:[];}
+
+  /* ScheduleIT — advance-tax + self-assessment challans */
+  var _itAdv=_rowsOf(_bp.advTax,'rows').filter(function(r){return nz(r.bsr)||I(r.amount)||nz(r.challanSlNo);});
+  var _itSat=_rowsOf(_bp.sat,'rows').filter(function(r){return nz(r.bsr)||I(r.amountPaid)||nz(r.challanSlNo);});
+  var _itPay=[];
+  _itAdv.forEach(function(r){_itPay.push({BSRCode:nz(r.bsr),DateDep:_iso(r.dateDeposit),SrlNoOfChaln:I(r.challanSlNo),Amt:I(r.amount)});});
+  _itSat.forEach(function(r){_itPay.push({BSRCode:nz(r.bsr),DateDep:_iso(r.dateDeposit),SrlNoOfChaln:I(r.challanSlNo),Amt:I(r.amountPaid)});});
+  var _schIT=_itPay.length?{TaxPayment:_itPay,TotalTaxPayments:_itPay.reduce(function(s,r){return s+I(r.Amt);},0)}:null;
+
+  /* ScheduleTDS2 — TDS other than salary (Form 16A, TAN-based) */
+  var _tds2src=_rowsOf(_bp.tdsTcs,'form16A').concat(_rowsOf(_bp.tdsTcs,'form16ABF')).filter(function(r){return nz(r.tan)||I(r.tdsClaimedCY)||I(r.tdsDeducted);});
+  var _tds2=_tds2src.map(function(r){return {
+    TDSCreditName:'S',TANOfDeductor:nz(r.tan).toUpperCase(),TDSSection:_tdsSec(r.section),
+    DeductedYr:_fy4(r.fyDeducted)||undefined,BroughtFwdTDSAmt:I(r.broughtFwd),
+    TaxDeductCreditDtls:{TaxDeductedOwnHands:I(r.tdsDeducted),TaxClaimedOwnHands:I(r.tdsClaimedCY)},
+    GrossAmount:I(r.grossReceiptOffered||r.grossReceipts),HeadOfIncome:_head(r.headOfIncome,'OS'),AmtCarriedFwd:I(r.balanceCF)
+  };});
+  _tds2.forEach(function(o){if(o.DeductedYr===undefined)delete o.DeductedYr;});
+  var _schTDS2=_tds2.length?{TDSOthThanSalaryDtls:_tds2,TotalTDSonOthThanSals:_tds2.reduce(function(s,r){return s+I(r.TaxDeductCreditDtls.TaxClaimedOwnHands);},0)}:null;
+
+  /* ScheduleTDS3 — TDS on property/rent u/s 194IA/IB/M etc. (Form 16B/C/D/E, PAN-based) */
+  var _tds3src=_rowsOf(_bp.tdsTcs,'form16BCDE').concat(_rowsOf(_bp.tdsTcs,'form16BCDEBF')).filter(function(r){return nz(r.pan)||I(r.tdsClaimedCY)||I(r.tdsDeducted);});
+  var _tds3=_tds3src.map(function(r){return {
+    TDSCreditName:'S',PANOfBuyerTenant:nz(r.pan).toUpperCase(),TDSSection:_tdsSec(r.section),
+    DeductedYr:_fy4(r.fyDeducted)||undefined,BroughtFwdTDSAmt:I(r.broughtFwd),
+    TaxDeductCreditDtls:{TaxDeductedOwnHands:I(r.tdsDeducted),TaxClaimedOwnHands:I(r.tdsClaimedCY)},
+    GrossAmount:I(r.grossReceiptOffered||r.grossReceipts),HeadOfIncome:_head(r.headOfIncome,'OS'),AmtCarriedFwd:I(r.balanceCF)
+  };});
+  _tds3.forEach(function(o){if(o.DeductedYr===undefined)delete o.DeductedYr;});
+  var _schTDS3=_tds3.length?{TDS3onOthThanSalDtls:_tds3,TotalTDS3OnOthThanSal:_tds3.reduce(function(s,r){return s+I(r.TaxDeductCreditDtls.TaxClaimedOwnHands);},0)}:null;
+
+  /* ScheduleTCS — tax collected at source */
+  var _tcsSrc=_rowsOf(_bp.tdsTcs,'tcs').concat(_rowsOf(_bp.tdsTcs,'tcsBF')).filter(function(r){return nz(r.tan)||I(r.tcsClaimedCY)||I(r.tcsCollected);});
+  var _tcs=_tcsSrc.map(function(r){return {
+    EmployerOrDeductorOrCollectDetl:{TCSCreditName:'S',TAN:nz(r.tan).toUpperCase(),TDSFinYr:_fy4(r.fyCollected)||undefined},
+    BroughtFwdTCSAmt:I(r.broughtFwd),
+    TCSCurrFYDtls:{TCSAmtCollOwnHands:I(r.tcsCollected)},
+    TCSClaimedThisYearDtls:{TCSAmtCollOwnHands:I(r.tcsClaimedCY)},
+    AmtCarriedFwd:I(r.balanceCF)
+  };});
+  _tcs.forEach(function(o){if(o.EmployerOrDeductorOrCollectDetl.TDSFinYr===undefined)delete o.EmployerOrDeductorOrCollectDetl.TDSFinYr;});
+  var _schTCS=_tcs.length?{TCSDetails:_tcs,TotalSchTCS:_tcs.reduce(function(s,r){return s+I(r.TCSClaimedThisYearDtls.TCSAmtCollOwnHands);},0)}:null;
+  var _tcsTot=_schTCS?_schTCS.TotalSchTCS:0;
+
+  /* ---- 115BBC anonymous-donation floor: taxable only above MAX(1L, 5% of total donations) ---- */
+  var _anonFloor=Math.max(100000,Math.round(totContrib*0.05));
+  var _anonTaxable=Math.max(0,anon-_anonFloor);
+  var _anonOther=anon-_anonTaxable;
+
+  /* ---- ScheduleFA : foreign assets (9 grids) ---- */
+  function _rowHasData(r){return Object.keys(r).some(function(k){var v=r[k];return typeof v==='number'?v!==0:nz(v)!=='';});}
+  function _faFilter(arr){return (arr||[]).filter(_rowHasData);}
+  var _faCust=_faFilter(S.fa_dep);
+  var _faEq=_faFilter(S.fa_eq);
+  var _faIns=_faFilter(S.fa_ins);
+  var _faFin=_faFilter(S.fa_fin);
+  var _faImm=_faFilter(S.fa_imm);
+  var _faCap=_faFilter(S.fa_cap);
+  var _faSign=_faFilter(S.fa_sign);
+  var _faTrust=_faFilter(S.fa_trust);
+  var _faOth=_faFilter(S.fa_oth);
+  var _schFA={};
+  if(_faCust.length)_schFA.DtlsForeignCustodialAcc=_faCust.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),FinancialInstName:nz(r.iname),FinancialInstAddress:nz(r.iaddr),ZipCode:nz(r.zip),AccountNumber:nz(r.acno),Status:_own(r.own),AccOpenDate:toISO(r.opened),PeakBalanceDuringPeriod:I(r.peak),ClosingBalance:I(r.close),NatureOfAmount:(/^(INT|DIV|SALE|OTH|NAP)$/.test(nz(r.nature).toUpperCase())?nz(r.nature).toUpperCase():'NAP'),GrossAmtPaidCredited:I(r.gross)};});
+  if(_faEq.length)_schFA.DtlsForeignEquityDebtInterest=_faEq.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),NameOfEntity:nz(r.iname),AddressOfEntity:nz(r.iaddr),ZipCode:nz(r.zip),NatureOfEntity:nz(r.nature),InterestAcquiringDate:toISO(r.acq),InitialValOfInvstmnt:I(r.init),PeakBalanceDuringPeriod:I(r.peak),ClosingBalance:I(r.close),TotGrossAmtPaidCredited:I(r.gross),TotGrossProceeds:I(r.proceeds)};});
+  if(_faIns.length)_schFA.DtlsForeignCashValueInsurance=_faIns.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),FinancialInstName:nz(r.iname),FinancialInstAddress:nz(r.iaddr),ZipCode:nz(r.zip),ContractDate:toISO(r.cdate),CashValOrSurrenderVal:I(r.surr),TotGrossAmtPaidCredited:I(r.gross)};});
+  if(_faFin.length)_schFA.DetailsFinancialInterest=_faFin.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),NatureOfEntity:nz(r.nature),NameOfEntity:nz(r.ename),AddressOfEntity:nz(r.eaddr),NatureOfInt:_dir(r.own),DateHeld:toISO(r.since),TotalInvestment:I(r.inv),IncFromInt:I(r.accrued),NatureOfInc:nz(r.inature),IncTaxAmt:I(r.taxable),IncTaxSch:_sch(r.sch),IncTaxSchNo:nz(r.item)};});
+  if(_faImm.length)_schFA.DetailsImmovableProperty=_faImm.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),AddressOfProperty:nz(r.addr),Ownership:_dir(r.own),DateOfAcq:toISO(r.acq),TotalInvestment:I(r.inv),IncDrvProperty:I(r.income),NatureOfInc:nz(r.inature),IncTaxAmt:I(r.taxable),IncTaxSch:_sch(r.sch),IncTaxSchNo:nz(r.item)};});
+  if(_faCap.length)_schFA.DetailsOthAssets=_faCap.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),NatureOfAsset:nz(r.nature),Ownership:_dir(r.own),DateOfAcq:toISO(r.acq),TotalInvestment:I(r.inv),IncDrvAsset:I(r.income),NatureOfInc:nz(r.inature),IncTaxAmt:I(r.taxable),IncTaxSch:_sch(r.sch),IncTaxSchNo:nz(r.item)};});
+  if(_faSign.length)_schFA.DetailsOfAccntsHvngSigningAuth=_faSign.map(function(r){return {NameOfInstitution:nz(r.iname),AddressOfInstitution:nz(r.iaddr),CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),NameMentionedInAccnt:nz(r.holder),InstitutionAccountNumber:nz(r.acno),PeakBalanceOrInvestment:I(r.peak),IncAccuredTaxFlag:(I(r.accrued)||I(r.taxable)?'Y':'N'),IncAccuredInAcc:I(r.accrued),IncOfferedAmt:I(r.taxable),IncOfferedSch:_sch(r.sch),IncOfferedSchNo:nz(r.item)};});
+  if(_faTrust.length)_schFA.DetailsOfTrustOutIndiaTrustee=_faTrust.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),NameOfTrust:nz(r.tname),AddressOfTrust:nz(r.taddr),NameOfOtherTrustees:nz(r.trname),AddressOfOtherTrustees:nz(r.traddr),NameOfSettlor:nz(r.sname),AddressOfSettlor:nz(r.saddr),NameOfBeneficiaries:nz(r.bname),AddressOfBeneficiaries:nz(r.baddr),DateHeld:toISO(r.since),IncDrvTaxFlag:(I(r.derived)||I(r.taxable)?'Y':'N'),IncDrvFromTrust:I(r.derived),IncOfferedAmt:I(r.taxable),IncOfferedSch:_sch(r.sch),IncOfferedSchNo:nz(r.item)};});
+  if(_faOth.length)_schFA.DetailsOfOthSourcesIncOutsideIndia=_faOth.map(function(r){return {CountryName:nz(r.country),CountryCodeExcludingIndia:_cc(r.country),ZipCode:nz(r.zip),NameOfPerson:nz(r.pname),AddressOfPerson:nz(r.paddr),IncDerived:I(r.derived),NatureOfInc:nz(r.nature),IncDrvTaxFlag:(I(r.taxable)?'Y':'N'),IncOfferedAmt:I(r.taxable),IncOfferedSch:_sch(r.sch),IncOfferedSchNo:nz(r.item)};});
+
+  /* ---- ScheduleOA : nature / other business ---- */
+  var _nob=(S.nob||[]).filter(function(r){return nz(r.code)||nz(r.trade);});
+  var _valMap={'At cost':'1','At market rate':'2','Cost or market whichever is lower':'3','1':'1','2':'2','3':'3'};
+  var _schOA={
+    IncUnHeadBPFlag:(_nob.length?'Y':'N'),
+    NatOfBus:[{NatureOfBusiness:_nob.map(function(r){return {Code:(/^0100[1-6]$/.test(nz(r.code))?nz(r.code):'01001'),TradeName1:nz(r.trade)};})}],
+    NumberOfBranches:I(S.odb.branches),
+    MethodOfAcct:(nz(S.odb.method).toUpperCase().indexOf('CASH')===0?'CASH':'MERC'),
+    ChangeInAcctMethFlg:(S.odb.mchg?'Y':'N'),
+    ProfDeviatDueAcctMeth:I(S.odb.eff145),
+    MethodOfValClgStk:{ValRawMaterial:(_valMap[nz(S.odb.raw)]||'1'),ValFinishedGoods:(_valMap[nz(S.odb.fin)]||'1'),ChngStockValMetFlg:(S.odb.vchg?'Y':'N'),EffectOnPL:I(S.odb.eff145a)}
+  };
+
+  /* ---- SchedulePTI (partial: identity + OS routing) ---- */
+  var _ptiRows=(S.pti||[]).filter(function(r){return nz(r.name)||I(r.income);});
+  function _ptiHead(){return {AmountOfInc:0,NetIncomeLoss:0,TDSAmount:0};}
+  var _schPTI=_ptiRows.length?{SchedulePTIDtls:_ptiRows.map(function(r){return {
+    InvstmntCvrdUs115UA115UB:(nz(r.entity)||'115UB'),BusinessName:nz(r.name),BusinessPAN:nz(r.pan).toUpperCase(),
+    IncOthSrc:{AmountOfInc:I(r.income),NetIncomeLoss:I(r.income),TDSAmount:I(r.tds)}
+  };})}:null;
+
+  /* ---- PartA_GEN1 arrays (Action C) ---- */
+  var _regIT=(S.regIT||[]).filter(function(r){return nz(r.sec)||nz(r.rno);}).map(function(r){return {SectionRegistered:nz(r.sec),RegSecExmpClaimed:'true',RegApprovalDate:toISO(r.dor),ApprovalRegistrationNo:nz(r.rno),ApprovingAuthority:nz(r.auth),EffectiveDate:toISO(r.eff)};});
+  var _regOth=(S.regOth||[]).filter(function(r){return nz(r.act)||nz(r.rno);}).map(function(r){return {LawRegistered:nz(r.act),OtherLawDesc:nz(r.act),RegApprDate:toISO(r.dor),ApprovalRegistrationNo:nz(r.rno),ApprovingAuthority:nz(r.auth),EffectiveDate:toISO(r.from),ValidDate:toISO(r.to)};});
+  var _projs=(S.proj||[]).filter(function(p){return nz(p.name);}).map(function(p){return {NameOfProjectOrInst:nz(p.name),ActivityNature:nz(p.nature),ClassificationCode:nz(p.nature)};});
+  var _stdmob=nz(A.phone).replace(/[^0-9]/g,'');
+
+  /* ---- PartA_GEN2 arrays (Action C) ---- */
+  var _MAP_AUDSEC={'10(23C)(iv)':'10(23C)(iv)','10(23C)(v)':'10(23C)(v)','10(23C)(vi)':'10(23C)(vi)','10(23C)(via)':'10(23C)(via)','12A(1)(b)':'12A(1)(b)','92E':'92E'};
+  var _auditDtls=(S.auditIT||[]).filter(function(r){return nz(r.audited)||nz(r.aud);}).map(function(r){var o={AuditedSection:(_MAP_AUDSEC[nz(r.sec)]||'12A(1)(b)'),AuditFlag:(nz(r.audited)==='Yes'?'Y':'N'),AudFrmName:nz(r.firm),AudFrmPAN:nz(r.pan).toUpperCase(),AuditReportFurnishDate:toISO(r.fdate)};if(nz(r.sec).indexOf('Other')===0)o.OtherSectionDesc=nz(r.sec);return o;});
+  var _MAP_OTHACT={'1':'1','2':'2','3':'3','4':'4','5':'5','6':'6'};
+  var _auditOth=(S.auditOth||[]).filter(function(r){return nz(r.act)||nz(r.sec);}).map(function(r){return {AuditedAct:(_MAP_OTHACT[nz(r.act)]||'6'),AuditedActOther:nz(r.act),AuditedSection:nz(r.sec),DateOfAudit:toISO(r.date)};});
+  var _MAP_REL={'1':'1','2':'2','3':'3','4':'4','5':'5','6':'6'};
+  var _authInd=(S.trustees||[]).filter(function(r){return nz(r.name)&&nz(r.entity)!=='Non-Individual';}).map(function(r){return {Name:nz(r.name),Relation:(_MAP_REL[nz(r.rel)]||'6'),ShareHoldingPercentage:(+nz(r.shp)||0),ResidentOfIndia:(nz(r.res)==='Non-Resident'?'N':'Y'),Address:nz(r.addr),MobileNo:I(nz(r.mob).replace(/[^0-9]/g,'')),EmailAddress:nz(r.email)};});
+  var _authNonInd=(S.benef||[]).filter(function(r){return nz(r.name);}).map(function(r){return {Name:nz(r.name),ResidentOfIndia:(nz(r.res)==='Non-Resident'?'N':'Y'),Address:nz(r.addr),BeneficialPercentage:(+nz(r.pct)||0)};});
+  var _contr13=(S.substc||[]).filter(function(r){return nz(r.name);}).map(function(r){return {Name:nz(r.name),Address:nz(r.addr),PAN:nz(r.pan).toUpperCase()};});
+  var _contrHUF=(S.relatives||[]).filter(function(r){return nz(r.name);}).map(function(r){return {Name:nz(r.name),Address:nz(r.addr),PAN:nz(r.pan).toUpperCase()};});
+
   var J={ITR:{ITR7:{
     CreationInfo:{
       SWVersionNo:'1.0', SWCreatedBy:'SW10000000', JSONCreatedBy:'SW10000000',
@@ -12092,6 +12505,7 @@ function buildITR7Json(){
           LocalityOrArea:nz(A.area), CityOrTownOrDistrict:nz(A.town),
           StateCode:stateCode(A.state), CountryCode:countryCode(A.country)||'91',
           PinCode:I(nz(A.pin)), CountryCodeMobile:91,
+          Phone:{STDcode:I(_stdmob.slice(0,4))||0,PhoneNo:I(_stdmob.slice(-8))||0},
           MobileNo:I(nz(A.mobile).replace(/\s/g,'')), EmailAddress:nz(A.email)
         },
         DateOFFormOrIncorp:toISO(S.dof),
@@ -12100,17 +12514,33 @@ function buildITR7Json(){
         SecExemptionClaimed:'11'
       },
       ProjectOrInstDtlsFlg:(S.proj||[]).some(function(p){return nz(p.name);})?'Y':'N',
+      ProjectOrInstDtls:_projs,
+      RegApprUnderITADtls:_regIT,
+      RegApprUnderOthITADtls:_regOth,
       FilingStatus:{
         ReturnFileSec:{IncomeTaxSec:MAP_RETTYPE[nz(S.ret)]||11},
         ResidentialStatus:(nz(S.res)==='Non-Resident')?'NRI':'RES',
         AsseseeRepFlg:nz(S.rep.name)?'Y':'N',
+        AssesseeRep:{RepName:nz(S.rep.name),RepEmailID:nz(S.rep.email),CountryCodeRepMobileNo:I(nz(S.rep.cc))||91,RepMobileNo:I(nz(S.rep.contact).replace(/[^0-9]/g,''))},
         PartnerInFirmFlg:(nz(S.q.partner)==='Yes')?'Y':'N',
         HeldUnlistedEqShrPrYrFlg:(nz(S.q.unl)==='Yes')?'Y':'N'
       }
     },
     PartA_GEN2:{
+      OtherDetailsFor7:{
+        OtherDetailsUs2_15:{CharitablePurposeOfGeneralPublic:nz(S.otherinfo.gpu)||'N'},
+        FirstReturnFlag:(nz(S.otherinfo.first)==='Yes'?'Y':'N'),
+        ProvisionsSec1310Applcbl:(nz(S.s1310.res)==='Yes'?'Y':'N'),
+        ChangeInActivitiesDuringYr:(nz(S.otherinfo.chg)==='Yes'?'Y':'N')
+      },
       LiableSec44ABflg:(S.auditIT||[]).some(function(r){return nz(r.audited)==='Yes';})?'Y':'N',
-      LiableAnyOthThnINTActflg:(S.auditOth||[]).some(function(r){return nz(r.act);})?'Y':'N'
+      AuditDetails:_auditDtls,
+      LiableAnyOthThnINTActflg:(S.auditOth||[]).some(function(r){return nz(r.act);})?'Y':'N',
+      LiableAnyOthThnINTActDetails:_auditOth,
+      AuthorFounderDtls5percent:_authInd,
+      AuthorFounderDtls5percentNonInd:_authNonInd,
+      ContributionUs13_3bDtls:_contr13,
+      ContributionHUFDtls:_contrHUF
     },
     PARTA_BS:{
       SourcesOfFund:{
@@ -12120,7 +12550,8 @@ function buildITR7Json(){
           AccumulatedInc:I((S.ownf[3]||{}).amt),
           AccumulatedIncUS10_11:0,
           BalDeemedInc:0,
-          TotalOtherReserve:I((S.ownf[5]||{}).amt),
+          OtherReserve:_othRes?[{Nature:nz((S.ownf[5]||{}).lbl)||'Other Reserves',Amount:_othRes}]:[],
+          TotalOtherReserve:_othRes,
           TotalFund:I(B.own)
         },
         LongTermBorrowings:{SecuredLoan:I(B.sec),UnSecuredLoan:I(B.unsec),TotalLoanFund:I(B.sec+B.unsec)},
@@ -12174,8 +12605,8 @@ function buildITR7Json(){
       AnonymousDonations:{
         AggregateAnonymousDonations:I(anon),
         TotalDonationsReceived:I(totContrib),
-        AnonymousDonations115BBC:I(anon),
-        AnonymousDonationsOthr115BBC:0
+        AnonymousDonations115BBC:I(_anonTaxable),
+        AnonymousDonationsOthr115BBC:I(_anonOther)
       }
     },
     ScheduleAI:{
@@ -12187,6 +12618,7 @@ function buildITR7Json(){
       InterestIncome:I(a.int),
       AgricultureIncome:I(a.agri),
       NetConsdrnTrnsfrCapAsst:I(a.cons),
+      OthersInc:{OthersIncDtls:(S.othinc||[]).filter(function(r){return !r.fix&&(nz(r.d)||I(r.a));}).map(function(r){return {OthNatOfInc:nz(r.d),OthAmount:I(r.a)};})},
       PassThroughIncome:I(ptiT),
       TotalofOtherIncomes:I(oiT),
       TotalofAggregateIncomes:I(aiTot)
@@ -12238,28 +12670,89 @@ function buildITR7Json(){
       GrossIncome:I(agg),
       TotalIncome:I(totalTI),
       IncChargeableTaxSplRates:0,
-      DonationsUs115BBC:I(anon),
+      DonationsUs115BBC:I(_anonTaxable),
       IncFromOS:{TotIncFromOS:0},
       AggIncothSpecInc115BBI:0
     },
+    PartB_TI2:{
+      TotExemptionUs10_21to29:0,
+      ExemptionUs1021:0,ExemptionUs10_23A:0,ExemptionUs10_23AAA:0,ExemptionUs10_23B:0,
+      ExemptionUs10_23EC:0,ExemptionUs10_23ED:0,ExemptionUs10_23EE:0,ExemptionUs10_29A:0,
+      TotExemptionUs10_23Cto10_47:0,
+      ExemptionUs10_23Ciiiab:0,ExemptionUs10_23Ciiiac:0,ExemptionUs10_23Ciiiad:0,ExemptionUs10_23Ciiiae:0,
+      ExemptionUs10_23D:0,ExemptionUs10_23DA:0,ExemptionUs10_23FB:0,ExemptionUs10_24:0,
+      ExemptionUs10_46:0,ExemptionUs10_46A:0,ExemptionUs10_46B:0,ExemptionUs10_47:0,
+      IncomeChargeable11_3:0,ExemptionUs13_A:0,ExemptionUs13_B:0,
+      VoluntaryContributions:I(totContrib),
+      IncomeFromHP:0,
+      ProfBusGain:{ProfGainNoSpecBus:0},
+      CapGain:{
+        ShortTerm:{ShortTerm20Per:0,ShortTerm30Per:0,ShortTermAppRate:0,ShortTermSplRateDTAA:0,TotalShortTerm:0},
+        LongTerm:{LongTerm12_5Per:0,LongTermSplRateDTAA:0,TotalLongTerm:0},
+        ShortTermLongTermTotal:0,CapGains30Per115BBH:0,TotalCapGains:0
+      },
+      IncFromOS:{TotIncFromOS:0},
+      TotIncNotPart7And11Abv:0,
+      GrossIncome:I(agg),
+      CurrentYearLoss:0,
+      GrossTotalIncome:I(agg),
+      IncChargeableTaxSplRates:0,
+      NetAgricultureIncomeOrOtherIncomeForRate:I(a.agri),
+      AggregateIncome:I(totalTI),
+      IncChrgbleMaxMarginalRates:0
+    },
+    PartB_TI3:(function(){
+      var _tid=_expTot.Total, _sum=I(agg)-I(applied)+I(_tid);
+      var _cg={ShortTerm:{ShortTerm20Per:0,ShortTerm30Per:0,ShortTermAppRate:0,ShortTermSplRateDTAA:0,TotalShortTerm:0},
+        LongTerm:{LongTerm12_5Per:0,LongTermSplRateDTAA:0,TotalLongTerm:0},
+        ShortTermLongTermTotal:0,CapGains30Per115BBH:0,TotalCapGains:0};
+      return {ComputationIncChargeable:{
+        TotIncPrevYr:I(agg),
+        TotExpIncur:I(applied),
+        ExpDisallowed:{
+          ExpCorpusStandingCredit:I(_expRows[0].Total),ExpLoanBorrow:0,DeprRespAsset:0,
+          ExpFormContri:I(_expRows[1].Total),CapExp:I(_aRows[10].Total),
+          AmtDisallSubClauseiaSec40:0,AmtDisallSubSec3Sec40A:0,AmtDisallSubSec3ASec40A:0,
+          AnyOthDisall:I(_expRows[3].Total),TotExpDisall:I(_tid)
+        },
+        Additions:{IncChargSec115BBI:0,IncExemptNotAvail:0,IncChargSec122:0,IncExpl3B:0,IncExpl1B:0,AnyOthrIncome:0,TotAdditions:0},
+        IncChargSec114:0,
+        SumTotal:_sum,
+        IncNotForming:{IncFromHP:0,ProfitGainsBP:0,CapGain:_cg,IncOS:0,Total:0},
+        LossCurYrToBeSetOff:0,
+        TotalInc:_sum,
+        IncIncludedChargRateSpec:I(_anonTaxable),
+        AnonymousDonation:I(anon),
+        IncChargSec115BBI:0,
+        IncChagrgSec13:0
+      }};
+    })(),
+    ScheduleA:_schA,
+    ITRScheduleJ:_schJ,
+    ITRScheduleI:_schI,
+    ITRScheduleD:_schD,
+    ITRScheduleDA:_schDA,
+    ITRScheduleIA:_schIA,
+    ITRScheduleR:_schR,
+    ScheduleOA:_schOA,
     PartB_TTI:{
       ComputationOfTaxLiability:{
         TaxPayableOnTI:{
-          TaxAtNormalRates:0,TaxAtSpecialRates:0,DonationUs115BC:0,
-          TaxIncChargUs115BBI:0,TaxAtMarginalRate:0,RebateOnAgricultureInc:0,TaxPayableOnTotInc:0
+          TaxAtNormalRates:_o('normalTax'),TaxAtSpecialRates:_o('specialTax'),DonationUs115BC:_o('bbcTax'),
+          TaxIncChargUs115BBI:_o('bbiTax'),TaxAtMarginalRate:0,RebateOnAgricultureInc:0,TaxPayableOnTotInc:_o('taxOnTotInc')
         },
-        Surcharge25ofSI:0,SurchargeOnTaxPayable:0,TotalSurcharge:0,EducationCess:0,GrossTaxLiability:0,
-        TaxRelief:{Section90:0,Section91:0,TotTaxRelief:0},
-        NetTaxLiability:0,
-        IntrstPay:{IntrstPayUs234A:0,IntrstPayUs234B:0,IntrstPayUs234C:0,LateFilingFee234F:0,TotalIntrstPay:0},
-        AggregateTaxInterestLiability:0
+        Surcharge25ofSI:_o('sc25SI'),SurchargeOnTaxPayable:_o('scOnTax'),TotalSurcharge:_o('totalSurcharge'),EducationCess:_o('cess'),GrossTaxLiability:_o('grossTax'),
+        TaxRelief:{Section90:_o('rel90'),Section91:0,TotTaxRelief:_o('totRelief')},
+        NetTaxLiability:_o('netTax'),
+        IntrstPay:{IntrstPayUs234A:_o('int234a'),IntrstPayUs234B:_o('int234b'),IntrstPayUs234C:_o('int234c'),LateFilingFee234F:_o('fee234f'),TotalIntrstPay:_o('intTotal')},
+        AggregateTaxInterestLiability:_o('aggregate')
       },
       TaxPaid:{
-        TaxesPaid:{AdvanceTax:0,TDS:0,TCS:0,SelfAssessmentTax:0,TotalTaxesPaid:0},
-        BalTaxPayable:0
+        TaxesPaid:{AdvanceTax:_o('advTax'),TDS:_o('tds'),TCS:I(_tcsTot),SelfAssessmentTax:_o('sat'),TotalTaxesPaid:_o('prepaid')},
+        BalTaxPayable:Math.max(0,_o('balance'))
       },
       Refund:{
-        RefundDue:0,
+        RefundDue:Math.max(0,-_o('balance')),
         NetTaxPyblOn115TDInc:0,
         BankAccountDtls:{
           BankDtlsFlag:banks.length?'Y':'N',
@@ -12285,6 +12778,14 @@ function buildITR7Json(){
       Place:nz(V.place)
     }
   }}};
+  var _R7=J.ITR.ITR7;
+  if(_sch115TD)_R7.Schedule115TD=_sch115TD;
+  if(Object.keys(_schFA).length)_R7.ScheduleFA=_schFA;
+  if(_schPTI)_R7.SchedulePTI=_schPTI;
+  if(_schIT)_R7.ScheduleIT=_schIT;
+  if(_schTDS2)_R7.ScheduleTDS2=_schTDS2;
+  if(_schTDS3)_R7.ScheduleTDS3=_schTDS3;
+  if(_schTCS)_R7.ScheduleTCS=_schTCS;
   return J;
 }
 

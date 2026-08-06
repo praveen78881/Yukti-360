@@ -1,0 +1,88 @@
+---
+title: "Overview"
+description: "Overview of GST API by Sandbox - Tax API Stack for India by Quicko."
+---
+
+Goods and Services Tax (GST) is a comprehensive indirect tax levied on the supply of goods and services in India. Implemented on July 1st, 2017, GST replaced multiple indirect taxes and unified the Indian tax system. As a consumption-based tax, GST is applied at each point of sale in the supply chain.
+
+## GST Registration Requirements
+
+Businesses must register under GST if they meet the following criteria:
+
+| **Supply Type** | **Annual Turnover Threshold** |
+| :-: | :-: |
+| Goods | ₹40 Lakhs |
+| Services | ₹20 Lakhs |
+
+<Info>
+  Businesses operating in special category states have lower thresholds: ₹20 Lakhs for goods and ₹10 Lakhs for services.
+</Info>
+
+## The GST Compliance Challenge
+
+Managing GST compliance is complex and time-consuming. Businesses must:
+
+- **Generate GST-compliant invoices** with proper tax calculations
+- **File monthly and annual returns** (GSTR-1, GSTR-3B, GSTR-9)
+- **Reconcile purchase and sales ledgers** with supplier data
+- **Claim Input Tax Credit (ITC)** accurately
+- **Generate E-Invoices** for B2B transactions (mandatory for businesses with turnover \> ₹5 Crores)
+- **Create E-Way Bills** for goods movement exceeding ₹50,000
+- **Maintain accurate ledgers** (Cash, ITC, Liability)
+- **Track return filing status** and deadlines
+
+Non-compliance can result in interest, penalties, and operational disruptions.
+
+## How Sandbox Simplifies GST Compliance
+
+Sandbox GST APIs provide a complete solution to automate your entire GST workflow. We handle the complexity of GSTN integration, encryption-decryption, digital signing, and compliance requirements so you can focus on your business.
+
+Sandbox is a TSP (Technical Service Provider) integrated with Quicko GSP (GST Suvidha Provider) and other third-party GSPs. To use Sandbox GST APIs, you need to onboard as an ASP (Application Service Provider) with Quicko GSP. This ensures access to GSTN-authorised infrastructure for reliable and compliant integrations.
+
+## API Categories
+
+<CardGroup cols={2}>
+  <Card title="Compliance APIs" icon="box-check" href="/api-reference/gst/overview#compliance-apis">
+    Automate taxpayer verification, GSTR filing, E-Invoice generation, and E-Way Bill management. Handle authentication, return filing, and ledger management seamlessly.
+  </Card>
+
+  <Card title="Analytics APIs" icon="chart-mixed" href="/api-reference/gst/overview#analytics-apis">
+    Reconcile GSTR-2A and GSTR-2B data, analyze compliance gaps, and ensure accurate ITC claims. Get insights into your GST data for better decision-making.
+  </Card>
+</CardGroup>
+
+### Compliance APIs
+
+Our Compliance APIs cover the complete spectrum of GST operations:
+
+- Verify GST-registered businesses and track return filing status without authentication.
+- Complete GST portal integration for authenticated taxpayers from fetching business sales/purchase information, return filing, ledgers and invoice management system (IMS) operations.
+- Generate, manage, and track E-Invoices seamlessly.
+- Manage E-Way Bills for goods movement across India.
+
+### Analytics APIs
+
+Transform your GST data into actionable insights:
+
+- GSTR-2A Reconciliation - Automatically reconcile your purchase data with supplier GSTR-1 filings to identify missing invoices, mismatches, and ITC eligibility.
+- GSTR-2B Reconciliation - Reconcile with auto-drafted purchase data to ensure accurate ITC claims and compliance.
+
+## Additional Reference Documentation
+
+For detailed schemas, entity attributes, and sample requests and responses, refer to the official GSTN documentation:
+
+### Public & Taxpayer API
+
+For **Public APIs** and **Taxpayer APIs** (including schemas, entity attributes, sample requests, and responses), visit the [GST Developer Portal API Docs](https://developer.gst.gov.in/apiportal/).
+
+### E-Invoice API
+
+For E-Invoice schemas, sample requests, and responses, refer to the [E-Invoice Portal API Docs](https://einv-apisandbox.nic.in/).
+
+### E-Way Bill API
+
+For E-Way Bill schemas, sample requests, and responses, visit the [E-Way Bill Portal API Docs](https://docs.ewaybillgst.gov.in/apidocs/).
+
+<Card title="GST" icon="/static/svg/workload-icons/GST.svg" href="https://sandbox.co.in/gst?utm_campaign=cta-banner&utm_source=in-co-sandbox-developer&utm_medium=direct&utm_content=api-reference-gst-overview">
+  Pricing and how businesses use Sandbox for GST filing, e-invoicing, and compliance.
+</Card>

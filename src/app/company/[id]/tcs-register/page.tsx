@@ -11,57 +11,8 @@ import { ManualEntryDialog } from '@/components/entries/ManualEntryDialog';
 import { getCurrentFY } from '@/lib/utils/dateUtils';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
-import type { JournalEntry } from '@/lib/accounting/computeEngine';
+import { computeTCSRegister } from '@/lib/accounting/tcsCompute';
 import type { EntityType } from '@/types/company';
-
-interface TCSRegisterRow {
-  date: string;
-  buyerName: string;
-  pan: string;
-  section: string;
-  saleAmount: number;
-  tcsRate: number;
-  tcsAmount: number;
-  status: 'collected' | 'deposited' | 'pending';
-}
-
-function computeTCSRegister(entries: JournalEntry[]): TCSRegisterRow[] {
-  const rows: TCSRegisterRow[] = [];
-
-  for (const entry of entries) {
-    let tcsAmount = 0;
-    let buyerName = '';
-    let saleAmount = 0;
-
-    for (const line of entry.lines) {
-      if (line.account_name.toLowerCase().includes('tcs') && (line.account_group === 'Statutory Liabilities' || line.account_group === 'Duties & Taxes')) {
-        tcsAmount += line.credit || 0;
-      } else if (line.debit > 0 && (line.account_group === 'Trade Receivables' || line.account_group === 'Sundry Debtors')) {
-        buyerName = line.account_name;
-        saleAmount += line.debit;
-      } else if (line.credit > 0 && (line.account_group === 'Revenue from Operations' || line.account_group === 'Sales' || line.account_group === 'Revenue')) {
-        saleAmount += line.credit;
-      }
-    }
-
-    if (tcsAmount > 0) {
-      const grossSale = saleAmount > tcsAmount ? saleAmount - tcsAmount : saleAmount;
-      const rate = grossSale > 0 ? (tcsAmount / grossSale) * 100 : 0;
-      rows.push({
-        date: entry.entry_date,
-        buyerName,
-        pan: '',
-        section: '',
-        saleAmount: grossSale,
-        tcsRate: Math.round(rate * 100) / 100,
-        tcsAmount,
-        status: 'collected',
-      });
-    }
-  }
-
-  return rows;
-}
 
 export default function TCSRegisterPage() {
   const { company, companyId, loading: companyLoading } = useCompany();
@@ -106,21 +57,6 @@ export default function TCSRegisterPage() {
 
   const data = tcsRows.map((r, i) => ({ sno: i + 1, ...r }));
 
-  return (
-    <div className="space-y-4">
-      <PageHeader title="TCS Register" description="Tax Collected at Source — register of all TCS collections" />
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="h-16 w-16 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-5">
-          <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-          </svg>
-        </div>
-        <h3 className="text-sm font-bold text-gray-800 mb-2">Access Restricted</h3>
-        <p className="text-xs text-gray-500 max-w-sm leading-relaxed">For security reasons, this register is currently not accessible. It will be enabled in a future update.</p>
-      </div>
-    </div>
-  );
-  // eslint-disable-next-line no-unreachable
   return (
     <div>
       <PageHeader title="TCS Register" description="Tax Collected at Source — register of all TCS collections">

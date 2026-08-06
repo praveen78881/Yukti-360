@@ -4,11 +4,21 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import type { EntityType, Company } from '@/types/company';
-import { getEntityData, upsertEntityData } from '@/lib/offlineDb';
+import { getEntityData, upsertEntityData, listJournalEntries } from '@/lib/offlineDb';
+import { buildAisCsvFromBooks, downloadAisCsv } from '@/lib/accounting/aisExport';
+import type { JournalEntry } from '@/lib/accounting/computeEngine';
 import {
   Calculator, FileText, CheckCircle, Shield, Lock, LockKeyhole,
-  UploadCloud, Save,
+  Save, FileDown, MoreVertical, Cloud, FolderInput, ShieldCheck,
+  Highlighter, X, AlertTriangle, Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { ImportItrModal, type ImportMode } from '@/components/itr/ImportItrModal';
+import {
+  validateItrInFrame, downloadItrJson, highlightItrFields, kebabifyDrillins, closeTopDrillin,
+  type ItrValResult,
+} from '@/lib/itr/client';
+import { setBackInterceptor } from '@/lib/appBack';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ITR filing module — year-wise (A.Y. 2026-27 and A.Y. 2025-26)
@@ -221,9 +231,6 @@ function IndividualItrView({ company, forms }: { company: Company; forms: ItrKey
           <span className="text-xs text-gray-400 truncate">· FY {meta.fy} · {entityLabel}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="hidden sm:inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-            <UploadCloud className="h-3 w-3" /> AIS import inside form
-          </span>
           <label className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500">
             <span className="text-gray-400">Assessment Year</span>
             <select
@@ -258,6 +265,11 @@ function ItrYearForms({
   // Lazy-mount iframes: only load a form once its tab is first opened.
   const [mounted, setMounted] = useState<Set<ItrKey>>(() => new Set([forms[0]]));
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [importMode, setImportMode] = useState<ImportMode | null>(null);
+  const [highlight, setHighlight] = useState(false);
+  const [validatedKey, setValidatedKey] = useState<ItrKey | null>(null); // form that last passed validation
+  const [valResult, setValResult] = useState<(ItrValResult & { key: ItrKey }) | null>(null); // drives the failure popup
   const winRefs = useRef<Partial<Record<ItrKey, Window>>>({});
   const timers = useRef<Partial<Record<ItrKey, number>>>({});
   const mountedRef = useRef(true);
@@ -265,6 +277,44 @@ function ItrYearForms({
   const openForm = (key: ItrKey) => {
     setActive(key);
     setMounted((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  };
+
+  const pan = (company.entity_details?.pan || '').toUpperCase();
+
+  /** Run the form's own validator. On pass → enable Download JSON. On fail → popup
+   *  listing every reason; if the Highlight toggle is on, outline the offending fields. */
+  const doValidate = (key: ItrKey) => {
+    setMenuOpen(false);
+    saveForm(key);
+    const win = winRefs.current[key];
+    const res = validateItrInFrame(win, key);
+    if (!res.ran) { toast.error(res.error || 'This form has no validator yet.'); return; }
+    highlightItrFields(win, res.errors, highlight);
+    if (res.errors.length === 0) {
+      setValidatedKey(key);
+      setValResult(null);
+      toast.success(res.warnings.length ? `Validation passed (${res.warnings.length} warning(s)). JSON ready to download.` : 'Validation passed — JSON ready to download.');
+    } else {
+      setValidatedKey((k) => (k === key ? null : k));
+      setValResult({ ...res, key });
+      toast.error(`${res.errors.length} validation error(s) — fix and re-validate.`);
+    }
+  };
+
+  /** Download the ITR JSON — only allowed after a clean validation of this form. */
+  const doDownload = (key: ItrKey) => {
+    setMenuOpen(false);
+    if (validatedKey !== key) { toast.error('Validate the return first — download unlocks once it passes.'); return; }
+    const r = downloadItrJson(winRefs.current[key], key, pan, ay);
+    if (r.ok) toast.success('ITR JSON downloaded — ready to upload on the portal.');
+    else toast.error(r.error || 'Could not build the JSON.');
+  };
+
+  const toggleHighlight = () => {
+    const next = !highlight;
+    setHighlight(next);
+    // Re-apply against the last failure set (or clear) immediately for feedback.
+    if (valResult && valResult.key === active) highlightItrFields(winRefs.current[active], valResult.errors, next);
   };
 
   const saveForm = useCallback((key: ItrKey) => {
@@ -289,6 +339,22 @@ function ItrYearForms({
     if (!win) return;
     winRefs.current[key] = win;
 
+    // 0) hide the tool's own in-page action buttons — all import/export/validate now
+    //    live in the shell's ⋮ menu, so the CA sees one consistent control surface.
+    try {
+      const d = win.document;
+      const STYLE_ID = '__itr_hide_native';
+      if (!d.getElementById(STYLE_ID)) {
+        const s = d.createElement('style');
+        s.id = STYLE_ID;
+        s.textContent = '#exportJsonBtn,#importAisBtn,#exportBtn,#backBtn{display:none!important;}';
+        d.head.appendChild(s);
+      }
+    } catch { /* cross-origin/timing — ignore */ }
+
+    // 0b) collapse each drill-in's action buttons into a ⋮ menu (matches the shell toolbar).
+    try { kebabifyDrillins(win); } catch { /* ignore */ }
+
     // 1) restore saved snapshot, 2) prefill empty fields from company master
     try {
       const rec = getEntityData(companyId, moduleKey, key);
@@ -311,6 +377,10 @@ function ItrYearForms({
       win.document.addEventListener('change', handler, true);
     } catch { /* ignore */ }
   }, [company, companyId, moduleKey, saveForm]);
+
+  // Shell Back button: while a drill-in is open in the active form, Back closes
+  // that drill-in (one level per press, like the portal) instead of leaving the page.
+  useEffect(() => setBackInterceptor(() => closeTopDrillin(winRefs.current[active])), [active]);
 
   // Flush only genuinely-pending autosaves on unmount (keys still holding a live timer).
   useEffect(() => {
@@ -349,19 +419,64 @@ function ItrYearForms({
             );
           })}
         </div>
-        <div className="flex items-center gap-2 shrink-0 pl-2">
+        <div className="relative flex items-center gap-2 shrink-0 pl-2">
           {savedAt && (
             <span className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-green-600">
               <CheckCircle className="h-3 w-3" /> Saved {savedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
+          {validatedKey === active && (
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+              <ShieldCheck className="h-3 w-3" /> Validated
+            </span>
+          )}
           <button
-            onClick={() => saveForm(active)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-            title="Save this return now (also synced to your account)"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+            title="Actions"
+            aria-label="Actions menu"
           >
-            <Save className="h-3.5 w-3.5" /> Save
+            <MoreVertical className="h-4 w-4" />
           </button>
+
+          {menuOpen && (
+            <>
+              {/* click-away backdrop */}
+              <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-9 z-40 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl">
+                <button onClick={() => { setMenuOpen(false); setImportMode('portal'); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
+                  <Cloud className="h-4 w-4 text-blue-600" /> Import from Portal
+                </button>
+                <button onClick={() => { setMenuOpen(false); setImportMode('offline'); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
+                  <FolderInput className="h-4 w-4 text-blue-600" /> Import (Offline)
+                </button>
+                <button onClick={() => { setMenuOpen(false); saveForm(active); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
+                  <Save className="h-4 w-4 text-gray-500" /> Save
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button onClick={() => doValidate(active)}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" /> Validate
+                </button>
+                <button onClick={() => doDownload(active)} disabled={validatedKey !== active}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50 disabled:opacity-40 disabled:hover:bg-transparent"
+                  title={validatedKey === active ? 'Download the validated ITR JSON' : 'Validate first to unlock'}>
+                  <FileDown className="h-4 w-4 text-blue-600" /> Download JSON
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button onClick={toggleHighlight}
+                  className="flex w-full items-center justify-between gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
+                  <span className="flex items-center gap-2.5"><Highlighter className="h-4 w-4 text-amber-500" /> Highlight problem fields</span>
+                  <span className={`inline-flex h-4 w-7 items-center rounded-full px-0.5 transition-colors ${highlight ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                    <span className={`h-3 w-3 rounded-full bg-white transition-transform ${highlight ? 'translate-x-3' : ''}`} />
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -385,6 +500,59 @@ function ItrYearForms({
           />
         ))}
       </div>
+
+      {importMode && (
+        <ImportItrModal
+          open={!!importMode}
+          mode={importMode}
+          onClose={() => setImportMode(null)}
+          company={company}
+          ay={ay}
+          getWin={() => winRefs.current[active]}
+        />
+      )}
+
+      {/* Validation-failure popup — lists every blocking reason so the CA can fix. */}
+      {valResult && valResult.errors.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
+          <div className="my-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between rounded-t-2xl bg-red-600 px-5 py-3 text-white">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                <div>
+                  <h3 className="text-sm font-bold leading-tight">Validation failed — JSON not exported</h3>
+                  <p className="text-[11px] text-red-100">{valResult.errors.length} error(s){valResult.warnings.length ? ` · ${valResult.warnings.length} warning(s)` : ''} · {ITR_META[valResult.key].short} · A.Y. {ay}</p>
+                </div>
+              </div>
+              <button onClick={() => setValResult(null)} className="rounded-lg p-1.5 text-red-100 hover:bg-white/10" aria-label="Close"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="max-h-[60vh] space-y-1.5 overflow-y-auto px-5 py-4">
+              {valResult.errors.map((e, i) => (
+                <div key={`e${i}`} className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span><b>{e.slno ? `Sl.No ${e.slno}: ` : ''}</b>{e.msg}</span>
+                </div>
+              ))}
+              {valResult.warnings.map((w, i) => (
+                <div key={`w${i}`} className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span><b>{w.slno ? `Sl.No ${w.slno}: ` : ''}</b>{w.msg}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between rounded-b-2xl border-t border-gray-100 bg-gray-50 px-5 py-3">
+              <label className="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
+                <span className={`inline-flex h-4 w-7 items-center rounded-full px-0.5 transition-colors ${highlight ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                  onClick={toggleHighlight} role="switch" aria-checked={highlight}>
+                  <span className={`h-3 w-3 rounded-full bg-white transition-transform ${highlight ? 'translate-x-3' : ''}`} />
+                </span>
+                <Highlighter className="h-3.5 w-3.5 text-amber-500" /> Highlight problem fields in the form
+              </label>
+              <button onClick={() => setValResult(null)} className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -405,18 +573,28 @@ function CompanyItr6View({ company }: { company: Company }) {
     if (!localStorage.getItem(key)) setShowLetter(true);
   }, [company?.id]);
 
-  // Company-data bridge for the ITR-6 iframe to auto-fill.
-  useEffect(() => {
-    const bridge = {
-      companyName: company.name,
-      pan: company.entity_details?.pan || '',
-      gstin: company.gst_details?.gstin || '',
-      address: company.entity_details?.address || '',
-      fy: '2024-25',
-      ay: '2025-26',
-    };
-    localStorage.setItem('ca_tax_bridge', JSON.stringify(bridge));
-  }, [company]);
+  // Company-data bridge for the ITR-6 iframe to auto-fill. The sheet reads the
+  // localStorage key on load and also accepts HYDRATE_ITR postMessages.
+  const bridgePayload = useCallback(() => ({
+    companyName: company.name,
+    pan: company.entity_details?.pan || '',
+    gstin: company.gst_details?.gstin || '',
+    address: company.entity_details?.address || '',
+    doi: company.entity_details?.dateOfIncorporation || '',
+    fy: AY_LIST[0].fy,
+    ay: AY_LIST[0].ay,
+  }), [company]);
+
+  // NOTE: deliberately no global localStorage bridge here — a global key would let a
+  // previously-opened company's data hydrate another company's ITR-6 iframe. All
+  // hydration goes through the per-iframe postMessage below (company-sandboxed).
+
+  const hydrateItr6 = useCallback(() => {
+    itr6Ref.current?.contentWindow?.postMessage(
+      { type: 'HYDRATE_ITR', payload: bridgePayload() },
+      window.location.origin,
+    );
+  }, [bridgePayload]);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -450,7 +628,7 @@ function CompanyItr6View({ company }: { company: Company }) {
               </div>
               <h2 className="text-xl font-bold text-white">Important Notice</h2>
               <p className="text-sm text-blue-200 mt-0.5">
-                Assessment Year 2025-26 &nbsp;·&nbsp; ITR-6 &nbsp;·&nbsp; Private Limited Company
+                Assessment Year {AY_LIST[0].ay} &nbsp;·&nbsp; ITR-6 &nbsp;·&nbsp; Private Limited Company
               </p>
             </div>
             <div className="max-h-[58vh] overflow-y-auto px-8 py-6 space-y-4 text-sm text-gray-700 leading-relaxed">
@@ -515,10 +693,10 @@ function CompanyItr6View({ company }: { company: Company }) {
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-semibold text-gray-800">Income Tax</span>
-          <span className="text-xs text-gray-400">· AY 2025-26 · ITR-6 · {ENTITY_TYPES[company.entity_type as EntityType]?.label}</span>
+          <span className="text-xs text-gray-400">· AY {AY_LIST[0].ay} · ITR-6 · {ENTITY_TYPES[company.entity_type as EntityType]?.label}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">AY 2025-26</span>
+          <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">AY {AY_LIST[0].ay}</span>
           <span className="rounded border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">ITR-6</span>
         </div>
       </div>
@@ -563,6 +741,7 @@ function CompanyItr6View({ company }: { company: Company }) {
         <iframe
           ref={itr6Ref}
           src="/tax-utilities/itr6.html"
+          onLoad={hydrateItr6}
           className={`absolute inset-0 h-full w-full border-none ${activeTab === 'itr' ? 'z-10' : 'pointer-events-none z-0 opacity-0'}`}
           title="ITR-6"
         />
@@ -632,7 +811,9 @@ function LockedItrView({ entityLabel, applicableItr }: { entityLabel: string; ap
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function StatutoryItrView({ company, form }: { company: Company; form: ItrKey }) {
-  const meta = AY_LIST[0]; // statutory forms ship for A.Y. 2026-27
+  // The statutory tools (ITR-5 / ITR-6 / ITR-7) ship for A.Y. 2026-27 only, so
+  // there is no year selector — just the fixed A.Y. badge.
+  const meta = AY_LIST[0];
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label ?? company.entity_type;
 
   return (
@@ -660,6 +841,12 @@ function StatutoryItrView({ company, form }: { company: Company; form: ItrKey })
 export default function IncomeTaxDashboard() {
   const { company, loading } = useCompany();
 
+  // Purge the legacy global ITR-6 bridge key so no stale company data can ever
+  // leak into another company's ITR-6 iframe (the iframe reads this key on load).
+  useEffect(() => {
+    try { localStorage.removeItem('ca_tax_bridge'); } catch { /* ignore */ }
+  }, []);
+
   if (loading || !company) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -676,14 +863,14 @@ export default function IncomeTaxDashboard() {
     return <IndividualItrView key={company.id} company={company} forms={forms} />;
   }
 
-  // 2) Statutory single-form entities → ITR-5 (firms/LLP/AOP/co-op),
-  //    ITR-6 (companies) or ITR-7 (trusts/societies/sec-8), A.Y. 2026-27
+  // 2) Statutory single-form entities → ITR-5 (firms/LLP/AOP/co-op) or ITR-6 (companies).
+  //    ITR-7 (trusts / societies / sec-8) is NOT yet released → locked (see step 3).
   const statForm = STATUTORY_ITR[entityType];
-  if (statForm) {
+  if (statForm && statForm !== 'itr7') {
     return <StatutoryItrView key={company.id} company={company} form={statForm} />;
   }
 
-  // 3) Fallback → locked "coming soon"
+  // 3) Fallback → locked "coming soon" — includes every ITR-7 entity type.
   const entityLabel = ENTITY_TYPES[entityType]?.label || entityType;
   const applicableItr = ENTITY_ITR_MAP[entityType] || 'ITR-5 / ITR-7';
   return <LockedItrView entityLabel={entityLabel} applicableItr={applicableItr} />;

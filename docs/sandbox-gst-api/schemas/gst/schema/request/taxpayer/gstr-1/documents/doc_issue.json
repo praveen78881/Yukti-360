@@ -1,0 +1,92 @@
+{
+  "id": "Get-Doc_Issue-Schema",
+  "properties": {
+    "doc_issue": {
+      "properties": {
+	   "flag":{
+					"description": "Status of Invoice",
+					"type": "string"
+			},
+        "chksum": {
+          "maxLength": 64,
+          "description": "Invoice checksum value",
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]+$",
+          "minLength": 1
+        },
+        "doc_det": {
+          "items": {
+            "properties": {
+              "doc_num": {
+                "description": "Document Number",
+                "type": "integer",
+                "maximum": 12,
+                "minimum": 1
+              },
+              "docs": {
+                "items": {
+                  "properties": {
+                    "cancel": {
+                      "description": "No. of Cancelled document",
+                      "type": "number"
+                    },
+                    "from": {
+                      "description": "From serial number",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 16
+                    },
+                    "net_issue": {
+                      "description": "net Issue of Document",
+                      "type": "number"
+                    },
+                    "num": {
+                      "description": "Serial no",
+                      "type": "number",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "description": "To serial number",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 16
+                    },
+                    "totnum": {
+                      "description": "Total number of Documents",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "totnum",
+                    "from",
+                    "to",
+                    "num",
+                    "cancel",
+                    "net_issue"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "docs",
+              "doc_num"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "doc_det",
+        "chksum"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "doc_issue"
+  ],
+  "type": "object"
+}

@@ -90,6 +90,13 @@ export interface GSTDetails {
   stateCode?: string;
   gstScheme?: 'regular' | 'composition';
   compositionRate?: number;
+  /** GST portal username — captured once for the Sandbox GSP OTP flow (GSTR-2A/2B
+   *  download, GSTR-1/3B/9 filing). Not a secret; the OTP goes to the taxpayer. */
+  portalUsername?: string;
+  /** e-Way Bill portal API credentials — captured once, used to silently
+   *  authenticate the EWB session when generating e-Way Bills. */
+  ewbUsername?: string;
+  ewbPassword?: string;
 }
 
 export interface InventoryConfig {

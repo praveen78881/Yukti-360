@@ -6,6 +6,40 @@ export interface ExportColumn {
   align?: 'left' | 'right' | 'center';
 }
 
+/** Statement header details prepended to CSV / Excel exports. */
+export interface ExportMeta {
+  companyName: string;
+  title: string;
+  dateRange: string;
+  entityType?: string;
+}
+
+/** Blank cells print as a plain dash — never an empty hole. */
+const dash = (val: unknown): unknown => (val == null || val === '' ? '-' : val);
+
+/** Compact official mark, bottom-right of every PDF page: "CA Studio" over the
+ *  download date-time. Two tiny lines tucked into the bottom margin. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function addCaStudioMark(doc: any) {
+  const now = new Date();
+  const stamp = `${now.toLocaleDateString('en-IN')} · ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    const w = doc.internal.pageSize.getWidth();
+    const h = doc.internal.pageSize.getHeight();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(120, 120, 120);
+    doc.text('CA Studio', w - 8, h - 7, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text(stamp, w - 8, h - 4, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+  }
+}
+
 export async function exportToPDF(
   title: string,
   companyName: string,
@@ -26,13 +60,17 @@ export async function exportToPDF(
 
   const doc = new jsPDF(options?.orientation || 'portrait');
 
-  // HEADER
+  // HEADER — clean professional type: company, entity, statement, as-on date
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text(companyName, 14, 15);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text(`Entity: ${entityType}`, 14, 22);
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(title, 14, 32);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text(dateRange, 14, 38);
 
@@ -43,9 +81,9 @@ export async function exportToPDF(
     body: data.map(row => columns.map(c => {
       const val = row[c.key];
       if (typeof val === 'number') return formatIndianCurrency(val);
-      return val || '';
+      return (val == null || val === '') ? '-' : String(val);
     })),
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { font: 'helvetica', fontSize: 9, cellPadding: 2 },
     headStyles: {
       fillColor: [249, 250, 251],
       textColor: [17, 24, 39],
@@ -56,18 +94,14 @@ export async function exportToPDF(
     ),
   });
 
-  // FOOTER
+  // FOOTER — page numbers left, CA Studio mark bottom-right
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.text(`Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
-    doc.text(
-      `Generated on ${new Date().toLocaleDateString('en-IN')}`,
-      doc.internal.pageSize.width - 60,
-      doc.internal.pageSize.height - 10
-    );
   }
+  addCaStudioMark(doc);
 
   // SIGNATURE BLOCK
   if (options?.includeSignatureBlock) {
@@ -87,17 +121,23 @@ export async function exportToExcel(
   title: string,
   columns: ExportColumn[],
   data: Record<string, any>[],
-  sheetName?: string
+  sheetName?: string,
+  meta?: ExportMeta,
 ) {
   const XLSX = await import('xlsx');
 
-  const ws = XLSX.utils.json_to_sheet(
-    data.map(row => {
-      const obj: Record<string, any> = {};
-      columns.forEach(c => { obj[c.header] = row[c.key]; });
-      return obj;
-    })
-  );
+  const aoa: unknown[][] = [];
+  if (meta) {
+    aoa.push([meta.companyName]);
+    if (meta.entityType) aoa.push([`Entity: ${meta.entityType}`]);
+    aoa.push([meta.title]);
+    aoa.push([meta.dateRange]);
+    aoa.push([]);
+  }
+  aoa.push(columns.map(c => c.header));
+  data.forEach(row => aoa.push(columns.map(c => dash(row[c.key]))));
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
   XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
@@ -106,17 +146,25 @@ export async function exportToExcel(
 export function exportToCSV(
   columns: ExportColumn[],
   data: Record<string, any>[],
-  filename: string
+  filename: string,
+  meta?: ExportMeta,
 ) {
-  const headers = columns.map(c => c.header).join(',');
+  // RFC 4180: quote fields containing commas, quotes, or line breaks; double embedded quotes.
+  const esc = (val: unknown): string => {
+    if (val == null) return '';
+    const s = String(val);
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const metaLines = meta
+    ? [esc(meta.companyName), meta.entityType ? esc(`Entity: ${meta.entityType}`) : null, esc(meta.title), esc(meta.dateRange), '']
+        .filter((l): l is string => l !== null)
+        .join('\n') + '\n'
+    : '';
+  const headers = columns.map(c => esc(c.header)).join(',');
   const rows = data.map(row =>
-    columns.map(c => {
-      const val = row[c.key];
-      if (typeof val === 'string' && val.includes(',')) return `"${val}"`;
-      return val ?? '';
-    }).join(',')
+    columns.map(c => esc(dash(row[c.key]))).join(',')
   ).join('\n');
-  const csv = '\uFEFF' + headers + '\n' + rows; // BOM for Excel UTF-8
+  const csv = '\uFEFF' + metaLines + headers + '\n' + rows; // BOM for Excel UTF-8
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -138,17 +186,48 @@ export async function exportElementAsImagePDF(options: {
   element.scrollIntoView({ block: 'start', inline: 'nearest' });
   await new Promise(resolve => setTimeout(resolve, 150));
 
+  // html2canvas-pro: fork with modern CSS color support (oklch/lab/color()) —
+  // the original html2canvas crashes on Tailwind v4's oklch colors.
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
     import('jspdf'),
-    import('html2canvas'),
+    import('html2canvas-pro'),
   ]);
 
-  const canvas = await html2canvas(element, {
-    scale: 3,
-    backgroundColor: '#ffffff',
-    useCORS: true,
-    logging: false,
-  });
+  // Mark the root so onclone can find it in the cloned document.
+  element.setAttribute('data-export-root', '1');
+  let canvas: HTMLCanvasElement;
+  try {
+    canvas = await html2canvas(element, {
+      scale: 3,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      // In the printed statement, editable cells must look like print: replace
+      // every input/select with its plain value — or a simple "-" when blank.
+      // No boxes, borders or decoration survive into the PDF.
+      onclone: (clonedDoc: Document) => {
+        try {
+          const root = clonedDoc.querySelector('[data-export-root="1"]');
+          if (!root) return;
+          root.querySelectorAll('input, select').forEach((el) => {
+            try {
+              const raw = el.tagName === 'SELECT'
+                ? ((el as HTMLSelectElement).selectedOptions?.[0]?.text ?? '')
+                : ((el as HTMLInputElement).value ?? '');
+              const span = clonedDoc.createElement('span');
+              span.textContent = raw && raw.trim() !== '' ? raw : '-';
+              span.style.cssText =
+                'display:block;width:100%;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
+                'font-size:13px;color:#374151;background:transparent;border:none;padding:2px 0;';
+              el.replaceWith(span);
+            } catch { /* leave this control as-is rather than break the export */ }
+          });
+        } catch { /* never let print-cleanup kill the export */ }
+      },
+    });
+  } finally {
+    element.removeAttribute('data-export-root');
+  }
 
   const imgData = canvas.toDataURL('image/png');
   const pdf = new jsPDF(orientation || 'landscape');
@@ -199,5 +278,6 @@ export async function exportElementAsImagePDF(options: {
     page += 1;
   }
 
+  addCaStudioMark(pdf);
   pdf.save(`${title.replace(/\s+/g, '_')}.pdf`);
 }

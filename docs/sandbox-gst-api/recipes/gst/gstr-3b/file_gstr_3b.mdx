@@ -1,0 +1,190 @@
+---
+title: "File GST Return-3B"
+description: "GSTR-3B is a self-declaration return where taxpayers summarize their sales, purchases, and liabilities. It's used to setoff liabilities and claim input tax credits (ITC) for the latest return period. This recipe shows how to automate GSTR-3B filing."
+---
+
+## Workflow Overview
+
+The GSTR-3B filing process follows this sequence:
+
+1. **Authenticate** - Create a taxpayer session (valid for 6 hours)
+2. **Get GSTR-3B Details** - Retrieve existing GSTR-3B data from the GST portal
+3. **Save Data** - Upload your GSTR-3B data to the GST portal for validation
+4. **Get Ledger Balance** - Check available cash and ITC credits
+5. **Offset Liability** - Allocate ITC and cash towards tax liability
+6. **Get Updated Details** - Retrieve GSTR-3B data with payment information
+7. **Generate EVC OTP** - Get Electronic Verification Code OTP
+8. **File Return** - Submit the return with OTP verification
+
+<Tip>
+**Status Polling:** Check the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gstr_return_status) every 10-15 seconds after saving or offsetting liabilities. Processing typically completes within 1-2 minutes. If status shows validation errors, fix the data and save again before proceeding.
+</Tip>
+
+<Warning>
+**Prerequisites:** 
+- Ensure GSTR-1 is filed for the same return period before filing GSTR-3B. GSTR-3B must reconcile with GSTR-1.
+- Ensure you have sufficient balance in your cash or ITC ledger before offsetting liabilities.
+- Ensure your Taxpayer access token is valid (6-hour validity) throughout the filing process.
+</Warning>
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before filing GSTR-3B, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours.
+  </Step>
+
+  <Step title="Get GSTR-3B Details" stepNumber={2} titleSize="h2">
+    Retrieve existing GSTR-3B data from the GST portal using the [**Get GSTR-3B Details**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/gstr_3b_details) endpoint to see what data is already saved for the return period.
+
+    This allows you to review the current state of your return and identify what needs to be updated before saving your data.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    The response will contain any existing GSTR-3B data for the return period. Use this information to prepare your complete return data in the next step.
+  </Step>
+
+  <Step title="Save GSTR-3B Data" stepNumber={3} titleSize="h2">
+    Once you have the Taxpayer access token, save your GSTR-3B data using the [**Save GSTR-3B**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/save) endpoint.
+
+    Provide all summary details including outward supplies, inward supplies, ITC eligibility, and tax payment details. The data will be saved on the GST portal for review before filing.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "ret_period": "122023",
+        "inward_sup": {...},
+        "sup_details": {...},
+        "intr_ltfee": {...},
+        "inter_sup": {...},
+        "itc_elg": {...},
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    The response will include a `reference_id` which you can use to check the status of the save operation. You can optionally poll the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint using this reference ID.
+  </Step>
+
+  <Step title="Get Ledger Balance" stepNumber={4} titleSize="h2">
+    Before offsetting liabilities, retrieve the current ledger balance using the [**Get Balance Ledger**](../../../api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_itc_balance_ledger) endpoint to understand available cash and ITC credits.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/ledgers/bal/2023/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    This will provide you with the current balance in cash ledger, ITC ledger, and liability ledger, which you'll need to properly offset liabilities in the next step.
+  </Step>
+
+  <Step title="Offset Liability" stepNumber={5} titleSize="h2">
+    Offset your tax liabilities using available ITC and cash ledger balance using the [**Offset Liability**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/offset_liability) endpoint.
+
+    Specify how you want to pay taxes from cash (`pdcash`) and how you want to utilize ITC credits (`pditc`) to offset your liabilities.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12/offset-liability' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pdcash": [...],
+        "pditc": {...}
+      }'
+      ```
+    </Accordion>
+
+    After offsetting liabilities, you need to retrieve the updated GSTR-3B details that include the payment information.
+  </Step>
+
+  <Step title="Get Updated GSTR-3B Details" stepNumber={6} titleSize="h2">
+    After offsetting liabilities, retrieve the updated GSTR-3B details using the [**Get GSTR-3B Details**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/gstr_3b_details) endpoint to obtain the complete return data including tax payment details (`tx_pmt`) that are required for filing.
+
+    This endpoint returns the GSTR-3B data with updated payment information reflecting the liability offset you performed in the previous step.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request GET \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0'
+      ```
+    </Accordion>
+
+    The response will contain the complete GSTR-3B data including the `tx_pmt` (tax payment) section with offset details. Extract this data as it is required for the filing request in the next step.
+  </Step>
+
+  <Step title="Generate EVC OTP" stepNumber={7} titleSize="h2">
+    To file GSTR-3B, you need to generate an EVC (Electronic Verification Code) OTP using the [**Generate EVC OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint.
+
+    Provide the PAN (Permanent Account Number) associated with the taxpayer's GST registration. The OTP will be sent to the registered mobile number or email.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/evc/otp?gstr=gstr-3b' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pan": "ABCCQ3123E"
+      }'
+      ```
+    </Accordion>
+
+    The OTP will be sent to the registered contact details. You'll need this OTP in the next step to complete the filing.
+  </Step>
+
+  <Step title="File GSTR-3B" stepNumber={8} titleSize="h2">
+    Once you have the EVC OTP and have retrieved the updated GSTR-3B details (including payment information), file your GSTR-3B using the [**File GSTR-3B**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/file) endpoint.
+
+    Include the PAN and OTP as query parameters, along with the complete GSTR-3B data including all sections and tax payment details in the request body.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-3b/2023/12/file?pan=AAACJ3770E&otp=123456' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "ret_period": "122023",
+        "inward_sup": {...},
+        "tx_pmt": {...},
+        "sup_details": {...},
+        "intr_ltfee": {...},
+        "inter_sup": {...},
+        "itc_elg": {...},
+        "gstin": "29AAACQ3770E000"
+      }'
+      ```
+    </Accordion>
+
+    Upon successful filing, the response will confirm that GSTR-3B has been filed for the specified return period.
+  </Step>
+</Steps>

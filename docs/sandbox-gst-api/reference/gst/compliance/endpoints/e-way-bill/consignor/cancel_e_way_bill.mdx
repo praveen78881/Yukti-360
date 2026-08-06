@@ -1,0 +1,19 @@
+---
+title: 'Cancel E-Way Bill'
+description: "Cancel E-Way Bill by passing E-Way Bill number and cancel reason code."
+openapi: '/api-reference/gst/compliance/openapi.json POST /gst/compliance/e-way-bill/consignor/bill/{ewb_no}/cancel'
+---
+
+#### Request body schema
+
+<Card
+    title="View request body schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-way-bill/cancel_e_way_bill.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+> 📘 Only the generator can cancel the E-Way Bill.
+
+> 🚧 The bill can be only cancelled within 24 hrs of generation.

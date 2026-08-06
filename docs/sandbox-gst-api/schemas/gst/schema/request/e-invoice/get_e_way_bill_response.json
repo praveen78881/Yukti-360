@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get E-Way Bill by IRN response",
+  "description": "NIC E-Way Bill payload returned at data.Data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "EwbDt": {
+      "type": "string",
+      "description": "Date and time when the E-Way Bill was generated."
+    },
+    "EwbNo": {
+      "type": "number",
+      "description": "E-Way Bill number associated with the IRN."
+    },
+    "EwbValidTill": {
+      "type": "string",
+      "description": "Date and time until which the E-Way Bill is valid."
+    },
+    "GenGstin": {
+      "type": "string",
+      "description": "GSTIN that generated the E-Way Bill."
+    },
+    "Status": {
+      "type": "string",
+      "description": "Current status of the E-Way Bill."
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { runBackInterceptor } from '@/lib/appBack';
 
 const ROUTE_META: Record<string, { label: string; section: string }> = {
   'journal':             { label: 'Journal',              section: 'Core' },
@@ -76,7 +77,7 @@ export function BackNav() {
   return (
     <div className="mb-2">
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => { if (runBackInterceptor()) return; navigate(-1); }}
         className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
       >
         <ChevronLeft className="h-3.5 w-3.5" />

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "EFiledlist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "arn": {
+            "type": "string"
+          },
+          "ret_prd": {
+            "type": "string"
+          },
+          "mof": {
+            "type": "string"
+          },
+          "dof": {
+            "type": "string"
+          },
+          "rtntype": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "arn",
+          "ret_prd",
+          "mof",
+          "dof",
+          "rtntype",
+          "status",
+          "valid"
+        ]
+      }
+    }
+  },
+  "required": [
+    "EFiledlist"
+  ]
+}

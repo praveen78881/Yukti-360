@@ -748,6 +748,27 @@ function tab(id){
 D.master.fy='2026-27'; D.master.ay='2027-28';
 addRow('tds',12); addRow('tcs',12);
 masterForm(); fyTag(); secTable(); dueTable(); recTable(); qtrTable(); strip();
+
+/* ==================== HOST-APP BRIDGE ====================
+   The CA-Studio shell posts books-derived register data into this iframe:
+   { type:'LOAD_REGISTER_DATA', payload:{ master, tds[], tcs[], rec } }.
+   Same shape as a saved register file, so it reuses the loadJSON merge. */
+window.addEventListener('message', function(ev){
+  if(ev.origin !== window.location.origin) return;
+  var d = ev.data;
+  if(!d || d.type !== 'LOAD_REGISTER_DATA' || !d.payload) return;
+  try{
+    var o = d.payload;
+    D.master = o.master || D.master || {};
+    D.tds = (o.tds && o.tds.length) ? o.tds : D.tds;
+    D.tcs = (o.tcs && o.tcs.length) ? o.tcs : D.tcs;
+    D.rec = o.rec || D.rec || {};
+    if(!D.tds.length) D.tds = Array.from({length:12}, blank);
+    if(!D.tcs.length) D.tcs = Array.from({length:12}, blank);
+    masterForm(); fyTag(); refresh('tds'); refresh('tcs'); renderRPU();
+    tab('tds');
+  }catch(err){ /* malformed payload — ignore */ }
+});
 </script>
 </body>
 </html>

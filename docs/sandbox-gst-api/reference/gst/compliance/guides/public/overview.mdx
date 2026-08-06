@@ -1,0 +1,95 @@
+---
+title: Overview
+description: Verify GSTIN (GST verification), track GST return filing status, and find GSTINs by PAN + state code using Sandbox GST Public APIs.
+keywords: ["GSTIN verification", "GST number verification", "track GST returns", "PAN to GSTIN", "GST compliance"]
+---
+
+# GST Public APIs
+
+GST Public APIs give you access to GST registration and compliance data without requiring taxpayer credentials. Verify GSTINs, track return filing status by financial year, and find GSTINs by PAN and state code.
+
+## What you can do
+
+<CardGroup cols={2}>
+  <Card title="GSTIN verification" icon="badge-check">
+    Validate a GSTIN. Get business details: legal name, trade name, taxpayer type, registration status, and principal address.
+  </Card>
+  <Card title="Track GST return filing" icon="file-circle-check">
+    Check whether a business has filed GST returns for a financial year, with optional filtering by return type.
+  </Card>
+  <Card title="Find GSTINs by PAN" icon="id-card">
+    Discover GSTINs linked to a PAN in a specific state using state code.
+  </Card>
+  <Card title="Cache-friendly lookups" icon="database">
+    Accept cached responses with the x-accept-cache header for faster lookups.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate with Sandbox">
+    Generate a JWT access token using your API key and secret via the [Authenticate](/api-reference/authenticate) API.
+  </Step>
+  <Step title="Verify GSTIN">
+    Call [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin) to verify GSTIN and fetch taxpayer details and registration status.
+  </Step>
+  <Step title="Track return filing">
+    Call [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs) with financial year and optional return type filter.
+  </Step>
+  <Step title="Find GSTIN by PAN">
+    Call [Search GSTIN by PAN](/api-reference/gst/compliance/endpoints/public/search_pan_state_code) with PAN and state code, then verify each GSTIN.
+  </Step>
+</Steps>
+
+## API reference
+
+| API | Purpose |
+|:----|:--------|
+| [Authenticate](/api-reference/authenticate) | Generate a JWT access token using x-api-key and x-api-secret |
+| [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin) | Verify GSTIN and fetch taxpayer details and registration status |
+| [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs) | Track return filing status by financial year with optional return type filter |
+| [Search GSTIN by PAN](/api-reference/gst/compliance/endpoints/public/search_pan_state_code) | Find GSTINs using PAN and state code, then verify each GSTIN |
+
+
+## Common use cases
+
+Use GST Public APIs when you need to:
+
+- Verify GSTIN during vendor onboarding and validate status is Active and names match vendor details
+- Validate supplier GSTIN status before processing invoices for Active or Cancelled status
+- Track GST return filing history for supplier compliance monitoring across financial years
+- Find GSTINs when you only have PAN and state code, then verify the discovered GSTINs
+- Build dashboards that monitor GSTIN status changes and filing behavior over time
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What are GST Public APIs?">
+    GST Public APIs are Sandbox endpoints for public GST data. They let you verify GSTINs, track return filing status, and find GSTINs by PAN and state code. No taxpayer credentials required. See [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin) and [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs).
+  </Accordion>
+
+  <Accordion title="Is Search GSTIN a GSTIN verification API?">
+    Yes. Search GSTIN verifies whether a GSTIN belongs to a GST-registered business. It returns business details and registration status. Use [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin) for onboarding and compliance workflows.
+  </Accordion>
+
+  <Accordion title="Do I need GST portal credentials for these APIs?">
+    No. These are public endpoints. You only need Sandbox authentication via [Authenticate](/api-reference/authenticate) to generate a JWT access token. Pass the token in the Authorization header (no Bearer prefix).
+  </Accordion>
+
+  <Accordion title="How does authentication work for GST Public APIs?">
+    Call [Authenticate](/api-reference/authenticate) with your x-api-key and x-api-secret to generate a JWT access token. Then pass the token directly in the Authorization header when calling endpoints like [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin). Sandbox tokens aren't Bearer tokens.
+  </Accordion>
+
+  <Accordion title="What inputs are required for Track GST Returns?">
+    Track GST Returns requires GSTIN in the request body and financial_year as a query parameter. Add an optional gstr query parameter to filter by return type. See [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs) and [Errors](/guides/developer-resources/errors) for troubleshooting.
+  </Accordion>
+
+  <Accordion title="How do I find GSTIN when I only have PAN?">
+    Use [Search GSTIN by PAN](/api-reference/gst/compliance/endpoints/public/search_pan_state_code) with PAN in the request body and state_code as a query parameter. This returns GSTINs for the PAN in that state. Validate each GSTIN using [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin).
+  </Accordion>
+
+  <Accordion title="What is x-accept-cache and when should I use it?">
+    It's an optional header that returns cached responses when available. This speeds up lookups. Set it to true if your workflow can tolerate cached data. See endpoint docs for [Search GSTIN](/api-reference/gst/compliance/endpoints/public/search_gstin) and [Track GST Returns](/api-reference/gst/compliance/endpoints/public/track_gstrs).
+  </Accordion>
+</AccordionGroup>

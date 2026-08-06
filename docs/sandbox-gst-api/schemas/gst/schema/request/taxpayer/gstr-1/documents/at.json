@@ -1,0 +1,94 @@
+{
+  "properties": {
+    "at": {
+      "items": {
+        "properties": {
+		"flag":{
+					"description": "Status of Invoice",
+					"type": "string"
+			},
+          "chksum": {
+            "maxLength": 64,
+            "description": "Checksum Value",
+            "type": "string"
+          },
+		  "diff_percent":{
+                                 "description":"Differential percentage",
+								 "type":"number",
+								 "multipleOf": 0.01						 
+								 }, 
+          "itms": {
+            "description": "Item Details",
+            "items": {
+              "properties": {
+                "ad_amt": {
+                  "description": "Amount of Advance received",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "csamt": {
+                  "description": "Cess Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "iamt": {
+                  "description": "IGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "rt": {
+                  "description": "Rate as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "camt": {
+                  "description": "CGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                },
+                "samt": {
+                  "description": "SGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.01
+                }
+              },
+              "required": [
+                "rt",
+                "ad_amt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "pos": {
+            "maxLength": 2,
+            "minLength": 2,
+            "description": "Actual Place of Supply",
+            "type": "string",
+			"pattern": "^(3[0-8]|[12][0-9]|0[1-9]|97)$"
+          },
+          "sply_ty": {
+            "description": "Supply Type of invoice",
+            "type": "string",
+            "enum": [
+              "INTER",
+              "INTRA"
+            ]
+          }
+        },
+        "required": [
+          "sply_ty",
+          "itms",
+          "pos",
+          "chksum"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "at"
+  ],
+  "type": "object"
+}

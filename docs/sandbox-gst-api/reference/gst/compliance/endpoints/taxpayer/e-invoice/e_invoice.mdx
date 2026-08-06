@@ -1,0 +1,30 @@
+---
+title: 'Get e-Invoice by IRN'
+description: "Fetch the e-Invoice by passing the invoice registration number (IRN). To fetch an e-Invoice, the authenticated taxpayer has to be a party in the transaction, either the seller or the buyer."
+openapi: '/api-reference/gst/compliance/openapi.json GET /gst/compliance/tax-payer/e-invoice/{irn}'
+---
+#### Response schema
+
+For successful responses, these resources describe the GSTN payload at `data.data`.
+
+<Card
+    title="View JSON schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/taxpayer/e-invoice/e_invoice.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+
+<Info>
+Only e-Invoices within the last 6 months can be fetched.
+</Info>
+
+<Card
+  title="View Excel field reference"
+  icon="file-spreadsheet"
+  href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/workbook/taxpayer/e-invoice/e_invoice-v1.0.xlsx"
+  arrow="true"
+  horizontal
+>
+</Card>

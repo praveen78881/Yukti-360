@@ -1,0 +1,186 @@
+---
+title: "Overview"
+description: "Retrieve GSTR-2A inward supplies data - B2B invoices, credit/debit notes, imports, TDS/TCS for ITC reconciliation."
+---
+
+# GSTR-2A API
+
+GSTR-2A is an auto-drafted inward supplies statement on the GST portal that reflects documents uploaded by suppliers for a return period. Use these APIs to retrieve GSTR-2A documents (B2B invoices, credit/debit notes, ISD, imports, TDS/TCS, amendments) to reconcile purchase data and monitor Input Tax Credit (ITC).
+
+<CardGroup cols={2}>
+  <Card title="Section-wise inward documents" icon="file-invoice">
+    Retrieve B2B invoices, credit/debit notes, ISD credits, imports (IMPG/IMPGSEZ), and TDS/TCS deductions from suppliers.
+  </Card>
+  <Card title="Amendment visibility" icon="database">
+    Track supplier amendments with B2BA, CDNA, ECOMA endpoints and view change history through AMDHIST.
+  </Card>
+  <Card title="Reconciliation-ready outputs" icon="circle-check">
+    Normalize inward supply data to match purchase registers and vendor records.
+  </Card>
+  <Card title="Compliance-safe access" icon="shield-check">
+    Access GSTR-2A through authenticated taxpayer sessions.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate taxpayer">
+    Call [Generate OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp) and [Verify OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp) to start a taxpayer session valid for 6 hours.
+  </Step>
+  
+  <Step title="Create or refresh session">
+    Use the session token for all GSTR-2A calls and refresh it with [Refresh Session](/api-reference/gst/compliance/endpoints/taxpayer/authentication/refresh_session) for long-running pulls.
+  </Step>
+  
+  <Step title="Select return period">
+    Specify the year and month for the GSTR-2A data you want to retrieve.
+  </Step>
+  
+  <Step title="Fetch GSTR-2A data">
+    Retrieve complete GSTR-2A documents or section-wise data via [B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2b), [CDN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdn), and other relevant endpoints.
+  </Step>
+  
+  <Step title="Normalize and store results">
+    Process the retrieved data for reconciliation against purchase records and audit trails.
+  </Step>
+  
+  <Step title="Re-run for amendments">
+    GSTR-2A is a dynamic statement - re-fetch periodically to detect supplier amendments and new uploads.
+  </Step>
+</Steps>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="Core invoices" icon="file-invoice" href="#core-invoice-apis">
+    B2B and B2BA endpoints for supplier invoices and amendments
+  </Card>
+  <Card title="Credit/Debit notes" icon="file-lines" href="#credit-debit-note-apis">
+    CDN and CDNA endpoints for notes from registered suppliers
+  </Card>
+  <Card title="E-commerce & TCS" icon="database" href="#e-commerce-and-tcs-apis">
+    ECOM, ECOMA, and TCS endpoints for e-commerce operator data
+  </Card>
+  <Card title="Imports & SEZ" icon="circle-check" href="#import-apis">
+    IMPG and IMPGSEZ endpoints for import-related inward supplies
+  </Card>
+  <Card title="Other credits" icon="shield-check" href="#other-credit-apis">
+    ISD and TDS endpoints for Input Service Distributor and TDS credits
+  </Card>
+  <Card title="Change tracking" icon="triangle-exclamation" href="#amendment-history-api">
+    AMDHIST endpoint for amendment history and change audit
+  </Card>
+</CardGroup>
+
+## Core invoice APIs
+
+Retrieve B2B invoices and their amendments:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2b) | B2B | Invoices from registered suppliers (inward supplies) |
+| [GSTR-2A B2BA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2ba) | B2BA | Amendments to B2B invoices by suppliers |
+
+## Credit/Debit note APIs
+
+Retrieve credit and debit notes from suppliers:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A CDN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdn) | CDN | Credit/Debit notes from registered suppliers |
+| [GSTR-2A CDNA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdna) | CDNA | Amendments to credit/debit notes |
+
+## E-commerce and TCS APIs
+
+Retrieve e-commerce operator supplies and TCS data:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A ECOM](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/ecom) | ECOM | Supplies through e-commerce operators |
+| [GSTR-2A ECOMA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/ecoma) | ECOMA | Amendments to e-commerce supplies |
+| [GSTR-2A TCS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/tcs) | TCS | Tax Collected at Source by e-commerce operators |
+
+## Import APIs
+
+Retrieve import and SEZ-related inward supplies:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A IMPG](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/impg) | IMPG | Imports of goods (Bill of Entry data) |
+| [GSTR-2A IMPGSEZ](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/impgsez) | IMPGSEZ | Imports from SEZ units/developers |
+
+## Other credit APIs
+
+Retrieve ISD credits and TDS deductions:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A ISD](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/isd) | ISD | Input Service Distributor credits received |
+| [GSTR-2A TDS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/tds) | TDS | Tax Deducted at Source by deductors |
+
+## Amendment history API
+
+Track changes to inward supplies over time:
+
+| API | Table/Code | Description |
+|:----|:-----------|:------------|
+| [GSTR-2A AMDHIST](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/amdhist) | AMDHIST | Amendment history for tracking supplier changes |
+
+## Common APIs
+
+Shared endpoints used across GSTR-2A workflow:
+
+| API | Purpose |
+|:----|:--------|
+| [Generate OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp) | Start taxpayer authentication |
+| [Verify OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp) | Complete authentication (6-hour session) |
+| [Refresh Session](/api-reference/gst/compliance/endpoints/taxpayer/authentication/refresh_session) | Extend taxpayer session |
+| [Logout](/api-reference/gst/compliance/endpoints/taxpayer/authentication/logout) | End taxpayer session |
+
+## Common use cases
+
+Use GSTR-2A APIs when you need to:
+
+- Reconcile purchase register against supplier-filed invoices visible in GSTR-2A (vendor-wise mismatch and missing invoice lists)
+- Track amendments to invoices and notes using B2BA, CDNA, ECOMA, and AMDHIST for audit trails
+- Monitor import and SEZ-related inward entries for period-wise ITC reconciliation (IMPG/IMPGSEZ)
+- Capture ISD credits for service-heavy organizations and map them to cost centers
+- Reconcile TDS/TCS credits reflected in GSTR-2A for cashflow and compliance reporting
+- Build monthly inward supplies dashboards with section-wise trends and vendor compliance scores
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="What is GSTR-2A and what does it contain?">
+    GSTR-2A is an auto-drafted inward supplies statement generated on the GST portal based on documents uploaded by suppliers in their GSTR-1 returns. GSTR-2A contains B2B invoices, credit/debit notes, import entries, ISD credits, TDS/TCS deductions, and e-commerce supplies that are relevant to Input Tax Credit (ITC) claims.
+  </Accordion>
+
+  <Accordion title="How is GSTR-2A different from GSTR-2B?">
+    GSTR-2A is a dynamic statement that updates whenever suppliers file or amend their GSTR-1 returns, making it useful for real-time tracking. GSTR-2B is a static statement generated monthly on a GSTN schedule that provides a fixed snapshot for ITC claims. Both statements serve ITC reconciliation but GSTR-2A reflects continuous supplier activity.
+  </Accordion>
+
+  <Accordion title="Why do invoices appear or mismatch in GSTR-2A?">
+    GSTR-2A reflects invoices exactly as suppliers file them in GSTR-1. Mismatches occur when suppliers file incorrect invoice numbers, GSTINs, taxable values, or tax amounts. Missing invoices in GSTR-2A indicate that suppliers have not yet filed GSTR-1 for that period. Use the [B2B endpoint](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2b) to retrieve current data and compare against your purchase register.
+  </Accordion>
+
+  <Accordion title="What are the prerequisites to call GSTR-2A APIs?">
+    GSTR-2A API calls require an authenticated taxpayer session. First call the [Generate OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp) endpoint, then verify with [Verify OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp) to obtain a session token valid for 6 hours. Include the session token in all subsequent GSTR-2A requests.
+  </Accordion>
+
+  <Accordion title="Which endpoints should I use for amendments?">
+    GSTR-2A amendment tracking requires multiple endpoints: [B2BA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2ba) for amended B2B invoices, [CDNA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdna) for amended credit/debit notes, [ECOMA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/ecoma) for amended e-commerce supplies, and [AMDHIST](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/amdhist) for the complete amendment history log.
+  </Accordion>
+
+  <Accordion title="How should I handle errors and timeouts?">
+    GSTR-2A API errors should be handled using standard error codes documented in the [error handling guide](/guides/developer-resources/errors). Common issues include session expiry (re-authenticate), rate limits (implement backoff), and GST portal downtime (retry with exponential backoff). Always validate the session before making bulk requests.
+  </Accordion>
+
+  <Accordion title="How often should I fetch GSTR-2A data?">
+    GSTR-2A is a dynamic statement that updates continuously as suppliers file or amend GSTR-1 returns. Fetch GSTR-2A data after the GSTR-1 filing deadline (11th of the following month) for maximum coverage, and re-fetch periodically to capture late filings and amendments. Monthly reconciliation workflows typically pull data multiple times per period.
+  </Accordion>
+
+  <Accordion title="Can I retrieve GSTR-2A data for past periods?">
+    GSTR-2A data is available for past return periods subject to GST portal retention policies. Specify the year and month parameters when calling section-wise endpoints like [B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/b2b) or [CDN](/api-reference/gst/compliance/endpoints/taxpayer/gstr-2a/cdn) to retrieve historical inward supplies data for ITC reconciliation and audit purposes.
+  </Accordion>
+</AccordionGroup>

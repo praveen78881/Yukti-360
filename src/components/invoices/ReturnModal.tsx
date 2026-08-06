@@ -45,6 +45,10 @@ interface ReturnItem {
   rate: number;
   gstRate: number;
   returnQty: number;
+  /** Taxable value as stored on the invoice line (net of discount) — proration base. */
+  origTaxable: number;
+  /** Total tax as stored on the invoice line (CGST+SGST+IGST+cess). */
+  origTax: number;
 }
 
 function buildReturnItems(source: SourceInvoice): ReturnItem[] {
@@ -56,6 +60,8 @@ function buildReturnItems(source: SourceInvoice): ReturnItem[] {
       rate: item.rate,
       gstRate: item.gst_rate,
       returnQty: item.qty,
+      origTaxable: item.taxable_value,
+      origTax: (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0) + (item.cess || 0),
     }));
   }
   // Legacy V1 purchase invoice — synthesize single row
@@ -67,6 +73,8 @@ function buildReturnItems(source: SourceInvoice): ReturnItem[] {
     rate: inv.item_rate ?? inv.taxable_value,
     gstRate: inv.gst_rate,
     returnQty: inv.item_qty ?? 1,
+    origTaxable: inv.taxable_value,
+    origTax: (inv.cgst || 0) + (inv.sgst || 0) + (inv.igst || 0),
   }];
 }
 
@@ -131,10 +139,9 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
     for (const item of returnItems) {
       if (item.returnQty <= 0) continue;
       const proportion = item.origQty > 0 ? item.returnQty / item.origQty : 0;
-      const origTaxable = item.origQty * item.rate;
-      const itemTaxable = origTaxable * proportion;
-      taxable += itemTaxable;
-      gstAmount += itemTaxable * (item.gstRate / 100);
+      // Prorate the STORED taxable value and tax — qty × rate ignores line discounts/cess.
+      taxable += item.origTaxable * proportion;
+      gstAmount += item.origTax * proportion;
     }
     return { taxable, gstAmount, total: taxable + gstAmount };
   }, [returnItems]);
@@ -169,11 +176,12 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
           returnType
         );
       } else {
-        // V1 purchase invoice — return by taxable amount
+        // V1 purchase invoice — return by taxable amount, prorated from the STORED
+        // taxable value (qty × rate would overstate discounted purchases).
         const taxableToReturn = returnItems.reduce((sum, r) => {
           if (r.returnQty <= 0) return sum;
           const proportion = r.origQty > 0 ? r.returnQty / r.origQty : 0;
-          return sum + (r.origQty * r.rate) * proportion;
+          return sum + r.origTaxable * proportion;
         }, 0);
         draft = createReturnFromPurchaseInvoiceLegacy(
           selectedSource.data,

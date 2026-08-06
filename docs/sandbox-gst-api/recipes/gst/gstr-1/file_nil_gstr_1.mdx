@@ -1,0 +1,79 @@
+---
+title: "File Nil GSTR-1"
+description: "Registered taxpayers with no outward supplies must file a Nil GSTR-1 to ensure full compliance. This recipe shows how to automate Nil GSTR-1 filing."
+---
+
+<Steps>
+  <Step title="Authenticate and Get Taxpayer Session" stepNumber={1} titleSize="h2">
+    Before filing Nil GSTR-1, you must authenticate and create a taxpayer session. Follow the steps in the [**Generate Taxpayer Session**](../authentication/generate_tax_payer_session) recipe to obtain a **Taxpayer access token**.
+
+    This access token is required for all GST Taxpayer API calls and is valid for 6 hours.
+  </Step>
+
+  <Step title="Initialize Nil Filing" stepNumber={2} titleSize="h2">
+    Initialize the Nil GSTR-1 filing process using the [**New Proceed**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/new_proceed) endpoint with `is_nil=Y` to indicate this is a nil return.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12/new-proceed?is_nil=Y' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "gstin": "29AAACQ3770E000",
+        "ret_period": "122023"
+      }'
+      ```
+    </Accordion>
+
+    The response will include a `reference_id` that you can use to track the filing initialization status. You can periodically check the status using the [**GST Return Status**](../../../api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint until it's ready for filing.
+  </Step>
+
+  <Step title="Generate EVC OTP" stepNumber={3} titleSize="h2">
+    To file Nil GSTR-1, you need to generate an EVC (Electronic Verification Code) OTP using the [**Generate EVC OTP**](../../../api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint.
+
+    Provide the PAN (Permanent Account Number) associated with the taxpayer's GST registration. The OTP will be sent to the registered mobile number or email.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/evc/otp?gstr=gstr-1' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "pan": "ABCCQ3123E"
+      }'
+      ```
+    </Accordion>
+
+    The OTP will be sent to the registered contact details. You'll need this OTP in the next step to complete the filing.
+  </Step>
+
+  <Step title="File Nil GSTR-1" stepNumber={4} titleSize="h2">
+    Once you have the EVC OTP, file your Nil GSTR-1 using the [**File GSTR-1**](../../../api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/file) endpoint.
+
+    Include the PAN and OTP as query parameters, along with the return period and `isnil` flag set to "Y" in the request body.
+
+    <Accordion title="cURL Request" defaultOpen>
+      ```bash
+      curl --request POST \
+        --url 'https://api.sandbox.co.in/gst/compliance/tax-payer/gstrs/gstr-1/2023/12/file?pan=AAACJ3770E&otp=123456' \
+        --header 'authorization: {taxpayer-access-token}' \
+        --header 'x-api-key: xxxxxxxxxxxxxx' \
+        --header 'x-api-version: 1.0.0' \
+        --header 'Content-Type: application/json' \
+        --data '{
+        "ret_period": "122023",
+        "gstin": "29AAACQ3770E000",
+        "isnil": "Y"
+      }'
+      ```
+    </Accordion>
+
+    Upon successful filing, the response will confirm that Nil GSTR-1 has been filed for the specified return period.
+  </Step>
+</Steps>

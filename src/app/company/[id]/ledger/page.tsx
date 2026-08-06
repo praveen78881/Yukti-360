@@ -19,7 +19,7 @@ import { computeAllBalances } from '@/lib/accounting/computeEngine';
 import { computeLedger, computeLedgerTFormat } from '@/lib/accounting/ledgerCompute';
 import type { AccountBalance } from '@/lib/accounting/computeEngine';
 import type { EntityType } from '@/types/company';
-import { listJournalEntries, deleteJournalEntry, updateAccountGroupInAllEntries, updateJournalEntry, getCustomAccounts } from '@/lib/offlineDb';
+import { listJournalEntries, deleteJournalEntry, updateAccountGroupInAllEntries, updateJournalEntry } from '@/lib/offlineDb';
 import { LEDGER_GROUPS } from '@/lib/coa';
 import type { PrimaryGroup } from '@/lib/coa';
 
@@ -294,17 +294,10 @@ export default function LedgerPage() {
     enabled: !!companyId,
   });
 
-  const rawBalances = useMemo(() => computeAllBalances(entries), [entries]);
-
-  // Merge in custom-registered accounts with 0 balance so they survive JE deletion
-  const balances = useMemo((): AccountBalance[] => {
-    if (!companyId) return rawBalances;
-    const existingNames = new Set(rawBalances.map(b => b.account_name.toLowerCase()));
-    const extras: AccountBalance[] = getCustomAccounts(companyId)
-      .filter(a => !existingNames.has(a.name.toLowerCase()))
-      .map(a => ({ account_name: a.name, account_group: a.account_group, nature: a.nature, total_debit: 0, total_credit: 0, balance: 0, balance_type: 'Dr' as const }));
-    return [...rawBalances, ...extras];
-  }, [rawBalances, companyId, entries]);
+  // The ledger lists only accounts that appear in at least one journal entry.
+  // Custom-registered accounts with no postings stay available in the entry
+  // dialogs' account dropdowns, but don't occupy a ledger row until used.
+  const balances = useMemo((): AccountBalance[] => computeAllBalances(entries), [entries]);
 
   const sortedBalances = useMemo(
     () => [...balances].sort((a, b) => a.account_name.localeCompare(b.account_name)),
@@ -672,6 +665,8 @@ export default function LedgerPage() {
     { header: 'Balance (₹)', key: 'balance_display', align: 'right' as const, isMono: true },
   ];
 
+  const selectedGroup = balances.find(b => b.account_name === selectedAccount)?.account_group || '';
+
   const runningData = ledgerRows.map(r => ({
     ...r,
     balance_display: `${formatIndianCurrency(r.running_balance)} ${r.balance_type}`,
@@ -682,7 +677,7 @@ export default function LedgerPage() {
 
   return (
     <div>
-      <PageHeader title={`Ledger: ${selectedAccount}`} description="Account ledger detail">
+      <PageHeader title={`Ledger: ${selectedAccount}`} description={selectedGroup ? `(${selectedGroup}) — Account ledger detail` : 'Account ledger detail'}>
         <div className="flex flex-col gap-2 items-end">
           <div className="flex gap-2">
             <button
@@ -694,6 +689,14 @@ export default function LedgerPage() {
               className="px-3 py-1.5 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
             >
               Back to List
+            </button>
+            {/* Shortcut to the SAME journal entry flow as the Journal page — same
+                store, same voucher numbering; nothing ledger-specific is created. */}
+            <button
+              onClick={() => setShowNewEntry(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" /> New Entry
             </button>
             <div className="flex border border-gray-200 rounded-xl overflow-hidden">
               {(['running', 'tformat'] as ViewMode[]).map(mode => (
@@ -744,7 +747,7 @@ export default function LedgerPage() {
         <div ref={detailRef}>
           <TAccountFormat
             title={`${selectedAccount} Account`}
-            subtitle={`${fromDate} to ${toDate}`}
+            subtitle={`${selectedGroup ? `(${selectedGroup}) · ` : ''}${fromDate} to ${toDate}`}
             companyName={company.name}
             leftLabel="Dr."
             rightLabel="Cr."
@@ -778,6 +781,7 @@ export default function LedgerPage() {
             <div className="text-center py-2 border-b border-gray-200 bg-gray-50/50">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide">{company.name}</p>
               <h3 className="text-sm font-bold text-gray-900 mt-px">{selectedAccount} — Ledger</h3>
+              {selectedGroup && <p className="text-[10px] font-semibold text-gray-500 mt-px">({selectedGroup})</p>}
               <p className="text-[10px] text-gray-400 mt-px">{fromDate} to {toDate}</p>
             </div>
             {selectedTxIds.size > 0 && (

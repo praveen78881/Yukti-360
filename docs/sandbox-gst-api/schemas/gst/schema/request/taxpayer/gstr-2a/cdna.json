@@ -1,0 +1,190 @@
+{
+
+    "properties": {
+        "cdna": {
+            "items": {
+                "properties": {
+                   "cfs": {
+		            "description": "R1_Fil_Status",
+		            "type": "string"
+		          },
+		            "cfs3b": {
+		            "description": "R3B_Fil_Status",
+		            "type": "string"
+		          },
+		            "dtcancel": {
+		            "description": "Date of cancellation of supplier",
+		            "type": "string"
+		          },
+		            "fldtr1": {
+		            "description": "Date of filing GSTR1/5 of supplier",
+		            "type": "string"
+		          },
+		            "flprdr1": {
+		            "description": "Filing period of GSTR1/5 of supplier",
+		            "type": "string"
+		          },
+                    "ctin": {
+					    "description": "Counter party gstin",
+                        "type": "string"
+                    },
+                    "nt": {
+                        "items": {
+                            "properties": {
+                                "chksum": {
+								    "description": "Checksum",
+                                    "type": "string"
+                                },                                
+                                "idt": {
+								    "description": "Involice date",
+                                    "type": "string"
+                                },
+                                "inum": {
+								    "description": "Involice number",
+                                    "type": "string"
+                                },
+								"val": {
+								    "description": "Note Value",
+                                    "type": "number"
+                                },
+								"pos":{
+                                    "description":"Maintained in GST System common database POS as provided in law / actual provision  of service.",
+                                    "type": "string"
+                                },
+							     "rchrg":{
+                                    "description":"Reverse Charge",
+                                    "type": "string"
+                                },
+                                "inv_typ":{
+                                    "description":"tax payer action",
+                                    "type":"string",
+                                    "enum":[
+                                        "R",
+                                        "DE",
+                                        "SEWP",
+                                        "SEWOP",
+									    "CBW"
+                                    ]
+                                },
+							     "d_flag": {
+								    "description": "delink flag",
+								    "type": "string"
+				                },
+                                "itms": {
+                                    "items": {
+                                        "properties": {
+                                            
+                                            "itm_det": {
+                                                "properties": {
+                                                    "camt": {
+													    "description": "CGST amount",
+                                                        "type": "number"
+                                                    },
+                                                    "csamt": {
+													    "description": "CESS amount",
+                                                        "type": "number"
+                                                    },
+                                                    "iamt": {
+													    "description": "IGST amount",
+                                                        "type": "number"
+                                                    },
+                                                    "samt": {
+													    "description": "SGST amount",
+                                                        "type": "number"
+                                                    },
+                                                    "txval": {
+													    "description": "Taxval amount",
+                                                        "type": "number"
+                                                    },
+                                                   "rt": {
+											          "description": "Tax rate",
+                                                      "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "txval",
+													"rt"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "num": {
+											    "description": "Item number",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "required": [
+                                            "num",
+                                            "itm_det"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "nt_dt": {
+								    "description": "note date",
+                                    "type": "string"
+                                },
+                                "nt_num": {
+								    "description": "note number",
+                                    "type": "string"
+                                },
+								"ont_dt": {
+								    "description": "original note date",
+                                    "type": "string"
+                                },
+                                "ont_num": {
+								    "description": "original note number",
+                                    "type": "string"
+                                },    
+				                "aspd": {
+								  "description":"Original period in which invoice was added",
+				                  "type": "string"
+				                }, 
+				                "atyp": {
+								  "description":"flag to determine type of amendment",
+				                  "type": "string"
+				                }, 
+                                "p_gst": {
+								    "description": "Pre GST Regime Dr./ Cr. Notes",
+                                    "type": "string"
+                                },                                
+                                "ntty": {
+								    "description": "note type",
+                                    "type": "string"
+                                },
+								"diff_percent": {
+								  "description": "Differential percentage",
+								  "type": "number",
+								  "multipleOf": 0.01
+								}
+                            },
+                            "required": [     
+                                "itms",
+                                "nt_num",
+								"ont_num",
+                                "nt_dt",
+								"ont_dt",
+                                "chksum",
+								"val",
+                                "ntty"
+                            ],
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "ctin",
+                    "nt",
+                    "cfs"
+                ],
+                "type": "object"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "cdna"
+    ],
+    "type": "object"
+}

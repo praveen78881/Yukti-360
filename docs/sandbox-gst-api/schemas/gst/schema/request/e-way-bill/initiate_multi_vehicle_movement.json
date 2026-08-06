@@ -1,0 +1,75 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+			"ewbNo": {
+					"type": "number",
+					"maxLength": 12,
+					"minLength": 12,
+					"description": "Ewaybill Number"
+			},
+			"reasonCode": {
+					"type": "string",
+					"maxLength": 1,
+					"minLength": 1,
+					"description": "Reason Code"
+			},
+			"reasonRem": {
+					"type": "string",
+					"maxLength": 50,
+					"description": "Remarks"
+			},
+			"fromPlace": {
+					"type": "string",
+					"maxLength": 50,
+					"description": "From Place"
+			},
+			"fromState": {
+					"type": "integer",
+					"maximum": 99,
+					"description": "From State"
+			},
+			"toPlace": {
+					"type": "string",
+					"maxLength": 50,
+					"description": "To Place"
+			},
+			"toState": {
+					"type": "integer",
+					"maximum": 99,
+					"description": "From State"
+			},
+			"transMode": {
+					"type": "string",
+					"enum": [
+							"1",
+							"2",
+							"3",
+							"4"
+					],
+					"description": "Mode of transport (Road-1, Rail-2, Air-3, Ship-4) "
+			},
+			"totalQuantity": {
+					"type": "number",
+					"description": "Total Quantity"
+			},
+			"unitCode": {
+					"type": "string",
+					"maxLength": 3,
+					"minLength": 3,
+					"description": "Unit Code"
+			}
+	},
+	"required": [
+			"ewbNo",
+			"fromPlace",
+			"fromState",
+			"toPlace",
+			"toState",
+			"reasonCode",
+			"reasonRem",
+			"transMode",
+			"totalQuantity",
+			"unitCode"
+	]
+}

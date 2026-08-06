@@ -218,6 +218,7 @@ export interface NewJournalEntryInput {
   book_period: string;
   is_opening?: boolean;
   is_closing?: boolean;
+  source_ref?: string | null;
 }
 
 export function listJournalEntries(companyId: string, filters?: JournalEntryFilters): JournalEntry[] {

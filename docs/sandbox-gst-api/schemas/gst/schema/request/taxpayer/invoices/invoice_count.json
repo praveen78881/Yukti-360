@@ -1,0 +1,576 @@
+{
+    "oneOf": [
+        {
+            "type": "object",
+            "title": "Schema for All other types of goods",
+            "additionalProperties": false,
+            "properties": {
+                "all_oth": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ttl_cnt": {
+                            "description": "Total count of records for all section under the goods type",
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "b2b": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "b2ba": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "b2bcn": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "b2bcna": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "b2bdn": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "b2bdna": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "ecom": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "ecoma": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    },
+                    "anyOf": [
+                        {
+                            "required": [
+                                "b2b",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "b2ba",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "b2bdn",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "b2bdna",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "b2bcn",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "b2bcna",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "ecom",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "ecoma",
+                                "ttl_cnt"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "object",
+            "title": "Schema for inward supplies of goods",
+            "additionalProperties": false,
+            "properties": {
+                "inv_supp_isd": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ttl_cnt": {
+                            "description": "Total count of records for all section under the goods type",
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "isd": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "isda": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "isdcn": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "isdcna": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    },
+                    "anyOf": [
+                        {
+                            "required": [
+                                "isd",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "isda",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "isdcn",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "isdcna",
+                                "ttl_cnt"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "object",
+            "title": "Schema for import of goods",
+            "additionalProperties": false,
+            "properties": {
+                "imp_gds": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ttl_cnt": {
+                            "description": "Total count of records for all section under the goods type",
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "impg": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "impga": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "impgsez": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        },
+                        "impgseza": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "noaction": {
+                                    "description": "Count of records for which action has not been taken",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "reject": {
+                                    "description": "Count of records which are rejected",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "pending": {
+                                    "description": "Count of records which are kept in pending",
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "accept": {
+                                    "description": "Count of records which are accepted",
+                                    "type": "integer",
+                                    "minimum": 0
+                                }
+                            }
+                        }
+                    },
+                    "anyOf": [
+                        {
+                            "required": [
+                                "impg",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "impga",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "impgsez",
+                                "ttl_cnt"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "impgseza",
+                                "ttl_cnt"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

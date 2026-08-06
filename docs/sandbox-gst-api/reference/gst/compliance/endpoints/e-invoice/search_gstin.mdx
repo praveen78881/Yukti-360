@@ -1,0 +1,29 @@
+---
+title: 'Search GSTIN Details'
+description: "Search taxpayer details by GSTIN in the invoice registration portal (IRP) database. The response is from the IRP and not from the GST Network."
+openapi: '/api-reference/gst/compliance/openapi.json POST /gst/compliance/e-invoice/tax-payer/gstin/search'
+---
+
+#### Request body schema
+
+<Card
+    title="View request body schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-invoice/search_gstin.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+
+#### Response schema
+
+For successful responses, this resource describes the NIC payload at `data.Data`.
+
+<Card
+  title="View JSON schema"
+  icon="code"
+  href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-invoice/search_gstin_response.json"
+  arrow="true"
+  horizontal
+>
+</Card>

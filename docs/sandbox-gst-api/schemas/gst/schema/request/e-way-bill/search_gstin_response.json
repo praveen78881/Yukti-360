@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Search GSTIN response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "address1": {
+      "type": "string"
+    },
+    "address2": {
+      "type": "string"
+    },
+    "blkStatus": {
+      "type": "string"
+    },
+    "gstin": {
+      "type": "string"
+    },
+    "legalName": {
+      "type": "string"
+    },
+    "pinCode": {
+      "type": "string"
+    },
+    "stateCode": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "tradeName": {
+      "type": "string"
+    },
+    "txpType": {
+      "type": "string"
+    }
+  }
+}

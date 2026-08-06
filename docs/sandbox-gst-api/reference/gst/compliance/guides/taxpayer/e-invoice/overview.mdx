@@ -1,0 +1,158 @@
+---
+title: "Overview"
+description: "Retrieve sales and purchase e-invoice lists from GST portal using async jobs with supply type filtering."
+---
+
+# E-Invoice List API
+
+E-Invoice List API downloads sales and purchase e-invoice lists for a return period (financial year + month). You can submit async jobs, poll for status, and download JSON for up to the last 6 months. When you need invoice-level details, fetch them by IRN.
+
+The API connects to the GST Network (NIC) e-invoicing system, so you can retrieve and reconcile e-invoice data for compliance and internal controls.
+
+<CardGroup cols={2}>
+  <Card title="Async job processing" icon="clock">
+    Submit list jobs and poll for completion when ready. Your application keeps running while jobs process in the background.
+  </Card>
+  <Card title="Signed JSON URL" icon="file-signature">
+    Get a time-bound signed URL to download e-invoice lists securely. URLs expire, so download promptly.
+  </Card>
+  <Card title="Supply type filter" icon="filter">
+    Filter by supply type (B2B, exports, SEZ) to download specific invoice categories for targeted reconciliation.
+  </Card>
+  <Card title="IRN drill-down" icon="magnifying-glass">
+    Fetch a single e-invoice by Invoice Reference Number (IRN) for invoice-level details. Party-restricted to buyer or seller.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate taxpayer session">
+    Start by authenticating to get a taxpayer access token. You'll need this token for all e-invoice list API calls.
+  </Step>
+  
+  <Step title="Submit e-invoice list job">
+    Submit a [purchase](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job) or [sales](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job) e-invoice list job for a specific return period with the required `supply_type` parameter.
+  </Step>
+  
+  <Step title="Capture and store job ID">
+    Save the `job_id` from the submission response. You'll use it to check job status.
+  </Step>
+  
+  <Step title="Poll job status">
+    Poll the job status endpoint using the `job_id` until `status = succeeded`.
+  </Step>
+  
+  <Step title="Download e-invoice list">
+    Download the JSON data from the signed `e_invoice_list_url` and store it in your system.
+  </Step>
+  
+  <Step title="Fetch invoice by IRN (optional)">
+    Retrieve a single e-invoice by Invoice Reference Number (IRN) for invoice-level details. Restricted to transaction parties (buyer or seller).
+  </Step>
+</Steps>
+
+## What you can do
+
+<CardGroup cols={2}>
+  <Card title="Download purchase e-invoices" icon="file-import" href="/recipes/gst/e-invoice/get_e_invoice_using_taxpayer_api">
+    Retrieve purchase e-invoice lists for AP reconciliation and vendor matching.
+  </Card>
+  <Card title="Download sales e-invoices" icon="file-export" href="/recipes/gst/e-invoice/get_e_invoice_using_taxpayer_api">
+    Retrieve sales e-invoice lists for AR reconciliation and sales registers.
+  </Card>
+  <Card title="Generate taxpayer session" icon="key" href="/recipes/gst/authentication/generate_tax_payer_session">
+    Start here: authenticate to get a taxpayer access token for e-invoice list APIs.
+  </Card>
+  <Card title="Handle errors" icon="triangle-exclamation" href="/guides/developer-resources/errors">
+    See error codes and handling for invalid periods or expired windows.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="List Purchase e-Invoices (Submit Job)" icon="file-import" href="/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job">
+    Submit an async job to list purchase e-invoices for a return period.
+  </Card>
+  <Card title="List Purchase e-Invoices (Job Status)" icon="clock-rotate-left" href="/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job_status">
+    Check the status of a purchase e-invoice list job.
+  </Card>
+  <Card title="List Sales e-Invoices (Submit Job)" icon="file-export" href="/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job">
+    Submit an async job to list sales e-invoices for a return period.
+  </Card>
+  <Card title="List Sales e-Invoices (Job Status)" icon="clock-rotate-left" href="/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job_status">
+    Check the status of a sales e-invoice list job.
+  </Card>
+  <Card title="Get e-Invoice by IRN" icon="magnifying-glass" href="/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/e_invoice">
+    Retrieve a single e-invoice using its Invoice Reference Number.
+  </Card>
+</CardGroup>
+
+## API reference
+
+### Job submission APIs
+
+| API | Purpose |
+|:----|:--------|
+| [List Purchase e-Invoices (Submit Job)](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job) | Submit async job to download purchase e-invoices for a return period |
+| [List Sales e-Invoices (Submit Job)](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job) | Submit async job to download sales e-invoices for a return period |
+
+### Job status APIs
+
+| API | Purpose |
+|:----|:--------|
+| [List Purchase e-Invoices (Job Status)](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_purchase_invoices_job_status) | Poll status and get signed download URL for purchase e-invoice list |
+| [List Sales e-Invoices (Job Status)](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/list_sales_invoices_job_status) | Poll status and get signed download URL for sales e-invoice list |
+
+### Invoice retrieval API
+
+| API | Purpose |
+|:----|:--------|
+| [Get e-Invoice by IRN](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/e_invoice) | Fetch a single e-invoice by Invoice Reference Number (party-restricted) |
+
+## Common use cases
+
+Use E-Invoice List API when you need to:
+
+- **Monthly AP reconciliation:** Compare purchase e-invoice lists with vendor bills in ERP to identify missing or duplicate invoices.
+- **Monthly AR register:** Build sales registers from e-invoice lists for reporting and internal controls.
+- **Supply-type segmentation:** Run separate downloads by `supply_type` (B2B, exports, SEZ) for category-wise reporting.
+- **Audit and support drill-down:** Fetch a single e-invoice by IRN to resolve disputes, validate invoice values, or support tickets.
+- **Automated matching:** Match e-invoice lists with internal invoice master data to flag exceptions before return filing.
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What is E-Invoice List API?">
+    E-Invoice List API downloads sales and purchase e-invoice lists for a return period (year + month). You can filter by supply type and download data via signed URLs.
+  </Accordion>
+
+  <Accordion title="How does E-Invoice List API work?">
+    The API uses an async job pattern. Submit a list job with return period and supply type, save the `job_id`, then poll the status endpoint until the job completes. Once it's done, download the JSON from the signed URL. See [Job-based APIs](/guides/developer-resources/job_based_apis) for polling best practices.
+  </Accordion>
+
+  <Accordion title="How far back can I retrieve e-invoices?">
+    You can retrieve e-invoices for up to the **last 6 months**. Requests for periods beyond this window will return an error.
+  </Accordion>
+
+  <Accordion title="What is supply_type and is it required?">
+    Supply type (`supply_type`) indicates the transaction category—B2B, exports, or SEZ. You must include it when submitting a list job. This determines which invoices show up in your results.
+  </Accordion>
+
+  <Accordion title="How long is the download URL valid?">
+    The signed `e_invoice_list_url` expires after a set time. Download the JSON soon after your job completes. If the URL expires, just submit a new job to get a fresh link.
+  </Accordion>
+
+  <Accordion title="What polling approach should I use for job status?">
+    Use a backoff strategy: start with shorter intervals, then gradually increase the wait time between checks. Don't poll too aggressively or you'll hit rate limits. See [Rate Limits](/guides/developer-resources/rate_limits) for details.
+  </Accordion>
+
+  <Accordion title="Can I use webhooks instead of polling?">
+    Yes. Instead of polling job status repeatedly, you can subscribe to job completion events via webhooks. Sandbox will notify your endpoint when the job finishes, so you can download the results immediately. See [Webhooks](/guides/developer-resources/webhooks) to configure webhook subscriptions and validate signatures.
+  </Accordion>
+
+  <Accordion title="Who can fetch an e-invoice by IRN?">
+    Only parties involved in the transaction can fetch invoices by IRN. If you're listed as the buyer or seller on the e-invoice, you can retrieve it using the [Get e-Invoice by IRN](/api-reference/gst/compliance/endpoints/taxpayer/e-invoice/e_invoice) endpoint.
+  </Accordion>
+</AccordionGroup>

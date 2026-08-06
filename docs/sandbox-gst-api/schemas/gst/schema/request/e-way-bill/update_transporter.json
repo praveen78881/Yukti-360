@@ -1,0 +1,19 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+		"ewbNo": {
+			"type": "number",
+			"description": "EwayBill Number"
+		},
+		"transporterId": {
+			"type": "string",
+			"pattern": "[0-9]{2}[0-9|A-Z]{13}",
+			"description": "15 Digit Transporter GSTIN/TRANSIN"
+		}
+	},
+	"required": [
+		"ewbNo",
+		"transporterId"
+	]
+}

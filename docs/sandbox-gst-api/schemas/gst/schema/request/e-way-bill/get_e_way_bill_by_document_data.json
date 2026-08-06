@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Get E-Way Bill by document data response",
+  "description": "NIC E-Way Bill payload returned at data.data for a successful Sandbox response.",
+  "type": "object",
+  "properties": {
+    "alert": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ewayBillDate": {
+      "type": "string"
+    },
+    "ewayBillNo": {
+      "type": "number"
+    },
+    "validUpto": {
+      "type": "string"
+    }
+  }
+}

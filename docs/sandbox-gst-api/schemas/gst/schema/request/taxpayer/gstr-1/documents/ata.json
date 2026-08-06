@@ -1,0 +1,100 @@
+{
+  "id": "Get-ATA-Schema",
+  "properties": {
+    "ata": {
+      "items": {
+        "properties": {
+		 "flag":{
+			"description": "Status of Invoice",
+			"type": "string"
+			},	
+          "chksum": {
+            "maxLength": 64,
+            "description": "Checksum Value",
+            "type": "string"
+          },
+          "omon": {
+            "maxLength": 6,
+            "minLength": 6,
+            "description": "Original Month",
+            "type": "string"
+          },
+          "pos": {
+            "maxLength": 2,
+            "minLength": 2,
+            "description": "Original Place of Supply",
+            "type": "string",
+			"pattern": "^(3[0-8]|[12][0-9]|0[1-9]|97)$"
+          },
+          "sply_ty": {
+            "description": "Original Supply Type of invoice",
+            "type": "string",
+            "enum": [
+              "INTER",
+              "INTRA"
+            ]
+          },
+		  "diff_percent":{
+                                 "description":"Differential percentage",
+								 "type":"number",
+								 "multipleOf": 0.01							 
+								 },
+          "itms": {
+            "description": "Item Details",
+            "items": {
+              "properties": {
+                "ad_amt": {
+                  "description": "Amount of Advance received",
+                  "type": "number"
+                },
+                "csamt": {
+                  "description": "Cess Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.001
+                },
+                "iamt": {
+                  "description": "IGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.001
+                },
+                "rt": {
+                  "description": "Rate as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.001
+                },
+                "camt": {
+                  "description": "CGST Amount as per invoice",
+                  "type": "number"
+                },
+                "samt": {
+                  "description": "SGST Amount as per invoice",
+                  "type": "number",
+				  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "rt",
+                "ad_amt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sply_ty",
+          "itms",
+          "pos",
+          "omon",
+          "chksum"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "ata"
+  ],
+  "type": "object"
+}

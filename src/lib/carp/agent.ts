@@ -9,6 +9,8 @@ import { CARP_TOOLS, executeTool, type ToolResult } from './tools';
 import { toGeminiFunctionDeclarations } from './geminiSchema';
 import { getUploadedWorkbook, getWorkbookSummary } from '@/lib/excelUpload';
 import { getSuspenseTransactions } from '@/lib/bulk/bulkDb';
+import { supabase } from '@/lib/supabaseClient';
+import { buildEntityKnowledge } from './entityKnowledge';
 
 const GEMINI_TOOLS = toGeminiFunctionDeclarations(CARP_TOOLS);
 import { getEntityData } from '@/lib/offlineDb';
@@ -162,6 +164,11 @@ RULES:
 8. Prefer merge=true when editing entity data so you never clobber unrelated fields; use merge=false only when the CA wants to replace an entire section.
 9. Be concise. Report what you actually did (which pages/sections/entries you changed).`;
 
+  // Entity-wise domain knowledge — tailors Aleza's reasoning (ITR form, tax/audit
+  // profile, statement format, GST/TDS/TCS/depreciation, and the integration model)
+  // to THIS entity type so it applies the right Indian rules.
+  prompt += buildEntityKnowledge(entityType);
+
   // Bulk mode — inject specialised bulk system prompt when company has bulk data
   const hasBulkData = getSuspenseTransactions(companyId).length > 0;
   if (hasBulkData) {
@@ -200,8 +207,8 @@ HARD RULES:
 - You are a speed layer — the CA can do everything manually. Never suggest the CA must use you.`;
   }
 
-  // Auto-inject uploaded Excel/CSV context if present
-  const uploadedWb = getUploadedWorkbook();
+  // Auto-inject uploaded Excel/CSV context if present (company-sandboxed)
+  const uploadedWb = getUploadedWorkbook(companyId);
   if (uploadedWb) {
     prompt += `
 
@@ -254,51 +261,33 @@ async function callGemini(
   functionCalls?: Array<{ name: string; args: Record<string, unknown> }>;
   rawParts: GeminiPart[];
 }> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Always call through the Netlify serverless proxy — the API key stays
+  // server-side and is NEVER referenced from client code (a VITE_-prefixed key
+  // would be inlined into the public bundle and could be extracted by any visitor).
+  const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
 
-  if (!apiKey) {
-    // Use Netlify serverless function as proxy (API key stays server-side)
-    const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
-    const response = await fetch('/.netlify/functions/gemini-plan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: proxyModel,
-        contents: messages,
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        tools: [{ functionDeclarations: GEMINI_TOOLS }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 4096,
-          // Surface the model's thinking summary so the UI can show its reasoning.
-          thinkingConfig: { includeThoughts: true },
-        },
-      }),
-    });
+  // Attach the signed-in user's Supabase access token so the proxy can verify
+  // the caller and refuse anonymous / cross-site abuse.
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const { data: sess } = (await supabase?.auth.getSession()) ?? { data: null };
+    const token = sess?.session?.access_token;
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  } catch { /* proceed unauthenticated; proxy will reject if it requires auth */ }
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errText}`);
-    }
-
-    const data = await response.json();
-    return parseGeminiResponse(data);
-  }
-
-  // Direct API call
-  const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  const response = await fetch(url, {
+  const response = await fetch('/.netlify/functions/gemini-plan', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
+      model: proxyModel,
       contents: messages,
       systemInstruction: { parts: [{ text: systemPrompt }] },
       tools: [{ functionDeclarations: GEMINI_TOOLS }],
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 4096,
+        // Surface the model's thinking summary so the UI can show its reasoning.
+        thinkingConfig: { includeThoughts: true },
       },
     }),
   });

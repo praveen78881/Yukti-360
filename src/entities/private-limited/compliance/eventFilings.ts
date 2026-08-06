@@ -116,7 +116,8 @@ export const EVENT_FILINGS: EventFiling[] = [
 export function computeEventFilingDueDate(filing: EventFiling, eventDate: string): string {
   const d = new Date(eventDate + 'T00:00:00');
   d.setDate(d.getDate() + filing.daysFromEvent);
-  return d.toISOString().slice(0, 10);
+  // Format from local date parts — toISOString() shifts local-midnight dates a day earlier in IST.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /**

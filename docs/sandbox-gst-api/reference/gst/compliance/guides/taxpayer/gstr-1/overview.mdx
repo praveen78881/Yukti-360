@@ -1,0 +1,185 @@
+---
+title: "Overview"
+description: "File GSTR-1 returns programmatically using Sandbox APIs—manage outward supplies, amendments, and compliance"
+---
+
+# GSTR-1 API
+
+GSTR-1 is a monthly or quarterly return for reporting outward supplies (sales). Use these APIs to save invoice data, retrieve summaries, and file returns directly to the GST portal.
+
+This API enables automated GSTR-1 compliance covering all invoice types, amendments, credit/debit notes, exports, and HSN summaries.
+
+<CardGroup cols={2}>
+  <Card title="All GSTR-1 tables" icon="file-invoice">
+    Save and retrieve B2B, B2C, exports, credit/debit notes, and nil supplies across all GSTR-1 tables.
+  </Card>
+  <Card title="Full filing workflow" icon="paper-plane">
+    From saving invoices to generating EVC OTP and filing—handle the entire compliance workflow via API.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate taxpayer">
+    Generate OTP and verify to start a taxpayer session valid for 6 hours.
+  </Step>
+  
+  <Step title="Save invoices">
+    Upload invoice data (B2B, B2C, exports, CDN, etc.) to the GST portal.
+  </Step>
+  
+  <Step title="Check return status">
+    Verify saved data and check for errors or warnings.
+  </Step>
+  
+  <Step title="Proceed to file">
+    Generate the summary and mark the return ready for filing.
+  </Step>
+  
+  <Step title="Get summary">
+    Retrieve table-wise summary of GSTR-1 data for review.
+  </Step>
+  
+  <Step title="Generate EVC OTP">
+    Request OTP for Electronic Verification Code to authorize filing.
+  </Step>
+  
+  <Step title="File return">
+    Submit the GSTR-1 return to the GST portal.
+  </Step>
+  
+  <Step title="Verify filing status">
+    Confirm successful filing and retrieve acknowledgment.
+  </Step>
+</Steps>
+
+## Recipes
+
+Step-by-step guides for common GSTR-1 workflows:
+
+<CardGroup cols={2}>
+  <Card title="File GSTR-1" icon="paper-plane" href="/recipes/gst/gstr-1/file_gstr_1">
+    Complete workflow to file GSTR-1 with outward supplies, amendments, and credit/debit notes.
+  </Card>
+  <Card title="File Nil GSTR-1" icon="file-circle-check" href="/recipes/gst/gstr-1/file_nil_gstr_1">
+    File a nil return when there are no outward supplies for the period.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="Document APIs" icon="file-lines" href="#document-apis">
+    Retrieve invoice data for each GSTR-1 table (B2B, B2C, exports, CDN, HSN, etc.)
+  </Card>
+  <Card title="Filing APIs" icon="paper-plane" href="#filing-apis">
+    Save data, proceed to file, generate summary, and submit returns
+  </Card>
+  <Card title="Return Status" icon="circle-check" href="/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status">
+    Check status after saving—view errors and validation info
+  </Card>
+  <Card title="Errors & Troubleshooting" icon="triangle-exclamation" href="/guides/developer-resources/errors">
+    Understand error codes and resolve common issues
+  </Card>
+</CardGroup>
+
+## Document APIs
+
+Retrieve invoice and supply data for each GSTR-1 table:
+
+| API | GSTR-1 Table | Description |
+|:----|:-------------|:------------|
+| [GSTR-1 AT](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/at) | 11A | Advances received (tax payable, invoice not issued) |
+| [GSTR-1 ATA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ata) | 11A (Amendments) | Amendment of advances reported earlier |
+| [GSTR-1 B2B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2b) | 4A, 4B, 6B, 6C | B2B invoices (incl. SEZ supplies & Deemed exports) |
+| [GSTR-1 B2BA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2ba) | 9A | Amendment of B2B invoices |
+| [GSTR-1 B2CL](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cl) | 5A, 5B | B2C Large invoices (inter-state above threshold) |
+| [GSTR-1 B2CLA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cla) | 9A | Amendment of B2C Large invoices |
+| [GSTR-1 B2CS](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2cs) | 7 | B2C Small (rate-wise consolidated) |
+| [GSTR-1 B2CSA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/b2csa) | 10 | Amendment of B2C Small (Table 7) |
+| [GSTR-1 CDNR](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnr) | 9B | Credit/Debit Notes to registered persons |
+| [GSTR-1 CDNRA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnra) | 9C | Amendment of CDNR (registered) |
+| [GSTR-1 CDNUR](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnur) | 9B | Credit/Debit Notes to unregistered persons |
+| [GSTR-1 CDNURA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/cdnura) | 9C | Amendment of CDNUR (unregistered) |
+| [GSTR-1 Document Issued](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/doc_issue) | 13 | Documents issued (invoice series, DN/CN series) |
+| [GSTR-1 EXP](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/exp) | 6A | Export invoices |
+| [GSTR-1 EXPA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/expa) | 9A (Exports) | Amendment of export invoices |
+| [GSTR-1 NIL Supplies](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/nil) | 8A–8D | Nil rated / exempt / non-GST outward supplies |
+| [GSTR-1 HSN Summary](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/get_hsn) | 12 | HSN-wise summary of outward supplies |
+| [GSTR-1 TXP](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/txp) | 11B | Advance tax adjusted against invoices |
+| [GSTR-1 TXPA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/txpa) | 11B (Amendments) | Amendments to advance adjustments |
+| [GSTR-1 ECOM](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ecom) | 14 | Supplies made through e-commerce operators |
+| [GSTR-1 ECOMA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/ecoma) | 14A | Amendments to Table 14 |
+| [GSTR-1 SUPECO](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/supeco) | 15 | Supplies u/s 9(5) where ECO is liable to pay tax |
+| [GSTR-1 SUPECOA](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/documents/supecoa) | 15A | Amendments to Table 15 |
+
+## Filing APIs
+
+Save invoice data and complete the filing workflow:
+
+| API | Purpose |
+|:----|:--------|
+| [Save GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/save) | Upload invoice JSON to GST portal |
+| [Reset GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/reset) | Reset saved return data |
+| [Proceed to File](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/new_proceed) | Generate summary and mark return ready for filing |
+| [File GSTR-1](/api-reference/gst/compliance/endpoints/taxpayer/gstr-1/file/file) | Submit the return to GST portal |
+
+## Common APIs
+
+Shared endpoints used across GSTR-1 workflow:
+
+| API | Purpose |
+|:----|:--------|
+| [Generate OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_otp) | Start taxpayer authentication |
+| [Verify OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/verify_otp) | Complete authentication (6-hour session) |
+| [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) | Request OTP for filing authorization |
+| [Return Status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) | Check status after saving return |
+| [Refresh Session](/api-reference/gst/compliance/endpoints/taxpayer/authentication/refresh_session) | Extend taxpayer session |
+| [Logout](/api-reference/gst/compliance/endpoints/taxpayer/authentication/logout) | End taxpayer session |
+
+## Common use cases
+
+Use GSTR-1 APIs when you need to:
+
+- Automate monthly or quarterly GSTR-1 filing
+- Bulk upload B2B and B2C invoices from your ERP or accounting system
+- Amend previously filed invoice data
+- File credit/debit notes for registered and unregistered recipients
+- Generate HSN-wise summaries for compliance
+- Build GST compliance into your SaaS platform
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What is GSTR-1?">
+    GSTR-1 is a monthly or quarterly return that registered taxpayers file to report details of outward supplies (sales). It includes B2B invoices, B2C sales, exports, credit/debit notes, and amendments.
+  </Accordion>
+
+  <Accordion title="What is the GSTR-1 filing workflow?">
+    1. Authenticate using OTP to start a 6-hour session
+    2. Save invoice data using the Save GSTR-1 API
+    3. Check return status for errors
+    4. Call Proceed to File to generate summary
+    5. Generate EVC OTP for authorization
+    6. File the return using File GSTR-1 API
+    7. Verify filing status
+  </Accordion>
+
+  <Accordion title="What's the difference between B2B and B2CL?">
+    **B2B**: Invoices to registered recipients (any value)  
+    **B2CL (B2C Large)**: Inter-state invoices to unregistered recipients exceeding ₹2.5 lakhs
+  </Accordion>
+
+  <Accordion title="What is EVC OTP?">
+    Electronic Verification Code OTP is required to authorize filing. After calling Proceed to File, generate EVC OTP and include it in the File GSTR-1 request.
+  </Accordion>
+
+  <Accordion title="How long is the taxpayer session valid?">
+    The session started after OTP verification is valid for 6 hours. Use the Refresh Session API to extend if needed.
+  </Accordion>
+
+  <Accordion title="Can I reset a saved return?">
+    Yes, use the Reset GSTR-1 API to clear saved data before filing. This is useful if you need to re-upload corrected invoice data.
+  </Accordion>
+</AccordionGroup>

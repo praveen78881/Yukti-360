@@ -1,0 +1,243 @@
+---
+title: "Overview"
+description: "Generate, update, extend, and manage GST e-way bills. Programmatically track goods movement with consignor, consignee, and transporter APIs."
+---
+
+# GST E-Way Bill API
+
+GST E-Way Bill (EWB) is an electronic permit required for transporting goods worth more than INR 50,000 under GST. Use this API to generate, update, extend, cancel, and manage e-way bills programmatically—enabling automated compliance workflows for goods movement across consignor, consignee, and transporter roles.
+
+<CardGroup cols={2}>
+  <Card title="Generate and fetch EWB" icon="file-invoice">
+    Generate e-way bills with Part-A data, items, and transporter details. Fetch bills by date, document data, or EWB number.
+  </Card>
+  <Card title="Update Part-B and transporter" icon="truck">
+    Update vehicle details (Part-B) or change transporter assignment after generating the e-way bill.
+  </Card>
+  <Card title="Transporter operations" icon="route">
+    Transporters can list assigned e-way bills, update vehicle details, and extend validity when delays occur.
+  </Card>
+  <Card title="Consolidated and multi-vehicle" icon="boxes-stacked">
+    Create consolidated e-way bills for multiple consignments in one vehicle. Manage multi-vehicle movement for partial deliveries.
+  </Card>
+  <Card title="Consignee actions" icon="user-check">
+    Consignees can view assigned e-way bills and reject incorrect bills for audit compliance.
+  </Card>
+  <Card title="Master data and troubleshooting" icon="magnifying-glass">
+    Search GSTIN, transporter IDs, HSN codes, and retrieve error lists for debugging.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before using the E-Way Bill API:
+
+- **API credentials**: Create API credentials on the E-Way Bill portal. See [Create API credentials](/api-reference/gst/compliance/guides/e-way-bill/authentication/create_api_credentials).
+- **Sandbox JWT token**: Authenticate with Sandbox to get an access token.
+- **E-Way Bill session**: Authenticate with the E-Way Bill portal to get an EWB access token.
+
+<Note>
+  **Header routing**: Use the `x-source` header to specify the E-Way Bill server: `primary` (default), `secondary`, or `tertiary`. This helps with load balancing and failover.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Create API credentials">
+    Register API credentials on the E-Way Bill portal to enable programmatic access. See [Create API credentials](/api-reference/gst/compliance/guides/e-way-bill/authentication/create_api_credentials).
+  </Step>
+  
+  <Step title="Authenticate for E-Way Bill access">
+    Use the [E-Way Bill Authentication](/api-reference/gst/compliance/endpoints/e-way-bill/authenticate) endpoint with your portal username, password, and GSTIN to get an access token.
+  </Step>
+  
+  <Step title="Generate E-Way Bill">
+    Create an e-way bill with Part-A data (invoice details, HSN codes, values) and optionally include transporter and vehicle details.
+  </Step>
+  
+  <Step title="Update logistics details">
+    Update Part-B vehicle details when the truck is assigned, or change the transporter using the update APIs.
+  </Step>
+  
+  <Step title="Track and verify">
+    Fetch e-way bills by EWB number, date range, or document data. Verify bill status across consignor, consignee, and transporter views.
+  </Step>
+  
+  <Step title="Handle transporter and consignee actions">
+    Transporters can view and manage assigned bills. Consignees can reject incorrect e-way bills to maintain audit compliance.
+  </Step>
+  
+  <Step title="Advanced movement and troubleshooting">
+    Create consolidated e-way bills for multiple shipments. Use multi-vehicle movement for partial deliveries. Check the [error list](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_error_list) for troubleshooting.
+  </Step>
+</Steps>
+
+## Quick links
+
+Quick access to common E-Way Bill starting points:
+
+<CardGroup cols={2}>
+  <Card title="Generate E-Way Bill session" icon="key" href="/recipes/gst/authentication/generate_e_way_bill_session">
+    Authenticate with the E-Way Bill portal and get an access token for API operations.
+  </Card>
+  <Card title="Generate E-Way Bill" icon="file-invoice" href="/api-reference/gst/compliance/endpoints/e-way-bill/consignor/generate_e_way_bill">
+    Create a new e-way bill with invoice and transporter details.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/gst/compliance/endpoints/e-way-bill/authenticate">
+    Authenticate with the E-Way Bill portal to start a session.
+  </Card>
+  <Card title="Consignor APIs" icon="building" href="#consignor-apis">
+    Generate, update, cancel, and extend e-way bills as the goods supplier.
+  </Card>
+  <Card title="Consignee APIs" icon="user-check" href="#consignee-apis">
+    View and reject e-way bills as the goods receiver.
+  </Card>
+  <Card title="Transporter APIs" icon="truck" href="#transporter-apis">
+    List, update, and extend e-way bills as the logistics provider.
+  </Card>
+  <Card title="Consolidated EWB" icon="boxes-stacked" href="#consolidated-e-way-bill-consignor">
+    Create and manage consolidated e-way bills for multiple consignments.
+  </Card>
+  <Card title="Common APIs" icon="magnifying-glass" href="#common-apis">
+    Fetch e-way bills, search GSTIN, HSN codes, and get error lists.
+  </Card>
+</CardGroup>
+
+## Authentication
+
+Authenticate with the E-Way Bill portal to start a session:
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [E-Way Bill Authentication](/api-reference/gst/compliance/endpoints/e-way-bill/authenticate) | POST | `/gst/compliance/e-way-bill/tax-payer/authenticate` |
+
+## Consignor APIs
+
+APIs for the goods supplier (consignor) to generate and manage e-way bills:
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Generate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/generate_e_way_bill) | POST | `/gst/compliance/e-way-bill/consignor/bill` |
+| [Get E-Way Bills By Date](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/get_e_way_bill_by_date) | GET | `/gst/compliance/e-way-bill/consignor/bills` |
+| [Get E-Way Bills By Document Data](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/get_e_way_bill_by_document_data) | GET | `/gst/compliance/e-way-bill/consignor/bill` |
+| [Cancel E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/cancel_e_way_bill) | POST | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/cancel` |
+| [Extend Validity](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/extend_validity) | POST | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/extend` |
+| [Update Vehicle Details (Part B)](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_vehicle_details) | PUT | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/vehicle` |
+| [Update Transporter](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_transporter) | PUT | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/transporter` |
+
+#### Consolidated e-way bill (Consignor)
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Consolidate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/consolidate_e_way_bill) | POST | `/gst/compliance/e-way-bill/consignor/consolidated-bill` |
+| [Get Consolidated Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/get_consolidated_bill) | GET | `/gst/compliance/e-way-bill/consignor/consolidated-bill/{consolidated_ewb_no}` |
+| [Regenerate Consolidated Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/regenerate_consolidated_bill) | POST | `/gst/compliance/e-way-bill/consignor/consolidated-bill/{consolidated_ewb_no}/regenerate` |
+
+#### Multi-vehicle movement (Consignor)
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Initiate Multi-Vehicle Movement](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/initiate_multi_vehicle_movement) | POST | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/multi-vehicle` |
+| [Add Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/add_vehicle) | POST | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/multi-vehicle/vehicle` |
+| [Update Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/update_vehicle) | PUT | `/gst/compliance/e-way-bill/consignor/bill/{ewb_no}/multi-vehicle/vehicle` |
+
+## Consignee APIs
+
+APIs for the goods receiver (consignee) to view and manage assigned e-way bills:
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Get E-Way Bills By Date](/api-reference/gst/compliance/endpoints/e-way-bill/consignee/get_e_way_bills_by_date) | GET | `/gst/compliance/e-way-bill/consignee/bills` |
+| [Reject E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignee/reject_e_way_bill) | POST | `/gst/compliance/e-way-bill/consignee/bill/{ewb_no}/reject` |
+
+## Transporter APIs
+
+APIs for logistics providers (transporters) to manage e-way bills:
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Get E-Way Bills By Date and State](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/get_e_way_bills_by_date_and_state) | GET | `/gst/compliance/e-way-bill/transporter/bills` |
+| [List E-Way Bills By Generator](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/list_e_way_bills_by_generator) | GET | `/gst/compliance/e-way-bill/transporter/bills/by-generator` |
+| [Extend Validity](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/extend_validity) | POST | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/extend` |
+| [Update Vehicle Details](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/update_vehicle_details) | PUT | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/vehicle` |
+| [Update Transporter](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/update_transporter) | PUT | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/transporter` |
+
+#### Consolidated e-way bill (Transporter)
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Consolidate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/consolidate_e_way_bill) | POST | `/gst/compliance/e-way-bill/transporter/consolidated-bill` |
+| [Get Consolidated Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/get_consolidated_bill) | GET | `/gst/compliance/e-way-bill/transporter/consolidated-bill/{consolidated_ewb_no}` |
+| [Regenerate Consolidated Bill](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/consolidated-e-way-bill/regenerate_consolidated_bill) | POST | `/gst/compliance/e-way-bill/transporter/consolidated-bill/{consolidated_ewb_no}/regenerate` |
+
+#### Multi-vehicle movement (Transporter)
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Initiate Multi-Vehicle Movement](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/initiate_multi_vehicle_movement) | POST | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/multi-vehicle` |
+| [Add Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/add_vehicle) | POST | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/multi-vehicle/vehicle` |
+| [Update Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/multi-vehicle-movement/update_vehicle) | PUT | `/gst/compliance/e-way-bill/transporter/bill/{ewb_no}/multi-vehicle/vehicle` |
+
+## Common APIs
+
+Shared endpoints for fetching e-way bills, searching master data, and troubleshooting:
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Get E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_e_way_bill) | GET | `/gst/compliance/e-way-bill/tax-payer/bill/{ewb_no}` |
+| [Get Error List](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_error_list) | GET | `/gst/compliance/e-way-bill/tax-payer/error-list` |
+| [Get HSN Details](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_hsn_details) | GET | `/gst/compliance/e-way-bill/tax-payer/hsn` |
+| [Search GSTIN](/api-reference/gst/compliance/endpoints/e-way-bill/common/search_gstin) | POST | `/gst/compliance/e-way-bill/tax-payer/gstin/search` |
+| [Search Transporter Id](/api-reference/gst/compliance/endpoints/e-way-bill/common/search_transporter) | POST | `/gst/compliance/e-way-bill/tax-payer/transin/search` |
+
+## Common use cases
+
+Use the GST E-Way Bill API when you need to:
+
+- Generate e-way bills for outbound shipments when an invoice is created in an ERP (manufacturing or wholesale dispatch)
+- Update Part-B vehicle details when the truck is assigned late or the vehicle changes mid-transit
+- Extend e-way bill validity when delays occur due to breakdown, rerouting, weather, or roadblocks based on remaining distance
+- Create a consolidated e-way bill for a transporter carrying multiple consignments in one vehicle for faster checkpoint verification
+- Use multi-vehicle movement when one e-way bill's goods are moved in parts across multiple vehicles (partial deliveries or hub transfers)
+- Allow consignees to reject an incorrect e-way bill (wrong GSTIN or invoice mapping) and keep records auditable
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="What is a GST e-way bill (EWB) and why is it needed?">
+    GST E-Way Bill (EWB) is an electronic permit required for transporting goods worth more than INR 50,000 under the GST regime. The e-way bill system tracks goods movement across state and intra-state borders, ensuring tax compliance and reducing tax evasion. Both the consignor (supplier) and transporter must generate or carry a valid e-way bill during transit.
+  </Accordion>
+
+  <Accordion title="How does GST E-Way Bill API authentication work?">
+    GST E-Way Bill API authentication requires two steps. First, authenticate with Sandbox to get a JWT access token. Then, use the [E-Way Bill Authentication](/api-reference/gst/compliance/endpoints/e-way-bill/authenticate) endpoint with your E-Way Bill portal username, password, and GSTIN to get an EWB access token. This token is used for all subsequent e-way bill operations. See the [Generate E-Way Bill session](/recipes/gst/authentication/generate_e_way_bill_session) recipe for a complete walkthrough.
+  </Accordion>
+
+  <Accordion title="Which APIs should a consignor use to generate and manage an e-way bill?">
+    Consignors (goods suppliers) use the [Generate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/generate_e_way_bill) endpoint to create e-way bills with Part-A invoice data. After generation, consignors can [Update Vehicle Details](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_vehicle_details) to add Part-B data, [Update Transporter](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/update_transporter) to change logistics provider, [Extend Validity](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/extend_validity) for delays, or [Cancel E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/cancel_e_way_bill) if needed.
+  </Accordion>
+
+  <Accordion title="How can a transporter update vehicle details or extend validity?">
+    Transporters can update vehicle details using the [Update Vehicle Details](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/update_vehicle_details) endpoint when a vehicle changes mid-transit. To extend validity due to transit delays, transporters use the [Extend Validity](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/extend_validity) endpoint with the remaining distance. Transporters can also list all assigned e-way bills using [Get E-Way Bills By Date and State](/api-reference/gst/compliance/endpoints/e-way-bill/transporter/get_e_way_bills_by_date_and_state).
+  </Accordion>
+
+  <Accordion title="How do consolidated e-way bills work and when should I use them?">
+    Consolidated E-Way Bill (CEWB) combines multiple e-way bills into a single document when a transporter carries goods from multiple consignors in one vehicle. CEWB is useful for logistics providers transporting multiple consignments to simplify checkpoint verification. Use the [Consolidate E-Way Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/consolidate_e_way_bill) endpoint to create a CEWB and [Get Consolidated Bill](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/consolidated-e-way-bill/get_consolidated_bill) to fetch details.
+  </Accordion>
+
+  <Accordion title="What is multi-vehicle movement and when is it required?">
+    Multi-vehicle movement applies when goods covered by a single e-way bill are transported using multiple vehicles—for example, in partial deliveries or hub-to-hub transfers. Use [Initiate Multi-Vehicle Movement](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/initiate_multi_vehicle_movement) to start multi-vehicle mode, then [Add Vehicle](/api-reference/gst/compliance/endpoints/e-way-bill/consignor/multi-vehicle-movement/add_vehicle) for each additional vehicle in the shipment chain.
+  </Accordion>
+
+  <Accordion title="How do I troubleshoot E-Way Bill API errors?">
+    E-Way Bill API errors can be debugged using the [Get Error List](/api-reference/gst/compliance/endpoints/e-way-bill/common/get_error_list) endpoint, which returns all error codes and descriptions from the E-Way Bill portal. For general API error handling patterns and HTTP status codes, see the [Errors guide](/guides/developer-resources/errors). Common issues include invalid GSTIN format, expired sessions, and missing Part-B data.
+  </Accordion>
+
+  <Accordion title="What is the x-source header and when should I use primary/secondary/tertiary?">
+    The `x-source` header specifies which E-Way Bill server to route requests to: `primary` (default), `secondary`, or `tertiary`. This header enables load balancing and failover when one server is unavailable or slow. Use `primary` for normal operations. Switch to `secondary` or `tertiary` if you experience timeouts or the primary server is under maintenance. Include this header in all E-Way Bill API requests.
+  </Accordion>
+</AccordionGroup>

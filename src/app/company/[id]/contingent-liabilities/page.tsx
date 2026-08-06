@@ -28,6 +28,7 @@ export default function ContingentLiabilitiesPage() {
   const { company, companyId, loading: companyLoading } = useCompany();
   const [items, setItems] = useState<ContingentItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   const [form, setForm] = useState({ type: 'liability' as 'liability' | 'asset', description: '', amount: 0, category: '' });
 
   useEffect(() => {
@@ -185,14 +186,25 @@ export default function ContingentLiabilitiesPage() {
                   <td className="px-3 py-2">
                     {editingId === item.id ? (
                       <input
-                        value={item.description}
-                        onChange={(e) => handleUpdate(item.id, { description: e.target.value })}
-                        onBlur={() => setEditingId(null)}
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onBlur={() => {
+                          const text = editingText.trim();
+                          if (text && text !== item.description) {
+                            handleUpdate(item.id, { description: text });
+                          } else {
+                            setEditingId(null);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
                         className="w-full border rounded px-2 py-1 text-sm"
                         autoFocus
                       />
                     ) : (
-                      <span onDoubleClick={() => setEditingId(item.id)}>{item.description}</span>
+                      <span onDoubleClick={() => { setEditingId(item.id); setEditingText(item.description); }}>{item.description}</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-gray-600">{item.category ?? '—'}</td>

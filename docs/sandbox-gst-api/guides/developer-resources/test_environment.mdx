@@ -1,0 +1,178 @@
+---
+title: "Test Environment"
+description: "Set up Sandbox Postman collections in the test environment with a detailed workflow: fork collections, populate environment variables, and run requests from examples."
+keywords:
+  - postman sandbox api
+  - sandbox test environment
+  - api testing postman
+  - sandbox environment variables
+  - try it out sandbox
+---
+
+Use this guide to hit your first test environment request.
+
+## Before you start
+
+Make sure the following prerequisites are complete before you begin:
+
+1. You can sign in to your Sandbox account.
+2. You have your test credentials (`api_key` and `api_secret`). See [Environments](/guides/developer-resources/environments) for details on test vs production credentials.
+3. You have Postman desktop app or Postman web access.
+4. You can access the [Sandbox public Postman workspace](https://www.postman.com/in-co-sandbox/sandbox-api).
+
+<Info>
+Base URLs are already configured in the collection environment. You only need to populate the required variable values.
+</Info>
+
+
+<Steps>
+  <Step title="Fork the Authentication collection with environment" stepNumber={1} titleSize="h3">
+    Start with the shared Authentication collection. This is where your environment is created.
+
+    <Frame>
+      <video controls width="100%">
+        <source src="https://d1hpi1behgky2u.cloudfront.net/step_1_79785c8d32.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </Frame>
+
+    1. Open the [Authentication collection](https://www.postman.com/in-co-sandbox/sandbox-api/collection/lc8rxrg/authentication).
+    2. Click **Fork**.
+    3. Enter a name such as `Authentication`.
+    4. Select your workspace.
+    5. Keep **Watch original collection** enabled.
+    6. Keep the environment included in the fork.
+    7. Click **Fork Collection**.
+
+    Validate this step:
+
+    1. You can see the Authentication collection under **Collections**.
+    2. You can see the forked environments under **Environments**.
+  </Step>
+
+  <Step title="Populate the environment" titleSize="h3">
+    Populate required values in the Authentication environment before running requests.
+
+    <Frame>
+      <video controls width="100%">
+        <source src="https://d1hpi1behgky2u.cloudfront.net/step_2_f5069fd2f3.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </Frame>
+
+    1. Open **Environments** in Postman.
+    2. Open the environment created in Step 1.
+    3. Fill the **Current value** for required variables like `api_key` and `api_secret`.
+    4. Click **Save**.
+    5. Select this environment from the top-right environment selector.
+
+    Minimum required variables:
+
+    ```text
+    api_key=<your test api key>
+    api_secret=<your test api secret>
+    ```
+
+    The environment has `access_token` variable , keep it empty for now. It will be set automatically after authentication.
+
+  </Step>
+
+  <Step title="Get the access token by hitting Authenticate" titleSize="h3">
+    Use the Authentication collection to generate the token used by secured requests.
+
+    <Frame>
+      <video controls width="100%">
+        <source src="https://d1hpi1behgky2u.cloudfront.net/step_3_a65f21ec00.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </Frame>
+
+    1. Open your forked Authentication collection.
+    2. Select the Authenticate request.
+    3. Confirm the environment is selected.
+    4. Verify headers/body reference the variables you populated.
+    5. Click **Send**.
+
+    Expected outcome:
+
+    1. Postman returns a successful authentication response.
+    2. Token is auto-saved to an environment variable.
+    3. The token value is visible in the environment **Current value**.
+  </Step>
+
+<Step title="Fork the product collection" titleSize="h3">
+    Fork only the product collection you want to test next.
+
+    <Frame>
+      <video controls width="100%">
+        <source src="https://d1hpi1behgky2u.cloudfront.net/step_4_35ffef1260.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </Frame>
+
+    1. Open the product collection link (KYC, GST, TDS, or IT).
+    2. Click **Fork**.
+    3. Enter a name such as `Sandbox KYC`.
+    4. Select your workspace.
+    5. Keep **Watch original collection** enabled.
+    6. If Postman prompts to include an environment, leave it unselected.
+    7. Click **Fork Collection**.
+
+    <Check>
+      You should now have two collections (Authentication + product) and one shared environment.
+    </Check>
+  </Step>
+  <Step title="Try out endpoint examples for mock responses" titleSize="h3">
+    Use documentation examples to inspect payload shape and mock responses before integration.
+
+    <Frame>
+      <video controls width="100%">
+        <source src="https://d1hpi1behgky2u.cloudfront.net/step_5_7830cf9fc0.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </Frame>
+
+    <Warning>
+      In the test environment, responses are returned only when your request body exactly matches the saved example request. Use saved requests so headers, body, variables, and authentication stay consistent and you can receive the expected response.
+    </Warning>
+
+    1. Open the endpoint page in Sandbox docs.
+    2. Scroll to **Request examples**.
+    3. Click **Try it out**.
+    
+    Expected outcome:
+
+    1. You receive a mock response payload.
+    2. The response structure matches the endpoint documentation.
+    3. You can validate field names, data types, and status codes for implementation planning.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication errors (401 or 403)">
+    Check the following:
+
+    1. `api_key` and `api_secret` are correct.
+    2. You are using test credentials with test APIs.
+    3. There are no extra spaces in environment variable values.
+    4. The token variable was populated after running Authenticate.
+  </Accordion>
+
+  <Accordion title="Missing variable errors">
+    Check the following:
+
+    1. Every `{{variable_name}}` in the request has a value.
+    2. You updated **Current value**, not only **Initial value**.
+    3. The correct environment is selected.
+  </Accordion>
+
+</AccordionGroup>
+
+## What to do next
+
+1. Repeat Step 5 for one request from each product you plan to integrate.
+2. Save successful requests as examples in your forked collection.
+3. Follow the [Quickstart](/guides/get-started/quickstart) to make your first API call with code.
+4. Move to implementation using the corresponding API reference pages.

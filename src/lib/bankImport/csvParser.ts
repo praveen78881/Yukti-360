@@ -38,15 +38,15 @@ function parseDate(val: string | number | null | undefined): string | null {
   if (!val) return null;
   const str = String(val).trim();
 
-  // DD/MM/YYYY or DD-MM-YYYY
-  const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  // DD/MM/YYYY or DD-MM-YYYY (optionally followed by a time, e.g. "05/04/2024 18:32:11")
+  const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s|$)/);
   if (dmy) {
     const [, d, m, y] = dmy;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
-  // DD-Mon-YYYY (e.g., 15-Jan-2024)
-  const dmonY = str.match(/^(\d{1,2})[\/\-](\w{3})[\/\-](\d{4})$/i);
+  // DD-Mon-YYYY (e.g., 15-Jan-2024), optional time suffix
+  const dmonY = str.match(/^(\d{1,2})[\/\-](\w{3})[\/\-](\d{4})(?:\s|$)/i);
   if (dmonY) {
     const months: Record<string, string> = {
       jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
@@ -61,19 +61,16 @@ function parseDate(val: string | number | null | undefined): string | null {
   const ymd = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
 
-  // DD/MM/YY
-  const dmyShort = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+  // DD/MM/YY, optional time suffix
+  const dmyShort = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})(?:\s|$)/);
   if (dmyShort) {
     const [, d, m, yy] = dmyShort;
     const y = parseInt(yy) > 50 ? `19${yy}` : `20${yy}`;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
-  // Fallback
-  try {
-    const d = new Date(str);
-    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-  } catch { /* ignore */ }
+  // No JS Date fallback — it parses ambiguous dates as US MM/DD, which is
+  // dangerous for Indian DD/MM bank statements. Unrecognized formats are skipped.
   return null;
 }
 

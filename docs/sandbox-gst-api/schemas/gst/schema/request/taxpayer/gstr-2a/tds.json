@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "properties": {
+    "tds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "gstin_ded": {
+            "description": "GSTIN of the deductee",
+            "$ref": "#/definitions/gstin_ded"
+          },
+          "amt_ded": {
+            "description": "Amount paid to deductee on which tax is deducted",
+            "$ref": "#/definitions/totalValue"
+          },
+          "iamt": {
+            "description": "IGST TDS amount",
+            "$ref": "#/definitions/txvalue"
+          },
+          "camt": {
+            "description": "CGST TDS amount",
+            "$ref": "#/definitions/txvalue"
+          },
+          "samt": {
+            "description": "SGST TDS amount",
+            "$ref": "#/definitions/txvalue"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "txvalue": {
+      "type": "number",
+      "multipleOf": 0.01,
+      "maximum": 99999999999.99
+    },
+    "totalValue": {
+      "type": "number",
+      "multipleOf": 0.01,
+      "maximum": 9999999999999.99
+    },
+    "gstin_ded": {
+      "type": "string",
+      "maxLength": 15,
+      "minLength": 15,
+      "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}"
+    }
+  }
+}

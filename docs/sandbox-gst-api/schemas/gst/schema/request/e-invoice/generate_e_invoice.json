@@ -1,0 +1,1392 @@
+﻿{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GST-India Invoice Document",
+    "required": [
+        "BuyerDtls",
+        "DocDtls",
+        "ItemList",
+        "SellerDtls",
+        "TranDtls",
+        "ValDtls",
+        "Version"
+    ],
+    "type": "object",
+    "properties": {
+        "Version": {
+            "maxLength": 6,
+            "minLength": 1,
+            "type": "string",
+            "description": "Version of the schema"
+        },
+        "Irn": {
+            "maxLength": 64,
+            "minLength": 64,
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Invoice Reference Number"
+        },
+        "TranDtls": {
+            "required": [
+                "SupTyp",
+                "TaxSch"
+            ],
+            "type": "object",
+            "properties": {
+                "TaxSch": {
+                    "maxLength": 10,
+                    "minLength": 3,
+                    "pattern": "^(GST)$",
+                    "type": "string",
+                    "description": "GST- Goods and Services Tax Scheme",
+                    "enum": [
+                        "GST"
+                    ]
+                },
+                "SupTyp": {
+                    "maxLength": 10,
+                    "minLength": 3,
+                    "pattern": "^((B2B)|(SEZWP)|(SEZWOP)|(EXPWP)|(EXPWOP)|(DEXP))$",
+                    "type": "string",
+                    "description": "Type of Supply: B2B-Business to Business, SEZWP - SEZ with payment, SEZWOP - SEZ without payment, EXPWP - Export with Payment, EXPWOP - Export without payment,DEXP - Deemed Export",
+                    "enum": [
+                        "B2B",
+                        "SEZWP",
+                        "SEZWOP",
+                        "EXPWP",
+                        "EXPWOP",
+                        "DEXP"
+                    ]
+                },
+                "RegRev": {
+                    "maxLength": 1,
+                    "minLength": 1,
+                    "pattern": "^([Y|N]{1})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Y- whether the tax liability is payable under reverse charge",
+                    "enum": [
+                        "Y",
+                        "N"
+                    ]
+                },
+                "EcmGstin": {
+                    "maxLength": 15,
+                    "minLength": 15,
+                    "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "GSTIN of e-Commerce operator"
+                },
+                "IgstOnIntra": {
+                    "maxLength": 1,
+                    "minLength": 1,
+                    "pattern": "^([Y|N]{1})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Y- indicates the supply is intra state but chargeable to IGST",
+                    "enum": [
+                        "Y",
+                        "N"
+                    ]
+                }
+            }
+        },
+        "DocDtls": {
+            "required": [
+                "Dt",
+                "No",
+                "Typ"
+            ],
+            "type": "object",
+            "properties": {
+                "Typ": {
+                    "maxLength": 3,
+                    "minLength": 3,
+                    "pattern": "^((INV)|(CRN)|(DBN))$",
+                    "type": "string",
+                    "description": "Document Type: INVOICE, CREDIT NOTE, DEBIT NOTE",
+                    "enum": [
+                        "INV",
+                        "CRN",
+                        "DBN"
+                    ]
+                },
+                "No": {
+                    "maxLength": 16,
+                    "minLength": 1,
+                    "pattern": "^([a-zA-Z1-9]{1}[a-zA-Z0-9/-]{0,15})$",
+                    "type": "string",
+                    "description": "Document Number"
+                },
+                "Dt": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                    "type": "string",
+                    "description": "Document Date"
+                }
+            }
+        },
+        "SellerDtls": {
+            "required": [
+                "Addr1",
+                "Gstin",
+                "LglNm",
+                "Loc",
+                "Pin",
+                "Stcd"
+            ],
+            "type": "object",
+            "properties": {
+                "Gstin": {
+                    "maxLength": 15,
+                    "minLength": 15,
+                    "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+                    "type": "string",
+                    "description": "GSTIN of supplier"
+                },
+                "LglNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Legal Name"
+                },
+                "TrdNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Tradename"
+                },
+                "Addr1": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Building/Flat no, Road/Street"
+                },
+                "Addr2": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Address 2 of the supplier (Floor no., Name of the premises/building)"
+                },
+                "Loc": {
+                    "maxLength": 50,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Location"
+                },
+                "Pin": {
+                    "maximum": 999999,
+                    "minimum": 100000,
+                    "type": "number",
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "maxLength": 2,
+                    "minLength": 1,
+                    "pattern": "^(?!0+$)([0-9]{1,2})$",
+                    "type": "string",
+                    "description": "State Code of the supplier. Refer the master"
+                },
+                "Ph": {
+                    "maxLength": 12,
+                    "minLength": 6,
+                    "pattern": "^([0-9]{6,12})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Phone or Mobile No."
+                },
+                "Em": {
+                    "maxLength": 100,
+                    "minLength": 6,
+                    "pattern": "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Email-Id"
+                }
+            }
+        },
+        "BuyerDtls": {
+            "required": [
+                "Addr1",
+                "Gstin",
+                "LglNm",
+                "Loc",
+                "Pos",
+                "Stcd"
+            ],
+            "type": "object",
+            "properties": {
+                "Gstin": {
+                    "maxLength": 15,
+                    "minLength": 3,
+                    "pattern": "^(([0-9]{2}[0-9A-Z]{13})|URP)$",
+                    "type": "string",
+                    "description": "GSTIN of buyer , URP if exporting"
+                },
+                "LglNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Legal Name"
+                },
+                "TrdNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Trade Name"
+                },
+                "Pos": {
+                    "maxLength": 2,
+                    "minLength": 1,
+                    "pattern": "^(?!0+$)([0-9]{1,2})$",
+                    "type": "string",
+                    "description": "State code of Place of supply. If POS lies outside the country, the code shall be 96."
+                },
+                "Addr1": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Address 1 of the buyer. (Building/Flat no., Road/Street etc.)"
+                },
+                "Addr2": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Address 2 of the buyer. (Floor no., Name of the premises/ building)"
+                },
+                "Loc": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Location"
+                },
+                "Pin": {
+                    "maximum": 999999,
+                    "minimum": 100000,
+                    "type": "number",
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "maxLength": 2,
+                    "minLength": 1,
+                    "pattern": "^(?!0+$)([0-9]{1,2})$",
+                    "type": "string",
+                    "description": "State Code of the buyer. Refer the master"
+                },
+                "Ph": {
+                    "maxLength": 12,
+                    "minLength": 6,
+                    "pattern": "^([0-9]{6,12})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Phone or Mobile No."
+                },
+                "Em": {
+                    "maxLength": 100,
+                    "minLength": 6,
+                    "pattern": "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Email-Id"
+                }
+            }
+        },
+        "DispDtls": {
+            "required": [
+                "Addr1",
+                "Loc",
+                "Nm",
+                "Pin",
+                "Stcd"
+            ],
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "Nm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Name of the company from which the goods are dispatched"
+                },
+                "Addr1": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Address 1 of the entity from which goods are dispatched. (Building/Flat no.Road/Street etc.)"
+                },
+                "Addr2": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Address 2 of the entity from which goods are dispatched. (Floor no., Name of the premises/building)"
+                },
+                "Loc": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Location"
+                },
+                "Pin": {
+                    "maximum": 999999,
+                    "minimum": 100000,
+                    "type": "number",
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "maxLength": 2,
+                    "minLength": 1,
+                    "pattern": "^(?!0+$)([0-9]{1,2})$",
+                    "type": "string",
+                    "description": "State Code. Refer the master"
+                }
+            }
+        },
+        "ShipDtls": {
+            "required": [
+                "Addr1",
+                "LglNm",
+                "Loc",
+                "Pin",
+                "Stcd"
+            ],
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "Gstin": {
+                    "maxLength": 15,
+                    "minLength": 3,
+                    "pattern": "^(([0-9]{2}[0-9A-Z]{13})|URP)$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "GSTIN of entity to whom goods are shipped"
+                },
+                "LglNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Legal Name"
+                },
+                "TrdNm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Trade Name"
+                },
+                "Addr1": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Address1 of the entity to whom the supplies are shipped to. (Building/Flat no., Road/Street etc.)"
+                },
+                "Addr2": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Address 2 of the entity to whom the supplies are shipped to. (Floor no., Name of the premises/building)."
+                },
+                "Loc": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": "string",
+                    "description": "Place (City,Town,Village) entity to whom the supplies are shipped to."
+                },
+                "Pin": {
+                    "maximum": 999999,
+                    "minimum": 100000,
+                    "type": "number",
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "maxLength": 2,
+                    "minLength": 1,
+                    "pattern": "^(?!0+$)([0-9]{1,2})$",
+                    "type": "string",
+                    "description": "State Code to which supplies are shipped to. Refer the master"
+                }
+            }
+        },
+        "ItemList": {
+            "type": "array",
+            "items": {
+                "required": [
+                    "AssAmt",
+                    "GstRt",
+                    "HsnCd",
+                    "IsServc",
+                    "SlNo",
+                    "TotAmt",
+                    "TotItemVal",
+                    "UnitPrice"
+                ],
+                "type": "object",
+                "properties": {
+                    "SlNo": {
+                        "maxLength": 6,
+                        "minLength": 1,
+                        "pattern": "^([0-9]{1,6})$",
+                        "type": "string",
+                        "description": "Serial No. of Item"
+                    },
+                    "PrdDesc": {
+                        "maxLength": 300,
+                        "minLength": 3,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Product Description"
+                    },
+                    "IsServc": {
+                        "maxLength": 1,
+                        "minLength": 1,
+                        "pattern": "^([Y|N]{1})$",
+                        "type": "string",
+                        "description": "Specify whether the supply is service or not. Specify Y-for Service",
+                        "enum": [
+                            "Y",
+                            "N"
+                        ]
+                    },
+                    "HsnCd": {
+                        "maxLength": 8,
+                        "minLength": 4,
+                        "pattern": "^(?!0+$)([0-9]{4}|[0-9]{6}|[0-9]{8})$",
+                        "type": "string",
+                        "description": "HSN Code. Refer Master"
+                    },
+                    "Barcde": {
+                        "maxLength": 30,
+                        "minLength": 3,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Bar Code"
+                    },
+                    "Qty": {
+                        "maximum": 9999999999.999,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Quantity"
+                    },
+                    "FreeQty": {
+                        "maximum": 9999999999.999,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Free Quantity"
+                    },
+                    "Unit": {
+                        "maxLength": 8,
+                        "minLength": 3,
+                        "pattern": "^([A-Z|a-z]{3,8})$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Unit. Refer the master"
+                    },
+                    "UnitPrice": {
+                        "maximum": 999999999999.999,
+                        "minimum": 0,
+                        "type": "number",
+                        "description": "Unit Price - Rate"
+                    },
+                    "TotAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": "number",
+                        "description": "Gross Amount (Unit Price * Quantity)"
+                    },
+                    "Discount": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Discount"
+                    },
+                    "PreTaxVal": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Pre tax value"
+                    },
+                    "AssAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": "number",
+                        "description": "Taxable Value (Total Amount -Discount)"
+                    },
+                    "GstRt": {
+                        "maximum": 999.999,
+                        "minimum": 0,
+                        "type": "number",
+                        "description": "The GST rate, represented as percentage that applies to the invoiced item. It will IGST rate only."
+                    },
+                    "IgstAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Amount of IGST payable."
+                    },
+                    "CgstAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Amount of CGST payable."
+                    },
+                    "SgstAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Amount of SGST payable."
+                    },
+                    "CesRt": {
+                        "maximum": 999.999,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Cess Rate"
+                    },
+                    "CesAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Cess Amount(Advalorem) on basis of rate and quantity of item"
+                    },
+                    "CesNonAdvlAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Cess Non-Advol Amount"
+                    },
+                    "StateCesRt": {
+                        "maximum": 999.999,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "State CESS Rate"
+                    },
+                    "StateCesAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "State CESS Amount"
+                    },
+                    "StateCesNonAdvlAmt": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "State CESS Non Adval Amount"
+                    },
+                    "OthChrg": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Other Charges"
+                    },
+                    "TotItemVal": {
+                        "maximum": 999999999999.99,
+                        "minimum": 0,
+                        "type": "number",
+                        "description": "Total Item Value = Assessable Amount + CGST Amt + SGST Amt + Cess Amt + CesNonAdvlAmt + StateCesAmt + StateCesNonAdvlAmt+Otherchrg"
+                    },
+                    "OrdLineRef": {
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Order line reference"
+                    },
+                    "OrgCntry": {
+                        "maxLength": 2,
+                        "minLength": 2,
+                        "pattern": "^([A-Z|a-z]{2})$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Origin Country. Refer Master"
+                    },
+                    "PrdSlNo": {
+                        "maxLength": 20,
+                        "minLength": 1,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Serial number in case of each item having a unique number."
+                    },
+                    "BchDtls": {
+                        "required": [
+                            "Nm"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "Nm": {
+                                "maxLength": 20,
+                                "minLength": 3,
+                                "pattern": "^([^\\\"])*$",
+                                "type": "string",
+                                "description": "Batch number"
+                            },
+                            "ExpDt": {
+                                "maxLength": 10,
+                                "minLength": 10,
+                                "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Batch Expiry Date"
+                            },
+                            "WrDt": {
+                                "maxLength": 10,
+                                "minLength": 10,
+                                "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Warranty Date"
+                            }
+                        }
+                    },
+                    "AttribDtls": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "Nm",
+                                "Val"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "Nm": {
+                                    "maxLength": 100,
+                                    "minLength": 1,
+                                    "pattern": "^([^\\\"])*$",
+                                    "type": "string",
+                                    "description": "Attribute name of the item"
+                                },
+                                "Val": {
+                                    "maxLength": 100,
+                                    "minLength": 1,
+                                    "pattern": "^([^\\\"])*$",
+                                    "type": "string",
+                                    "description": "Attribute value of the item"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "ValDtls": {
+            "required": [
+                "AssVal",
+                "TotInvVal"
+            ],
+            "type": "object",
+            "properties": {
+                "AssVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": "number",
+                    "description": "Total Assessable value of all items"
+                },
+                "CgstVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Total CGST value of all items"
+                },
+                "SgstVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Total SGST value of all items"
+                },
+                "IgstVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Total IGST value of all items"
+                },
+                "CesVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Total CESS value of all items"
+                },
+                "StCesVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Total State CESS value of all items"
+                },
+                "Discount": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Discount"
+                },
+                "OthChrg": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Other Charges"
+                },
+                "RndOffAmt": {
+                    "maximum": 99.99,
+                    "minimum": -99.99,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Rounded off amount"
+                },
+                "TotInvVal": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": "number",
+                    "description": "Final Invoice value"
+                },
+                "TotInvValFc": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Final Invoice value in Additional Currency"
+                }
+            }
+        },
+        "PayDtls": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "Nm": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Payee Name"
+                },
+                "AccDet": {
+                    "maxLength": 18,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Bank account number of payee"
+                },
+                "Mode": {
+                    "maxLength": 18,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Mode of Payment: Cash, Credit, Direct Transfer"
+                },
+                "FinInsBr": {
+                    "maxLength": 11,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Branch or IFSC code"
+                },
+                "PayTerm": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Terms of Payment"
+                },
+                "PayInstr": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Payment Instruction"
+                },
+                "CrTrn": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Credit Transfer"
+                },
+                "DirDr": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Direct Debit"
+                },
+                "CrDay": {
+                    "maximum": 9999,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Credit Days"
+                },
+                "PaidAmt": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "The sum of amount which have been paid in advance."
+                },
+                "PaymtDue": {
+                    "maximum": 99999999999999.984,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Outstanding amount that is required to be paid."
+                }
+            }
+        },
+        "RefDtls": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "InvRm": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Remarks/Note"
+                },
+                "DocPerdDtls": {
+                    "type": "object",
+                    "properties": {
+                        "InvStDt": {
+                            "maxLength": 10,
+                            "minLength": 10,
+                            "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "Invoice Period Start Date"
+                        },
+                        "InvEndDt": {
+                            "maxLength": 10,
+                            "minLength": 10,
+                            "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "Invoice Period End Date"
+                        }
+                    }
+                },
+                "PrecDocDtls": {
+                    "type": "array",
+                    "items": {
+                        "required": [
+                            "InvDt",
+                            "InvNo"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "InvNo": {
+                                "maxLength": 16,
+                                "minLength": 1,
+                                "pattern": "^[1-9a-zA-Z]{1}[0-9a-zA-Z/-]{1,15}$",
+                                "type": "string",
+                                "description": "Reference of original invoice, if any."
+                            },
+                            "InvDt": {
+                                "maxLength": 10,
+                                "minLength": 10,
+                                "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                                "type": "string",
+                                "description": "Date of preceding invoice"
+                            },
+                            "OthRefNo": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Other Reference"
+                            }
+                        }
+                    }
+                },
+                "ContrDtls": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "RecAdvRefr": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Receipt Advice No."
+                            },
+                            "RecAdvDt": {
+                                "maxLength": 10,
+                                "minLength": 10,
+                                "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Date of receipt advice"
+                            },
+                            "TendRefr": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Lot/Batch Reference No."
+                            },
+                            "ContrRefr": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Contract Reference Number"
+                            },
+                            "ExtRefr": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Any other reference"
+                            },
+                            "ProjRefr": {
+                                "maxLength": 20,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Project Reference Number"
+                            },
+                            "PORefr": {
+                                "maxLength": 16,
+                                "minLength": 1,
+                                "pattern": "^([^\\\"])*$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "PO Reference Number"
+                            },
+                            "PORefDt": {
+                                "maxLength": 10,
+                                "minLength": 10,
+                                "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "POReferencedate"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "AddlDocDtls": {
+            "type": [
+                "array",
+                "null"
+            ],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Url": {
+                        "maxLength": 100,
+                        "minLength": 3,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Supporting document URL"
+                    },
+                    "Docs": {
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Supporting document in Base64 Format"
+                    },
+                    "Info": {
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "pattern": "^([^\\\"])*$",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Any additional information"
+                    }
+                }
+            }
+        },
+        "ExpDtls": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "ShipBNo": {
+                    "maxLength": 20,
+                    "minLength": 1,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Shipping Bill No."
+                },
+                "ShipBDt": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^[0-3][0-9]/[0-1][0-9]/[2][0][1-2][0-9]$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Shipping Bill Date"
+                },
+                "Port": {
+                    "maxLength": 10,
+                    "minLength": 2,
+                    "pattern": "^[0-9|A-Z|a-z]{2,10}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Port Code. Refer the master"
+                },
+                "RefClm": {
+                    "maxLength": 1,
+                    "minLength": 1,
+                    "pattern": "^([Y|N]{1})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Claiming Refund. Y/N"
+                },
+                "ForCur": {
+                    "maxLength": 16,
+                    "minLength": 3,
+                    "pattern": "^[A-Z|a-z]{3,16}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Additional Currency Code. Refer the master"
+                },
+                "CntCode": {
+                    "maxLength": 2,
+                    "minLength": 2,
+                    "pattern": "^([A-Z]{2})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Country Code. Refer the master"
+                },
+                "ExpDuty": {
+                    "maximum": 999999999999.99,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Export Duty"
+                }
+            }
+        },
+        "EwbDtls": {
+            "required": [
+                "Distance"
+            ],
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "TransId": {
+                    "maxLength": 15,
+                    "minLength": 15,
+                    "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Transin/GSTIN"
+                },
+                "TransName": {
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "pattern": "^([^\\\"])*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Name of the transporter"
+                },
+                "TransMode": {
+                    "maxLength": 1,
+                    "minLength": 1,
+                    "pattern": "^([1-4]{1})?$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Mode of transport (Road-1, Rail-2, Air-3, Ship-4)",
+                    "enum": [
+                        "1",
+                        "2",
+                        "3",
+                        "4"
+                    ]
+                },
+                "Distance": {
+                    "maximum": 4000,
+                    "minimum": 0,
+                    "type": "number",
+                    "description": "Distance between source and destination PIN codes"
+                },
+                "TransDocNo": {
+                    "maxLength": 15,
+                    "minLength": 1,
+                    "pattern": "^([a-zA-Z0-9/-]{1,15})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Tranport Document Number"
+                },
+                "TransDocDt": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^[a-zA-Z0-9]{1}[a-zA-Z0-9-/]*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Transport Document Date"
+                },
+                "VehNo": {
+                    "maxLength": 20,
+                    "minLength": 4,
+                    "pattern": "^([A-Z|a-z|0-9]{4,20})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Vehicle Number"
+                },
+                "VehType": {
+                    "maxLength": 1,
+                    "minLength": 1,
+                    "pattern": "^([O|R]{1})$",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Whether O-ODC or R-Regular",
+                    "enum": [
+                        "O",
+                        "R"
+                    ]
+                }
+            }
+        }
+    },
+    "description": "GST Invoice format for IRN Generation in INDIA"
+}

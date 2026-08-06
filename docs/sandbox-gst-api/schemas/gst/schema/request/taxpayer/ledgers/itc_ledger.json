@@ -1,0 +1,263 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+            "bal": {
+                "type": "number",
+                "multipleOf": 0.01,
+                "maximum": 9999999999999.99,
+                "minimum": 0.00
+            },
+            "gstin": {
+                "maxLength": 15,
+                "minLength": 15,
+                "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}",
+                "type": "string"
+            },
+            "ret_period": {
+                "pattern": "^((0[1-9]|1[012])((19|20)\\d\\d))$",
+                "type": "string"
+            },
+            "txamt": {
+                "type": "number",
+                "multipleOf": 0.01,
+                "maximum": 9999999999999.99,
+                "minimum": -9999999999999.99
+            }
+    },
+    "properties": {
+        "itcLdgDtls": {
+            "id": "/properties/itcLdgDtls",
+            "properties": {
+                "cl_bal": {
+                    "id": "/properties/itcLedgerResponseVO/properties/cl_bal",
+                    "properties": {
+                        "tot_rng_bal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/tot_rng_bal",
+                            "type": "number",
+                            "tot_rng_bal": { "$ref": "#/definitions/bal"}
+                        },
+                        "cessTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/cessTaxBal",
+                            "type": "number",
+                            "cessTaxBal": {"$ref": "#/definitions/bal"}
+                        },
+                        "cgstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/cgstTaxBal",
+                            "type": "number",
+                            "cgstTaxBal": {"$ref": "#/definitions/bal"}
+                        },
+                        "desc": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/desc",
+                            "type": "string"
+                        },
+                        "igstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/igstTaxBal",
+                            "type": "number",
+                            "igstTaxBal": {"$ref": "#/definitions/bal"}
+                        },
+                        "sgstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/cl_bal/properties/sgstTaxBal",
+                            "type": "number",
+                           "sgstTaxBal": { "$ref": "#/definitions/bal"}
+                        }
+                    },
+                    "type": "object"
+                },
+                "fr_dt": {
+                    "id": "/properties/itcLedgerResponseVO/properties/fr_dt",
+                    "type": "string"
+                },
+                "gstin": {
+                    "id": "/properties/itcLedgerResponseVO/properties/gstin",
+                    "type": "string",
+                   "gstin": { "$ref": "#/definitions/gstin"}
+                },
+                "op_bal": {
+                    "id": "/properties/itcLedgerResponseVO/properties/op_bal",
+                    "properties": {
+                        "tot_rng_bal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/tot_rng_bal",
+                            "type": "number",
+                           "tot_rng_bal": { "$ref": "#/definitions/bal"}
+                        },
+                        "cessTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/cessTaxBal",
+                            "type": "number",
+                            "cessTaxBal": {"$ref": "#/definitions/bal"}
+                        },
+                        "cgstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/cgstTaxBal",
+                            "type": "number",
+                            "cgstTaxBal": {"$ref": "#/definitions/bal"}
+                        },
+                        "desc": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/desc",
+                            "type": "string"
+                        },
+                     
+                        "igstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/igstTaxBal",
+                            "type": "number",
+                           "igstTaxBal": { "$ref": "#/definitions/bal"}
+                        },
+                        "sgstTaxBal": {
+                            "id": "/properties/itcLedgerResponseVO/properties/op_bal/properties/sgstTaxBal",
+                            "type": "number",
+                             "sgstTaxBal": {"$ref": "#/definitions/bal"}
+                        }
+                    },
+                    "type": "object"
+                },
+                "to_dt": {
+                    "id": "/properties/itcLedgerResponseVO/properties/to_dt",
+                    "type": "string"
+                },
+                "tr": {
+                    "id": "/properties/itcLedgerResponseVO/properties/tr",
+                    "items": {
+                        "id": "/properties/itcLedgerResponseVO/properties/tr/items",
+                        "properties": {
+                            "tot_tr_amt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/tot_tr_amt",
+                                "type": "number",
+                                "tot_tr_amt": {"$ref": "#/definitions/bal"}
+                            },
+                            "tot_rng_bal": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/tot_rng_bal",
+                                "type": "number",
+                                "tot_rng_bal": { "$ref": "#/definitions/bal"}
+                            },
+                            "cessTaxAmt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/cessTaxAmt",
+                                "type": "number",
+                                "cessTaxAmt": {"$ref": "#/definitions/txamt"}
+                            },
+                            "cessTaxBal": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/cessTaxBal",
+                                "type": "number",
+                                 "cessTaxBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "cgstTaxAmt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/cgstTaxAmt",
+                                "type": "number",
+                                "cgstTaxAmt": {"$ref": "#/definitions/txamt"}
+                            },
+                            "cgstTaxBal": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/cgstTaxBal",
+                                "type": "number",
+                                "cgstTaxBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "desc": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/desc",
+                                "type": "string"
+                            },
+                            "dt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/dt",
+                                "type": "string"
+                            },
+                            "igstTaxAmt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/igstTaxAmt",
+                                "type": "number",
+                                "igstTaxAmt": {"$ref": "#/definitions/txamt"}
+                            },
+                            "igstTaxBal": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/igstTaxBal",
+                                "type": "number",
+                                "igstTaxBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "ref_no": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/ref_no",
+                                "type": "string"
+                            },
+                            "sgstTaxAmt": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/sgstTaxAmt",
+                                "type": "number",
+                                 "sgstTaxAmt": {"$ref": "#/definitions/txamt"}
+                            },
+                            "sgstTaxBal": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/sgstTaxBal",
+                                "type": "number",
+                                 "sgstTaxBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "ret_period": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/ret_period",
+                                "type": "string",
+                               "ret_period": { "$ref": "#/definitions/ret_period"}
+                            },
+                            "tr_typ": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/tr_typ",
+                                "type": "string"
+                            },
+                            "taxOffDesg": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/taxOffDesg",
+                                "type": "string"
+                            },
+                            "taxOffNam": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/taxOffNam",
+                                "type": "string"
+                            },
+                            "taxOffJursd": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/taxOffJursd",
+                                "type": "string"
+                            },
+                            "taxOffAdmn": {
+                                "id": "/properties/itcLedgerResponseVO/properties/tr/items/properties/taxOffAdmn",
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "provCrdBalList": {
+            "id": "/properties/provCrdBalList",
+            "properties": {
+                "provCrdBal": {
+                    "id": "/properties/provisionalCreditList/properties/provCrdBal",
+                    "items": {
+                        "id": "/properties/provisionalCreditList/properties/provisionalCredit/items",
+                        "properties": {
+                            "cessProCrBal": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/cessProCrBal",
+                                "type": "number",
+                                 "cessProCrBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "cgstProCrBal": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/cgstProCrBal",
+                                "type": "number",
+                                "cgstProCrBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "igstProCrBal": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/igstProCrBal",
+                                "type": "number",
+                               "igstProCrBal": { "$ref": "#/definitions/bal"}
+                            },
+                            "ret_period": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/ret_period",
+                                "type": "string",
+                                 "ret_period": {"$ref": "#/definitions/ret_period"}
+                            },
+                            "sgstProCrBal": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/sgstProCrBal",
+                                "type": "number",
+                                 "sgstProCrBal": {"$ref": "#/definitions/bal"}
+                            },
+                            "totProCrBal": {
+                                "id": "/properties/provisionalCreditList/properties/provisionalCredit/items/properties/totProCrBal",
+                                "type": "number",
+                                 "totProCrBal": {"$ref": "#/definitions/bal"}
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "type": "object"
+}

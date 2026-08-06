@@ -1,0 +1,43 @@
+---
+title: "POST for GET"
+description: "Learn why Sandbox uses POST requests for data retrieval to protect sensitive information."
+keywords: ["POST", "GET", "security", "sensitive data", "PAN", "Aadhaar"]
+---
+
+Sandbox uses POST requests instead of GET for retrieving sensitive data. This design choice places identification parameters (PAN, Aadhaar, GST, etc.) in the request body rather than in URLs.
+
+## Why post instead of get?
+
+### Reduced logging risk
+
+Intermediary servers typically do not log request body data. Most systems log only request URLs and headers, omitting the body. This practice reduces the chance of accidental data exposure in server logs.
+
+### Enhanced security
+
+Data in the request body benefits from additional security measures:
+
+- Not visible in browser history or bookmarks
+- Not cached by default
+- Not logged in server access logs
+- Protected during transmission with https encryption
+
+<Warning>
+  Never include sensitive identifiers like PAN, Aadhaar, or GSTIN in query parameters or url paths.
+</Warning>
+
+## Example
+
+Instead of:
+```
+GET /api/kyc/pan/verify?pan=ABCDE1234F
+```
+
+Sandbox uses:
+```bash
+POST /api/kyc/pan/verify
+Content-Type: application/json
+
+{
+  "pan": "ABCDE1234F"
+}
+```

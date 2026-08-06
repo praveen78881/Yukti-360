@@ -1,0 +1,34 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+		"Irn": {
+			"type": "string",
+			"minLength": 64,
+			"maxLength": 64,
+			"description": "Invoice Reference Number"
+		},
+		"CnlRsn": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 1,
+			"enum": [
+				"1",
+				"2",
+				"3",
+				"4"
+			],
+			"description": "Cancel Reason 1- Duplicate, 2 - Data entry mistake, 3- Order Cancelled, 4 - Others"
+		},
+		"CnlRem": {
+			"type": "string",
+			"minLength": 0,
+			"maxLength": 100,
+			"description": "Cancel Remarks"
+		}
+	},
+	"required": [
+		"Irn",
+		"CnlRsn"
+	]
+}

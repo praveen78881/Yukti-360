@@ -43,6 +43,11 @@ const NOTES: NoteDefinition[] = [
   { noteNo: '16', title: 'Short-term Loans and Advances', groups: ['Short-term Loans & Advances', 'Other Current Assets'] },
 ];
 
+// Contra-asset subgroups are shown as deductions: their balances net AGAINST the note total.
+const CONTRA_SUBGROUPS = new Set(['Accumulated Depreciation', 'Accumulated Amortisation']);
+const noteLineAmount = (line: { account_group: string; balance: number }): number =>
+  CONTRA_SUBGROUPS.has(line.account_group) ? -Math.abs(line.balance) : Math.abs(line.balance);
+
 const SCHEDULE_III_AGEING_LABELS = [
   { key: 'lessThan6Months', label: 'Less than 6 months' },
   { key: 'sixMonthsTo1Year', label: '6 months to 1 year' },
@@ -89,7 +94,7 @@ export default function BalanceSheetNotesPage() {
   const groupedNotes = NOTES.map(note => {
     const groupSet = new Set(note.groups);
     const lines = balances.filter(b => groupSet.has(b.account_group));
-    const total = lines.reduce((s, b) => s + Math.abs(b.balance), 0);
+    const total = lines.reduce((s, b) => s + noteLineAmount(b), 0);
     return { note, lines, total };
   }).filter(n => n.lines.length > 0 || n.total !== 0);
 
@@ -108,7 +113,7 @@ export default function BalanceSheetNotesPage() {
         title: n.note.title,
         account_name: line.account_name,
         account_group: line.account_group,
-        amount: Math.abs(line.balance),
+        amount: noteLineAmount(line),
       }))
     ),
     ...contingentItems.map(item => ({
@@ -193,7 +198,7 @@ export default function BalanceSheetNotesPage() {
                         sno: idx + 1,
                         account_name: line.account_name,
                         account_group: line.account_group,
-                        amount: Math.abs(line.balance),
+                        amount: noteLineAmount(line),
                       })),
                       {
                         sno: '',
@@ -230,7 +235,7 @@ export default function BalanceSheetNotesPage() {
                         <td className="px-3 py-2 text-gray-800">{line.account_name}</td>
                         <td className="px-3 py-1.5 text-xs text-gray-500">{line.account_group}</td>
                         <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-sm">
-                          {formatIndianCurrency(Math.abs(line.balance))}
+                          {formatIndianCurrency(noteLineAmount(line))}
                         </td>
                       </tr>
                     ))}

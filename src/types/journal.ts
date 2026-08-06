@@ -39,6 +39,9 @@ export interface JournalEntry {
   book_period: string;
   is_opening: boolean;
   is_closing: boolean;
+  /** Optional provenance marker, e.g. 'bulk_suspense:<id>' for bank-import
+   *  allocations, so the source flow can find and reverse its own entries. */
+  source_ref?: string | null;
   created_at: string;
   updated_at: string;
 }

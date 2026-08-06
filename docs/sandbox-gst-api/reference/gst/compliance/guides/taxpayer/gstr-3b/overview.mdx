@@ -1,0 +1,126 @@
+---
+title: "Overview"
+description: "Fetch GSTR-3B details, auto-calculate liability, save return data, offset liability with ITC and cash, and file GSTR-3B using EVC OTP on the GST portal."
+---
+
+# GSTR-3B API
+
+GSTR-3B is a monthly or quarterly GST summary return for declaring tax liability and paying GST for a tax period. Use this API to fetch GSTR-3B details, auto-calculate liability, save return data, offset liability using cash and ITC, and file GSTR-3B with EVC OTP authorization.
+
+## Why use this API
+
+GSTR-3B filing is mandatory for all regular GST-registered taxpayers. This API automates the complete workflow, from fetching portal data to filing with authorized signatory verification, following GST compliance requirements for Form GSTR-3B.
+
+<CardGroup cols={2}>
+  <Card title="Fetch & validate" icon="file-lines">
+    Retrieve saved GSTR-3B data and auto-calculated liability from the GST portal for any return period.
+  </Card>
+  <Card title="Save & process" icon="floppy-disk">
+    Upload GSTR-3B JSON to the portal and poll return status until validation completes.
+  </Card>
+  <Card title="Offset liability" icon="scale-balanced">
+    Allocate Input Tax Credit (ITC) and cash ledger balance to offset tax liability before filing.
+  </Card>
+  <Card title="File with EVC" icon="paper-plane">
+    Generate EVC OTP for authorized signatory and file GSTR-3B after liability offset.
+  </Card>
+</CardGroup>
+
+## Recipes
+
+Follow step-by-step guides for common GSTR-3B workflows:
+
+<CardGroup cols={2}>
+  <Card title="File GSTR-3B" icon="file-circle-check" href="/recipes/gst/gstr-3b/file_gstr_3b">
+    Complete workflow for filing GSTR-3B with liability offset and EVC verification.
+  </Card>
+  <Card title="File Nil GSTR-3B" icon="file" href="/recipes/gst/gstr-3b/file_nil_gstr_3b">
+    Simplified workflow for filing nil returns when there are no transactions or liability.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="GSTR-3B data" icon="database" href="#gstr-3b-data-apis">
+    Fetch saved return data and auto-calculated liability from the GST portal.
+  </Card>
+  <Card title="Ledger balances" icon="wallet" href="#ledger-apis">
+    Retrieve cash and ITC ledger balances before liability offset.
+  </Card>
+  <Card title="Return filing" icon="paper-plane" href="#return-filing-apis">
+    Save, offset liability, and file GSTR-3B to the GST portal.
+  </Card>
+  <Card title="Status polling" icon="rotate" href="#status-polling-apis">
+    Track return processing status and retrieve validation errors.
+  </Card>
+  <Card title="Authentication" icon="shield-check" href="#authentication-apis">
+    Generate EVC OTP for authorized signatory verification.
+  </Card>
+</CardGroup>
+
+## GSTR-3B data APIs
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Get GSTR-3B Details](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/gstr_3b_details) | `GET` | `/gst/compliance/tax-payer/gstrs/gstr-3b/{year}/{month}` |
+| [Get GSTR-3B Liability Auto Calc](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/auto_liability_calc) | `GET` | `/gst/compliance/tax-payer/gstrs/gstr-3b/{year}/{month}/auto-liability-calc` |
+
+## Return filing APIs
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Save GSTR-3B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/save) | `POST` | `/gst/compliance/tax-payer/gstrs/gstr-3b/{year}/{month}` |
+| [Offset Liability](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/offset_liability) | `POST` | `/gst/compliance/tax-payer/gstrs/gstr-3b/{year}/{month}/offset-liability` |
+| [File GSTR-3B](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/file) | `POST` | `/gst/compliance/tax-payer/gstrs/gstr-3b/{year}/{month}/file` |
+
+## Ledger APIs
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Get Balance Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_itc_balance_ledger) | `GET` | `/gst/compliance/tax-payer/ledgers/bal/{year}/{month}` |
+
+## Status polling APIs
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [GST Return Status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) | `GET` | `/gst/compliance/tax-payer/gstrs/{year}/{month}/status` |
+
+## Authentication APIs
+
+| API | Method | Path |
+|:----|:-------|:-----|
+| [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) (requires PAN and `gstr=gstr-3b` query parameter) | `POST` | `/gst/compliance/tax-payer/evc/otp` |
+
+## Common use cases
+
+Use GSTR-3B API when you need to:
+
+- Automate GSTR-3B filing from ERP or accounting software across multiple return periods
+- Track GSTR-3B processing status with return polling in a filing dashboard
+- Catch validation errors after save and offset operations before filing
+- Handle nil returns for inactive GSTINs using the [File Nil GSTR-3B](/recipes/gst/gstr-3b/file_nil_gstr_3b) recipe
+
+## FAQs
+
+<AccordionGroup>
+  <Accordion title="What is GSTR-3B and who needs to file it?">
+    GSTR-3B is a monthly or quarterly self-declaration summary return for GST-registered taxpayers in India. All regular taxpayers must file GSTR-3B to declare tax liability, claim Input Tax Credit (ITC), and pay GST for each return period. The return consolidates sales, purchases, and tax liability into one submission. See the [GST API overview](/api-reference/gst/overview) for terminology and authentication prerequisites.
+  </Accordion>
+  <Accordion title="What is the GSTR-3B filing workflow using the API?">
+    The GSTR-3B filing workflow has eight steps. First, fetch existing return data and auto-calculate liability for validation. Next, save the return JSON to the portal and poll status until save completes. Then offset liability using ITC and cash, and poll status until offset completes. Finally, generate EVC OTP for the authorized signatory and file the return with OTP verification.
+  </Accordion>
+  <Accordion title="Why do I need to poll GST return status after save and offset?">
+    The GST portal processes save and offset requests asynchronously. Polling the [GST Return Status](/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status) endpoint confirms when processing completes and catches validation errors before you proceed to the next step.
+  </Accordion>
+  <Accordion title="What is EVC OTP and why is it required for filing?">
+    EVC (Electronic Verification Code) OTP is a one-time password sent to the authorized signatory's registered mobile or email. EVC OTP authenticates the signatory before filing GSTR-3B. Generate the OTP using the [Generate EVC OTP](/api-reference/gst/compliance/endpoints/taxpayer/authentication/generate_evc_otp) endpoint with the signatory's PAN.
+  </Accordion>
+  <Accordion title="What is the difference between GSTR-3B and nil GSTR-3B?">
+    Regular GSTR-3B is filed when a taxpayer has transactions, tax liability, or ITC claims for the period. Nil GSTR-3B is filed when there are no outward or inward supplies, no liability, and no ITC for the period. Nil filing is still mandatory to maintain compliance. Use the [File Nil GSTR-3B](/recipes/gst/gstr-3b/file_nil_gstr_3b) recipe for nil returns.
+  </Accordion>
+  <Accordion title="What is liability offset in GSTR-3B?">
+    Liability offset allocates Input Tax Credit (ITC) and cash ledger balance to pay tax liability. The [Offset Liability](/api-reference/gst/compliance/endpoints/taxpayer/gstr-3b/offset_liability) endpoint lets you specify how much ITC and cash to apply to each tax head (IGST, CGST, SGST, cess). Liability offset must complete before filing.
+  </Accordion>
+</AccordionGroup>
+

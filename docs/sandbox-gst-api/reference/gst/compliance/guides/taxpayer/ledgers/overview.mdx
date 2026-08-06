@@ -1,0 +1,162 @@
+---
+title: "Overview"
+description: "Fetch electronic cash ledger, ITC credit ledger, and return liability ledger data for a GSTIN to reconcile GST payments and plan return set-off."
+---
+
+# GST Ledgers API
+
+GST ledgers are electronic records on the GST portal that track a taxpayer's cash deposits, input tax credit (ITC), and return-related tax liabilities for a GSTIN. Use this API to fetch cash ledger, ITC ledger, and liability ledger data to reconcile payments and plan set-off.
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Cash and ITC balance snapshot" icon="database">
+    Retrieves current cash and ITC balances for a GSTIN as of a specific month, including blocked ITC fields.
+  </Card>
+  <Card title="Cash ledger transactions" icon="file-invoice">
+    Fetches detailed cash ledger entries for a date range to reconcile deposits, payments, and debits against internal records.
+  </Card>
+  <Card title="ITC credit and utilisation" icon="circle-check">
+    Accesses ITC ledger entries with transaction descriptions and reference numbers to track credit accruals and offsets.
+  </Card>
+  <Card title="Return liability breakdown" icon="triangle-exclamation">
+    Views return-related liabilities and adjustments for a filing period to understand pending obligations before filing.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Generate OTP for taxpayer">
+    [Initiate OTP authentication](/recipes/gst/authentication/generate_tax_payer_session) for the GSTIN to begin the session.
+  </Step>
+  <Step title="Obtain taxpayer access token">
+    Create an authenticated session to obtain a Taxpayer access token for the `Authorization` header.
+  </Step>
+  <Step title="Retrieve balance snapshot">
+    [Fetch current cash and ITC balances](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_itc_balance_ledger) for the period.
+  </Step>
+  <Step title="Fetch cash ledger transactions">
+    [Pull cash ledger entries](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_ledger) for a date range to reconcile deposits and debits.
+  </Step>
+  <Step title="Fetch ITC ledger transactions">
+    [Retrieve ITC ledger entries](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/itc_ledger) for a date range to track credits and utilisation.
+  </Step>
+  <Step title="Retrieve return liability ledger">
+    [Fetch return-related liabilities](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/return_liability_ledger) for the selected return period.
+  </Step>
+  <Step title="Validate and proceed">
+    Compare available cash and ITC against payable liability before filing returns. Refresh session if expired.
+  </Step>
+</Steps>
+
+## Recipes
+
+<CardGroup cols={2}>
+  <Card title="Generate taxpayer session" icon="key" href="/recipes/gst/authentication/generate_tax_payer_session">
+    Authenticate and obtain a Taxpayer access token for ledger API calls.
+  </Card>
+  <Card title="File GSTR-3B" icon="paper-plane" href="/recipes/gst/gstr-3b/file_gstr_3b">
+    Use ledger insights to prepare and file your GSTR-3B return.
+  </Card>
+  <Card title="Check return status" icon="circle-check" href="/api-reference/gst/compliance/endpoints/taxpayer/common/gst_return_status">
+    Verify return filing status and errors after submission.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/guides/developer-resources/errors">
+    Handle API errors and validation failures gracefully.
+  </Card>
+</CardGroup>
+
+## API categories
+
+<CardGroup cols={2}>
+  <Card title="Balance snapshot" icon="database" href="#balance-snapshot">
+    Gets cash and ITC balances as on a specific month.
+  </Card>
+  <Card title="Electronic cash ledger" icon="file-invoice" href="#electronic-cash-ledger">
+    Detailed cash ledger transactions for a date range.
+  </Card>
+  <Card title="Electronic credit ledger" icon="circle-check" href="#electronic-credit-ledger-itc">
+    ITC credit and debit entries with reference details.
+  </Card>
+  <Card title="Return liability ledger" icon="triangle-exclamation" href="#return-liability-ledger">
+    Return-related liabilities and adjustments by period.
+  </Card>
+</CardGroup>
+
+## API reference
+
+All ledger APIs require:
+- `Authorization` header with Taxpayer access token
+- `x-api-key` header with your API key
+
+### Balance snapshot
+
+| API | Path | Description |
+|:----|:-----|:------------|
+| [Cash + ITC Balance](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_itc_balance_ledger) | `GET /gst/compliance/tax-payer/ledgers/bal/{year}/{month}` | Returns cash balance and ITC balance for the specified year and month. Includes blocked ITC fields if applicable. |
+
+### Electronic cash ledger
+
+| API | Path | Description |
+|:----|:-----|:------------|
+| [Cash Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/cash_ledger) | `GET /gst/compliance/tax-payer/ledgers/cash?from={DD/MM/YYYY}&to={DD/MM/YYYY}` | Returns cash ledger entries for the date range. `to` date cannot be beyond the current date. |
+
+### Electronic credit ledger (ITC)
+
+| API | Path | Description |
+|:----|:-----|:------------|
+| [ITC Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/itc_ledger) | `GET /gst/compliance/tax-payer/ledgers/itc?from={DD/MM/YYYY}&to={DD/MM/YYYY}` | Returns ITC credits and debits with descriptions and reference numbers. Both `from` and `to` are required. |
+
+### Return liability ledger
+
+| API | Path | Description |
+|:----|:-----|:------------|
+| [Return Liability Ledger](/api-reference/gst/compliance/endpoints/taxpayer/ledgers/return_liability_ledger) | `GET /gst/compliance/tax-payer/ledgers/tax/{year}/{month}?from={DD/MM/YYYY}&to={DD/MM/YYYY}` | Returns liabilities and adjustments for the return period. Combine with date range filters. |
+
+## Common use cases
+
+Use GST Ledgers API when you need to:
+
+- **Build a GST payment readiness dashboard** that shows available cash and ITC balances against expected GSTR-3B liability before filing.
+- **Reconcile challan deposits** with cash ledger debits against internal payment records for month-end closing and audits.
+- **Investigate balance discrepancies** by pulling transaction-level ledger entries with descriptions and reference numbers.
+- **Validate payments posted on the GST portal** before proceeding to file returns or when filing fails due to insufficient balance.
+- **Automate statutory audit evidence collection** with ledger extracts for finance teams and monthly compliance reviews.
+- **Plan ITC utilisation strategy** by analyzing available credit across CGST, SGST, and IGST heads before set-off.
+
+## FAQs
+
+<AccordionGroup>
+  <Accordion title="What is the GST Ledgers API?">
+    GST Ledgers API provides programmatic access to the electronic ledgers maintained on the GST portal for a GSTIN. The API returns cash ledger, ITC credit ledger, and return liability ledger data—the same information available on the GST portal under the "Electronic Ledger" section. Developers use this API to build dashboards, reconciliation tools, and filing-readiness checks.
+  </Accordion>
+  
+  <Accordion title="What is the difference between Cash Ledger, ITC Ledger, and Return Liability Ledger?">
+    Each ledger has a different purpose. Cash Ledger tracks cash deposits via challans and debits for tax payments. ITC Ledger records input tax credits claimed from purchases and their use against output liability. Return Liability Ledger shows liabilities for each filing period. Together, these ledgers determine the net payable or refundable amount during return filing.
+  </Accordion>
+  
+  <Accordion title="When should I use Cash + ITC Balance vs the detailed ledgers?">
+    Cash + ITC Balance API returns a snapshot of current balances for a specific month, ideal for quick checks before filing or dashboard summaries. Detailed ledger APIs return individual transactions with descriptions and reference numbers. Use these for reconciliation, audit trails, and investigating discrepancies.
+  </Accordion>
+  
+  <Accordion title="What date format do the from and to parameters use?">
+    Ledger APIs use `DD/MM/YYYY` format for `from` and `to` query parameters (for example, `01/04/2025` for April 1, 2025). Common validation errors include: `to` date beyond current date, `from` date after `to` date, and invalid date format. Ensure both dates fall within the authenticated GSTIN's registration period.
+  </Accordion>
+  
+  <Accordion title="What authentication is required for ledger APIs?">
+    GST Ledgers APIs require a Taxpayer access token obtained through the [taxpayer authentication flow](/recipes/gst/authentication/generate_tax_payer_session) with OTP verification. Include this token in the `Authorization` header along with your `x-api-key`. Taxpayer tokens expire after 30 minutes of inactivity. Refresh the session if you receive an authentication error.
+  </Accordion>
+  
+  <Accordion title="Can I use ledger data to prepare for GSTR-3B set-off and payment?">
+    Yes. Use GST Ledgers API for [GSTR-3B preparation](/recipes/gst/gstr-3b/file_gstr_3b). Fetch cash and ITC balances to determine available funds, compare against your computed liability, and identify any shortfall requiring additional challan payment. The return liability ledger shows pending liabilities from previous periods that may affect your filing.
+  </Accordion>
+  
+  <Accordion title="What should I do if ledger values don't match my internal books?">
+    Ledger discrepancies typically arise from timing differences, rejected transactions, or portal sync delays. Pull transaction-level entries with reference numbers using the detailed ledger APIs, then match each entry against your internal records. Common causes include unposted challans, reversed ITC claims, and pending return processing. Review the [error handling guide](/guides/developer-resources/errors) for troubleshooting, or contact GST support if discrepancies persist.
+  </Accordion>
+  
+  <Accordion title="How do I handle session expiry during ledger API calls?">
+    Taxpayer sessions expire after approximately 30 minutes of inactivity. If you receive an authentication error (HTTP 401 or specific error code), re-initiate the taxpayer authentication flow to obtain a fresh access token. Design your integration to detect session expiry and automatically trigger re-authentication before retrying the failed request.
+  </Accordion>
+</AccordionGroup>

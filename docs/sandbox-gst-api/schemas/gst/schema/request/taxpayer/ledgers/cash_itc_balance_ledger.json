@@ -1,0 +1,299 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"additionalProperties": false,
+	"definitions": {
+            "bal": {
+                "type": "number",
+                "multipleOf": 0.01,
+                "maximum": 9999999999999.99,
+                "minimum": 0.00
+            },
+            "gstin": {
+                "maxLength": 15,
+                "minLength": 15,
+                "pattern": "[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz1-9A-Ja-j]{1}[0-9a-zA-Z]{1}",
+                "type": "string"
+            },
+            "tax_period": {
+                "pattern": "^(((19|20)\\d\\d)(0[1-9]|1[012]))$",
+                "type": "string"
+            }
+    },
+	"id": "http://example.com/example.json",
+	"properties": {
+		"cash_bal": {
+			"additionalProperties": false,
+			"id": "/properties/cash_bal",
+			"properties": {
+				"cess": {
+					"additionalProperties": false,
+					"id": "/properties/cash_bal/properties/cess",
+					"properties": {
+						"fee": {
+							"id": "/properties/cash_bal/properties/cess/properties/fee",
+							"type": "number",
+                             "fee": {"$ref": "#/definitions/bal"}
+						},
+						"intr": {
+							"id": "/properties/cash_bal/properties/cess/properties/intr",
+							"type": "number",
+                             "intr": {"$ref": "#/definitions/bal" }
+						},
+						"oth": {
+							"id": "/properties/cash_bal/properties/cess/properties/oth",
+							"type": "number",
+                             "oth": {"$ref": "#/definitions/bal"}
+						},
+						"pen": {
+							"id": "/properties/cash_bal/properties/cess/properties/pen",
+							"type": "number",
+                             "pen": {"$ref": "#/definitions/bal"}
+						},
+						"tx": {
+							"id": "/properties/cash_bal/properties/cess/properties/tx",
+							"type": "number",
+                             "tx": {"$ref": "#/definitions/bal"}
+						}
+					},
+					"required": [
+						"oth",
+						"pen",
+						"fee",
+						"tx",
+						"intr"
+					],
+					"type": "object"
+				},
+				"cess_tot_bal": {
+					"id": "/properties/cash_bal/properties/cess_tot_bal",
+					"type": "number",
+                    "cess_tot_bal": {"$ref": "#/definitions/bal"}
+				},
+				"cgst": {
+					"additionalProperties": false,
+					"id": "/properties/cash_bal/properties/cgst",
+					"properties": {
+						"fee": {
+							"id": "/properties/cash_bal/properties/cgst/properties/fee",
+							"type": "number",
+                             "fee": {"$ref": "#/definitions/bal"}
+						},
+						"intr": {
+							"id": "/properties/cash_bal/properties/cgst/properties/intr",
+							"type": "number",
+                            "intr": { "$ref": "#/definitions/bal"}
+						},
+						"oth": {
+							"id": "/properties/cash_bal/properties/cgst/properties/oth",
+							"type": "number",
+                             "oth": {"$ref": "#/definitions/bal"}
+						},
+						"pen": {
+							"id": "/properties/cash_bal/properties/cgst/properties/pen",
+							"type": "number",
+                             "pen": {"$ref": "#/definitions/bal"}
+						},
+						"tx": {
+							"id": "/properties/cash_bal/properties/cgst/properties/tx",
+							"type": "number",
+                            "tx": { "$ref": "#/definitions/bal"}
+						}
+					},
+					"required": [
+						"oth",
+						"pen",
+						"fee",
+						"tx",
+						"intr"
+					],
+					"type": "object"
+				},
+				"cgst_tot_bal": {
+					"id": "/properties/cash_bal/properties/cgst_tot_bal",
+					"type": "number",
+                     "cgst_tot_bal": {"$ref": "#/definitions/bal"}
+				},
+				"igst": {
+					"additionalProperties": false,
+					"id": "/properties/cash_bal/properties/igst",
+					"properties": {
+						"fee": {
+							"id": "/properties/cash_bal/properties/igst/properties/fee",
+							"type": "number",
+                             "fee": {"$ref": "#/definitions/bal"}
+						},
+						"intr": {
+							"id": "/properties/cash_bal/properties/igst/properties/intr",
+							"type": "number",
+                            "intr": { "$ref": "#/definitions/bal"}
+						},
+						"oth": {
+							"id": "/properties/cash_bal/properties/igst/properties/oth",
+							"type": "number",
+                             "oth": {"$ref": "#/definitions/bal"}
+						},
+						"pen": {
+							"id": "/properties/cash_bal/properties/igst/properties/pen",
+							"type": "number",
+                             "pen": {"$ref": "#/definitions/bal"}
+						},
+						"tx": {
+							"id": "/properties/cash_bal/properties/igst/properties/tx",
+							"type": "number",
+                             "tx": {"$ref": "#/definitions/bal"}
+						}
+					},
+					"required": [
+						"oth",
+						"pen",
+						"fee",
+						"tx",
+						"intr"
+					],
+					"type": "object"
+				},
+				"igst_tot_bal": {
+					"id": "/properties/cash_bal/properties/igst_tot_bal",
+					"type": "number",
+                   "igst_tot_bal": { "$ref": "#/definitions/bal"}
+				},
+				"sgst": {
+					"additionalProperties": false,
+					"id": "/properties/cash_bal/properties/sgst",
+					"properties": {
+						"fee": {
+							"id": "/properties/cash_bal/properties/sgst/properties/fee",
+							"type": "number",
+                            "fee": { "$ref": "#/definitions/bal"}
+						},
+						"intr": {
+							"id": "/properties/cash_bal/properties/sgst/properties/intr",
+							"type": "number",
+                             "intr": {"$ref": "#/definitions/bal"}
+						},
+						"oth": {
+							"id": "/properties/cash_bal/properties/sgst/properties/oth",
+							"type": "number",
+                            "oth": { "$ref": "#/definitions/bal"}
+						},
+						"pen": {
+							"id": "/properties/cash_bal/properties/sgst/properties/pen",
+							"type": "number",
+                            "pen": { "$ref": "#/definitions/bal"}
+						},
+						"tx": {
+							"id": "/properties/cash_bal/properties/sgst/properties/tx",
+							"type": "number",
+                            "tx": { "$ref": "#/definitions/bal"}
+						}
+					},
+					"required": [
+						"oth",
+						"pen",
+						"fee",
+						"tx",
+						"intr"
+					],
+					"type": "object"
+				},
+				"sgst_tot_bal": {
+					"id": "/properties/cash_bal/properties/sgst_tot_bal",
+					"type": "number",
+                    "sgst_tot_bal": { "$ref": "#/definitions/bal"}
+				}
+			},
+			"required": [
+				"igst",
+				"cgst_tot_bal",
+				"cess_tot_bal",
+				"sgst",
+				"igst_tot_bal",
+				"cess",
+				"sgst_tot_bal",
+				"cgst"
+			],
+			"type": "object"
+		},
+		"gstin": {
+			"id": "/properties/gstin",
+			"type": "string",
+            "gstin": {"$ref": "#/definitions/gstin"}
+		},
+		"itc_bal": {
+			"additionalProperties": false,
+			"id": "/properties/itc_bal",
+			"properties": {
+				"cess_bal": {
+					"id": "/properties/itc_bal/properties/cess_bal",
+					"type": "number",
+                    "cess_bal": {"$ref": "#/definitions/bal"}
+				},
+				"cgst_bal": {
+					"id": "/properties/itc_bal/properties/cgst_bal",
+					"type": "number",
+                    "cgst_bal": {"$ref": "#/definitions/bal"}
+				},
+				"igst_bal": {
+					"id": "/properties/itc_bal/properties/igst_bal",
+					"type": "number",
+                    "igst_bal": {"$ref": "#/definitions/bal"}
+				},
+				"sgst_bal": {
+					"id": "/properties/itc_bal/properties/sgst_bal",
+					"type": "number",
+                    "sgst_bal": {"$ref": "#/definitions/bal"}
+				}
+			},
+			"required": [
+				"cgst_bal",
+				"igst_bal",
+				"cess_bal",
+				"sgst_bal"
+			],
+			"type": "object"
+		},
+		"itc_blck_bal": {
+			"additionalProperties": false,
+			"id": "/properties/itc_blck_bal",
+			"properties": {
+				"cess_blck_bal": {
+					"id": "/properties/itc_blck_bal/properties/cess_blck_bal",
+					"type": "number",
+                    "cess_blck_bal": {"$ref": "#/definitions/bal"}
+				},
+				"cgst_blck_bal": {
+					"id": "/properties/itc_blck_bal/properties/cgst_blck_bal",
+					"type": "number",
+                    "cgst_blck_bal": {"$ref": "#/definitions/bal"}
+				},
+				"igst_blck_bal": {
+					"id": "/properties/itc_blck_bal/properties/igst_blck_bal",
+					"type": "number",
+                    "igst_blck_bal": {"$ref": "#/definitions/bal"}
+				},
+				"sgst_blck_bal": {
+					"id": "/properties/itc_blck_bal/properties/sgst_blck_bal",
+					"type": "number",
+                   "sgst_blck_bal": {"$ref": "#/definitions/bal"}
+				}
+			},
+			"required": [
+				"cgst_blck_bal",
+				"igst_blck_bal",
+				"cess_blck_bal",
+				"sgst_blck_bal"
+			],
+			"type": "object"
+		}
+	},
+
+
+	"required": [
+		"itc_bal",
+		"gstin",
+		"cash_bal"
+	],
+	"type": "object"
+
+
+}

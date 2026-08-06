@@ -1,0 +1,242 @@
+---
+title: "E-Way Bill master data"
+description: "Official NIC E-Way Bill API codes for Sandbox GST APIs, including supply, document, transport, vehicle, unit, cancellation, and validity-extension fields."
+keywords:
+  - "E-Way Bill master data"
+  - "E-Way Bill master codes"
+  - "GST E-Way Bill API codes"
+  - "NIC E-Way Bill codes"
+  - "transport mode codes"
+---
+
+This page lists the official NIC master codes used in Sandbox E-Way Bill API requests and responses. Match each code to its named field. A numeric code has no meaning outside its category.
+
+## Request field index
+
+| Category | Request field | Used in |
+| --- | --- | --- |
+| Supply, sub-supply, document, and transaction | `supplyType`, `subSupplyType`, `subSupplyDesc`, `docType`, `transactionType` | Generate E-Way Bill |
+| Transport mode | `transMode` | Generate, consolidate, and multi-vehicle flows; see the validity-extension caveat below |
+| Vehicle fields | `vehicleNo`, `vehicleType` | Generate and vehicle-update request families |
+| Vehicle and consolidated-bill reasons | `reasonCode` | Vehicle update, consolidated-bill regeneration, and multi-vehicle flows |
+| Units | `itemList[].qtyUnit`, `unitCode` | Generate E-Way Bill and multi-vehicle movement |
+| Cancellation | `cancelRsnCode` | Cancel E-Way Bill |
+| Validity extension | `extnRsnCode`, `consignmentStatus`, `transMode` | Extend E-Way Bill validity |
+
+<Note>
+  Source: [NIC E-Way Bill master codes list](https://docs.ewaybillgst.gov.in/apidocs/master-codes-list.html). Reviewed 20 July 2026. Codes are field-specific and are not interchangeable.
+</Note>
+
+## Request values
+
+### Supply and sub-supply types
+
+Use `supplyType` and `subSupplyType` when you generate an E-Way Bill.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| I | Inward | `supplyType` |
+| O | Outward | `supplyType` |
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Supply | `subSupplyType` |
+| 2 | Import | `subSupplyType` |
+| 3 | Export | `subSupplyType` |
+| 4 | Job Work | `subSupplyType` |
+| 5 | For Own Use | `subSupplyType` |
+| 6 | Job work Returns | `subSupplyType` |
+| 7 | Sales Return | `subSupplyType` |
+| 8 | Others | `subSupplyType` |
+| 9 | SKD/CKD/Lots | `subSupplyType` |
+| 10 | Line Sales | `subSupplyType` |
+| 11 | Recipient Not Known | `subSupplyType` |
+| 12 | Exhibition or Fairs | `subSupplyType` |
+
+When `subSupplyType` is `8` (Others), provide the reason in `subSupplyDesc`.
+
+### Document types
+
+Use `docType` when you generate an E-Way Bill.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| INV | Tax Invoice | `docType` |
+| BIL | Bill of Supply | `docType` |
+| BOE | Bill of Entry | `docType` |
+| CHL | Delivery Challan | `docType` |
+| OTH | Others | `docType` |
+
+### Transport modes
+
+Use `transMode` for the transport mode in the relevant request.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Road | `transMode` |
+| 2 | Rail | `transMode` |
+| 3 | Air | `transMode` |
+| 4 | Ship | `transMode` |
+| 5 | inTransit | `transMode` in validity extension only; see the note below |
+
+<Note>
+  Generation, consolidation, and multi-vehicle request schemas use transport modes `1` to `4`. NIC also lists `5` (inTransit), and the validity-extension example uses it. Do not treat `5` as a universally valid `transMode` value.
+</Note>
+
+### Units
+
+Use these unit codes in `itemList[].qtyUnit` when you generate an E-Way Bill and in `unitCode` for multi-vehicle movement.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| BAG | BAGS | `itemList[].qtyUnit`, `unitCode` |
+| BAL | BALE | `itemList[].qtyUnit`, `unitCode` |
+| BDL | BUNDLES | `itemList[].qtyUnit`, `unitCode` |
+| BKL | BUCKLES | `itemList[].qtyUnit`, `unitCode` |
+| BOU | BILLION OF UNITS | `itemList[].qtyUnit`, `unitCode` |
+| BOX | BOX | `itemList[].qtyUnit`, `unitCode` |
+| BTL | BOTTLES | `itemList[].qtyUnit`, `unitCode` |
+| BUN | BUNCHES | `itemList[].qtyUnit`, `unitCode` |
+| CAN | CANS | `itemList[].qtyUnit`, `unitCode` |
+| CBM | CUBIC METERS | `itemList[].qtyUnit`, `unitCode` |
+| CCM | CUBIC CENTIMETERS | `itemList[].qtyUnit`, `unitCode` |
+| CMS | CENTI METERS | `itemList[].qtyUnit`, `unitCode` |
+| CTN | CARTONS | `itemList[].qtyUnit`, `unitCode` |
+| DOZ | DOZENS | `itemList[].qtyUnit`, `unitCode` |
+| DRM | DRUMS | `itemList[].qtyUnit`, `unitCode` |
+| GGK | GREAT GROSS | `itemList[].qtyUnit`, `unitCode` |
+| GMS | GRAMMES | `itemList[].qtyUnit`, `unitCode` |
+| GRS | GROSS | `itemList[].qtyUnit`, `unitCode` |
+| GYD | GROSS YARDS | `itemList[].qtyUnit`, `unitCode` |
+| KGS | KILOGRAMS | `itemList[].qtyUnit`, `unitCode` |
+| KLR | KILOLITRE | `itemList[].qtyUnit`, `unitCode` |
+| KME | KILOMETRE | `itemList[].qtyUnit`, `unitCode` |
+| LTR | LITRES | `itemList[].qtyUnit`, `unitCode` |
+| MTR | METERS | `itemList[].qtyUnit`, `unitCode` |
+| MLT | MILILITRE | `itemList[].qtyUnit`, `unitCode` |
+| MTS | METRIC TON | `itemList[].qtyUnit`, `unitCode` |
+| NOS | NUMBERS | `itemList[].qtyUnit`, `unitCode` |
+| OTH | OTHERS | `itemList[].qtyUnit`, `unitCode` |
+| PAC | PACKS | `itemList[].qtyUnit`, `unitCode` |
+| PCS | PIECES | `itemList[].qtyUnit`, `unitCode` |
+| PRS | PAIRS | `itemList[].qtyUnit`, `unitCode` |
+| QTL | QUINTAL | `itemList[].qtyUnit`, `unitCode` |
+| ROL | ROLLS | `itemList[].qtyUnit`, `unitCode` |
+| SET | SETS | `itemList[].qtyUnit`, `unitCode` |
+| SQF | SQUARE FEET | `itemList[].qtyUnit`, `unitCode` |
+| SQM | SQUARE METERS | `itemList[].qtyUnit`, `unitCode` |
+| SQY | SQUARE YARDS | `itemList[].qtyUnit`, `unitCode` |
+| TBS | TABLETS | `itemList[].qtyUnit`, `unitCode` |
+| TGM | TEN GROSS | `itemList[].qtyUnit`, `unitCode` |
+| THD | THOUSANDS | `itemList[].qtyUnit`, `unitCode` |
+| TON | TONNES | `itemList[].qtyUnit`, `unitCode` |
+| TUB | TUBES | `itemList[].qtyUnit`, `unitCode` |
+| UGS | US GALLONS | `itemList[].qtyUnit`, `unitCode` |
+| UNT | UNITS | `itemList[].qtyUnit`, `unitCode` |
+| YDS | YARDS | `itemList[].qtyUnit`, `unitCode` |
+
+### Vehicle update and consolidated-bill reasons
+
+Use `reasonCode` when you update vehicle details, regenerate a consolidated bill, or start multi-vehicle movement.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Due to Break Down | `reasonCode` |
+| 2 | Due to Transshipment | `reasonCode` |
+| 3 | Others (Pls. Specify) | `reasonCode` |
+| 4 | First Time | `reasonCode` |
+
+### Vehicle number formats
+
+Use one of these official templates for `vehicleNo`. Do not replace these templates with a custom regular expression.
+
+| Template | Description | Used in |
+| --- | --- | --- |
+| AB121234 | First 2 char are State Code | `vehicleNo` |
+| AB12A1234 | First 2 char are State Code | `vehicleNo` |
+| AB12AB1234 | First 2 char are State Code | `vehicleNo` |
+| ABC1234 | — | `vehicleNo` |
+| AB123A1234 | First 2 char are State Code | `vehicleNo` |
+| AB12ABC1234 | First 2 char are State Code | `vehicleNo` |
+| DFXXXXXX | Defence Vehicle | `vehicleNo` |
+| TMXXXXXXXXXXXXX | Temp RC; at least 7 characters | `vehicleNo` |
+| BPXXXXXXXXXXXXX | Bhutan Vehicle; at least 7 characters | `vehicleNo` |
+| NPXXXXXXXXXXXXX | Nepal Vehicle; at least 7 characters | `vehicleNo` |
+
+### Vehicle types
+
+Use `vehicleType` when the request supports a vehicle type.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| R | Regular | `vehicleType` |
+| O | ODC (Over Dimentional Cargo) | `vehicleType` |
+
+### Cancellation reasons
+
+Use `cancelRsnCode` when you cancel an E-Way Bill.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Duplicate | `cancelRsnCode` |
+| 2 | Order Cancelled | `cancelRsnCode` |
+| 3 | Data Entry mistake | `cancelRsnCode` |
+| 4 | Others | `cancelRsnCode` |
+
+### Validity-extension reasons and consignment status
+
+Use `extnRsnCode` to explain a validity extension. The extension request also includes `consignmentStatus`.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Natural Calamity | `extnRsnCode` |
+| 2 | Law and Order Situation | `extnRsnCode` |
+| 4 | Transshipment | `extnRsnCode` |
+| 5 | Accident | `extnRsnCode` |
+| 99 | Others | `extnRsnCode` |
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| M | inMovement | `consignmentStatus` |
+| T | inTransit | `consignmentStatus` |
+
+### Transaction types
+
+Use `transactionType` when you generate an E-Way Bill.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| 1 | Regular | `transactionType` |
+| 2 | Bill To - Ship To | `transactionType` |
+| 3 | Bill From - Dispatch From | `transactionType` |
+| 4 | Combination of 2 and 3 | `transactionType` |
+
+## Response and reference values
+
+The following values appear in E-Way Bill responses or describe the generation channel. Do not send them as request inputs unless an endpoint explicitly documents them.
+
+### Mode of generation
+
+`genMode` identifies the generation channel in an E-Way Bill response.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| API | Application Programming Interface | `genMode` response field |
+| Exc | Bulk Upload | `genMode` response field |
+| SMS | SMS Facility | `genMode` response field |
+| APP | Mobile APP | `genMode` response field |
+| WEB | Web based system | `genMode` response field |
+
+### E-Way Bill status
+
+The E-Way Bill payload uses these values in its `status` field.
+
+| Code | Description | Used in |
+| --- | --- | --- |
+| ACT | Active | E-Way Bill payload `status` |
+| CNL | Cancelled | E-Way Bill payload `status` |
+| DIS | Discarded | E-Way Bill payload `status` |
+
+<Note>
+  E-Way Bill payload `status` values (`ACT`, `CNL`, and `DIS`) are different from response-envelope `data.status` values (`1` for NIC success and `0` for a NIC business failure). Check the field path before interpreting a status code.
+</Note>

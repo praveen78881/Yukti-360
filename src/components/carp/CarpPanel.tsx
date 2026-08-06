@@ -14,7 +14,7 @@ import {
 import {
   X, Send, Loader2, ChevronDown, Wrench,
   Check, AlertCircle, ArrowRight, RotateCcw,
-  FileText, Download, Paperclip, FileSpreadsheet, Bot, LockKeyhole,
+  FileText, Download, Paperclip, FileSpreadsheet, Bot,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════
@@ -118,7 +118,7 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
 
     setUploading(true);
     try {
-      const wb = await parseExcelFile(file);
+      const wb = await parseExcelFile(file, companyId || undefined);
       setUploadedFile(wb);
 
       // Inject a friendly assistant message in the chat
@@ -312,13 +312,18 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
         )}
 
         <div className="flex items-end gap-1.5">
-          {/* Upload button — locked for security */}
+          {/* Upload button */}
           <button
-            disabled
-            title="Upload disabled for security reasons"
-            className="h-8 w-8 rounded-lg border border-amber-200 bg-amber-50 flex items-center justify-center shrink-0 cursor-not-allowed"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || isLoading}
+            title="Upload Excel / CSV"
+            className="h-8 w-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <LockKeyhole className="h-3.5 w-3.5 text-amber-400" />
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip className="h-3.5 w-3.5" />
+            )}
           </button>
 
           <textarea
@@ -354,19 +359,12 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
           </button>
         </div>
 
-        {/* Security notice */}
-        <p className="mt-1.5 text-[10px] text-gray-400 flex items-center gap-1">
-          <LockKeyhole className="h-2.5 w-2.5 text-amber-400 shrink-0" />
-          Upload disabled for security. You can still explore the AI freely.
-        </p>
-
-        {/* Hidden file input — disabled */}
+        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
           accept=".xlsx,.xls,.csv"
           className="hidden"
-          disabled
           onChange={handleFileUpload}
         />
       </div>

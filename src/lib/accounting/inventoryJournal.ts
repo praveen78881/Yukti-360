@@ -353,10 +353,11 @@ export function summarizeInventorySubLines(subLines: InventorySubLine[] = []): I
 
 function parentSideForAccount(accountName: string, providedGroup?: string): 'debit' | 'credit' {
   const group = resolveEffectiveGroup(accountName, providedGroup);
-  if (group === 'Revenue from Operations' || group === 'Cost of Materials Consumed' && canonicalAccount(accountName) === 'purchase returns') return 'credit';
-  if (group === 'Cost of Materials Consumed' || group === 'Revenue from Operations' && canonicalAccount(accountName) === 'sales returns') return 'debit';
-  
   const name = canonicalAccount(accountName);
+  // Revenue accounts post as credit, except contra-revenue (sales returns).
+  if (group === 'Revenue from Operations') return name === 'sales returns' ? 'debit' : 'credit';
+  // Cost accounts post as debit, except contra-cost (purchase returns).
+  if (group === 'Cost of Materials Consumed') return name === 'purchase returns' ? 'credit' : 'debit';
   if (name === 'sales' || name === 'purchase returns') return 'credit';
   return 'debit';
 }

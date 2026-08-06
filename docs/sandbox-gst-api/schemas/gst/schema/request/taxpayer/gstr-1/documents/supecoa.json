@@ -1,0 +1,156 @@
+{
+	"id": "Get-SUPECOA-Schema",
+	"properties": {
+		"supecoa": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": { 
+			  "clttxa": {
+				"type": "array",
+				"items": 
+				  {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"oetin": {
+							"description": "Original Ecom Tin",
+											   "type": "string",
+											   "maxLength": 15,
+											   "minLength": 15,
+											   "pattern": "^[a-zA-Z0-9._\\s]+$"
+						   },
+					  "etin": {
+					   "description": "Ecom Tin",
+										  "type": "string",
+										  "maxLength": 15,
+										  "minLength": 15,
+										  "pattern": "^[a-zA-Z0-9._\\s]+$"
+					  },
+					  "suppval": {
+						"description": "Ecom supply value",
+						"$ref": "#/definitions/nonEmptyCostAT" 
+					  },
+					  "igst": {
+						 "description": "IGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "cgst": {
+						 "description": "CGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "sgst": {
+						 "description": "SGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "cess": {
+					   "description": "Cess amount",
+					   "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "flag": {
+					   "description": "Taxpayer action",
+					   "$ref": "#/definitions/ecomFlag"
+					  },
+					  "omon": {
+						  "description": "Original Month",
+						  "$ref": "#/definitions/ecomOmon"
+					  }
+					},
+					"required": [
+					  "oetin",
+					  "etin",
+					  "omon",
+					  "cgst",
+					  "sgst",
+					  "igst",
+					  "suppval"
+					]
+				  }
+			  },
+			  "paytxa": {
+				"type": "array",
+				"items": 
+				  {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"oetin": {
+							"description": "Original Ecom Tin",
+											   "type": "string",
+											   "maxLength": 15,
+											   "minLength": 15,
+											   "pattern": "^[a-zA-Z0-9._\\s]+$"
+						   },
+					  "etin": {
+					   "description": "Ecom Tin",
+										  "type": "string",
+										  "maxLength": 15,
+										  "minLength": 15,
+										  "pattern": "^[a-zA-Z0-9._\\s]+$"
+					  },
+					  "suppval": {
+						"description": "Ecom supply value",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "igst": {
+						 "description": "IGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "cgst": {
+						 "description": "CGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "sgst": {
+						 "description": "SGST amount",
+						 "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "cess": {
+					   "description": "Cess amount",
+					   "$ref": "#/definitions/nonEmptyCostAT"
+					  },
+					  "flag": {
+					   "description": "Taxpayer action",
+					   "$ref": "#/definitions/ecomFlag"
+					  },
+					  "omon": {
+						  "description": "Original Month",
+						  "$ref": "#/definitions/ecomOmon"
+					  }
+					},
+					"required": [
+					  "oetin",
+					  "etin",
+					  "omon",
+					  "cgst",
+					  "sgst",
+					  "igst",
+					  "suppval"
+					]
+				  }
+			  }
+			}
+        }
+    },
+	"definitions": {
+		"nonEmptyCostAT": {
+			"type": "number",
+			"multipleOf": 0.01,
+			"maximum": 99999999999.99,
+			"minimum": -99999999999.99
+		},
+		"ecomFlag": {
+			"type": "string",
+			"enum": [
+				"N",
+				"E",
+				"D"
+			]
+		},
+		"ecomOmon": {
+			"type": "string",
+			"minLength": 1,
+			"pattern": "^((0[1-9]|1[012])((19|20)\\d\\d))$"
+		}
+	}
+}
+
+

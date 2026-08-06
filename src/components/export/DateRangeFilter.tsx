@@ -34,7 +34,11 @@ export function DateRangeFilter({ fromDate, toDate, onDateChange, allRange }: Da
     };
   }, [isOpen]);
 
-  const today = new Date().toISOString().split('T')[0];
+  // Format from local date parts — toISOString() converts to UTC and shifts the
+  // date one day earlier for timezones ahead of UTC (e.g. IST).
+  const toLocalISO = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = toLocalISO(new Date());
   const fy = getCurrentFY();
 
   const presets = [
@@ -43,7 +47,7 @@ export function DateRangeFilter({ fromDate, toDate, onDateChange, allRange }: Da
       getRange: () => {
         const now = new Date();
         return {
-          from: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
+          from: toLocalISO(new Date(now.getFullYear(), now.getMonth(), 1)),
           to: today,
         };
       },
@@ -54,7 +58,7 @@ export function DateRangeFilter({ fromDate, toDate, onDateChange, allRange }: Da
         const now = new Date();
         const qMonth = Math.floor(now.getMonth() / 3) * 3;
         return {
-          from: new Date(now.getFullYear(), qMonth, 1).toISOString().split('T')[0],
+          from: toLocalISO(new Date(now.getFullYear(), qMonth, 1)),
           to: today,
         };
       },

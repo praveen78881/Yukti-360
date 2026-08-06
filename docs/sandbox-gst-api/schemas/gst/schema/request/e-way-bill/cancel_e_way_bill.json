@@ -1,0 +1,22 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"type": "object",
+	"properties": {
+			"ewbNo": {
+					"type": "number",
+					"description": "EwayBill Number"
+			},
+			"cancelRsnCode": {
+					"type": "number",
+					"description": "Reason for cancellation"
+			},
+			"cancelRmrk": {
+					"type": "string",
+					"description": "Remarks"
+			}
+	},
+	"required": [
+			"ewbNo",
+			"cancelRsnCode"
+	]
+}

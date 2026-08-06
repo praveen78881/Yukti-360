@@ -1,0 +1,74 @@
+{
+  "type": "object",
+  "properties": {
+    "tcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chksum": {
+			"description": "Checksum",
+            "type": "string"
+          },
+          "etin": {
+			"description": "GSTIN of E-commerce Portal",
+            "type": "string"
+          },
+          "m_id": {
+			"description": "Merchant ID allocated by e-commerce portal",
+            "type": "string"
+          },
+          "sup_val": {
+			"description": "Gross Value of Supplies",
+            "type": "number"
+          },
+          "tx_val": {
+			"description": "Taxable Value on which TCS has been deducted",
+            "type": "number"
+          },
+          "irt": {
+			"description": "TCS_IGST rate",
+            "type": "number"
+          },
+          "iamt": {
+			"description": "TCS_IGST amount",
+            "type": "number"
+          },
+          "crt": {
+			"description": "TCS_CGST rate",
+            "type": "number"
+          },
+          "camt": {
+			"description": "TCS_CGST amount",
+            "type": "number"
+          },
+          "srt": {
+			"description": "TCS_SGST rate",
+            "type": "number"
+          },
+          "samt": {
+			"description": "TCS_SGST amount",
+            "type": "number"
+          },
+          "csrt": {
+			"description": "TCS_Cess rate",
+            "type": "number"
+          },
+          "csamt": {
+			"description": "TCS_Cess amount",
+            "type": "number"
+          }
+        },
+        "required": [
+          "chksum",
+          "iamt",
+          "camt",
+          "samt"
+        ]
+      }
+    }
+  },
+  "required": [
+    "tcs"
+  ]
+}

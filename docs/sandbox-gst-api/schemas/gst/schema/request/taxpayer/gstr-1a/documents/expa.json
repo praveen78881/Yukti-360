@@ -1,0 +1,139 @@
+{
+  "id": "Get-EXPA-Schema",
+  "properties": {
+    "expa": {
+      "items": {
+        "properties": {
+          "exp_typ": {
+            "description": "Export Type : With / Without payment of GST",
+            "type": "string",
+            "enum": [
+              "WPAY",
+              "WOPAY"
+            ]
+          },
+          "inv": {
+            "items": {
+              "properties": {
+                "chksum": {
+                  "description": "Invoice checksum value",
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9]+$",
+                  "maxLength": 64,
+                  "minLength": 1
+                },
+				"flag": {
+					"description": "Status of Invoice",
+					"type": "string"
+				},	
+                "idt": {
+                  "description": "Supplier Invoice Date",
+                  "type": "string",
+                  "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))$"
+                },
+                "inum": {
+                  "maxLength": 16,
+                  "description": "Supplier Invoice Number",
+                  "type": "string"
+                },
+                "oidt": {
+                  "description": "Original Invoice Date",
+                  "type": "string",
+                  "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))$"
+                },
+                "oinum": {
+                  "maxLength": 16,
+                  "description": "Original Invoice Number",
+                  "type": "string"
+                },
+				"diff_percent":{
+                                 "description":"Differential percentage",
+								 "type":"number",
+								 "multipleOf": 0.01							 
+								 }, 
+
+                "itms": {
+                  "items": {
+                    "properties": {
+                      "rt": {
+                        "description": "rate as per invoice",
+                        "type": "number",
+						"multipleOf": 0.01
+                      },
+                      "iamt": {
+                        "description": "IGST Amount as per invoice",
+                        "type": "number",
+						"multipleOf": 0.01
+                      },
+					  "csamt": {
+						"description": "Cess Amount as per invoice",
+						"type": "number",
+						"multipleOf": 0.01
+					  },		  
+                      "txval": {
+                        "description": "Taxable value of Goods or Service as per invoice",
+                        "type": "number",
+						"multipleOf": 0.01,
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "rt",
+                      "txval"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "sbdt": {
+                  "description": "Shipping Bill Date. or Bill of Export Date",
+                  "type": "string",
+                  "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))$"
+                },
+                "sbpcode": {
+                  "description": "Shipping Port Code",
+                  "maxLength": 6,
+                  "type": "string"
+                },
+                "sbnum": {
+                  "description":"Shipping Bill No. or Bill of Export No.",
+                                 	 "type":"string",
+                                	 "minLength":3,
+                                 	 "maxLength":7,
+                                 	 "pattern":"^[0-9]{3,7}$"
+                },
+                "val": {
+                  "description": "Supplier Invoice Value",
+                  "type": "number",
+				  "multipleOf": 0.01
+                }
+              },
+              "required": [
+                "itms",
+                "val",
+                "chksum",
+                "idt",
+                "inum",
+                "oidt",
+                "oinum",
+				"flag"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "exp_typ",
+          "inv"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "expa"
+  ],
+  "type": "object"
+}

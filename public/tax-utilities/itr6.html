@@ -2720,60 +2720,511 @@ const nobRows = () => []
 function buildJSON(){
   const C=S.C, p=k=>S.p[k]||"", today=new Date().toISOString().slice(0,10);
   const bank=(S.r.bank||[]).filter(b=>String(b.bank||"").trim());
+  const R=k=>(S.r[k]||[]);                       /* repeater rows           */
+  const bc=(pop,row)=>I(P(pop,row));             /* single-amount break-up  */
+  const foreign=S.p["cl.status"]==="Foreign Company";
+  const sum=(arr,f)=>arr.reduce((a,r)=>a+num(r[f]),0);
+
+  /* ---- Schedule SI (special rates) ---- */
+  const siRows=R("ti_si").filter(r=>String(r.sec||"").trim()||num(r.amt));
+  /* ---- HP property rows ---- */
+  const hpRows=R("hp_prop").filter(r=>String(r.addr||"").trim()||num(r.gav));
+  /* ---- generic helpers for Action-C detail schedules ---- */
+  const NE  = r => Object.values(r).some(x=>String(x==null?"":x).trim()!=="");
+  const FR  = k => R(k).filter(NE);                 /* non-empty repeater rows */
+  const up  = s => String(s||"").toUpperCase()||undefined;
+  const st  = s => (String(s==null?"":s).trim()||undefined);
+
   return {ITR:{ITR6:{
     CreationInfo:{ SWVersionNo:"1.0", SWCreatedBy:"SW20000001", JSONCreatedBy:"SW20000001",
       JSONCreationDate: today, IntermediaryCity: p("verifier.place")||"NA", Digest:"-" },
     Form_ITR6:{ FormName:"ITR-6",
       Description:"For Companies other than companies claiming exemption under section 11",
       AssessmentYear:"2026", SchemaVer:"Ver1.0", FormVer:"Ver1.0" },
-    PartA_GEN1:{ PersonalInfo:{
-        AssesseeName:{ AssesseeName: p("cl.name") }, PAN: p("cl.pan"),
-        DOF: ISO(p("cl.doi")), CIN: p("assessee.cin"),
-        EmailAddress: p("assessee.email"), Phone: p("assessee.land") },
-      FilingStatus:{ ReturnFileSec: S.v.sec||"", ReturnType: S.v.rettype||"",
-        ResidentialStatus: (S.p["cl.resid"]||"").toUpperCase().indexOf("NON")===0?"NR":"RES",
-        CompanyType: S.p["cl.status"]==="Foreign Company"?"F":"D",
-        SectionOpted: S.v.regime||"", TurnoverExceeds400Cr: S.v.to400==="Yes"?"Y":"N",
-        DPIITRecognised: S.v.dpiit==="Yes"?"Y":"N", DPIITRegNo: p("dpiit_no")||undefined,
-        MSMERegNo: S.v.msme==="Yes" ? (p("msme_no")||undefined) : undefined } },
-    PartA_GEN2:{ AuditInfo:{ LiableSec44AB: S.v.aud44ab==="Yes"?"Y":"N",
-        AuditorName: p("aud44ab_det.aname")||undefined, AuditorMembNo: p("aud44ab_det.amem")||undefined,
-        AuditReportDate: ISO(p("aud44ab_det.repdt")), UDIN: p("aud44ab_det.udin")||undefined },
-      NatureOfBusiness: nobRows().map(x=>({ Code: nicCode(x[0], x[1]) || undefined,
-        Sector: x[1].sect, SubSector: x[1].sub||undefined, PresumptiveUs44AE: x[2]?"Y":"N",
-        TradeName: x[1].trade||undefined, Description: x[1].desc||undefined })) },
-    PARTA_BS:{ TotalLiabilities: I(C.it_bs_totliab), TotalAssets: I(C.it_bs_totassets) },
+
+    /* ===================== PART A — GENERAL ===================== */
+    PartA_GEN1:{
+      OrgFirmInfo:{
+        AssesseeName:{ SurNameOrOrgName: p("cl.name")||undefined },
+        PAN: p("cl.pan")||undefined,
+        Address:{
+          ResidenceNo: p("assessee.flat")||undefined,
+          LocalityOrArea: p("assessee.district")||undefined,
+          CityOrTownOrDistrict: p("assessee.district")||undefined,
+          StateCode: p("assessee.state")||undefined,
+          CountryCode: foreign?undefined:"91",
+          Phone:{ STDcode: p("assessee.std")||undefined, PhoneNo: p("assessee.land")||undefined },
+          CountryCodeMobile: p("assessee.ccode")||"91",
+          MobileNo: p("assessee.secmob")||undefined,
+          EmailAddress: p("assessee.email")||undefined },
+        DateOFFormOrIncorp: ISO(p("cl.doi")),
+        StatusOrCompanyType: (S.p["cl.status"]==="Foreign Company")?"F":(p("assessee.status")||"7"),
+        DomesticCompFlg: foreign?"N":"Y" },
+      FilingStatus:{
+        ReturnFileSec:{ IncomeTaxSec: S.v.sec||"139" },
+        ResidentialStatus: foreign?"NR":"RES",
+        FinancialStmtFlag: S.v.indas==="Yes"?"Y":"N",
+        UnderLiquidation: S.v.ol==="Yes"?"Y":"N",
+        FiiFpiFlag:"N", Sec581AFlag:"N", AsseseeRepFlg: p("repasse.name")?"Y":"N",
+        StartUpDPIITFlag: S.v.dpiit==="Yes"?"Y":"N",
+        ItrFilingDueDate: p("int_dates.duedate")||undefined,
+        ifMSME: S.v.msme==="Yes"?"Y":"N" } },
+
+    PartA_GEN2For6:{
+      LiableSec44AAflg: p("assessee.ma44aa")==="Yes"?"Y":"N",
+      LiableSec44ABflg: S.v.aud44ab==="Yes"?"Y":"N",
+      AuditInfo:{ AuditorName: p("aud44ab_det.aname")||undefined, AuditorMemNo: p("aud44ab_det.amem")||undefined,
+        AudFrmPAN: p("aud44ab_det.fpan")||undefined, AuditDate: ISO(p("aud44ab_det.repdt")) },
+      LiableSec92Eflg:"N",
+      NatureOfComp:{ CompanyUnlistedFlag: p("assessee.unlisted")==="Yes"?"Y":"N" },
+      NatOfBus:{ NatureOfBusiness: nobRows().map(x=>({ Code: nicCode(x[0], x[1]) || undefined,
+        TradeName: x[1].trade||undefined, Description: x[1].desc||undefined })) } },
+
+    /* ===================== PART A — BALANCE SHEET ===================== */
+    PARTA_BSFor6FrmAY13:{
+      EquityAndLiablities:{
+        ShareHolderFund:{
+          ShareCapital:{ IssuedSubsPaidUp: I(S.v.bs_paid), TotShareCapital: I(S.v.bs_paid) },
+          ResrNSurp:{ RevResr: I(S.v.bs_genres),
+            OtherResrvTotal: I(C.it_bs_scoth + C.it_bs_othres),
+            PLAccount: I(C.ov_bs_pl),
+            TotResrNSurp: I(V("bs_genres") + C.it_bs_scoth + C.it_bs_othres + C.ov_bs_pl) },
+          TotShareHolderFund: I(V("bs_paid") + V("bs_genres") + C.it_bs_scoth + C.it_bs_othres + C.ov_bs_pl) },
+        NonCurrLiabilities:{
+          LongTermBorrowings:{
+            TermLoans:{ RupeeLoans:{ FromBanks: I(S.v.bs_ltbank), FromOthers: I(S.v.bs_ltoth),
+                Total: I(V("bs_ltbank")+V("bs_ltoth")) }, TotalTermLoans: I(V("bs_ltbank")+V("bs_ltoth")) },
+            TotalLTBorrowings: I(V("bs_ltbank")+V("bs_ltoth")+C.it_bs_ltborr) },
+          NetDefferedTaxLiability: I(S.v.bs_dtl),
+          OthLongTermLiablities:{ TradePayables: I(S.v.bs_lttrade), Others: I(S.v.bs_ltothliab),
+            TotalOthLtLiabilities: I(V("bs_lttrade")+V("bs_ltothliab")) },
+          LongTermProvisions:{ ProvEmpBenefits: I(S.v.bs_ltempben), Others: I(S.v.bs_ltothprov),
+            Total: I(V("bs_ltempben")+V("bs_ltothprov")) },
+          TotalNonCurrLiabilites: I(V("bs_ltbank")+V("bs_ltoth")+C.it_bs_ltborr+V("bs_dtl")
+            +V("bs_lttrade")+V("bs_ltothliab")+V("bs_ltempben")+V("bs_ltothprov")) },
+        CurrentLiabilities:{
+          ShortTrmBorrowings:{ TotShortTrmBorrowings: I(C.it_bs_stborr) },
+          TradePayables:{ TotalTradePayables: I(C.it_bs_tcred) },
+          OthCurrLiabilities:{ TotOthCurrLiabilities: I(C.it_bs_ocl + V("bs_demand")) },
+          ShortTermProv:{ EmpBenefitProv: I(S.v.bs_provemp), ITProvision: I(S.v.bs_provit),
+            OthProvision: I(C.it_bs_ostp), TotShortTermProvisions: I(V("bs_provemp")+V("bs_provit")+C.it_bs_ostp) },
+          TotCurrLiabilitiesProvision: I(C.it_bs_stborr + C.it_bs_tcred + C.it_bs_ocl + V("bs_demand")
+            + V("bs_provemp") + V("bs_provit") + C.it_bs_ostp) },
+        TotEquityAndLiabilities: I(C.it_bs_totliab) },
+      Assets:{
+        NonCurrAssets:{
+          FixedAsset:{ Tangible:{ NetBlock: I(C.it_bs_nbfa) }, InTangible:{ NetBlock: I(S.v.bs_intang) },
+            CapWrkProg: I(S.v.bs_cwip), TotFixedAsset: I(C.it_bs_nbfa + V("bs_intang") + V("bs_cwip")) },
+          NonCurrInvstmnts:{ TotNonCurrInvstmnts: I(C.it_bs_ncinv) },
+          NetDeferredTaxAssets: I(S.v.bs_dta),
+          LongTrmLoanAdv:{ TotLTLoanAdv: I(C.it_bs_ltla) },
+          OthNonCurrAssets:{ Others: I(S.v.bs_onca), Total: I(V("bs_lttr")+V("bs_onca")) },
+          TotNonCurrAssets: I(C.it_bs_nbfa + V("bs_intang") + V("bs_cwip") + C.it_bs_ncinv + V("bs_dta")
+            + C.it_bs_ltla + V("bs_lttr") + V("bs_onca")) },
+        CurrentAssets:{
+          CurrInvstmnts:{ TotCurrInvstmnts: I(C.it_bs_cinv) },
+          Inventories:{ RawMatl: I(S.v.bs_inv_rm), FinOrTradGood: I(S.v.bs_inv_fg), StkInTrade: I(S.v.bs_inv_sit),
+            Others: I(C.it_bs_invoth), TotInventries: I(V("bs_inv_rm")+V("bs_inv_fg")+V("bs_inv_sit")+C.it_bs_invoth) },
+          TradeReceivables:{ TotalTradeReceivables: I(C.it_bs_tdeb) },
+          CashNCashEquivalents:{ BalWithBanks: I(S.v.bs_bank), ChequesDrafts: I(S.v.bs_cheq),
+            CashInHand: I(S.v.bs_cash), Others: I(S.v.bs_cashoth),
+            TotCashNCashEquivalents: I(V("bs_bank")+V("bs_cheq")+V("bs_cash")+V("bs_cashoth")) },
+          TotShortTermLoanAdv:{ TotShrtTermLoans: I(C.it_bs_stla) },
+          OtherCurrAssets: I(C.it_bs_oca),
+          TotCurrAssets: I(C.it_bs_cinv + V("bs_inv_rm")+V("bs_inv_fg")+V("bs_inv_sit")+C.it_bs_invoth
+            + C.it_bs_tdeb + V("bs_bank")+V("bs_cheq")+V("bs_cash")+V("bs_cashoth") + C.it_bs_stla + C.it_bs_oca) } },
+      TotalAssets: I(C.it_bs_totassets) },
+
+    /* ===================== PART A — MANUFACTURING / TRADING / P&L ===================== */
+    ManufacturingAccount: (S.v.mtpl==="Yes"&&S.v.mfgac==="Yes") ? {
+      OpeningInventory:{ OpngInvntryTotal: I(V("mfg_ops_rm")+V("mfg_ops_wip")),
+        DirectExpenses: I(C.it_mfg_direxp), TotalFactoryOverheads: I(C.it_mfg_factexp),
+        TotalDebtsManfctrngAcc: I(V("mfg_ops_rm")+V("mfg_ops_wip")+V("mfg_purch")+V("mfg_wages")+C.it_mfg_direxp+C.it_mfg_factexp) },
+      ClosingStock:{ ClsngStckTotal: I(C.ov_mfg_cls_rm + V("mfg_cls_wip")) },
+      CostOfGoodsPrdcd: I(C.it_mfg_cop) } : undefined,
+    TradingAccount:{
+      OtherOperatingRevenueDtls: R("tr_othrev").filter(r=>String(r.p||"").trim()||num(r.a)).map(r=>({
+        OperatingRevenueName: r.p||undefined, OperatingRevenueAmt: I(r.a) })),
+      OperatingRevenueTotal: I(C.it_tr_othrev),
+      SalesGrossReceiptsTotal: I(V("tr_prod")+V("tr_serv")),
+      TotRevenueFrmOperations: I(V("tr_prod")+V("tr_serv")+C.it_tr_othrev),
+      TardingAccTotCred: I(C.it_tr_totinc),
+      DutyTaxPay:{ ExciseCustomsVAT:{ TotExciseCustomsVAT: I(C.it_tr_duties) } },
+      GrossProfitFrmBusProf: I(C.it_tr_gp) },
+    PARTA_PL:{
+      CreditsToPL:{ OthIncome:{ TotOthIncome: I(C.it_pl_othinc) }, TotCreditsToPL: I(C.it_pl_gp + C.it_pl_othinc) },
+      DebitsToPL:{ DebitPlAcnt:{
+        Freight: I(S.v.pl_freight), ConsumptionOfStores: I(S.v.pl_stores), PowerFuel: I(S.v.pl_power),
+        RentExpdr: I(S.v.pl_rents), RepairsBldg: I(S.v.pl_repb), RepairMach: I(S.v.pl_repm),
+        EmployeeComp:{ TotEmployeeComp: I(C.it_pl_sal) },
+        Insurances:{ TotInsurances: I(C.it_pl_ins) },
+        StaffWelfareExp: I(S.v.pl_staff), Entertainment: I(S.v.pl_entert), Hospitality: I(S.v.pl_hosp),
+        Conference: I(S.v.pl_conf), SalePromoExp: I(S.v.pl_promo), Advertisement: I(S.v.pl_adv),
+        CommissionExpdrDtls:{ Total: I(S.v.pl_comm) },
+        RoyalityDtls:{ Total: I(S.v.pl_royalty) },
+        ProfessionalConstDtls:{ Total: I(S.v.pl_prof) },
+        HotelBoardLodge: I(S.v.pl_hotel), TravelExp: I(S.v.pl_travel), ConveyanceExp: I(S.v.pl_convey),
+        TelephoneExp: I(S.v.pl_tel), GuestHouseExp: I(S.v.pl_guest), ClubExp: I(S.v.pl_club),
+        FestivalCelebExp: I(S.v.pl_festival), Scholarship: I(S.v.pl_scholar), Gift: I(S.v.pl_gift),
+        Donation: I(S.v.pl_donation),
+        RatesTaxesPays:{ ExciseCustomsVAT:{ TotExciseCustomsVAT: I(C.it_pl_taxrates) } },
+        AuditFee: I(S.v.pl_audit), OtherExpenses: I(C.it_pl_othexp),
+        BadDebtDtls:{ BadDebt: I(C.it_pl_baddebt) },
+        ProvForBadDoubtDebt: I(S.v.pl_bad), OthProvisionsExpdr: I(C.it_pl_prov),
+        PBIDTA: I(C.it_pl_pbit),
+        InterestExpdrtDtls:{ InterestExpdr: I(S.v.pl_interest) },
+        DepreciationAmort: I(S.v.pl_dep), PBT: I(C.it_pl_pbt) },
+        TaxProvAppr:{ ProvForCurrTax: I(S.v.pl_curtax), ProvDefTax: I(S.v.pl_deftax),
+          ProfitAfterTax: I(C.it_pl_pat), BalBFPrevYr: I(S.v.pl_bf),
+          AmtAvlAppr: I(C.it_pl_pat + V("pl_bf")),
+          Appropriations:{ TrfToReserves: I(S.v.pl_transres), TotAppropriations: I(V("pl_transres")+C.it_pl_othapp) } } } },
+
+    /* ===================== PART A — OL (Liquidation) ===================== */
+    PARTA_OL: S.v.ol==="Yes" ? {
+      OpeningBal:{ CashInHand: I(S.v.ol_ob_cash), CashInBank: I(S.v.ol_ob_bank),
+        TotalOpenBal: I(V("ol_ob_cash")+V("ol_ob_bank")) },
+      Receipts:{ Interest: I(S.v.ol_r_int), Dividend: I(S.v.ol_r_div),
+        TotalSaleofAssets: I(C.it_ol_sale), RlznDuesDebtors: I(S.v.ol_r_real),
+        TotOthersReceiptsOnly: I(C.it_ol_roth),
+        TotalOfReceipts: I(V("ol_r_int")+V("ol_r_div")+C.it_ol_sale+V("ol_r_real")+C.it_ol_roth) },
+      TotalOpenReceipts: I(C.it_ol_rtot),
+      Payments:{ RepaymentSecuredloan: I(S.v.ol_p_sec), RepaymentUnsecuredloan: I(S.v.ol_p_unsec),
+        RepaymentCreditors: I(S.v.ol_p_cred), Commission: I(S.v.ol_p_comm),
+        TotalOthersPayments: I(C.it_ol_poth),
+        TotalPayments: I(V("ol_p_sec")+V("ol_p_unsec")+V("ol_p_cred")+V("ol_p_comm")+C.it_ol_poth) },
+      ClosingStock:{ CashInHand: I(S.v.ol_cb_cash), CashInBank: I(S.v.ol_cb_bank),
+        TotalClBal: I(V("ol_cb_cash")+V("ol_cb_bank")) },
+      TotalClPaymnts: I(C.it_ol_ptot) } : undefined,
+
+    /* ===================== SCHEDULE BP ===================== */
     CorpScheduleBP:{ BusinessIncOthThanSpec:{
         ProfBfrTaxPL: I(C.ov_bp_pbt), NetPLFromSpecBus: I(C.ov_bp_specpl),
         NetProfLossSpecifiedBus: I(S.v.bp_35adpl), BalancePLOthThanSpecBus: I(C.it_bp_balance),
         TotExpDebPL: I(C.it_bp_expdeb), AdjustedPLOthThanSpecBus: I(C.it_bp_adjusted),
-        DepreciationDebPLCosAct: I(C.ov_bp_depco), AdjustPLAfterDeprOthSpecInc: I(C.it_bp_afterdep),
+        DepreciationDebPLCosAct: I(C.ov_bp_depco),
+        DepreciationAllowITAct32:{ TotDeprAllowITAct: I(C.it_bp_depit) },
+        AdjustPLAfterDeprOthSpecInc: I(C.it_bp_afterdep),
         AmtDebPLDisallowUs36: I(C.it_oi_36), AmtDebPLDisallowUs37: I(C.it_oi_37),
         AmtDebPLDisallowUs40: I(C.it_oi_40), AmtDebPLDisallowUs40A: I(C.it_oi_40a),
         AmtDebPLDisallowUs43B: I(C.it_oi_43b), InterestDisAllowUs23SMEAct: I(S.v.bp_msmeint),
         DeemIncUs41: I(S.v.bp_41), DeemIncUs43CA: I(S.v.bp_43ca),
         TotAfterAddToPLDeprOthSpecInc: I(C.it_bp_totadd), TotDeductionAmts: I(C.it_bp_totded),
-        PLAftAdjDedBusOthThanSpec: I(C.it_bp_other), DeemedProfitBusUs: I(C.it_bp_presump),
+        PLAftAdjDedBusOthThanSpec: I(C.it_bp_other),
+        DeemedProfitBusUs:{ TotDeemedProfitBusUs: I(C.it_bp_presump) },
         NetPLAftAdjBusOthThanSpec: I(C.it_bp_netother) },
-      SpecBusinessInc: I(C.it_bp_spec), IncSpecifiedBusiness: I(C.it_bp_35ad),
+      SpecBusinessInc:{ NetPLFrmSpecBus: I(P("bp_spec","np")), AdditionUs28to44DA: I(P("bp_spec","add")),
+        DeductUs28to44DA: I(P("bp_spec","ded")), AdjustedPLFrmSpecuBus: I(C.it_bp_spec) },
+      IncSpecifiedBusiness:{ NetPLFrmSpecifiedBus: I(P("bp_35ad","np")), AddSec28to44DA: I(P("bp_35ad","add")),
+        DedSec28to44DAOTDedSec35AD: I(P("bp_35ad","ded")),
+        ProfitLossSpecifiedBusiness: I(P("bp_35ad","np")+P("bp_35ad","add")-P("bp_35ad","ded")),
+        DedSec35AD1: I(P("bp_35ad","d35ad")), ProfitLossSpecifiedBusFinal: I(C.it_bp_35ad) },
       IncChrgUnHdProftGain: I(C.it_bp_income) },
-    ScheduleHP:{ TotalIncomeChargeableUnHP: I(C.it_hp_income) },
-    ScheduleCG:{ TotalSTCG: I(C.it_cg_sttot), TotalLTCG: I(C.it_cg_lttot),
-                 TotalCapGains: I(C.it_cg_income) },
-    ScheduleOS:{ IncChargeable: I(C.it_os_income) },
-    PartB_TI:{ IncomeFromHP: I(C.it_ti_hp), ProfBusGain: I(C.it_ti_bp),
-      CapGain: I(C.it_ti_cg), IncFromOS: I(C.it_ti_os), GrossTotIncome: I(C.it_ti_gti),
-      DeductionsUnderScheduleVIA: I(C.it_ti_via), DeductionUs10AA: I(C.it_ti_10aa),
-      TotalIncome: I(C.it_ti_total), IncChargeableTaxSplRate: I(C.it_ti_si),
-      NetAgricultureIncomeOrOtherIncomeForRate: 0, LossesOfCurrentYearCarriedFwd: I(C.it_ti_cfl) },
+
+    /* ===================== SCHEDULE HP ===================== */
+    ScheduleHP:{
+      PropertyDetails: hpRows.map((r,i)=>{
+        const share=(parseFloat(r.pct)||100)/100;
+        const alv=Math.max(0, num(r.gav)-num(r.unreal)-num(r.localtax))*share;
+        return { HPSNo:i+1,
+          AddressDetailWithZipCode:{ AddrDetail:r.addr||undefined, CityOrTownOrDistrict:r.city||undefined,
+            StateCode:r.state||undefined, CountryCode:r.country||"91", PinCode:r.zip||undefined },
+          PropertyOwner:r.own||undefined, PropCoOwnedFlg: (parseFloat(r.pct)||100)<100?"Y":"N",
+          AssessePercentShareProp: parseFloat(r.pct)||100, ifLetOut: r.typ||"L",
+          Rentdetails:{ AnnualLetableValue:I(num(r.gav)*share), RentNotRealized:I(num(r.unreal)*share),
+            LocalTaxes:I(num(r.localtax)*share), TotalUnrealizedAndTax:I((num(r.unreal)+num(r.localtax))*share),
+            BalanceALV:I(alv), AnnualOfPropOwned:I(alv), ThirtyPercentOfBalance:I(alv*0.3),
+            IntOnBorwCap:I(num(r.interest)*share), Section24B:{ TotalInterestUs24B:I(num(r.interest)*share) },
+            TotalDeduct:I(alv*0.3 + num(r.interest)*share),
+            ArrearsUnrealizedRentRcvd:I(num(r.arrears)*0.7),
+            IncomeOfHP:I(alv - alv*0.3 - num(r.interest)*share + num(r.arrears)*0.7) } };
+      }),
+      TotalIncomeChargeableUnHP: I(C.it_hp_income) },
+
+    /* ===================== SCHEDULE CG (subtotals) ===================== */
+    ScheduleCG:{
+      ShortTermCapGain:{ TotalSTCG: I(C.it_cg_sttot) },
+      LongTermCapGain:{ TotalLTCG: I(C.it_cg_lttot) },
+      SumOfCGIncm: I(C.it_cg_income) },
+
+    /* ===================== SCHEDULE OS ===================== */
+    ScheduleOS:{
+      IncOthThanOwnRaceHorse:{
+        DividendGross: I(C.it_os_div),
+        DividendOthThan22e: bc("os_div","oth"), Dividend22e: bc("os_div","e"), Dividend22f: bc("os_div","f"),
+        InterestGross: I(C.it_os_int),
+        RentFromMachPlantBldgs: I(S.v.os_rent),
+        Tot562x: I(C.it_os_56x), AnyOtherIncome: I(C.it_os_oth),
+        IncChargeableSpecialRates: I(C.it_os_spl),
+        Deductions:{ TotDeductions: I(C.it_os_57) },
+        BalanceNoRaceHorse: I(C.it_os_income) },
+      TotOthSrcNoRaceHorse: I(C.it_os_income),
+      IncChargeableFrmOthSrc: I(C.it_os_income) },
+
+    /* ===================== SCHEDULE VIA ===================== */
+    ScheduleVIA:{ DeductUndChapVIA:{
+      Section80G: bc("ti_via","s80g"), Section80GGA: bc("ti_via","s80gga"),
+      Section80GGB: bc("ti_via","s80ggb"), Section80GGC: bc("ti_via","s80ggc"),
+      TotPartBchapterVIA: I(P("ti_via","s80g")+P("ti_via","s80gga")+P("ti_via","s80ggb")+P("ti_via","s80ggc")),
+      Section80IA: bc("ti_via","s80ia"), Section80IAB: bc("ti_via","s80iab"), Section80IAC: bc("ti_via","s80iac"),
+      Section80IB: bc("ti_via","s80ib"), Section80IBA: bc("ti_via","s80iba"), Section80IC: bc("ti_via","s80ie"),
+      Section80JJA: bc("ti_via","s80jja"), Section80JJAA: bc("ti_via","s80jjaa"),
+      Section80LA: bc("ti_via","s80la1"), Section80LA_1A: bc("ti_via","s80la1a"),
+      Section80M: bc("ti_via","s80m"), Section80PA: bc("ti_via","s80pa"),
+      TotPartCchapterVIA: I(P("ti_via","s80ia")+P("ti_via","s80iab")+P("ti_via","s80iac")+P("ti_via","s80ib")
+        +P("ti_via","s80iba")+P("ti_via","s80ie")+P("ti_via","s80jja")+P("ti_via","s80jjaa")
+        +P("ti_via","s80la1")+P("ti_via","s80la1a")+P("ti_via","s80m")+P("ti_via","s80pa")),
+      TotalChapVIADeductions: I(C.it_ti_via) } },
+
+    /* ===================== SCHEDULE 10AA ===================== */
+    Schedule10AA:{ DeductSEZ:{ DedUs10Detail:{ Undertaking:{
+      DedFromUndertakingWithAy: R("ti_10aa").filter(r=>num(r.amt)).map(r=>({
+        AssmtYrUnit: r.ay||undefined, DedUs10Sub: I(r.amt) })) },
+      TotalDedUs10Sub: I(C.it_ti_10aa) } } },
+
+    /* ===================== SCHEDULE SI ===================== */
+    ScheduleSI:{
+      SplCodeRateTax: siRows.map(r=>({ SecCode: r.sec||undefined, SplRatePercent: parseFloat(r.rate)||0,
+        SplRateInc: I(r.amt), SplRateIncTax: I(r.tax) })),
+      TotSplRateInc: I(sum(siRows,"amt")), TotSplRateIncTax: I(sum(siRows,"tax")) },
+
+    /* ===================== SCHEDULE EI ===================== */
+    ScheduleEI:{ InterestInc: bc("ti_ei","int"), NetAgriIncOrOthrIncRule7: bc("ti_ei","agri"),
+      IncChrgblAsPerDTAA: bc("ti_ei","dtaa"), PassThrIncNotChrgblTax: bc("ti_ei","pti"),
+      Others: bc("ti_ei","oth"), TotalExemptInc: I(C.it_ti_ei) },
+
+    /* ===================== SCHEDULE MAT / MATC ===================== */
+    ScheduleMAT:{
+      ProfAfterTaxPLAcnt: bc("mat_bp","np"),
+      Additions:{ ITPaidInclDefTax: bc("mat_bp","a_it"), ResvrNo33AC: bc("mat_bp","a_res"),
+        ProvUncertainLiab: bc("mat_bp","a_prov"), ProvLossOfSubsComp: bc("mat_bp","a_divid"),
+        DividendPaidOrProposed: bc("mat_bp","a_dividend"), ExpendExempIncUs10s: bc("mat_bp","a_exempt"),
+        DepreciatAttribToRevalAsset: bc("mat_bp","a_reval"), Others: bc("mat_bp","a_oth"),
+        TotAdditions: I(P("mat_bp","a_it")+P("mat_bp","a_res")+P("mat_bp","a_prov")+P("mat_bp","a_divid")
+          +P("mat_bp","a_dividend")+P("mat_bp","a_exempt")+P("mat_bp","a_dep")+P("mat_bp","a_defer")
+          +P("mat_bp","a_reval")+P("mat_bp","a_oth")) },
+      Deducts:{ AmtWithdrawFromResvrIfCredPL: bc("mat_bp","d_res"), IncExempIncUs10s: bc("mat_bp","d_exempt"),
+        UnAbsorbedDepreciat: bc("mat_bp","d_dep"), ProSickIndustryOrExcedAccumLos: bc("mat_bp","d_profit"),
+        Others: bc("mat_bp","d_oth"),
+        TotDeducts: I(P("mat_bp","d_res")+P("mat_bp","d_exempt")+P("mat_bp","d_dep")+P("mat_bp","d_reval")
+          +P("mat_bp","d_loss")+P("mat_bp","d_profit")+P("mat_bp","d_oth")) },
+      BookProfUs115JB: I(C.it_mat_bookprofit),
+      DeemedTotalIncUs115JB: I(C.it_mat_bookprofit),
+      TaxPayableUs115JB: I(C.it_mat_tax) },
+    ScheduleMATC:{
+      TaxUs115JBCurrAssYr: I(C.it_mat_tax), TaxOthProvCurrAssYr: I(C.it_tti_net),
+      AmtOfTaxWithCred: I(C.it_mat_credit),
+      UtilMATCredAvl: R("mat_credit").filter(r=>String(r.ay||"").trim()||num(r.bf)).map(r=>({
+        AssYr: r.ay||undefined, MATCredGross: I(r.bf), MATCredBF: I(r.bf),
+        MATCredUtilCurrYr: I(r.setoff), BalMATCredCF: I(r.cf) })),
+      TotMatCredSetOff: I(C.it_mat_credit),
+      AmtTaxCredUs115JAA: I(C.it_mat_credit) },
+
+    /* ===================== TAXES PAID ===================== */
+    ScheduleIT:{
+      TaxPayment: R("tp_adv").concat(R("tp_sat")).filter(r=>num(r.amt)).map(r=>({
+        BSRCode: r.bsr||undefined, DateDep: ISO(r.dt), SrlNoOfChaln: r.ch||undefined, Amt: I(r.amt) })),
+      TotalTaxPayments: I(C.it_tp_adv + C.it_tp_sat) },
+    ScheduleTDS2:{
+      TDSOthThanSalaryDtls: R("tp_tds_0").filter(r=>String(r.tan||"").trim()||num(r.claimed)).map(r=>({
+        TDSCreditName: r.name||undefined, TANOfDeductor: r.tan||undefined, TDSSection: r.head||undefined,
+        GrossAmount: I(r.gross), HeadOfIncome: r.head||undefined,
+        TaxDeductCreditDtls:{ TaxClaimedOwnHands: I(r.claimed) }, AmtCarriedFwd: 0 })),
+      TotalTDSonOthThanSals: I(sum(R("tp_tds_0"),"claimed")) },
+    ScheduleTDS3:{
+      TDS3onOthThanSalDtls: R("tp_tds_1").filter(r=>String(r.pan||"").trim()||num(r.claimed)).map(r=>({
+        TDSCreditName: r.name||undefined, PANOfBuyerTenant: r.pan||undefined,
+        GrossAmount: I(r.gross), TaxDeductCreditDtls:{ TaxClaimedOwnHands: I(r.claimed) }, AmtCarriedFwd: 0 })),
+      TotalTDS3OnOthThanSal: I(sum(R("tp_tds_1"),"claimed")) },
+    ScheduleTCS:{
+      TCSDetails: R("tp_tcs").filter(r=>num(r.claimed)||num(r.collected)).map(r=>({
+        EmployerOrDeductorOrCollectDetl:{ TCSCreditName: r.name||undefined, TAN: r.tan||undefined },
+        TCSCurrFYDtls:{ TCSAmtCollOwnHands: I(r.collected) },
+        TCSClaimedThisYearDtls:{ TCSAmtCollOwnHands: I(r.claimed) }, AmtCarriedFwd: 0 })),
+      TotalSchTCS: I(C.it_tp_tcs) },
+    ScheduleTR1:{
+      ScheduleTR: R("tti_rel90").concat(R("tti_rel91")).filter(r=>String(r.country||"").trim()||num(r.relief)).map(r=>({
+        CountryCodeExcludingIndia: r.country||undefined, TaxIdentificationNo: r.tin||undefined,
+        TaxPaidOutsideIndia: I(r.foreign), TaxReliefOutsideIndia: I(r.relief),
+        ReliefClaimedUsSection: r.sec||undefined })),
+      TotalTaxReliefOutsideIndia: I(C.it_tti_rel90 + C.it_tti_rel91),
+      TaxReliefOutsideIndiaDTAA: I(C.it_tti_rel90), TaxReliefOutsideIndiaNotDTAA: I(C.it_tti_rel91) },
+
+    /* ===================== SCHEDULE GST ===================== */
+    ScheduleGST: R("gst").filter(r=>String(r.gstin||r.p||"").trim()).length ? {
+      GSTNNo: (R("gst")[0]||{}).gstin || undefined,
+      AnnualValueGSTR: I(sum(R("gst"),"amt")) } : undefined,
+
+    /* ===================== SCHEDULE IF (unincorporated entities) ===================== */
+    ScheduleIF: (()=>{ const rows=FR("unincorp"); if(!rows.length) return undefined;
+      return { PartnerFirmDetails: rows.map(r=>({
+          FirmName: st(r.name), FirmType: st(r.typ), FirmPAN: up(r.pan),
+          IsLiableToAudit: st(r.aud), Sec92EFirmFlag: st(r.s92e),
+          ProfitSharePercent: parseFloat(r.pct)||0, ProfitShareAmt: I(r.sp),
+          FirmCapBalOn31Mar: I(r.cap) })),
+        TotalProfitShareAmt: I(sum(rows,"sp")), TotalFirmCapBalOn31Mar: I(sum(rows,"cap")) }; })(),
+
+    /* ===================== SCHEDULE FD (foreign-currency break-up) ===================== */
+    ScheduleFD: (P("fd","p_cap")||P("fd","p_rev")||P("fd","r_cap")||P("fd","r_rev")) ? {
+      PaymntMadeOnCapitalAcc: I(P("fd","p_cap")), PaymntMadeOnRevenueAcc: I(P("fd","p_rev")),
+      ReceiptsOnCapitalAcc:   I(P("fd","r_cap")), ReceiptsOnRevenueAcc:   I(P("fd","r_rev")) } : undefined,
+
+    /* ===================== SCHEDULE TPSA (92CE secondary adjustment) ===================== */
+    ScheduleTPSA: (P("tpsa","amt")||FR("tpsa").length) ? {
+      AmtPrimaryAdjUs92CE_2A: I(P("tpsa","amt")), AdditionalIncTax18PercAbove: I(P("tpsa","t18")),
+      Surcharge12Perc: I(P("tpsa","sur")), HealthEducationCess: I(P("tpsa","cess")),
+      TotalAdditionalTax: I(P("tpsa","totA")), TaxesPaid: I(P("tpsa","paidB")),
+      NetTaxPayable: I(P("tpsa","netAB")),
+      DtlsTaxesPaid: FR("tpsa").map(r=>({ BSRCode: up(r.bsr), BankBranchName: st(r.bank),
+        DateDep: ISO(r.dt), SrlNoOfChaln: parseInt(r.ch,10)||undefined, Amount: I(r.amt) })),
+      TotalAmountDeposited: I(sum(R("tpsa"),"amt")) } : undefined,
+
+    /* ===================== SCHEDULE PTI (pass-through income) ===================== */
+    SchedulePTI: (()=>{ const rows=FR("pti"); if(!rows.length) return undefined;
+      const H={HP:"IncFromHP",BP:"IncBusOrProf",OS:"IncOthSrc"};
+      return { SchedulePTIDtls: rows.map(r=>{
+          const node={ InvstmntCvrdUs115UA115UB: st(r.ent)||"B", BusinessName: st(r.name),
+            BusinessPAN: up(r.pan) };
+          const inc=I(r.inc), tds=I(r.tds);
+          node[H[r.head]||"IncOthSrc"]={ AmountOfInc: inc, NetIncomeLoss: inc, TDSAmount: tds };
+          return node; }) }; })(),
+
+    /* ===================== SCHEDULE FA (foreign assets) ===================== */
+    ScheduleFA: (()=>{ const o={}; const cc=r=>st(r.country);
+      const dep=FR("fa_dep"); if(dep.length) o.DtlsForeignCustodialAcc=dep.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), FinancialInstName:st(r.iname),
+        FinancialInstAddress:st(r.iaddr), ZipCode:st(r.izip), AccountNumber:st(r.acno),
+        Status:st(r.own), AccOpenDate:ISO(r.opdt), PeakBalanceDuringPeriod:I(r.peak),
+        ClosingBalance:I(r.clos), GrossAmtPaidCredited:I(r.gross), NatureOfAmount:st(r.inctype) }));
+      const eq=FR("fa_eq"); if(eq.length) o.DtlsForeignEquityDebtInterest=eq.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), NameOfEntity:st(r.ename),
+        AddressOfEntity:st(r.eaddr), ZipCode:st(r.ezip), NatureOfEntity:st(r.enat),
+        InterestAcquiringDate:ISO(r.acdt), InitialValOfInvstmnt:I(r.inval),
+        PeakBalanceDuringPeriod:I(r.pkval), ClosingBalance:I(r.clval),
+        TotGrossAmtPaidCredited:I(r.gross), TotGrossProceeds:I(r.proceeds) }));
+      const ins=FR("fa_ins"); if(ins.length) o.DtlsForeignCashValueInsurance=ins.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), FinancialInstName:st(r.iname),
+        FinancialInstAddress:st(r.iaddr), ZipCode:st(r.izip), ContractDate:ISO(r.cdt),
+        CashValOrSurrenderVal:I(r.surr), TotGrossAmtPaidCredited:I(r.gross) }));
+      const fin=FR("fa_fin"); if(fin.length) o.DetailsFinancialInterest=fin.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.zip),
+        NameOfEntity:st(r.ename), AddressOfEntity:st(r.eaddr), NatureOfInt:st(r.own),
+        DateHeld:ISO(r.since), TotalInvestment:I(r.inv), IncFromInt:I(r.accr),
+        NatureOfInc:st(r.inctype) }));
+      const imm=FR("fa_imm"); if(imm.length) o.DetailsImmovableProperty=imm.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.zip),
+        Ownership:st(r.own), DateOfAcq:ISO(r.acdt), TotalInvestment:I(r.inv),
+        IncDrvProperty:I(r.inc), NatureOfInc:st(r.inctype) }));
+      const cap=FR("fa_cap"); if(cap.length) o.DetailsOthAssets=cap.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.zip),
+        NatureOfAsset:st(r.anat), Ownership:st(r.own), DateOfAcq:ISO(r.acdt),
+        TotalInvestment:I(r.inv), IncDrvAsset:I(r.inc), NatureOfInc:st(r.inctype) }));
+      const sgn=FR("fa_sign"); if(sgn.length) o.DetailsOfAccntsHvngSigningAuth=sgn.map(r=>({
+        NameOfInstitution:st(r.iname), AddressOfInstitution:st(r.iaddr), CountryName:cc(r),
+        CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.izip), NameMentionedInAccnt:st(r.holder),
+        InstitutionAccountNumber:st(r.acno), PeakBalanceOrInvestment:I(r.peak),
+        IncAccuredTaxFlag: num(r.accr)?"Y":"N" }));
+      const tr=FR("fa_trusts"); if(tr.length) o.DetailsOfTrustOutIndiaTrustee=tr.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.zip),
+        NameOfTrust:st(r.tname), AddressOfTrust:st(r.taddr), NameOfOtherTrustees:st(r.trname),
+        AddressOfOtherTrustees:st(r.traddr), NameOfSettlor:st(r.sname), AddressOfSettlor:st(r.saddr),
+        NameOfBeneficiaries:st(r.bname), AddressOfBeneficiaries:st(r.baddr), DateHeld:ISO(r.since),
+        IncDrvTaxFlag: num(r.derived)?"Y":"N" }));
+      const oi=FR("fa_othinc"); if(oi.length) o.DetailsOfOthSourcesIncOutsideIndia=oi.map(r=>({
+        CountryName:cc(r), CountryCodeExcludingIndia:st(r.country), ZipCode:st(r.zip),
+        NameOfPerson:st(r.pname), AddressOfPerson:st(r.paddr), NatureOfInc:st(r.inctype),
+        IncDrvTaxFlag: num(r.derived)?"Y":"N" }));
+      return Object.keys(o).length?o:undefined; })(),
+
+    /* ===================== SCHEDULE AL (assets & liabilities — unlisted co.) ===================== */
+    ScheduleAL: (()=>{ const uc={};
+      const land=r=>({ Address:st(r.addr), PinCode:parseInt(num(r.pin),10)||undefined,
+        AcquisitionDate:ISO(r.dt), AcquisitionCost:I(r.cost), Purpose:st(r.purp) });
+      const rl=FR("al_resland"); if(rl.length) uc.DtlsBldLandResHouseUC=rl.map(land);
+      const ol=FR("al_othland"); if(ol.length) uc.DtlsBldLandNotResHouseUC=ol.map(land);
+      const li=FR("al_listed"); if(li.length) uc.DtlsListedEquitySharesUC=li.map(r=>({
+        OpenBalNumberOfShares:I(r.opqty), OpenBalShareType:st(r.typ), OpenBalAcquisitionCost:I(r.opcost),
+        ShrsAcqNumberOfShares:I(r.acqty), ShrsAcqShareType:st(r.typ), ShrsAcqAcquisitionCost:I(r.accost),
+        ShrsTrsNumberOfShares:I(r.trqty), ShrsTrsShareType:st(r.typ), ShrsTrsSaleConsdr:I(r.trcons),
+        ClBalNumberOfShares:I(r.clqty), ClBalShareType:st(r.typ), ClBalAcquisitionCost:I(r.clcost) }));
+      const ul=FR("al_unlisted"); if(ul.length) uc.DtlsUnListedEquitySharesUC=ul.map(r=>({
+        CompanyName:st(r.name), PAN:up(r.pan), OpenBalNumberOfShares:I(r.opqty),
+        OpenBalAcquisitionCost:I(r.opcost), ShrsAcqNumberOfShares:I(r.acqty),
+        SubscriptionPurchaseDate:ISO(r.acdt), FaceValuePerShare:parseFloat(r.fv)||undefined,
+        IssuePricePerShare:parseFloat(r.pfresh)||undefined, PurchasePricePerShare:parseFloat(r.ppurch)||undefined,
+        ShrsTrsNumberOfShares:I(r.trqty), SaleConsideration:I(r.trcons),
+        ClBalNumberOfShares:I(r.clqty), ClBalAcquisitionCost:I(r.clcost) }));
+      const os=FR("al_othsec"); if(os.length) uc.DtlsOtherSecuritiesUC=os.map(r=>({
+        SecuritiesType:st(r.typ), ListedUnlistedFlag:st(r.listed),
+        OpenBalNumberOfSecurities:I(r.opqty), OpenBalAcquisitionCost:I(r.opcost),
+        ShrsAcqNumberOfSecurities:I(r.acqty), SubscriptionPurchaseDate:ISO(r.acdt),
+        FaceValuePerShare:parseFloat(r.fv)||undefined, PurchasePricePerSecurity:parseFloat(r.ppurch)||undefined,
+        ShrsTrsNumberOfSecurities:I(r.trqty), SaleConsideration:I(r.trcons),
+        ClBalNumberOfSecurities:I(r.clqty), ClBalAcquisitionCost:I(r.clcost) }));
+      const cc=FR("al_capcon"); if(cc.length) uc.DtlsCapitalContributionOthEntityUC=cc.map(r=>({
+        EntityName:st(r.name), PAN:up(r.pan), OpeningBalance:I(r.op), AmtContributedDrgTheYr:I(r.contrib),
+        AmtWithdrawnDrgTheYr:I(r.withdr), AmtprofitLossDividend:I(r.pld), ClosingBalance:I(r.cl) }));
+      const la=FR("al_loans"); if(la.length) uc.DtlsLoansAdvancesUC=la.map(r=>({
+        PersonName:st(r.name), PAN:up(r.pan), OpeningBalance:I(r.op), AmountReceived:I(r.recd),
+        AmountPaid:I(r.paid), InterestCredited:I(r.intr), ClosingBalance:I(r.cl),
+        InterestRate:parseFloat(r.pct)||undefined }));
+      const ve=FR("al_vehicles"); if(ve.length) uc.DtlsVehiclestransportUC=ve.map(r=>({
+        AssetParticulars:st(r.part), RegNumVehicle:st(r.reg), AcquisitionCost:I(r.cost),
+        AcquisitionDate:ISO(r.dt), Purpose:st(r.purp) }));
+      const je=FR("al_jewel"); if(je.length) uc.DtlsJewelleryArchCollectionsUC=je.map(r=>({
+        AssetParticulars:st(r.part), Quantity:I(r.qty), AcquisitionCost:I(r.cost),
+        AcquisitionDate:ISO(r.dt), Purpose:st(r.purp) }));
+      const lb=FR("al_liab"); if(lb.length) uc.DtlsLiabilitiesUC=lb.map(r=>({
+        PersonName:st(r.name), PAN:up(r.pan), OpeningBalance:I(r.op), AmountReceived:I(r.recd),
+        AmountPaid:I(r.paid), InterestCredited:I(r.intp), ClosingBalance:I(r.cl),
+        InterestRate:parseFloat(r.pct)||undefined }));
+      if(!Object.keys(uc).length) return undefined;
+      uc.ALUnlistedCompanyFlag="Y";
+      return { AsstLiabilitiesUnlistedCompany: uc }; })(),
+
+    /* ===================== SCHEDULE SH (shareholders — unlisted co.) ===================== */
+    ScheduleSH: (()=>{ const uc={};
+      const sh=FR("sh1_1"); if(sh.length) uc.DtlsSHEndPreviousYearUC=sh.map(r=>({
+        ShareholderName:st(r.name), ResidentialStatus:st(r.resid), ShareType:st(r.typ), PAN:up(r.pan),
+        AllotmentDate:ISO(r.dt), NumberOfSharesHeld:I(r.qty), FaceValuePerShare:parseFloat(r.fv)||undefined,
+        IssuePricePerShare:parseFloat(r.ip)||undefined, AmountReceived:I(r.amt) }));
+      const ap=FR("sh1_2"); if(ap.length) uc.DtlsEquityShareEndPrvYr=ap.map(r=>({
+        ApplicantName:st(r.name), ResidentialStatus:st(r.resid), ShareType:st(r.typ), PAN:up(r.pan),
+        ApplicationDate:ISO(r.dt), NumberOfSharesApplied:I(r.qty), ApplicationMoneyReceived:I(r.amt),
+        FaceValuePerShare:parseFloat(r.fv)||undefined, ProposedIssuePrice:parseFloat(r.ip)||undefined }));
+      if(!Object.keys(uc).length) return undefined;
+      return { ShrhldngUnlistedCompany: uc }; })(),
+
+    /* ===================== PART B — TI ===================== */
+    "PartB-TI":{
+      IncomeFromHP: I(C.it_ti_hp),
+      ProfBusGain:{ ProfGainNoSpecBus: I(C.it_bp_netother), ProfGainSpecBus: I(Math.max(0,C.it_bp_spec)),
+        ProfGainSpecifiedBus: I(Math.max(0,C.it_bp_35ad)), TotProfBusGain: I(C.it_ti_bp) },
+      CapGain:{ ShortTerm:{ TotalShortTerm: I(C.it_cg_sttot) },
+        LongTerm:{ TotalLongTerm: I(C.it_cg_lttot) },
+        ShortTermLongTermTotal: I(C.it_cg_income), TotalCapGains: I(C.it_ti_cg) },
+      IncFromOS:{ OtherSrcThanOwnRaceHorse: I(C.it_os_income), TotIncFromOS: I(C.it_ti_os) },
+      TotalTI: I(C.it_ti_heads),
+      CurrentYearLoss: I(C.it_ti_cyla),
+      BalanceAfterSetoffLosses: I(C.it_ti_heads - C.it_ti_cyla),
+      BroughtFwdLossesSetoff: I(C.it_ti_bfla),
+      GrossTotalIncome: I(C.it_ti_gti),
+      DeductionsUndSchVIADtl:{ TotDeductUndSchVIA: I(C.it_ti_via) },
+      DeductionsUnder10Aor10AA: I(C.it_ti_10aa),
+      TotalIncome: I(C.it_ti_total),
+      IncChargeableTaxSplRates: I(C.it_ti_si),
+      IncChargeableTaxNormalRates: I(C.it_ti_normal),
+      NetAgricultureIncomeOrOtherIncomeForRate: 0,
+      LossesOfCurrentYearCarriedFwd: I(C.it_ti_cfl) },
+
+    /* ===================== PART B — TTI ===================== */
     PartB_TTI:{
       ComputationOfTaxLiability:{
+        TaxPayableOnDeemedTI:{ TaxDeemedTISec115JB: I(C.it_mat_tax), TotalTax: I(C.it_mat_tax) },
         TaxPayableOnTI:{ TaxAtNormalRates: I(C.it_tti_normal), TaxAtSpecialRates: I(C.it_tti_special),
-          DonationUs115BC: 0, TaxAtMarginalRate: I(C.it_tti_marginal), TaxIncChargUs115BBI: 0,
-          RebateOnAgricultureInc: 0, TaxPayableOnTotInc: I(C.it_tti_ontotinc) },
-        Surcharge25ofSI: 0, SurchargeOnTaxPayable: I(C.it_tti_surcharge),
-        TotalSurcharge: I(C.it_tti_surcharge), EducationCess: I(C.it_tti_cess),
-        GrossTaxLiability: I(C.it_tti_gross),
+          TaxPayableOnTotInc: I(C.it_tti_ontotinc), Surcharge25ofSI: 0,
+          SurchargeOnTaxPayable: I(C.it_tti_surcharge), TotalSurcharge: I(C.it_tti_surcharge),
+          EducationCess: I(C.it_tti_cess), GrossTaxLiability: I(C.it_tti_gross) },
+        GrossTaxPayable: I(C.it_tti_gross),
         TaxRelief:{ Section90: I(C.it_tti_rel90), Section91: I(C.it_tti_rel91),
                     TotTaxRelief: I(C.it_tti_rel90 + C.it_tti_rel91) },
         NetTaxLiability: I(C.it_tti_net),
@@ -2781,20 +3232,20 @@ function buildJSON(){
           IntrstPayUs234C: I(C.it_int_234c), LateFilingFee234F: I(C.it_int_234f),
           TotalIntrstPay: I(C.it_int_total) },
         AggregateTaxInterestLiability: I(C.it_tti_aggregate) },
-      MATDetails:{ BookProfitUs115JB: I(C.it_mat_bookprofit), TaxPayableUs115JB: I(C.it_mat_tax),
-        MATCreditSetOffUs115JAA: I(C.it_mat_credit), MATCreditCarriedFwd: I(C.it_mat_cf) },
       TaxPaid:{ TaxesPaid:{ AdvanceTax: I(C.it_tp_adv), TDS: I(C.it_tp_tds), TCS: I(C.it_tp_tcs),
           SelfAssessmentTax: I(C.it_tp_sat), TotalTaxesPaid: I(C.it_tp_total) },
         BalTaxPayable: I(C.it_tti_balance) },
       Refund:{ RefundDue: I(C.it_tti_refund), NetTaxPyblOn115TDInc: I(C.it_td_net),
-        BankAccountDtls:{ BankDtls: bank.map(b=>({ IFSCCode:String(b.ifsc||"").toUpperCase(),
-          BankName:b.bank, BankAccountNo:String(b.acno||""),
-          UseForRefund: b.refund==="Y" ? "true" : "false" })) } },
+        BankAccountDtls:{ BankDtlsFlag: bank.length?"Y":"N",
+          AddtnlBankDetails: bank.map(b=>({ IFSCCode:String(b.ifsc||"").toUpperCase(),
+            BankName:b.bank, BankAccountNo:String(b.acno||""), AccountType:b.type||undefined,
+            UseForRefund: b.refund==="Y" ? "true" : "false" })) } },
       AssetOutsideIndiaFlg: S.v.fa==="Yes" ? "YES" : "NO" },
+
+    /* ===================== VERIFICATION ===================== */
     Verification:{ Declaration:{ AssesseeVerName: p("verifier.name"),
         AssesseeVerPAN: p("verifier.pan"), FatherName: p("verifier.father")||undefined,
-        Capacity: p("verifier.capacity") },
-      Date: today, Place: p("verifier.place") }
+        Capacity: p("verifier.capacity"), Place: p("verifier.place"), Date: today } }
   }}};
 }
 $("btnExport").addEventListener("click",()=>{
@@ -2815,6 +3266,42 @@ document.querySelectorAll(".clientbar select[data-cat]").forEach(s=>{
 paintFlags();
 computeAll();
 showScreen("itr");
+
+/* ==================== HOST-APP BRIDGE ====================
+   CA-Studio wires company master data into this sheet two ways:
+   1. localStorage 'ca_tax_bridge' written by the shell before load
+   2. postMessage { type:'HYDRATE_ITR', payload:{ companyName, pan, doi } }
+   Values are applied through the sheet's own inputs (value + input event),
+   so its normal save/compute pipeline handles them; existing user-entered
+   values are never overwritten. */
+(function(){
+  function setField(id, val){
+    if(val == null || val === '') return;
+    var el = document.getElementById(id);
+    if(!el || el.value) return;
+    el.value = String(val);
+    el.dispatchEvent(new Event('input',  { bubbles:true }));
+    el.dispatchEvent(new Event('change', { bubbles:true }));
+  }
+  function toDDMMYYYY(raw){
+    if(!raw) return '';
+    var m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return m[3] + '/' + m[2] + '/' + m[1];
+    return String(raw);
+  }
+  function applyBridge(b){
+    if(!b) return;
+    setField('cl_name', b.companyName || b.name);
+    setField('cl_pan', (b.pan || '').toUpperCase());
+    setField('cl_doi', toDDMMYYYY(b.doi));
+  }
+  try{ applyBridge(JSON.parse(localStorage.getItem('ca_tax_bridge') || 'null')); }catch(e){}
+  window.addEventListener('message', function(ev){
+    if(ev.origin !== window.location.origin) return;
+    var d = ev.data;
+    if(d && d.type === 'HYDRATE_ITR' && d.payload) applyBridge(d.payload);
+  });
+})();
 </script>
 </body>
 </html>

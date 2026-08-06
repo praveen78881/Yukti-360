@@ -1,0 +1,29 @@
+---
+title: 'Search GSTIN'
+description: "Get taxpayer and transporter details by passing the GSTIN. The data is fetched from the IRP database and not GST Network database."
+openapi: '/api-reference/gst/compliance/openapi.json POST /gst/compliance/e-way-bill/tax-payer/gstin/search'
+---
+
+#### Request body schema
+
+<Card
+    title="View request body schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-way-bill/search_gstin.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+
+#### Response schema
+
+For successful responses, this reference describes the NIC E-Way Bill payload at `data.data`.
+
+<Card
+  title="View JSON schema"
+  icon="code"
+  href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/schema/request/e-way-bill/search_gstin_response.json"
+  arrow="true"
+  horizontal
+>
+</Card>

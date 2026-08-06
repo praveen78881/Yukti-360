@@ -21,12 +21,16 @@ export interface ExcelWorkbook {
   uploadedAt: string;
   sheets: ExcelSheet[];
   totalRows: number;
+  /** Company the workbook was uploaded under — reads from any other company return null. */
+  companyId?: string;
 }
 
 const STORAGE_KEY = 'carp_excel_upload';
 
-/** Parse a File object into a structured ExcelWorkbook and persist to sessionStorage. */
-export function parseExcelFile(file: File): Promise<ExcelWorkbook> {
+/** Parse a File object into a structured ExcelWorkbook and persist to sessionStorage.
+ *  The workbook is sandboxed to `companyId`: getUploadedWorkbook for any other
+ *  company returns null, so an upload never crosses company boundaries. */
+export function parseExcelFile(file: File, companyId?: string): Promise<ExcelWorkbook> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -65,6 +69,7 @@ export function parseExcelFile(file: File): Promise<ExcelWorkbook> {
           uploadedAt: new Date().toISOString(),
           sheets,
           totalRows: sheets.reduce((s, sh) => s + sh.rowCount, 0),
+          companyId,
         };
 
         try {
@@ -84,11 +89,19 @@ export function parseExcelFile(file: File): Promise<ExcelWorkbook> {
   });
 }
 
-/** Retrieve the last uploaded workbook from sessionStorage. */
-export function getUploadedWorkbook(): ExcelWorkbook | null {
+/** Retrieve the last uploaded workbook from sessionStorage — only if it belongs
+ *  to `companyId`. A workbook uploaded under one company is invisible (and is
+ *  proactively dropped) when any other company asks for it. */
+export function getUploadedWorkbook(companyId?: string): ExcelWorkbook | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ExcelWorkbook) : null;
+    if (!raw) return null;
+    const wb = JSON.parse(raw) as ExcelWorkbook;
+    if (companyId && wb.companyId && wb.companyId !== companyId) {
+      sessionStorage.removeItem(STORAGE_KEY); // stale cross-company upload — purge
+      return null;
+    }
+    return wb;
   } catch {
     return null;
   }

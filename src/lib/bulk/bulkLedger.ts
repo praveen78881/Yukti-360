@@ -33,7 +33,7 @@ import {
   insertLedgerEntry,
   appendAuditLog,
 } from './bulkDb';
-import { createJournalEntry, listBookPeriods, listJournalEntries, registerCustomAccount } from '@/lib/offlineDb';
+import { createJournalEntry, deleteJournalEntry, listBookPeriods, listJournalEntries, registerCustomAccount } from '@/lib/offlineDb';
 import { generateUniqueShortEntryCode } from '@/lib/utils/entryCodeGenerator';
 import { emitJournalDataChanged } from '@/lib/journalSync';
 import type { JournalLine } from '@/types/journal';
@@ -122,6 +122,8 @@ function createJournalEntriesForAllocation(
         lines,
         narration,
         book_period: bookPeriod,
+        // Provenance so unallocateRows can find and reverse exactly these entries.
+        source_ref: `bulk_suspense:${txn.id}`,
       });
     } catch (err) {
       console.error('Failed to create journal entry during allocation:', err);
@@ -559,11 +561,22 @@ export function flagSuspenseRows(
 // ── Unallocate rows ───────────────────────────────────────────────────────────
 
 /**
- * Reset ALLOCATED rows back to UNALLOCATED.
- * Note: This does not delete the corresponding JEs — they remain in the books
- * until manually removed. Call this from the workspace UI when user wants to re-classify.
+ * Reset ALLOCATED rows back to UNALLOCATED, and REVERSE the journal entries that
+ * were created for them during allocation (matched by source_ref). Without this,
+ * re-classifying a row (Unallocate → Move) would double-post the bank transaction.
  */
 export function unallocateRows(companyId: string, ids: string[]): void {
+  // Delete the allocation JEs tagged with these suspense ids.
+  const idSet = new Set(ids.map((id) => `bulk_suspense:${id}`));
+  const orphanedJEs = listJournalEntries(companyId).filter(
+    (e) => e.source_ref != null && idSet.has(e.source_ref),
+  );
+  let reversed = 0;
+  for (const je of orphanedJEs) {
+    deleteJournalEntry(je.id);
+    reversed++;
+  }
+
   updateSuspenseRows(companyId, ids, {
     status: 'UNALLOCATED',
     allocatedLedgerId: null,
@@ -574,7 +587,7 @@ export function unallocateRows(companyId: string, ids: string[]): void {
   appendAuditLog(companyId, {
     actor: 'MANUAL',
     action: 'unallocate_rows',
-    detail: { ids, count: ids.length },
+    detail: { ids, count: ids.length, journalEntriesReversed: reversed },
   });
   emitJournalDataChanged(companyId);
 }

@@ -224,6 +224,133 @@ export function buildGstr3bPortalJson(
   };
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   GSTR-3B summary-report model (one record per month, April→March)
+   Mirrors the row structure of the standard GSTR-3B Summary Report sheet:
+   Sales Summary (3.1 a/b/c/e) · Table 5 inward · 3.1(d) RCM · tax liability
+   (non-RCM / RCM) · interest · late fee · ITC (non-RCM / RCM) · opening ITC /
+   cash offset (report-only). Exports to the portal save JSON via
+   buildGstr3bSaveJson().
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface Split4 { igst: number; cgst: number; sgst: number; cess: number }
+
+export interface Gstr3bMonthData {
+  /** Table 3.1 taxable values */
+  txval31a: number;
+  txval31b: number;
+  txval31c: number;
+  txval31e: number;
+  /** Table 5 — inward supplies: composition/exempt/nil and non-GST */
+  inward5Exmp: number;
+  inward5NonGst: number;
+  /** Table 3.1(d) — inward supplies liable to reverse charge (taxable value) */
+  txval31d: number;
+  /** Tax on 3.1(a) outward supplies → osup_det amounts */
+  taxNonRcm: Split4;
+  /** Tax on 3.1(d) RCM inward supplies → isup_rev amounts */
+  taxRcm: Split4;
+  /** → intr_ltfee.intr_details */
+  interest: Split4;
+  /** → intr_ltfee.ltfee_details (portal levies late fee under CGST/SGST only) */
+  lateFee: { cgst: number; sgst: number };
+  /** ITC availed, all other than RCM → itc_avl ty:OTH */
+  itcNonRcm: Split4;
+  /** ITC availed on RCM payments → itc_avl ty:ISRC */
+  itcRcm: Split4;
+  /** Report-only: opening ITC balance (April is editable; later months carry forward) */
+  openItc: Split4;
+  /** Report-only: tax paid in cash for the month */
+  cashOffset: Split4;
+}
+
+export function emptyGstr3bMonth(): Gstr3bMonthData {
+  const z4 = (): Split4 => ({ igst: 0, cgst: 0, sgst: 0, cess: 0 });
+  return {
+    txval31a: 0, txval31b: 0, txval31c: 0, txval31e: 0,
+    inward5Exmp: 0, inward5NonGst: 0,
+    txval31d: 0,
+    taxNonRcm: z4(), taxRcm: z4(),
+    interest: z4(), lateFee: { cgst: 0, sgst: 0 },
+    itcNonRcm: z4(), itcRcm: z4(),
+    openItc: z4(), cashOffset: z4(),
+  };
+}
+
+/**
+ * Portal-valid GSTR-3B save JSON for one month, per the official save schema:
+ * gstin · ret_period · sup_details · inter_sup · eco_dtls · itc_elg (all five
+ * itc_avl types) · inward_sup · intr_ltfee. The payment sections (tx_pmt,
+ * liab_breakup) are portal-computed at offset time — they carry ledger ids
+ * (liab_ldg_id) only the portal can issue, so a prepared upload must omit them.
+ */
+export function buildGstr3bSaveJson(
+  gstin: string,
+  retPeriodMmYyyy: string,
+  m: Gstr3bMonthData
+): Record<string, unknown> {
+  const s4 = (x: Split4) => ({
+    iamt: round2(x.igst), camt: round2(x.cgst), samt: round2(x.sgst), csamt: round2(x.cess),
+  });
+  const zero4 = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
+  const itcRcm = s4(m.itcRcm);
+  const itcOth = s4(m.itcNonRcm);
+  const itc_net = {
+    iamt: round2(itcRcm.iamt + itcOth.iamt),
+    camt: round2(itcRcm.camt + itcOth.camt),
+    samt: round2(itcRcm.samt + itcOth.samt),
+    csamt: round2(itcRcm.csamt + itcOth.csamt),
+  };
+  return {
+    gstin,
+    ret_period: retPeriodMmYyyy,
+    sup_details: {
+      osup_det: { txval: round2(m.txval31a), ...s4(m.taxNonRcm) },
+      osup_zero: { txval: round2(m.txval31b), iamt: 0, csamt: 0 },
+      osup_nil_exmp: { txval: round2(m.txval31c) },
+      isup_rev: { txval: round2(m.txval31d), ...s4(m.taxRcm) },
+      osup_nongst: { txval: round2(m.txval31e) },
+    },
+    inter_sup: {
+      unreg_details: [] as unknown[],
+      comp_details: [] as unknown[],
+      uin_details: [] as unknown[],
+    },
+    eco_dtls: {
+      eco_sup: { txval: 0, ...zero4 },
+      eco_reg_sup: { txval: 0 },
+    },
+    itc_elg: {
+      itc_avl: [
+        { ty: 'IMPG', ...zero4 },
+        { ty: 'IMPS', ...zero4 },
+        { ty: 'ISRC', ...itcRcm },
+        { ty: 'ISD', ...zero4 },
+        { ty: 'OTH', ...itcOth },
+      ],
+      itc_rev: [
+        { ty: 'RUL', ...zero4 },
+        { ty: 'OTH', ...zero4 },
+      ],
+      itc_net,
+      itc_inelg: [
+        { ty: 'RUL', ...zero4 },
+        { ty: 'OTH', ...zero4 },
+      ],
+    },
+    inward_sup: {
+      isup_details: [
+        { ty: 'GST', inter: 0, intra: round2(m.inward5Exmp) },
+        { ty: 'NONGST', inter: 0, intra: round2(m.inward5NonGst) },
+      ],
+    },
+    intr_ltfee: {
+      intr_details: s4(m.interest),
+      ltfee_details: { camt: round2(m.lateFee.cgst), samt: round2(m.lateFee.sgst) },
+    },
+  };
+}
+
 export function downloadGstr3bJsonFile(gstin: string, retPeriodMmYyyy: string, form: Gstr3bFormState): void {
   const data = buildGstr3bPortalJson(gstin, retPeriodMmYyyy, form);
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

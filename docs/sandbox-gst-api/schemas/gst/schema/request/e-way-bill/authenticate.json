@@ -1,0 +1,23 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"required": [
+			"password",
+			"username",
+			"gstin"
+	],
+	"type": "object",
+	"properties": {
+			"password": {
+					"type": "string"
+			},
+			"username": {
+					"type": "string"
+			},
+			"gstin": {
+					"maxLength": 15,
+					"minLength": 15,
+					"pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+					"type": "string"
+			}
+	}
+}

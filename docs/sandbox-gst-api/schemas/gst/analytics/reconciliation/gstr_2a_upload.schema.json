@@ -1,0 +1,764 @@
+[
+  {
+    "resource": "gstr2a",
+    "schema": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "anyOf": [
+            {
+              "required": [
+                "b2b"
+              ]
+            },
+            {
+              "required": [
+                "b2ba"
+              ]
+            },
+            {
+              "required": [
+                "cdnr"
+              ]
+            },
+            {
+              "required": [
+                "cdnra"
+              ]
+            }
+          ],
+          "required": [
+            "fp",
+            "gstin"
+          ],
+          "properties": {
+            "fp": {
+              "type": "string",
+              "pattern": "^((0[1-9]|1[012])((19|20)\\d\\d))$",
+              "minLength": 1
+            },
+            "b2b": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "ctin",
+                  "cfs",
+                  "inv"
+                ],
+                "properties": {
+                  "cfs": {
+                    "type": "string",
+                    "description": "R1_Fil_Status"
+                  },
+                  "inv": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "chksum",
+                        "inum",
+                        "idt",
+                        "val",
+                        "pos",
+                        "rchrg",
+                        "inv_typ",
+                        "itms"
+                      ],
+                      "properties": {
+                        "idt": {
+                          "type": "string",
+                          "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))*$",
+                          "description": "Supplier Invoice Date"
+                        },
+                        "irn": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9]+$",
+                          "maxLength": 64,
+                          "minLength": 64,
+                          "description": "Invoice Referrence Number"
+                        },
+                        "pos": {
+                          "type": "string",
+                          "description": "Maintained in GST System common database POS as provided in law / actual provision of service."
+                        },
+                        "val": {
+                          "type": "number",
+                          "description": "Supplier Invoice Value"
+                        },
+                        "aspd": {
+                          "type": "string",
+                          "description": "Return period in which invoice is amended"
+                        },
+                        "atyp": {
+                          "type": "string",
+                          "description": "flag to determine type of amendment"
+                        },
+                        "inum": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9-/]+$",
+                          "description": "Supplier Invoice Number"
+                        },
+                        "itms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "num",
+                              "itm_det"
+                            ],
+                            "properties": {
+                              "num": {
+                                "type": "integer",
+                                "description": "row numer"
+                              },
+                              "itm_det": {
+                                "type": "object",
+                                "required": [
+                                  "txval",
+                                  "rt"
+                                ],
+                                "properties": {
+                                  "rt": {
+                                    "type": "number",
+                                    "description": "Tax Rate"
+                                  },
+                                  "camt": {
+                                    "type": "number",
+                                    "description": "tax amount for cgst"
+                                  },
+                                  "iamt": {
+                                    "type": "number",
+                                    "description": "tax amount for igst"
+                                  },
+                                  "samt": {
+                                    "type": "number",
+                                    "description": "tax amount for sgst"
+                                  },
+                                  "csamt": {
+                                    "type": "number",
+                                    "description": "tax amount for cess"
+                                  },
+                                  "txval": {
+                                    "type": "number",
+                                    "description": "Taxable value of Goods or Service as per invoice"
+                                  }
+                                },
+                                "description": "details of the items of invoice"
+                              }
+                            }
+                          }
+                        },
+                        "rchrg": {
+                          "type": "string",
+                          "description": "Reverse Charge"
+                        },
+                        "chksum": {
+                          "type": "string",
+                          "description": "checksum value"
+                        },
+                        "srctyp": {
+                          "type": "string",
+                          "description": "Source Type of Invoice"
+                        },
+                        "inv_typ": {
+                          "type": "string",
+                          "description": "flag to determine if it is sez or deemed"
+                        },
+                        "irngendate": {
+                          "type": "string",
+                          "pattern": "^(0[1-9]|1[0-9]|2[0-8]|29((?=-([0][13-9]|1[0-2])|(?=-(0[1-9]|1[0-2])-([0-9]{2}(0[48]|[13579][26]|[2468][048])|([02468][048]|[13579][26])00))))|30(?=-(0[13-9]|1[0-2]))|31(?=-(0[13578]|1[02])))-(0[1-9]|1[0-2])-[0-9]{4}$",
+                          "minLength": 1,
+                          "description": "IRN Generated Date"
+                        },
+                        "diff_percent": {
+                          "type": "number",
+                          "multipleOf": 0.01,
+                          "description": "Differential percentage"
+                        }
+                      }
+                    }
+                  },
+                  "ctin": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]+$",
+                    "maxLength": 15,
+                    "minLength": 15,
+                    "description": "GSTIN/UID of the Receiver taxpayer/UN,Govt Bodies"
+                  },
+                  "cfs3b": {
+                    "type": "string",
+                    "description": "R3B_Fil_Status"
+                  },
+                  "fldtr1": {
+                    "type": "string",
+                    "description": "Date of filing GSTR1/5 of supplier"
+                  },
+                  "flprdr1": {
+                    "type": "string",
+                    "description": "Filing period of GSTR1/5 of supplier"
+                  },
+                  "dtcancel": {
+                    "type": "string",
+                    "description": "Date of cancellation of supplier"
+                  }
+                }
+              }
+            },
+            "cdn": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "ctin",
+                  "nt",
+                  "cfs"
+                ],
+                "properties": {
+                  "nt": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "itms",
+                        "nt_num",
+                        "nt_dt",
+                        "chksum",
+                        "val",
+                        "ntty"
+                      ],
+                      "properties": {
+                        "idt": {
+                          "type": "string",
+                          "description": "Involice date"
+                        },
+                        "irn": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9]+$",
+                          "maxLength": 64,
+                          "minLength": 64,
+                          "description": "Invoice Referrence Number"
+                        },
+                        "pos": {
+                          "type": "string",
+                          "description": "Maintained in GST System common database POS as provided in law / actual provision of service."
+                        },
+                        "val": {
+                          "type": "number",
+                          "description": "Note Value"
+                        },
+                        "aspd": {
+                          "type": "string",
+                          "description": "Return period in which note is amended"
+                        },
+                        "atyp": {
+                          "type": "string",
+                          "description": "flag to determine type of amendment"
+                        },
+                        "inum": {
+                          "type": "string",
+                          "description": "Involice number"
+                        },
+                        "itms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "num",
+                              "itm_det"
+                            ],
+                            "properties": {
+                              "num": {
+                                "type": "integer",
+                                "description": "Item number"
+                              },
+                              "itm_det": {
+                                "type": "object",
+                                "required": [
+                                  "txval",
+                                  "rt"
+                                ],
+                                "properties": {
+                                  "rt": {
+                                    "type": "number",
+                                    "description": "Tax rate"
+                                  },
+                                  "camt": {
+                                    "type": "number",
+                                    "description": "CGST amount"
+                                  },
+                                  "iamt": {
+                                    "type": "number",
+                                    "description": "IGST amount"
+                                  },
+                                  "samt": {
+                                    "type": "number",
+                                    "description": "SGST amount"
+                                  },
+                                  "csamt": {
+                                    "type": "number",
+                                    "description": "CESS amount"
+                                  },
+                                  "txval": {
+                                    "type": "number",
+                                    "description": "Taxval amount"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "ntty": {
+                          "type": "string",
+                          "description": "note type"
+                        },
+                        "cflag": {
+                          "type": "string",
+                          "description": "counter party flag"
+                        },
+                        "nt_dt": {
+                          "type": "string",
+                          "description": "note date"
+                        },
+                        "p_gst": {
+                          "type": "string",
+                          "description": "Pre GST Regime Dr./ Cr. Notes"
+                        },
+                        "rchrg": {
+                          "type": "string",
+                          "description": "Reverse Charge"
+                        },
+                        "updby": {
+                          "type": "string",
+                          "description": "uploaded by"
+                        },
+                        "chksum": {
+                          "type": "string",
+                          "description": "Checksum"
+                        },
+                        "d_flag": {
+                          "type": "string",
+                          "description": "delink flag"
+                        },
+                        "nt_num": {
+                          "type": "string",
+                          "description": "note number"
+                        },
+                        "srctyp": {
+                          "type": "string",
+                          "description": "Source Type of Invoice"
+                        },
+                        "inv_typ": {
+                          "enum": [
+                            "R",
+                            "DE",
+                            "SEWP",
+                            "SEWOP",
+                            "CBW"
+                          ],
+                          "type": "string",
+                          "description": "tax payer action"
+                        },
+                        "irngendate": {
+                          "type": "string",
+                          "pattern": "^(0[1-9]|1[0-9]|2[0-8]|29((?=-([0][13-9]|1[0-2])|(?=-(0[1-9]|1[0-2])-([0-9]{2}(0[48]|[13579][26]|[2468][048])|([02468][048]|[13579][26])00))))|30(?=-(0[13-9]|1[0-2]))|31(?=-(0[13578]|1[02])))-(0[1-9]|1[0-2])-[0-9]{4}$",
+                          "minLength": 1,
+                          "description": "IRN Generated Date"
+                        },
+                        "diff_percent": {
+                          "type": "number",
+                          "multipleOf": 0.01,
+                          "description": "Differential percentage"
+                        }
+                      }
+                    }
+                  },
+                  "cfs": {
+                    "type": "string",
+                    "description": "R1_Fil_Status"
+                  },
+                  "ctin": {
+                    "type": "string",
+                    "description": "Counter party gstin"
+                  },
+                  "cfs3b": {
+                    "type": "string",
+                    "description": "R3B_Fil_Status"
+                  },
+                  "fldtr1": {
+                    "type": "string",
+                    "description": "Date of filing GSTR1/5 of supplier"
+                  },
+                  "flprdr1": {
+                    "type": "string",
+                    "description": "Filing period of GSTR1/5 of supplier"
+                  },
+                  "dtcancel": {
+                    "type": "string",
+                    "description": "Date of cancellation of supplier"
+                  }
+                }
+              }
+            },
+            "b2ba": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "ctin",
+                  "cfs",
+                  "inv"
+                ],
+                "properties": {
+                  "cfs": {
+                    "type": "string",
+                    "description": "R1_Fil_Status"
+                  },
+                  "inv": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "chksum",
+                        "inum",
+                        "idt",
+                        "oinum",
+                        "oidt",
+                        "val",
+                        "pos",
+                        "inv_typ",
+                        "rchrg",
+                        "itms"
+                      ],
+                      "properties": {
+                        "idt": {
+                          "type": "string",
+                          "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))*$",
+                          "description": "Supplier Invoice Date"
+                        },
+                        "pos": {
+                          "type": "string",
+                          "description": "Maintained in GST System common database POS as provided in law / actual provision of service."
+                        },
+                        "val": {
+                          "type": "number",
+                          "description": "Supplier Invoice Value"
+                        },
+                        "aspd": {
+                          "type": "string",
+                          "description": "Original period in which invoice was added"
+                        },
+                        "atyp": {
+                          "type": "string",
+                          "description": "flag to determine type of amendment"
+                        },
+                        "inum": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9/_-]+$",
+                          "description": "Supplier Invoice Number"
+                        },
+                        "itms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "num",
+                              "itm_det"
+                            ],
+                            "properties": {
+                              "num": {
+                                "type": "integer",
+                                "description": "item number"
+                              },
+                              "itm_det": {
+                                "type": "object",
+                                "required": [
+                                  "txval",
+                                  "rt"
+                                ],
+                                "properties": {
+                                  "rt": {
+                                    "type": "number",
+                                    "description": "Tax Rate"
+                                  },
+                                  "camt": {
+                                    "type": "number",
+                                    "description": "tax amount for cgst"
+                                  },
+                                  "iamt": {
+                                    "type": "number",
+                                    "description": "tax amount for igst"
+                                  },
+                                  "samt": {
+                                    "type": "number",
+                                    "description": "tax amount for sgst"
+                                  },
+                                  "csamt": {
+                                    "type": "number",
+                                    "description": "tax amount for cess"
+                                  },
+                                  "txval": {
+                                    "type": "number",
+                                    "description": "Taxable value of Goods or Service as per invoice"
+                                  }
+                                },
+                                "description": "details of the items of invoice"
+                              }
+                            }
+                          }
+                        },
+                        "oidt": {
+                          "type": "string",
+                          "pattern": "^((0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[-]((19|20)\\d\\d))*$",
+                          "description": "Original Supplier Invoice Date"
+                        },
+                        "oinum": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9/_-]+$",
+                          "description": "Original Supplier Invoice Number"
+                        },
+                        "rchrg": {
+                          "type": "string",
+                          "description": "Reverse Charge"
+                        },
+                        "chksum": {
+                          "type": "string",
+                          "description": "checksum value"
+                        },
+                        "inv_typ": {
+                          "type": "string",
+                          "description": "flag to determine if it is sez or deemed"
+                        },
+                        "diff_percent": {
+                          "type": "number",
+                          "multipleOf": 0.01,
+                          "description": "Differential percentage"
+                        }
+                      }
+                    }
+                  },
+                  "ctin": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]+$",
+                    "maxLength": 15,
+                    "minLength": 15,
+                    "description": "GSTIN/UID of the Receiver taxpayer/UN,Govt Bodies"
+                  },
+                  "cfs3b": {
+                    "type": "string",
+                    "description": "R3B_Fil_Status"
+                  },
+                  "fldtr1": {
+                    "type": "string",
+                    "description": "Date of filing GSTR1/5 of supplier"
+                  },
+                  "flprdr1": {
+                    "type": "string",
+                    "description": "Filing period of GSTR1/5 of supplier"
+                  },
+                  "dtcancel": {
+                    "type": "string",
+                    "description": "Date of cancellation of supplier"
+                  }
+                }
+              }
+            },
+            "cdna": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "ctin",
+                  "nt",
+                  "cfs"
+                ],
+                "properties": {
+                  "nt": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "itms",
+                        "nt_num",
+                        "ont_num",
+                        "nt_dt",
+                        "ont_dt",
+                        "chksum",
+                        "val",
+                        "ntty"
+                      ],
+                      "properties": {
+                        "idt": {
+                          "type": "string",
+                          "description": "Involice date"
+                        },
+                        "pos": {
+                          "type": "string",
+                          "description": "Maintained in GST System common database POS as provided in law / actual provision  of service."
+                        },
+                        "val": {
+                          "type": "number",
+                          "description": "Note Value"
+                        },
+                        "aspd": {
+                          "type": "string",
+                          "description": "Original period in which invoice was added"
+                        },
+                        "atyp": {
+                          "type": "string",
+                          "description": "flag to determine type of amendment"
+                        },
+                        "inum": {
+                          "type": "string",
+                          "description": "Involice number"
+                        },
+                        "itms": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "num",
+                              "itm_det"
+                            ],
+                            "properties": {
+                              "num": {
+                                "type": "integer",
+                                "description": "Item number"
+                              },
+                              "itm_det": {
+                                "type": "object",
+                                "required": [
+                                  "txval",
+                                  "rt"
+                                ],
+                                "properties": {
+                                  "rt": {
+                                    "type": "number",
+                                    "description": "Tax rate"
+                                  },
+                                  "camt": {
+                                    "type": "number",
+                                    "description": "CGST amount"
+                                  },
+                                  "iamt": {
+                                    "type": "number",
+                                    "description": "IGST amount"
+                                  },
+                                  "samt": {
+                                    "type": "number",
+                                    "description": "SGST amount"
+                                  },
+                                  "csamt": {
+                                    "type": "number",
+                                    "description": "CESS amount"
+                                  },
+                                  "txval": {
+                                    "type": "number",
+                                    "description": "Taxval amount"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "ntty": {
+                          "type": "string",
+                          "description": "note type"
+                        },
+                        "nt_dt": {
+                          "type": "string",
+                          "description": "note date"
+                        },
+                        "p_gst": {
+                          "type": "string",
+                          "description": "Pre GST Regime Dr./ Cr. Notes"
+                        },
+                        "rchrg": {
+                          "type": "string",
+                          "description": "Reverse Charge"
+                        },
+                        "chksum": {
+                          "type": "string",
+                          "description": "Checksum"
+                        },
+                        "d_flag": {
+                          "type": "string",
+                          "description": "delink flag"
+                        },
+                        "nt_num": {
+                          "type": "string",
+                          "description": "note number"
+                        },
+                        "ont_dt": {
+                          "type": "string",
+                          "description": "original note date"
+                        },
+                        "inv_typ": {
+                          "enum": [
+                            "R",
+                            "DE",
+                            "SEWP",
+                            "SEWOP",
+                            "CBW"
+                          ],
+                          "type": "string",
+                          "description": "tax payer action"
+                        },
+                        "ont_num": {
+                          "type": "string",
+                          "description": "original note number"
+                        },
+                        "diff_percent": {
+                          "type": "number",
+                          "multipleOf": 0.01,
+                          "description": "Differential percentage"
+                        }
+                      }
+                    }
+                  },
+                  "cfs": {
+                    "type": "string",
+                    "description": "R1_Fil_Status"
+                  },
+                  "ctin": {
+                    "type": "string",
+                    "description": "Counter party gstin"
+                  },
+                  "cfs3b": {
+                    "type": "string",
+                    "description": "R3B_Fil_Status"
+                  },
+                  "fldtr1": {
+                    "type": "string",
+                    "description": "Date of filing GSTR1/5 of supplier"
+                  },
+                  "flprdr1": {
+                    "type": "string",
+                    "description": "Filing period of GSTR1/5 of supplier"
+                  },
+                  "dtcancel": {
+                    "type": "string",
+                    "description": "Date of cancellation of supplier"
+                  }
+                }
+              }
+            },
+            "gstin": {
+              "type": "string",
+              "pattern": "^([0-9]{2}[0-9A-Z]{13})$",
+              "maxLength": 15,
+              "minLength": 15
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "valid_from": "01/08/2020"
+  }
+]

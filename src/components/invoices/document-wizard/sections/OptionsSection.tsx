@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DocumentMode } from '../types';
 import type { InvoiceV2Draft } from '@/lib/accounting/gstInvoices';
-import { STATE_CODES } from '@/lib/accounting/gstInvoices';
+import { STATE_CODES, getSupplyCategory, applySupplyCategory, type SupplyCategory } from '@/lib/accounting/gstInvoices';
 import type { PurchaseFields } from '../useDocumentState';
 
 interface SalesOptionsProps {
@@ -26,6 +26,11 @@ export function OptionsSection(props: OptionsSectionProps) {
     const { invoice, updateInvoice, sellerStateCode } = props;
     const [isExport, setIsExport] = useState(() => invoice.buyer_type === 'OVERSEAS');
     const isIgst = invoice.supply_type === 'inter';
+    // Additive: supply-category (invoice-type) picker for registered/business supplies.
+    // Default reflects the current draft (Regular for a normal B2B) — changing it is opt-in.
+    const supplyCat = getSupplyCategory(invoice);
+    const showSupplyCat = !isExport && !!invoice.buyer_gstin?.trim();
+    const isSez = supplyCat === 'SEZ_WP' || supplyCat === 'SEZ_WOP';
 
     return (
       <section className="dw-section">
@@ -68,6 +73,20 @@ export function OptionsSection(props: OptionsSectionProps) {
             />
             Export
           </label>
+          {showSupplyCat && (
+            <div className="opts" style={{ gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--grey)' }}>Invoice type</span>
+              <select
+                value={supplyCat}
+                onChange={(e) => updateInvoice(applySupplyCategory(e.target.value as SupplyCategory))}
+              >
+                <option value="REGULAR_B2B">Regular</option>
+                <option value="SEZ_WP">SEZ — with payment (SEWP)</option>
+                <option value="SEZ_WOP">SEZ — without payment (SEWOP)</option>
+                <option value="DEEMED_EXPORT">Deemed Export (DE)</option>
+              </select>
+            </div>
+          )}
           <div className="opts" style={{ gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--grey)' }}>Tax</span>
             <div className="seg">
@@ -90,6 +109,55 @@ export function OptionsSection(props: OptionsSectionProps) {
             </div>
             {!invoice.force_igst && <span className="hint">auto</span>}
           </div>
+        </div>
+
+        {showSupplyCat && isSez && (
+          <div className="row" style={{ marginTop: 8 }}>
+            <div className="f c12">
+              <span className="hint" style={{ color: 'var(--amber, #b45309)' }} title="SEZ supplies are treated as inter-state (IGST). Confirm the recipient is an SEZ unit/developer.">
+                ⚠ SEZ supply — treated as inter-state (IGST); verify the SEZ recipient before filing.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* E-commerce operator — drives GSTR-1 Table 14/15 (SUPECO) auto-population */}
+        <div className="row" style={{ marginTop: 14 }}>
+          <div className="f c3">
+            <label className="opts" style={{ minHeight: 32 }}>
+              <input
+                type="checkbox"
+                checked={!!invoice.ecom_supply}
+                onChange={(e) => updateInvoice(e.target.checked
+                  ? { ecom_supply: true }
+                  : { ecom_supply: false, ecom_gstin: undefined, ecom_9_5: false })}
+              />
+              Supplied through e-commerce operator
+            </label>
+          </div>
+          {invoice.ecom_supply && (
+            <>
+              <div className="f c3">
+                <label>ECO GSTIN (etin) <b>*</b></label>
+                <input
+                  value={invoice.ecom_gstin || ''}
+                  onChange={(e) => updateInvoice({ ecom_gstin: e.target.value.toUpperCase() })}
+                  placeholder="27AAGCM1234P1Z7"
+                />
+              </div>
+              <div className="f c3">
+                <label>&nbsp;</label>
+                <label className="opts" style={{ minHeight: 32 }} title="ECO is liable to pay tax (restaurants, cabs, housekeeping). Routes to Table 15.">
+                  <input
+                    type="checkbox"
+                    checked={!!invoice.ecom_9_5}
+                    onChange={(e) => updateInvoice({ ecom_9_5: e.target.checked })}
+                  />
+                  U/s 9(5) — ECO pays tax
+                </label>
+              </div>
+            </>
+          )}
         </div>
 
         {isExport && (

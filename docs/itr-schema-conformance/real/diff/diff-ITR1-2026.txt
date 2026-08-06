@@ -1,0 +1,41 @@
+# ITR1 AY2026-27  (emitted tool: itr1)
+schema leaves 448 | required 352 | emitted-present 359 | OK(non-zero) 48 | ZERO 311 | MISS 89
+REQUIRED: 352 | reqOK 47 | reqZERO 301 | reqMISS 4 | %required-fillable 13.4%
+
+
+## Per-schedule
+  CreationInfo                 total    6 | OK    6 ZERO    0 MISS    0 | req    6 reqMISS    0
+  FilingStatus                 total   20 | OK    4 ZERO    2 MISS   14 | req   10 reqMISS    4
+  Form_ITR1                    total    5 | OK    5 ZERO    0 MISS    0 | req    5 reqMISS    0
+  ITR1_IncomeDeductions        total  122 | OK    8 ZERO   87 MISS   27 | req   91 reqMISS    0
+  ITR1_TaxComputation          total   14 | OK    0 ZERO   13 MISS    1 | req   13 reqMISS    0
+  LTCG112A                     total    3 | OK    0 ZERO    3 MISS    0 | req    3 reqMISS    0
+  PersonalInfo                 total   32 | OK   16 ZERO    7 MISS    9 | req   17 reqMISS    0
+  Refund                       total    6 | OK    2 ZERO    4 MISS    0 | req    6 reqMISS    0
+  Schedule80C                  total    3 | OK    0 ZERO    3 MISS    0 | req    3 reqMISS    0
+  Schedule80D                  total   33 | OK    2 ZERO   17 MISS   14 | req   19 reqMISS    0
+  Schedule80DD                 total    8 | OK    1 ZERO    3 MISS    4 | req    4 reqMISS    0
+  Schedule80E                  total    8 | OK    0 ZERO    8 MISS    0 | req    8 reqMISS    0
+  Schedule80EE                 total    8 | OK    0 ZERO    8 MISS    0 | req    8 reqMISS    0
+  Schedule80EEA                total    9 | OK    0 ZERO    9 MISS    0 | req    9 reqMISS    0
+  Schedule80EEB                total    9 | OK    0 ZERO    9 MISS    0 | req    9 reqMISS    0
+  Schedule80G                  total   72 | OK    0 ZERO   60 MISS   12 | req   60 reqMISS    0
+  Schedule80GGA                total   15 | OK    0 ZERO   15 MISS    0 | req   15 reqMISS    0
+  Schedule80GGC                total   13 | OK    0 ZERO    9 MISS    4 | req    9 reqMISS    0
+  Schedule80U                  total    5 | OK    1 ZERO    2 MISS    2 | req    3 reqMISS    0
+  ScheduleEA10_13A             total    9 | OK    0 ZERO    8 MISS    1 | req    8 reqMISS    0
+  ScheduleTCS                  total    7 | OK    0 ZERO    7 MISS    0 | req    7 reqMISS    0
+  ScheduleTDS3Dtls             total    9 | OK    0 ZERO    8 MISS    1 | req    8 reqMISS    0
+  TDSonOthThanSals             total    8 | OK    0 ZERO    8 MISS    0 | req    8 reqMISS    0
+  TDSonSalaries                total    5 | OK    0 ZERO    5 MISS    0 | req    5 reqMISS    0
+  TaxPaid                      total    6 | OK    0 ZERO    6 MISS    0 | req    6 reqMISS    0
+  TaxPayments                  total    5 | OK    0 ZERO    5 MISS    0 | req    5 reqMISS    0
+  TaxReturnPreparer            total    3 | OK    0 ZERO    3 MISS    0 | req    2 reqMISS    0
+  Verification                 total    5 | OK    3 ZERO    2 MISS    0 | req    5 reqMISS    0
+
+## REQUIRED leaves MISSING (filing blockers), grouped by schedule
+### FilingStatus  (4)
+  ITR1.FilingStatus.AssesseeRep.RepName
+  ITR1.FilingStatus.AssesseeRep.RepEmailID
+  ITR1.FilingStatus.AssesseeRep.CountryCodeRepMobileNo
+  ITR1.FilingStatus.AssesseeRep.RepMobileNo

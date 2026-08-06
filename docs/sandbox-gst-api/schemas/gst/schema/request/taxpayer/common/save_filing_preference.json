@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "title": "SAVE PREFERENCE schema",
+  "additionalProperties": false,
+  "properties": {
+    "gstin": {
+      "description": "GSTIN",
+      "type": "string",
+      "maxLength": 15,
+      "minLength": 15
+    },
+    "fy": {
+      "type": "string",
+      "title": "The financial year for profile selection",
+      "maxLength": 7,
+      "minLength": 7,
+      "pattern": "^[0-9]{4}-[0-9]{2}$"
+    },
+    "quarter": {
+      "type": "string",
+      "title": "The return period for profile selection from a quarter",
+      "enum": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ],
+      "description": "quarter value"
+    },
+    "preference": {
+      "type": "string",
+      "enum": [
+        "Q",
+        "M"
+      ],
+      "description": "Preference value"
+    }
+  },
+  "required": [
+    "gstin",
+    "fy",
+    "quarter",
+    "preference"
+  ]
+}

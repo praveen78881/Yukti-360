@@ -15,6 +15,7 @@ import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { AlertBanner } from '@/components/layout/AlertBanner';
 import { getJournalDateRange, deleteJournalEntry, listJournalEntries } from '@/lib/offlineDb';
 import { generateUniqueEntryCode } from '@/lib/utils/entryCodeGenerator';
+import { buildJournalPayload, parseJournalJson, bookPeriodFromDate } from '@/lib/accounting/journalTransfer';
 import type { EntityType } from '@/types/company';
 import type { JournalLine } from '@/types/journal';
 import type { JournalEntry as ComputeJournalEntry } from '@/lib/accounting/computeEngine';
@@ -99,7 +100,7 @@ export default function JournalPage() {
 
   const JOURNAL_PAGE_LIMIT = 5000;
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 100;
+  const PAGE_SIZE = 500;
 
   const entryCodeQuery = entryCodeFilter.trim() || undefined;
   const { entries, loading, createEntry, deleteEntry, refresh } = useJournalEntries({
@@ -179,26 +180,9 @@ export default function JournalPage() {
 
   const handleExportJournalJson = () => {
     if (!companyId) return;
-    // Export full visible journal data WITHOUT entry_code.
-    const exportedEntries = entries.map((e) => ({
-      entry_date: e.entry_date,
-      voucher_type: e.voucher_type,
-      voucher_number: e.voucher_number,
-      lines: e.lines,
-      narration: e.narration,
-      book_period: e.book_period,
-      is_opening: e.is_opening,
-      is_closing: e.is_closing,
-    }));
-
-    const payload = {
-      schema: 'vaarta_journal_import_v1',
-      company_id: companyId,
-      exported_at: new Date().toISOString(),
-      count: exportedEntries.length,
-      entries: exportedEntries,
-    };
-
+    // Certified transfer format (vaarta_journal_import_v2) — same structure the Journal
+    // and Companies pages import. See src/lib/accounting/journalTransfer.ts.
+    const payload = buildJournalPayload(company.name || 'Company', entries);
     const filename = `journal_export_${(company.name || 'company').replace(/\s+/g, '_')}_${fromDate}_to_${toDate}.json`;
     downloadJsonFromObject(filename, payload);
     setShowTransferMenu(false);
@@ -216,14 +200,6 @@ export default function JournalPage() {
     }
   };
 
-  const computeBookPeriodFromDate = (entryDate: string): string => {
-    const d = new Date(`${entryDate}T00:00:00`);
-    const month = d.getMonth();
-    const year = d.getFullYear();
-    const fyStartYear = month < 3 ? year - 1 : year;
-    return `${fyStartYear}-${fyStartYear + 1}`;
-  };
-
   const readTextFromFile = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -232,103 +208,35 @@ export default function JournalPage() {
       reader.readAsText(file);
     });
 
-  type ImportedPayload = {
-    schema?: string;
-    company_id?: string;
-    entries?: ImportedEntry[];
-  };
-  type ImportedEntry = {
-    entry_date?: string;
-    voucher_type?: string;
-    voucher_number?: string | null;
-    lines?: ImportedLine[];
-    narration?: string;
-    book_period?: string;
-    is_opening?: boolean;
-    is_closing?: boolean;
-  };
-  type ImportedLine = Partial<JournalLine>;
-
-  const normalizeImportedLines = (lines: ImportedLine[]): JournalLine[] =>
-    lines
-      .map((line) => {
-        const account_name = String(line.account_name || '').trim();
-        const account_group = String(line.account_group || '').trim();
-        const nature = line.nature;
-        const debit = Number(line.debit || 0);
-        const credit = Number(line.credit || 0);
-
-        if (
-          !account_name ||
-          !account_group ||
-          (nature !== 'asset' &&
-            nature !== 'liability' &&
-            nature !== 'capital' &&
-            nature !== 'revenue' &&
-            nature !== 'expense')
-        ) {
-          return null;
-        }
-
-        return {
-          account_name,
-          account_group,
-          nature,
-          debit: Number.isFinite(debit) ? debit : 0,
-          credit: Number.isFinite(credit) ? credit : 0,
-          inventory_sub_lines: line.inventory_sub_lines,
-          tds_section: line.tds_section,
-          tds_rate: line.tds_rate,
-          tcs_section: line.tcs_section,
-          tcs_rate: line.tcs_rate,
-        } as JournalLine;
-      })
-      .filter((line): line is JournalLine => !!line);
-
   const handleImportJournalJson = async (file: File) => {
     if (!companyId) return;
     setShowTransferMenu(false);
     setImporting(true);
     try {
       const raw = await readTextFromFile(file);
-      const parsed = JSON.parse(raw) as ImportedPayload;
+      const parsed = parseJournalJson(raw); // vaarta_journal_import_v2 (+ legacy v1)
 
-      if (parsed.schema && parsed.schema !== 'vaarta_journal_import_v1') {
-        window.alert('Unsupported journal JSON schema.');
+      if (!parsed.ok) {
+        window.alert(parsed.error || 'Unsupported journal JSON.');
         return;
       }
-      if (parsed.company_id && parsed.company_id !== companyId) {
-        const proceed = window.confirm(
-          'This JSON belongs to a different company. Import entries into the current company anyway?',
-        );
-        if (!proceed) return;
+      // Cross-company guard: v2 carries company_name, legacy v1 carried company_id.
+      if (parsed.companyId && parsed.companyId !== companyId) {
+        if (!window.confirm('This JSON was exported from a different company. Import into the current company anyway?')) return;
+      } else if (parsed.companyName && company.name && parsed.companyName.trim().toLowerCase() !== company.name.trim().toLowerCase()) {
+        if (!window.confirm(`This JSON is for "${parsed.companyName}". Import into "${company.name}" anyway?`)) return;
       }
 
-      const importEntries = Array.isArray(parsed.entries) ? parsed.entries : [];
-      if (importEntries.length === 0) {
-        window.alert('No entries found in JSON file.');
+      if (parsed.entries.length === 0) {
+        window.alert('No valid entries found in the JSON file.');
         return;
       }
 
       let importedCount = 0;
-      let invalidCount = 0;
+      const invalidCount = parsed.skipped;
       let failedCount = 0;
       const importedDates: string[] = [];
-      for (const item of importEntries) {
-        if (
-          !item?.entry_date ||
-          !item?.voucher_type ||
-          !Array.isArray(item.lines) ||
-          item.lines.length === 0
-        ) {
-          invalidCount += 1;
-          continue;
-        }
-        const normalizedLines = normalizeImportedLines(item.lines);
-        if (normalizedLines.length === 0) {
-          invalidCount += 1;
-          continue;
-        }
+      for (const item of parsed.entries) {
         try {
           // eslint-disable-next-line no-await-in-loop
           await createEntry({
@@ -336,15 +244,12 @@ export default function JournalPage() {
             entry_code: generateUniqueEntryCode(companyId),
             entry_date: item.entry_date,
             voucher_type: item.voucher_type,
-            voucher_number:
-              item.voucher_number === null || item.voucher_number === undefined
-                ? undefined
-                : item.voucher_number,
-            lines: normalizedLines,
+            voucher_number: item.voucher_number ?? undefined,
+            lines: item.lines as unknown as JournalLine[],
             narration: item.narration ?? '',
-            book_period: item.book_period || computeBookPeriodFromDate(item.entry_date),
-            is_opening: item.is_opening ?? false,
-            is_closing: item.is_closing ?? false,
+            book_period: bookPeriodFromDate(item.entry_date),
+            is_opening: false,
+            is_closing: false,
           });
           importedCount += 1;
           importedDates.push(item.entry_date);
@@ -610,27 +515,25 @@ export default function JournalPage() {
 
         {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
-            <div className="text-xs text-gray-500 font-medium">
-              Showing <span className="font-bold text-gray-900">{(currentPage - 1) * PAGE_SIZE + 1}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * PAGE_SIZE, journalEntries.length)}</span> of <span className="font-bold text-gray-900">{journalEntries.length}</span> entries
+          <div className="shrink-0 flex items-center justify-between px-3 py-1 bg-white border-t border-gray-200">
+            <div className="text-[10px] text-gray-400 font-medium">
+              {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, journalEntries.length)} of {journalEntries.length}
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="h-8 px-3 text-xs font-semibold border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                className="h-5 px-2 text-[10px] font-semibold border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
               >
-                Previous
+                ‹ Prev
               </button>
-              <div className="h-8 px-3 flex items-center justify-center text-xs font-bold text-gray-900 bg-gray-100 rounded-md">
-                Page {currentPage} of {totalPages}
-              </div>
+              <span className="px-1.5 text-[10px] font-bold text-gray-600">{currentPage}/{totalPages}</span>
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="h-8 px-3 text-xs font-semibold border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                className="h-5 px-2 text-[10px] font-semibold border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
               >
-                Next
+                Next ›
               </button>
             </div>
           </div>

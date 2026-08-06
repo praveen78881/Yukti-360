@@ -101,12 +101,15 @@ create table if not exists public.journal_entries (
   book_period    text not null default '',
   is_opening     boolean not null default false,
   is_closing     boolean not null default false,
+  source_ref     text,                         -- provenance marker (e.g. 'bulk_suspense:<id>')
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   constraint journal_entries_code_uq unique (company_id, entry_code)
 );
 create index if not exists journal_entries_company_date_idx
   on public.journal_entries (company_id, entry_date);
+create index if not exists journal_entries_source_ref_idx
+  on public.journal_entries (source_ref) where source_ref is not null;
 
 -- â”€â”€ custom_accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Mirrors the TS `CustomAccount` interface. Account name is unique per company,
@@ -1207,3 +1210,37 @@ create policy export_prefs_all on public.export_prefs
 -- ===== fix for pre-existing tables =====
 alter table public.companies alter column financial_year_start type text;
 
+
+
+-- ============================================================================
+-- 0013_sync_tombstones.sql — deletion tombstones for cross-device sync
+-- ============================================================================
+create table if not exists public.sync_tombstones (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null,
+  table_name  text not null,
+  row_id      text not null,
+  deleted_at  timestamptz not null default now(),
+  constraint sync_tombstones_uq unique (user_id, table_name, row_id)
+);
+create index if not exists sync_tombstones_user_idx on public.sync_tombstones (user_id);
+
+create or replace function public.set_tombstone_user_id()
+returns trigger as $$
+begin
+  if new.user_id is null then
+    new.user_id := auth.uid();
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists a_sync_tombstones_set_user_id on public.sync_tombstones;
+create trigger a_sync_tombstones_set_user_id
+  before insert or update on public.sync_tombstones
+  for each row execute function public.set_tombstone_user_id();
+
+alter table public.sync_tombstones enable row level security;
+drop policy if exists sync_tombstones_all on public.sync_tombstones;
+create policy sync_tombstones_all on public.sync_tombstones
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());

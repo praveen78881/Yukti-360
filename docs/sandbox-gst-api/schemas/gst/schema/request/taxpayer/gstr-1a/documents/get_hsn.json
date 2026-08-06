@@ -1,0 +1,240 @@
+{
+	"id": "Get-HSN-Schema",
+	"properties": {
+		"hsn": {
+			"properties": {
+			"flag":{
+					"description": "Status of Invoice",
+					"type": "string"
+			},
+				"chksum": {
+					"maxLength": 64,
+					"description": "Invoice checksum value",
+					"type": "string",
+					"pattern": "^[a-zA-Z0-9]+$",
+					"minLength": 1
+				},
+				"hsn_b2b": {
+					"items": {
+						"properties": {
+							"iamt": {
+								"description": "IGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"camt": {
+								"description": "CGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"samt": {
+								"description": "SGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"csamt": {
+								"description": "Cess Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"desc": {
+								"description": "Description of goods sold",
+								"type": "string"
+							},
+							"user_desc": {
+								"description": "Description given by Taxpayer",
+								"type": "string"
+							},
+							"hsn_sc": {
+								"description": "HSN of Goods or Services as per Invoice line items",
+								"type": "string",
+								"pattern": "^[0-9]{2,8}$",
+								"minLength": 2,
+								"maxLength": 8
+							},
+							"num": {
+								"description": "Serial no",
+								"type": "integer",
+								"minLength": 1
+							},
+							"qty": {
+								"description": "Quantity of goods sold",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"txval": {
+								"description": "Taxable value of Goods or Service as per invoice",
+								"type": "number",
+								"multipleOf": 0.001,
+								"minLength": 1
+							},
+							"uqc": {
+								"description": "UQC (Unit of Measure) of goods sold",
+								"type": "string"
+							},
+							"val": {
+								"description": "Supplier Invoice Value",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+                            "rt": {
+                                "description": "Tax Rate",
+								"type": "number"
+				            }
+						},
+						"anyOf": [{
+								"required": [
+									"txval",
+									"val",
+									"hsn_sc",
+									"qty",
+									"num",
+									"uqc"
+								]
+							},
+							{
+								"required": [
+									"txval",
+									"val",
+									"qty",
+									"num",
+									"uqc",
+									"desc"
+
+								]
+							},
+                                  {
+								"required": [
+                                    "hsn_sc",
+									"txval",
+									"rt",
+									"qty",
+									"num",
+									"uqc"
+									
+								]
+							}
+						],
+						"type": "object"
+					},
+					"type": "array"
+				},
+				"hsn_b2c": {
+					"items": {
+						"properties": {
+							"iamt": {
+								"description": "IGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"camt": {
+								"description": "CGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"samt": {
+								"description": "SGST Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"csamt": {
+								"description": "Cess Amount as per invoice",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"desc": {
+								"description": "Description of goods sold",
+								"type": "string"
+							},
+							"user_desc": {
+								"description": "Description given by Taxpayer",
+								"type": "string"
+							},
+							"hsn_sc": {
+								"description": "HSN of Goods or Services as per Invoice line items",
+								"type": "string",
+								"pattern": "^[0-9]{2,8}$",
+								"minLength": 2,
+								"maxLength": 8
+							},
+							"num": {
+								"description": "Serial no",
+								"type": "integer",
+								"minLength": 1
+							},
+							"qty": {
+								"description": "Quantity of goods sold",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+							"txval": {
+								"description": "Taxable value of Goods or Service as per invoice",
+								"type": "number",
+								"multipleOf": 0.001,
+								"minLength": 1
+							},
+							"uqc": {
+								"description": "UQC (Unit of Measure) of goods sold",
+								"type": "string"
+							},
+							"val": {
+								"description": "Supplier Invoice Value",
+								"type": "number",
+								"multipleOf": 0.001
+							},
+                            "rt": {
+                                "description": "Tax Rate",
+								"type": "number"
+				            }
+						},
+						"anyOf": [{
+								"required": [
+									"txval",
+									"val",
+									"hsn_sc",
+									"qty",
+									"num",
+									"uqc"
+								]
+							},
+							{
+								"required": [
+									"txval",
+									"val",
+									"qty",
+									"num",
+									"uqc",
+									"desc"
+
+								]
+							},
+                                  {
+								"required": [
+                                    "hsn_sc",
+									"txval",
+									"rt",
+									"qty",
+									"num",
+									"uqc"
+									
+								]
+							}
+						],
+						"type": "object"
+					},
+					"type": "array"
+				}
+			},
+			"required": [
+				"hsn_b2b",
+				"hsn_b2c",
+				"chksum"
+			],
+			"type": "object"
+		}
+	},
+	"required": [
+		"hsn"
+	],
+	"type": "object"
+}

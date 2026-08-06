@@ -1,5 +1,5 @@
 import type { InvoiceV2Draft, LineItem } from '@/lib/accounting/gstInvoices';
-import { GST_RATES, isCessApplicable, getCessInfo } from '@/lib/accounting/gstInvoices';
+import { GST_RATES, UQC_OPTIONS, isCessApplicable, getCessInfo } from '@/lib/accounting/gstInvoices';
 
 interface LineItemsSectionProps {
   invoice: InvoiceV2Draft;
@@ -23,9 +23,11 @@ export function LineItemsSection({ invoice, updateItem, addItem, removeItem }: L
               <th style={{ width: 28 }}></th>
               <th style={{ minWidth: 220 }}>Description *</th>
               <th style={{ width: 100 }}>HSN *</th>
+              <th style={{ width: 84 }}>UQC</th>
               <th className="r" style={{ width: 76 }}>Qty</th>
               <th className="r" style={{ width: 104 }}>Rate</th>
               <th className="r" style={{ width: 76 }}>Disc %</th>
+              <th style={{ width: 108 }}>Nature</th>
               <th style={{ width: 92 }}>GST %</th>
               <th className="r" style={{ width: 100 }}>Tax</th>
               <th className="r" style={{ width: 110 }}>Total</th>
@@ -67,6 +69,23 @@ export function LineItemsSection({ invoice, updateItem, addItem, removeItem }: L
                     />
                   </td>
                   <td>
+                    {/* SAC (99xxxx) has no unit — pipeline forces uqc NA / qty 0; mirror that here (display-only). */}
+                    {/^99/.test((item.hsn || '').replace(/\D/g, '')) ? (
+                      <select value="NA" disabled title="Services (SAC 99xxxx) carry no unit of measure">
+                        <option value="NA">NA</option>
+                      </select>
+                    ) : (
+                      <select
+                        value={item.uqc || 'NOS'}
+                        onChange={(e) => updateItem(idx, { uqc: e.target.value })}
+                      >
+                        {UQC_OPTIONS.map((u) => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                  <td>
                     <input
                       type="number"
                       className="num"
@@ -101,10 +120,22 @@ export function LineItemsSection({ invoice, updateItem, addItem, removeItem }: L
                     />
                   </td>
                   <td>
+                    {/* supply_nature — default TAXABLE (= current). Non-taxable natures feed the NIL table. */}
+                    <select
+                      value={item.supply_nature}
+                      onChange={(e) => updateItem(idx, { supply_nature: e.target.value as LineItem['supply_nature'] })}
+                    >
+                      <option value="TAXABLE">Taxable</option>
+                      <option value="NIL_RATED">Nil-rated</option>
+                      <option value="EXEMPT">Exempt</option>
+                      <option value="NON_GST">Non-GST</option>
+                    </select>
+                  </td>
+                  <td>
                     <select
                       value={item.gst_rate}
                       onChange={(e) => updateItem(idx, { gst_rate: Number(e.target.value) })}
-                      disabled={invoice.doc_type === 'BILL_OF_SUPPLY'}
+                      disabled={invoice.doc_type === 'BILL_OF_SUPPLY' || item.supply_nature !== 'TAXABLE'}
                     >
                       {GST_RATES.map((r) => (
                         <option key={r} value={r}>{r}%</option>

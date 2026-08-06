@@ -17,6 +17,7 @@ import {
   Trash2, Pencil, Check, X, LayoutGrid, Search, LogOut, type LucideIcon,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { clearLocalDataOnSignOut } from '@/lib/sync/cloudSync';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
 
 interface NavItem { label: string; href: string; icon: LucideIcon }
@@ -168,15 +169,19 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
     if (nav.plAppropriation) fsItems.push({ label: 'P&L Appropriation', href: `${base}/pl-appropriation`, icon: BarChart3 });
     if (nav.balanceSheet) {
       fsItems.push({ label: 'Balance Sheet', href: `${base}/balance-sheet`, icon: Building2 });
-      if (nav.bsNotes) fsItems.push({ label: 'Balance Sheet Notes', href: `${base}/bs-notes`, icon: FileText });
+      // Balance Sheet Notes page removed from nav — notes open by clicking a
+      // particular inside the Balance Sheet itself (BsNotesDrawer).
     }
     if (nav.cashFlowStatement !== 'never') fsItems.push({ label: 'Cash Flow Statement', href: `${base}/cash-flow`, icon: ArrowRightLeft });
     if (nav.fundsFlowStatement !== 'never') fsItems.push({ label: 'Funds Flow Statement', href: `${base}/funds-flow`, icon: ArrowRightLeft });
     if (nav.ratioAnalysis) fsItems.push({ label: 'Ratio Analysis', href: `${base}/ratio-analysis`, icon: BarChart3 });
     if (nav.incomeExpenditure) fsItems.push({ label: 'Income & Expenditure', href: `${base}/income-expenditure`, icon: Receipt });
     if (nav.receiptsPayments) fsItems.push({ label: 'Receipts & Payments', href: `${base}/receipts-payments`, icon: Receipt });
-    // Tally — standalone viewer, placed above Financial Statements
-    g.push({ heading: 'TALLY', items: [{ label: 'Tally', href: `${base}/tally`, icon: FileText }] });
+    // Integrations — Tally viewer + cross-ERP import & reconciliation
+    g.push({ heading: 'INTEGRATIONS', items: [
+      { label: 'Tally', href: `${base}/tally`, icon: FileText },
+      { label: 'ERP Bridge', href: `${base}/erp-bridge`, icon: ArrowLeftRight },
+    ] });
 
     if (fsItems.length > 0) g.push({ heading: 'FINANCIAL STATEMENTS', items: fsItems });
 
@@ -451,7 +456,7 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
           </Link>
           {isSupabaseConfigured && (
             <button
-              onClick={async () => { try { await supabase?.auth.signOut(); } catch { /* ignore */ } navigate('/auth'); }}
+              onClick={async () => { try { await supabase?.auth.signOut(); } catch { /* ignore */ } clearLocalDataOnSignOut(); navigate('/auth'); }}
               className="w-full flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors text-gray-600 hover:bg-red-50 hover:text-red-600"
             >
               <LogOut className="h-3.5 w-3.5 shrink-0 text-gray-400" />

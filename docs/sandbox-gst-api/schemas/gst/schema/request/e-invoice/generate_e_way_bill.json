@@ -1,0 +1,198 @@
+﻿{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "Irn": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 64,
+            "maxLength": 64,
+            "description": "Irn Number"
+        },
+        "TransId": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 15,
+            "maxLength": 15,
+            "description": "Transin/GSTIN"
+        },
+        "TransName": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Name of the transporter"
+        },
+        "TransMode": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 1,
+            "minLength": 1,
+            "enum": [
+                "1",
+                "2",
+                "3",
+                "4"
+            ],
+            "description": "Mode of transport (Road-1, Rail-2, Air-3, Ship-4)"
+        },
+        "Distance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 4000,
+            "description": "Distance between source and destination PIN codes"
+        },
+        "TransDocNo": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 1,
+            "maxLength": 15,
+            "description": "Transport Document Number"
+        },
+        "TransDocDt": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 10,
+            "maxLength": 10,
+            "description": "Transport Document Date"
+        },
+        "VehNo": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 4,
+            "maxLength": 20,
+            "description": "Vehicle Number"
+        },
+        "VehType": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1,
+            "enum": [
+                "O",
+                "R"
+            ],
+            "description": "Whether O-ODC or R-Regular "
+        },
+        "ExpShipDtls": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "Addr1": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Address1 of the entity to whom the supplies are shipped to. (Building/Flat no.,Road/Street etc.)"
+                },
+                "Addr2": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Address 2 of the entity to whom the supplies are shipped to. (Floor no., Name of the premises/building)."
+                },
+                "Loc": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Place (City,Town,Village) entity to whom the supplies are shipped to."
+                },
+                "Pin": {
+                    "type": "number",
+                    "minimum": 100000,
+                    "maximum": 999999,
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2,
+                    "description": "State Code to which supplies are shipped to. Refer the master"
+                }
+            },
+            "required": [
+                "Addr1",
+                "Loc",
+                "Pin",
+                "Stcd"
+            ]
+        },
+        "DispDtls": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "properties": {
+                "Nm": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Name of the company from which the goods are dispatched"
+                },
+                "Addr1": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Address 1 of the entity from which goods are dispatched. (Building/Flat no.Road/Street etc.)"
+                },
+                "Addr2": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Address 2 of the entity from which goods are dispatched. (Floor no., Name of the premises/building)"
+                },
+                "Loc": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "description": "Location"
+                },
+                "Pin": {
+                    "type": "number",
+                    "minimum": 100000,
+                    "maximum": 999999,
+                    "description": "Pincode"
+                },
+                "Stcd": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2,
+                    "description": "State Code. Refer the master"
+                }
+            },
+            "required": [
+                "Nm",
+                "Addr1",
+                "Loc",
+                "Pin",
+                "Stcd"
+            ]
+        }
+    },
+    "required": [
+        "Distance"
+    ]
+}

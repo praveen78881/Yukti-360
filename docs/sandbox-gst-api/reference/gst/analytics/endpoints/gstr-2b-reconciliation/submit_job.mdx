@@ -1,0 +1,38 @@
+---
+title: 'Submit Job'
+description: "Submit GSTR-2B reconciliation job and get two signed URLs to upload GSTR-2B and purchase ledger."
+openapi: '/api-reference/gst/analytics/openapi.json POST /gst/analytics/gstr-2b-reconciliation'
+---
+
+<Note>
+This endpoint is part of a job-based async workflow. See the [job-based API workflow guide](/guides/developer-resources/job_based_apis#job-based-api-workflow) for job creation, payload upload, and status polling.
+</Note>
+
+You upload two files after the job is created: the GSTR-2B JSON export and the purchase ledger workbook.
+
+#### Upload file schemas
+
+Use these schemas to validate both files before you upload them to the signed URLs returned by this endpoint.
+
+<CardGroup>
+  <Card
+    title="View GSTR-2B upload schema"
+    icon="code"
+    href="https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/analytics/reconciliation/gstr_2b_upload.schema.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+  <Card
+    title="View purchase ledger schema"
+    icon="file-spreadsheet"
+    href="https://sheet-tools.quicko.org.in/sheet-schema-builder?schema_url=https://raw.githubusercontent.com/in-co-sandbox/in-co-sandbox-docs/refs/heads/main/data/gst/analytics/reconciliation/purchase_ledger_workbook.schema.json"
+    arrow="true"
+    horizontal
+  >
+  </Card>
+</CardGroup>
+
+<Note>
+The GSTR upload schema file lists the available schema versions with their `valid_from` dates.
+</Note>

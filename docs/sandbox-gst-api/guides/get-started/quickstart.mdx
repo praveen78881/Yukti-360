@@ -1,0 +1,109 @@
+---
+title: "Quickstart"
+description: "Learn how to authenticate and make your first API call to Sandbox APIs in minutes."
+keywords: ["quickstart", "authentication", "API", "get started", "access token"]
+---
+
+This guide shows you how to authenticate and make your first API call to Sandbox. You'll generate API credentials, get an access token, and call an endpoint.
+
+<Info>
+  **Prerequisites**: You need a Sandbox account. [Sign up here](https://accounts.sandbox.co.in/signup) if you don't have one.
+</Info>
+
+## Send your first API request
+
+<Steps>
+  <Step title="Get your API credentials">
+    Navigate to [Sandbox Console](https://console.sandbox.co.in) and go to **Settings** → **API Keys** to retrieve your API Key and API Secret. Sandbox provides separate credentials for test and production [environments](/guides/developer-resources/environments).
+    
+    Follow this guide to generate your keys: [Generate your API Keys](https://help.sandbox.co.in/portal/en/kb/articles/generate-your-api-keys).
+
+    <Warning>
+      Save your API key and secret immediately when they appear—you won't be able to view the secret again.
+    </Warning>
+  </Step>
+  <Step title="Authenticate to get an access token">
+    Use the [Authenticate API](/api-reference/authenticate) to generate an access token. Pass your API Key and API Secret in the request headers.
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST 'https://api.sandbox.co.in/authenticate' \
+         -H 'x-api-key: YOUR_API_KEY' \
+         -H 'x-api-secret: YOUR_API_SECRET' \
+         -H 'x-api-version: 1.0.0' \
+         -H 'Content-Type: application/json'
+    ```
+    </CodeGroup>
+
+    **Response**
+    ```json
+    {
+      "code": 200,
+      "data": {
+        "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+      },
+      "timestamp": 1750687659809,
+      "transaction_id": "3a31716a-6a4d-4670-83fe-849d8209e35a"
+    }
+    ```
+
+    <Note>
+      Access tokens are valid for 24 hours. Regenerate a new token when it expires.
+    </Note>
+  </Step>
+  <Step title="Make your first API call">
+    Use your access token to call any Sandbox API. This example searches for GST information using a GSTIN.
+
+    **Headers**
+
+    <ParamField header="x-api-key" type="string" required>
+      Your API Key from the Sandbox Console
+    </ParamField>
+
+    <ParamField header="authorization" type="string" required>
+      Your access token (without "Bearer" prefix)
+    </ParamField>
+
+    <ParamField header="x-api-version" type="string">
+      API version (e.g., "1.0")
+    </ParamField>
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST 'https://api.sandbox.co.in/gst/compliance/public/gstin/search' \
+         -H 'x-api-key: YOUR_API_KEY' \
+         -H 'authorization: eyJ0eXAiOiJKV1QiLCJhbGc...' \
+         -H 'x-api-version: 1.0' \
+         -H 'Content-Type: application/json' \
+         -d '{
+           "gstin": "05ABNTY3290P8ZB"
+         }'
+    ```
+    </CodeGroup>
+
+    <Warning>
+      Don't include "Bearer" prefix in the authorization header. Pass only the access token value.
+    </Warning>
+  </Step>
+</Steps>
+
+<Check>
+  You are all set to use Sandbox APIs
+</Check>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Error handling" icon="circle-exclamation" href="/guides/developer-resources/errors">
+    Understand error codes and how to handle them
+  </Card>
+  <Card title="Rate limits" icon="gauge-high" href="/guides/developer-resources/rate_limits">
+    Learn about API rate limits and best practices
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/guides/developer-resources/webhooks">
+    Set up webhooks for real-time notifications
+  </Card>
+  <Card title="Test environment" icon="flask-vial" href="/guides/developer-resources/test_environment">
+    Set up Postman collections and run test requests
+  </Card>
+</CardGroup>

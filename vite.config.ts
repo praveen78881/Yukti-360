@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { pathToFileURL } from 'url';
+import { statSync } from 'node:fs';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -67,9 +69,51 @@ export default defineConfig(({ mode }) => {
         });
       },
     },
+    // Dev-only: mirror the Sandbox GST Netlify function on localhost so the
+    // GSTR-2A/2B pages work at http://localhost:3000 without deploying. Uses the
+    // SAME server-side core as netlify/functions/gst-sandbox.js, reading
+    // SANDBOX_API_KEY/SECRET from the loaded env — never exposed to the browser.
+    {
+      name: 'sandbox-gst-dev-middleware',
+      configureServer(devServer) {
+        const isDev = process.env.NODE_ENV !== 'production';
+        if (!isDev) return;
+
+        const corePath = path.resolve(__dirname, 'netlify/functions/_shared/sandboxCore.mjs');
+        const coreUrl = pathToFileURL(corePath).href;
+
+        devServer.middlewares.use('/.netlify/functions/gst-sandbox', async (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end('Method not allowed');
+            return;
+          }
+          let raw = '';
+          req.on('data', (chunk) => { raw += chunk; });
+          req.on('end', async () => {
+            try {
+              // Cache-bust by mtime so edits to sandboxCore.mjs are picked up in dev
+              // without a manual restart (re-imports only when the file actually changes).
+              const mtime = statSync(corePath).mtimeMs;
+              const { getConfigFromEnv, handleAction } = await import(`${coreUrl}?t=${mtime}`);
+              const { action, env: reqEnv, ...params } = JSON.parse(raw || '{}');
+              const cfg = getConfigFromEnv(env, reqEnv);
+              const { status, data } = await handleAction(action, params, cfg);
+              res.statusCode = status;
+              res.setHeader('content-type', 'application/json');
+              res.end(JSON.stringify(data));
+            } catch (e: any) {
+              res.statusCode = e?.statusCode || 500;
+              res.setHeader('content-type', 'application/json');
+              res.end(JSON.stringify({ error: e?.message || 'Sandbox proxy failed' }));
+            }
+          });
+        });
+      },
+    },
     ],
     server: {
-      port: 1066,
+      port: 3000,
       strictPort: true,
       // Don't watch stray binary/data files dropped in the repo — they can be
       // locked by other apps (image viewers, OneDrive sync) and crash the dev
@@ -93,6 +137,29 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
         'radix-ui': path.resolve(__dirname, './src/shims/radix-ui'),
+      },
+    },
+    build: {
+      // Split heavy third-party libraries into their own chunks so no single
+      // bundle is oversized, and so a change to app code doesn't bust the cache
+      // for these rarely-changing vendors.
+      // 600 kB acknowledges the deliberately-isolated vendor libs (jspdf, pdfjs,
+      // xlsx); app chunks stay well under this, so the warning still catches real bloat.
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return;
+            if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) return 'react-vendor';
+            if (id.includes('lucide-react')) return 'icons';
+            if (id.includes('xlsx')) return 'xlsx';
+            if (id.includes('jspdf') || id.includes('html2canvas')) return 'pdf';
+            if (id.includes('recharts') || id.includes('/d3-') || id.includes('/victory-')) return 'charts';
+            if (id.includes('pdfjs-dist')) return 'pdfjs';
+            if (id.includes('@supabase')) return 'supabase';
+            return 'vendor';
+          },
+        },
       },
     },
   };

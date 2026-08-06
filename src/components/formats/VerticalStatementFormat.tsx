@@ -14,6 +14,9 @@ interface StatementItem {
   /** If provided, renders an editable number input in the Current Year cell */
   editValue?: string;
   onEdit?: (value: string) => void;
+  /** When set, the previous-year cell becomes directly typeable (blank = nil). */
+  prevEditValue?: string;
+  onPrevEdit?: (value: string) => void;
 }
 
 interface StatementSection {
@@ -38,7 +41,9 @@ export function VerticalStatementFormat({
   sections, showPreviousYear = true, signatureBlock = false, onItemClick,
 }: VerticalStatementProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    // Page-fit: cap the statement at roughly A4 width and centre it, so the
+    // Particulars column hugs its text instead of stretching across the screen.
+    <div className="mx-auto w-full max-w-3xl bg-white border border-gray-200 rounded-xl overflow-hidden">
       {/* Header */}
       <div className="text-center py-4 border-b border-gray-200 bg-gray-50/50">
         <h2 className="text-base font-bold text-gray-900">{companyName}</h2>
@@ -53,11 +58,11 @@ export function VerticalStatementFormat({
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-12">Note</th>
             <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Particulars</th>
-            <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-44">
+            <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-40">
               Current Year (₹)
             </th>
             {showPreviousYear && (
-              <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-44">
+              <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-40">
                 Previous Year (₹)
               </th>
             )}
@@ -121,7 +126,17 @@ export function VerticalStatementFormat({
                   </td>
                   {showPreviousYear && (
                     <td className="px-4 py-2 text-right font-mono text-[13px] tabular-nums text-gray-400">
-                      {item.previousYear !== null ? formatIndianCurrency(item.previousYear) : '—'}
+                      {item.onPrevEdit ? (
+                        <input
+                          type="number"
+                          value={item.prevEditValue ?? ''}
+                          onChange={e => item.onPrevEdit!(e.target.value)}
+                          placeholder="0"
+                          className="w-full text-right bg-gray-50 border border-gray-200 rounded px-2 py-0.5 font-mono text-[13px] tabular-nums text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:bg-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                      ) : (
+                        item.previousYear !== null ? formatIndianCurrency(item.previousYear) : '—'
+                      )}
                     </td>
                   )}
                 </tr>
@@ -134,8 +149,8 @@ export function VerticalStatementFormat({
       {/* Signature block */}
       {signatureBlock && (
         <div className="flex justify-between px-10 py-8 border-t border-gray-200 mt-2">
-          {['Director', 'Director', 'Chartered Accountant'].map(role => (
-            <div key={role} className="text-center">
+          {['Director', 'Director', 'Chartered Accountant'].map((role, ri) => (
+            <div key={`${role}-${ri}`} className="text-center">
               <div className="w-36 border-t border-gray-400 pt-1.5 mt-12">
                 <p className="text-xs text-gray-500">{role}</p>
               </div>
