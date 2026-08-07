@@ -50,3 +50,4 @@ mcp-server/node_modules/
 # Claude Code local settings & stray screenshots (not part of the app)
 .claude/
 /Screenshot*.png
+.wf-test-*.mjs

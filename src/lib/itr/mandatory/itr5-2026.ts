@@ -1080,7 +1080,7 @@ function categoryAChecks(j: unknown, errors: MandatoryIssue[], warnings: Mandato
     err(pdtP, 'Sub-status is "Trust other than a trust eligible to file ITR-7" — Sl. No. 1 and Sl. No. 2 of Table F in Part A General 2 cannot be blank', 'A-30');
   }
   if (f1 === 'Y' && members.length > 0) {
-    const totShare = members.reduce((s, m) => s + num(prop(m, 'SharePercentage')), 0);
+    const totShare = members.reduce<number>((s, m) => s + num(prop(m, 'SharePercentage')), 0);
     if (Math.abs(totShare - 100) > 0.01) {
       err(`${g2}.PartnerOrMemberInfo`, `Table F Sl. No. 1 is "Yes" — the sum of "Percentage of share (if determinate)" must equal 100 (currently ${totShare})`, 'A-21');
     }
