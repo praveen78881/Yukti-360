@@ -212,6 +212,9 @@ export function CarpPanel({ open, onClose, width, onWidthChange }: CarpPanelProp
       );
       setMessages((prev) => prev.filter((m) => m.id !== 'loading'));
     } catch (err: unknown) {
+      // Always log the REAL error — the friendly message below masks the cause,
+      // which makes model/key/quota issues undiagnosable without this line.
+      console.error('CARP AI error:', err);
       const raw = err instanceof Error ? err.message.toLowerCase() : '';
       const friendlyError = raw.includes('quota') || raw.includes('rate') || raw.includes('limit') || raw.includes('429')
         ? 'Hey CA, you\'ve reached the usage limit for now. Please wait a minute and try again.'

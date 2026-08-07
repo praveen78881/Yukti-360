@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
           req.on('end', async () => {
             try {
               const body = JSON.parse(raw || '{}');
-              const { model = 'gemini-flash-lite-latest', ...geminiPayload } = body ?? {};
+              const { model = 'gemini-3-flash-preview', ...geminiPayload } = body ?? {};
 
               const response = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,

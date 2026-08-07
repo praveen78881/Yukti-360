@@ -264,7 +264,7 @@ async function callGemini(
   // Always call through the Netlify serverless proxy — the API key stays
   // server-side and is NEVER referenced from client code (a VITE_-prefixed key
   // would be inlined into the public bundle and could be extracted by any visitor).
-  const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
+  const proxyModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3-flash-preview';
 
   // Attach the signed-in user's Supabase access token so the proxy can verify
   // the caller and refuse anonymous / cross-site abuse.

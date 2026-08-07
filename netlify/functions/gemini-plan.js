@@ -15,14 +15,12 @@
  * Response: Gemini API response passed through directly.
  */
 
-// Models the proxy is allowed to invoke. Client-supplied model must be one of these.
+// Models the proxy is allowed to invoke. Pinned to gemini-3-flash-preview ONLY —
+// the app must always call this model (older 2.x models have no quota on this plan).
 const ALLOWED_MODELS = new Set([
-  'gemini-flash-lite-latest',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-1.5-flash',
+  'gemini-3-flash-preview',
 ]);
-const DEFAULT_MODEL = 'gemini-flash-lite-latest';
+const DEFAULT_MODEL = 'gemini-3-flash-preview';
 
 function jsonError(message, status = 500) {
   return new Response(JSON.stringify({ error: message }), {

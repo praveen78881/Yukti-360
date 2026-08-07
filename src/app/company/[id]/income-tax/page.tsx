@@ -16,9 +16,11 @@ import { toast } from 'sonner';
 import { ImportItrModal, type ImportMode } from '@/components/itr/ImportItrModal';
 import {
   validateItrInFrame, downloadItrJson, highlightItrFields, kebabifyDrillins, closeTopDrillin,
+  extractItrJson,
   type ItrValResult,
 } from '@/lib/itr/client';
 import { setBackInterceptor } from '@/lib/appBack';
+import { getMandatoryChecker, isFormReleased } from '@/lib/itr/mandatory';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ITR filing module — year-wise (A.Y. 2026-27 and A.Y. 2025-26)
@@ -52,6 +54,26 @@ type ItrKey = 'itr1' | 'itr2' | 'itr3' | 'itr4' | 'itr5' | 'itr6' | 'itr7';
 function itrSrc(ay: string, key: ItrKey): string {
   if (key === 'itr5' || key === 'itr6' || key === 'itr7') return `/tax-utilities/${key}.html`;
   return ay === '2026-27' ? `/tax-utilities/${key}.html` : `/tax-utilities/${key}-${ay}.html`;
+}
+
+/** Assessment years an actual data-entry tool is BUILT for. ITR-1..4 ship a
+ *  year-suffixed AY 2025-26 copy; ITR-5/6/7 ship a single file that emits
+ *  AssessmentYear 2026 — i.e. an A.Y. 2026-27 build with no 2025-26 variant.
+ *  Serving the 2026-27 tool under a 2025-26 selection would silently produce a
+ *  return stamped with the wrong assessment year, so we surface it instead. */
+const TOOL_YEARS: Record<ItrKey, string[]> = {
+  itr1: ['2026-27', '2025-26'],
+  itr2: ['2026-27', '2025-26'],
+  itr3: ['2026-27', '2025-26'],
+  itr4: ['2026-27', '2025-26'],
+  itr5: ['2026-27'],
+  itr6: ['2026-27'],
+  itr7: ['2026-27'],
+};
+
+/** True when a data-entry tool actually exists for this (form, assessment year). */
+function hasToolFor(key: ItrKey, ay: string): boolean {
+  return TOOL_YEARS[key].includes(ay);
 }
 
 const ITR_META: Record<ItrKey, { label: string; short: string; note: string }> = {
@@ -264,6 +286,9 @@ function ItrYearForms({
   const [active, setActive] = useState<ItrKey>(forms[0]);
   // Lazy-mount iframes: only load a form once its tab is first opened.
   const [mounted, setMounted] = useState<Set<ItrKey>>(() => new Set([forms[0]]));
+  // Frames stay hidden until onFrameLoad has hidden the tool's own action buttons —
+  // otherwise "Import AIS" / "Export JSON" flash for a moment on first open.
+  const [frameReady, setFrameReady] = useState<Set<ItrKey>>(new Set());
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [importMode, setImportMode] = useState<ImportMode | null>(null);
@@ -281,29 +306,62 @@ function ItrYearForms({
 
   const pan = (company.entity_details?.pan || '').toUpperCase();
 
-  /** Run the form's own validator. On pass → enable Download JSON. On fail → popup
-   *  listing every reason; if the Highlight toggle is on, outline the offending fields. */
-  const doValidate = (key: ItrKey) => {
+  /** Run the form's own validator PLUS the official schema-driven mandatory-field
+   *  check for this exact (form, assessment year). Validation passes only when the
+   *  in-form checks are clean AND every mandatory field per the ITD schema/rules is
+   *  filled — until then Download JSON stays locked. */
+  const doValidate = async (key: ItrKey) => {
     setMenuOpen(false);
     saveForm(key);
     const win = winRefs.current[key];
     const res = validateItrInFrame(win, key);
     if (!res.ran) { toast.error(res.error || 'This form has no validator yet.'); return; }
+
+    // Official mandatory-field layer — built from the ITD schema + validation
+    // rules for this form-year (src/lib/itr/mandatory/*).
+    const mandatory: { slno: string; msg: string }[] = [];
+    let mandatoryWarnings: { slno: string; msg: string }[] = [];
+    try {
+      const checker = await getMandatoryChecker(key, ay);
+      if (checker) {
+        const ext = extractItrJson(win, key);
+        if (ext.ok && ext.json) {
+          const rep = checker(ext.json);
+          mandatory.push(
+            ...rep.missing.map((m) => ({ slno: '', msg: `Mandatory field not filled: ${m.label}${m.hint ? ` (${m.hint})` : ''} — ${m.path}` })),
+            ...rep.errors.map((e) => ({ slno: e.rule ?? '', msg: e.msg })),
+          );
+          mandatoryWarnings = rep.warnings.map((w) => ({ slno: w.rule ?? '', msg: w.msg }));
+        }
+      }
+    } catch { /* mandatory layer is additive — never block the base validation */ }
+
+    const allErrors = [...res.errors, ...mandatory];
+    const allWarnings = [...res.warnings, ...mandatoryWarnings];
     highlightItrFields(win, res.errors, highlight);
-    if (res.errors.length === 0) {
+    if (allErrors.length === 0) {
       setValidatedKey(key);
       setValResult(null);
-      toast.success(res.warnings.length ? `Validation passed (${res.warnings.length} warning(s)). JSON ready to download.` : 'Validation passed — JSON ready to download.');
+      toast.success(allWarnings.length ? `Validation passed (${allWarnings.length} warning(s)). JSON ready to download.` : 'Validation passed — all mandatory fields are filled. JSON ready to download.');
     } else {
       setValidatedKey((k) => (k === key ? null : k));
-      setValResult({ ...res, key });
-      toast.error(`${res.errors.length} validation error(s) — fix and re-validate.`);
+      setValResult({ ...res, errors: allErrors, warnings: allWarnings, key });
+      toast.error(`${allErrors.length} validation error(s) — fill the mandatory details and re-validate.`);
     }
   };
 
-  /** Download the ITR JSON — only allowed after a clean validation of this form. */
+  /** Download the ITR JSON — only after a clean validation, and only for form-years
+   *  the government has actually released. */
   const doDownload = (key: ItrKey) => {
     setMenuOpen(false);
+    if (!isFormReleased(key, ay)) {
+      toast.error(`${ITR_META[key].short} for A.Y. ${ay} is not yet released by the government — the ITR JSON cannot be downloaded.`);
+      return;
+    }
+    if (!hasToolFor(key, ay)) {
+      toast.error(`No A.Y. ${ay} form exists for ${ITR_META[key].short} — the JSON would be stamped A.Y. ${TOOL_YEARS[key][0]}.`);
+      return;
+    }
     if (validatedKey !== key) { toast.error('Validate the return first — download unlocks once it passes.'); return; }
     const r = downloadItrJson(winRefs.current[key], key, pan, ay);
     if (r.ok) toast.success('ITR JSON downloaded — ready to upload on the portal.');
@@ -347,7 +405,10 @@ function ItrYearForms({
       if (!d.getElementById(STYLE_ID)) {
         const s = d.createElement('style');
         s.id = STYLE_ID;
-        s.textContent = '#exportJsonBtn,#importAisBtn,#exportBtn,#backBtn{display:none!important;}';
+        // Every tool's own action buttons. ITR-1..4 use #exportJsonBtn/#importAisBtn,
+        // ITR-5 uses #exportBtn, ITR-6/7 use #btnExport/#btnValidate — all must be
+        // hidden or the tool's toolbar competes with the shell's ⋮ menu.
+        s.textContent = '#exportJsonBtn,#importAisBtn,#exportBtn,#backBtn,#btnExport,#btnValidate{display:none!important;}';
         d.head.appendChild(s);
       }
     } catch { /* cross-origin/timing — ignore */ }
@@ -376,6 +437,9 @@ function ItrYearForms({
       win.document.addEventListener('input', handler, true);
       win.document.addEventListener('change', handler, true);
     } catch { /* ignore */ }
+
+    // Native buttons are hidden and state restored — safe to reveal the frame.
+    setFrameReady((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
   }, [company, companyId, moduleKey, saveForm]);
 
   // Shell Back button: while a drill-in is open in the active form, Back closes
@@ -461,9 +525,9 @@ function ItrYearForms({
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50">
                   <ShieldCheck className="h-4 w-4 text-emerald-600" /> Validate
                 </button>
-                <button onClick={() => doDownload(active)} disabled={validatedKey !== active}
+                <button onClick={() => doDownload(active)} disabled={validatedKey !== active || !isFormReleased(active, ay) || !hasToolFor(active, ay)}
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50 disabled:opacity-40 disabled:hover:bg-transparent"
-                  title={validatedKey === active ? 'Download the validated ITR JSON' : 'Validate first to unlock'}>
+                  title={!isFormReleased(active, ay) ? `${ITR_META[active].short} for A.Y. ${ay} is not released yet` : !hasToolFor(active, ay) ? `No A.Y. ${ay} form exists for ${ITR_META[active].short}` : validatedKey === active ? 'Download the validated ITR JSON' : 'Validate first to unlock'}>
                   <FileDown className="h-4 w-4 text-blue-600" /> Download JSON
                 </button>
                 <div className="my-1 border-t border-gray-100" />
@@ -486,7 +550,22 @@ function ItrYearForms({
         <span className="ml-1 text-gray-400">· A.Y. {ay}</span>
       </div>
 
-      {/* Iframes */}
+      {/* Unreleased form-year note (e.g. ITR-6 for A.Y. 2026-27) */}
+      {!isFormReleased(active, ay) && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-1.5 text-[11px] font-semibold text-amber-800">
+          {ITR_META[active].short} is not yet released by the government for A.Y. {ay} — therefore the ITR JSON cannot be downloaded.
+        </div>
+      )}
+
+      {/* No data-entry tool built for this year — the form on screen belongs to a
+          different assessment year, so its JSON would carry the wrong A.Y. */}
+      {!hasToolFor(active, ay) && (
+        <div className="border-b border-red-200 bg-red-50 px-4 py-1.5 text-[11px] font-semibold text-red-800">
+          No A.Y. {ay} data-entry form exists for {ITR_META[active].short} — the form shown is the A.Y. {TOOL_YEARS[active][0]} version, so its JSON would be stamped A.Y. {TOOL_YEARS[active][0]}. Download is disabled for this year.
+        </div>
+      )}
+
+      {/* Iframes — invisible until their native buttons are hidden (no flash) */}
       <div className="relative flex-1 overflow-hidden bg-gray-50">
         {forms.filter((k) => mounted.has(k)).map((key) => (
           <iframe
@@ -496,9 +575,15 @@ function ItrYearForms({
             className={`absolute inset-0 h-full w-full border-none ${
               active === key ? 'z-10' : 'pointer-events-none z-0 opacity-0'
             }`}
+            style={frameReady.has(key) ? undefined : { visibility: 'hidden' }}
             title={ITR_META[key].label}
           />
         ))}
+        {!frameReady.has(active) && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          </div>
+        )}
       </div>
 
       {importMode && (
@@ -811,9 +896,11 @@ function LockedItrView({ entityLabel, applicableItr }: { entityLabel: string; ap
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function StatutoryItrView({ company, form }: { company: Company; form: ItrKey }) {
-  // The statutory tools (ITR-5 / ITR-6 / ITR-7) ship for A.Y. 2026-27 only, so
-  // there is no year selector — just the fixed A.Y. badge.
-  const meta = AY_LIST[0];
+  // Assessment-year selector (top right). ITR-6 defaults to A.Y. 2025-26 — the
+  // last version released by the government; selecting 2026-27 shows the
+  // not-released note inside the workspace and blocks the JSON download.
+  const [ay, setAy] = useState<string>(isFormReleased(form, AY_LIST[0].ay) ? AY_LIST[0].ay : AY_LIST[1].ay);
+  const meta = AY_LIST.find((y) => y.ay === ay) ?? AY_LIST[0];
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label ?? company.entity_type;
 
   return (
@@ -825,11 +912,24 @@ function StatutoryItrView({ company, form }: { company: Company; form: ItrKey })
           <span className="truncate text-xs text-gray-400">· FY {meta.fy} · {entityLabel}</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">A.Y. {meta.ay}</span>
+          <label className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500">
+            <span className="text-gray-400">Assessment Year</span>
+            <select
+              value={ay}
+              onChange={(e) => setAy(e.target.value)}
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] font-semibold text-blue-700 focus:border-blue-400 focus:outline-none"
+              title="Choose the assessment year to file"
+            >
+              {AY_LIST.map((y) => (
+                <option key={y.ay} value={y.ay}>A.Y. {y.ay}</option>
+              ))}
+            </select>
+          </label>
           <span className="rounded border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">{ITR_META[form].short}</span>
         </div>
       </div>
-      <ItrYearForms key={form} company={company} forms={[form]} ay={meta.ay} moduleKey={meta.module} />
+      {/* key includes ay so switching years remounts under the correct module key. */}
+      <ItrYearForms key={`${form}-${ay}`} company={company} forms={[form]} ay={meta.ay} moduleKey={meta.module} />
     </div>
   );
 }
