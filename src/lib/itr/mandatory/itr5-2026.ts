@@ -13,7 +13,8 @@
  *    (Category A — "Return will not be allowed to be uploaded"). Every
  *    category-A rule that is decidable from the exported JSON alone
  *    (mandatory-if conditions and cross-field requirements) is encoded in
- *    categoryAChecks / categoryAChecks2 with rule id "A-<Sl. no.>".
+ *    categoryAChecks / categoryAChecks2 / categoryAChecks3 with rule id
+ *    "A-<Sl. no.>" — 126 distinct rule ids.
  *    Out of scope by design: the ~700 arithmetic reconciliation rules (they
  *    belong to the computation engine) and rules needing external data
  *    (CPC records, e-verification state, Form 10IF/10IFA/10IEA lookups,
@@ -672,6 +673,17 @@ function isDateStr(v: unknown): boolean {
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+/**
+ * Affirmative test for the boolean-ish flags. ITR-5 is not consistent: most
+ * flags are the enum ["Y","N"], but PropCoOwnedFlg, PartnerForeignCompFlg and
+ * AssetOutsideIndiaFlg use ["YES","NO"], and ifLetOut uses ["Y","D"] (Y = let
+ * out, D = deemed let out). Rules therefore test affirmativeness tolerantly;
+ * the exact literal is policed separately by schemaFormatChecks().
+ */
+function isYes(v: unknown): boolean {
+  const s = str(v).toUpperCase();
+  return s === 'Y' || s === 'YES' || s === 'TRUE' || s === '1';
+}
 /** "Has any data": object/array carrying at least one non-empty value. */
 function hasData(v: unknown): boolean {
   if (v === null || v === undefined) return false;
@@ -821,6 +833,23 @@ function schemaFormatChecks(j: unknown, errors: MandatoryIssue[], warnings: Mand
   for (const [path, label] of ynPaths) {
     chk(path, (v) => YN.includes(str(v)), `${label} must be "Y" or "N"`);
   }
+
+  /* Four flags that are NOT "Y"/"N" in this schema — a wrong literal is
+     rejected at upload, and it also silences the rules that depend on them. */
+  const YESNO = ['YES', 'NO'];
+  chk(`${P}.PartB_TTI.AssetOutsideIndiaFlg`, (v) => YESNO.includes(str(v).toUpperCase()),
+    'Part B-TTI Sl. No. 17 (assets outside India) must be "YES" or "NO" — not "Y"/"N"');
+  chk(`${P}.PartA_GEN2.PartnerOrMemberInfo`, (v) => arr(v).every(
+    (m) => isEmpty(prop(m, 'PartnerForeignCompFlg'))
+      || YESNO.includes(str(prop(m, 'PartnerForeignCompFlg')).toUpperCase()),
+  ), '"Whether the partner / member is a foreign company" must be "YES" or "NO" — not "Y"/"N"');
+  chk(`${P}.ScheduleHP.PropertyDetails`, (v) => arr(v).every(
+    (pr) => isEmpty(prop(pr, 'PropCoOwnedFlg'))
+      || YESNO.includes(str(prop(pr, 'PropCoOwnedFlg')).toUpperCase()),
+  ), 'Schedule HP "Is the property co-owned?" must be "YES" or "NO" — not "Y"/"N"');
+  chk(`${P}.ScheduleHP.PropertyDetails`, (v) => arr(v).every(
+    (pr) => isEmpty(prop(pr, 'ifLetOut')) || ['Y', 'D'].includes(str(prop(pr, 'ifLetOut')).toUpperCase()),
+  ), 'Schedule HP "Type of house property" must be "Y" (let out) or "D" (deemed let out)');
 }
 
 /* ── Category A rules — Part A General (Table 2, Sl. nos. 1-80) ────────────── */
@@ -861,9 +890,15 @@ function categoryAChecks(j: unknown, errors: MandatoryIssue[], warnings: Mandato
   }
 
   /* A-3 — valid mobile number */
+  /* The schema pattern is [1-9][0-9]{9} | [1-9][0-9]{4,9} — i.e. 5 to 10
+     digits, the shorter forms accommodating foreign numbers. Do NOT insist on
+     10 digits here or a valid NRI return is blocked. */
   const mob = str(at(j, `${org}.Address.MobileNo`));
-  if (mob !== '' && !/^[1-9][0-9]{9}$/.test(mob)) {
-    err(`${org}.Address.MobileNo`, 'Enter a valid 10-digit mobile number in Part A General', 'A-3');
+  if (mob !== '' && !/^[1-9][0-9]{4,9}$/.test(mob)) {
+    err(`${org}.Address.MobileNo`, 'Enter a valid mobile number in Part A General (5 to 10 digits, not starting with 0)', 'A-3');
+  }
+  if (/^[1-9][0-9]{4,8}$/.test(mob) && str(at(j, `${org}.Address.CountryCodeMobile`)) === '91') {
+    warn(`${org}.Address.MobileNo`, 'The country code is 91 (India) but the mobile number is not 10 digits', 'A-3');
   }
 
   /* A-4 — unlisted equity shares held → details mandatory */
@@ -1029,7 +1064,7 @@ function categoryAChecks(j: unknown, errors: MandatoryIssue[], warnings: Mandato
   }
   /* A-33 — a foreign-company member must carry a non-zero share */
   members.forEach((m, i) => {
-    if (str(prop(m, 'PartnerForeignCompFlg')) === 'Y' && num(prop(m, 'PercentageOfShareForeignComp')) <= 0) {
+    if (isYes(prop(m, 'PartnerForeignCompFlg')) && num(prop(m, 'PercentageOfShareForeignComp')) <= 0) {
       err(`${g2}.PartnerOrMemberInfo[${i}].PercentageOfShareForeignComp`, 'A member of the AOP / BOI / AJP is a foreign company — the percentage of share of the foreign company cannot be zero', 'A-33');
     }
   });
@@ -1221,23 +1256,42 @@ function categoryAChecks2(j: unknown, errors: MandatoryIssue[], warnings: Mandat
   arr(at(j, `${P}.ScheduleHP.PropertyDetails`)).forEach((pr, i) => {
     const base = `${P}.ScheduleHP.PropertyDetails[${i}]`;
     const rent = prop(pr, 'Rentdetails');
+    const intBorw = num(prop(rent, 'IntOnBorwCap'));
     /* A-206 — interest u/s 24(b) claimed → lender-wise details mandatory */
-    if (num(prop(rent, 'IntOnBorwCap')) > 0
+    if (intBorw > 0
         && arr(prop(prop(rent, 'Section24B'), 'Section24BDtls')).length === 0) {
       err(`${base}.Rentdetails.Section24B.Section24BDtls`, 'Interest on borrowed capital u/s 24(b) is claimed — the lender-wise details of the loan are mandatory', 'A-206');
     }
-    /* A-198 — let-out / deemed let-out property must carry a gross rent */
-    const letOut = str(prop(pr, 'ifLetOut'));
-    if ((letOut === 'L' || letOut === 'D') && num(prop(rent, 'AnnualLetableValue')) <= 0) {
+    /* A-198 — let-out / deemed let-out property must carry a gross rent.
+       ifLetOut is ["Y","D"] in this schema: every ITR-5 house property is
+       either let out (Y) or deemed let out (D), so the rule applies to all. */
+    const letOut = str(prop(pr, 'ifLetOut')).toUpperCase();
+    if ((letOut === 'Y' || letOut === 'D') && num(prop(rent, 'AnnualLetableValue')) <= 0) {
       err(`${base}.Rentdetails.AnnualLetableValue`, 'The property is let out / deemed let out — the gross rent received, receivable or lettable value cannot be zero or blank', 'A-198');
     }
-    /* Co-owned property → co-owner table and the assessee\'s share */
-    if (str(prop(pr, 'PropCoOwnedFlg')) === 'Y') {
-      if (arr(prop(pr, 'CoOwners')).length === 0) {
-        err(`${base}.CoOwners`, 'The property is co-owned — the details of every co-owner must be provided', 'A-195');
+    /* ── Co-owned property (Sl. nos. 193, 195, 207) ── */
+    if (isYes(prop(pr, 'PropCoOwnedFlg'))) {
+      const ownShare = num(prop(pr, 'AssessePercentShareProp'));
+      const coOwners = arr(prop(pr, 'CoOwners'));
+      /* A-193 — the assessee's share plus every co-owner's share must be 100% */
+      if (coOwners.length === 0) {
+        err(`${base}.CoOwners`, 'The property is co-owned — the details of every co-owner must be provided so that the shares add up to 100%', 'A-193');
+      } else {
+        const total = coOwners.reduce<number>(
+          (s, c) => s + num(prop(c, 'PercentShareProperty')), ownShare,
+        );
+        if (Math.abs(total - 100) > 0.01) {
+          err(`${base}.AssessePercentShareProp`, `The property is co-owned — the assessee's share and the co-owners' shares must total 100% (currently ${total}%)`, 'A-193');
+        }
+        /* A-207 — the other co-owners' share must be below 100% */
+        const othersShare = total - ownShare;
+        if (othersShare >= 100) {
+          err(`${base}.CoOwners`, 'The property is co-owned — the percentage share of the other co-owner(s) must be less than 100%', 'A-207');
+        }
       }
-      if (isEmpty(prop(pr, 'AssessePercentShareProp'))) {
-        err(`${base}.AssessePercentShareProp`, 'The property is co-owned — the percentage share of the assessee in the property is mandatory', 'A-195');
+      /* A-195 — no interest u/s 24(b) when the assessee's share is nil */
+      if (ownShare <= 0 && intBorw > 0) {
+        err(`${base}.Rentdetails.IntOnBorwCap`, "Interest on borrowed capital cannot be claimed when the assessee's share in the co-owned property is zero", 'A-195');
       }
     }
   });
@@ -1407,11 +1461,11 @@ function categoryAChecks2(j: unknown, errors: MandatoryIssue[], warnings: Mandat
   }
 
   /* A-777 / A-840 — foreign assets flag ↔ Schedule FA */
-  const faFlag = str(at(j, `${btti}.AssetOutsideIndiaFlg`));
-  if (faFlag === 'Y' && !hasData(at(j, `${P}.ScheduleFA`))) {
-    err(`${P}.ScheduleFA`, 'Sl. No. 17 of Part B-TTI (assets outside India) is "Yes" — Schedule FA is mandatory', 'A-840');
+  const faFlag = at(j, `${btti}.AssetOutsideIndiaFlg`);
+  if (isYes(faFlag) && !hasData(at(j, `${P}.ScheduleFA`))) {
+    err(`${P}.ScheduleFA`, 'Sl. No. 17 of Part B-TTI (assets outside India) is "YES" — Schedule FA is mandatory', 'A-840');
   }
-  if (faFlag !== 'Y' && hasData(at(j, `${P}.ScheduleFA`))) {
+  if (!isYes(faFlag) && hasData(at(j, `${P}.ScheduleFA`))) {
     warn(`${btti}.AssetOutsideIndiaFlg`, 'Schedule FA carries foreign-asset details — Sl. No. 17 of Part B-TTI should be answered "Yes"', 'A-777');
   }
 
@@ -1500,6 +1554,130 @@ function categoryAChecks2(j: unknown, errors: MandatoryIssue[], warnings: Mandat
   }
 }
 
+/* ── Category A rules — remaining mandatory-if conditions ──────────────────── */
+/* Sl. nos. 39, 62, 65 (Part A General / Form 10IEA), 410-411, 445-446
+   (Schedule CG), 611 (Schedule 80G), 642 (Schedule 80P), 741-742 (Schedule EI).
+   Everything here is decided on the exported JSON alone. */
+
+function categoryAChecks3(j: unknown, errors: MandatoryIssue[], warnings: MandatoryIssue[]): void {
+  const org = `${P}.PartA_GEN1.OrgFirmInfo`;
+  const fsP = `${P}.PartA_GEN1.FilingStatus`;
+  const cg = `${P}.ScheduleCG`;
+  const err = (path: string, msg: string, rule: string) => errors.push({ path, msg, rule });
+  const warn = (path: string, msg: string, rule: string) => warnings.push({ path, msg, rule });
+
+  const status = str(at(j, `${org}.StatusOrCompanyType`));
+  const subStatus = str(at(j, `${org}.SubStatus`));
+
+  /* ── A-39 / A-62 / A-65 — the 115BAC / Form 10IEA questions that must be
+     answered. Both are scoped to the assessees to whom section 115BAC(1A)
+     applies (AOP / BOI / AJP and their sub-statuses) so that a firm or a
+     co-operative society is never blocked by them. */
+  const bac115Substatus = ['8', '11', '12', '13', '18', '19', '20', '21'];
+  const bacApplies = ['14', '9'].includes(status) || bac115Substatus.includes(subStatus);
+  const optOldCurr = str(at(j, `${fsP}.OptOldRegimeCurrAY`));
+  const ieaCurrOld = str(at(j, `${fsP}.F10IEACurrAYOldRegime`));
+  const ieaCurrNew = str(at(j, `${fsP}.F10IEACurrAYNewRegime`));
+  const ieaEarlierOld = str(at(j, `${fsP}.Form10IEAEarlierAYOldRegime`));
+  const ieaEarlierNew = str(at(j, `${fsP}.F10IEAEarlierAYNewRegime`));
+  if (bacApplies && optOldCurr === '' && ieaCurrOld === '' && ieaCurrNew === '') {
+    err(`${fsP}.OptOldRegimeCurrAY`, 'Sub-status is a society / business trust / investment fund / other AOP-BOI / AJP — Sl. No. A19 d(i), the method of opting out of the new tax regime u/s 115BAC in the current year, cannot be left blank', 'A-39');
+  }
+  if (bacApplies && str(at(j, `${fsP}.IncFrmBusOrProf`)) === 'N' && optOldCurr === '') {
+    err(`${fsP}.OptOldRegimeCurrAY`, 'There is no income from business or profession — Sl. No. A19(d)(i)(II) (option for the old tax regime u/s 115BAC(6)) must be answered', 'A-62');
+  }
+  if (ieaEarlierOld === 'Y' && ieaEarlierNew !== 'Y' && ieaCurrNew === '') {
+    err(`${fsP}.F10IEACurrAYNewRegime`, 'Form 10IEA was not filed with the re-entry option for an earlier assessment year — "Have you furnished Form 10IEA for re-entering the new tax regime in the current assessment year?" must be answered', 'A-65');
+  }
+
+  /* ── A-410 / A-411 — sale of land or building: both dates are mandatory ── */
+  const landRows: Array<[string, string]> = [
+    [`${cg}.ShortTermCapGain.SaleofLandBuild.SaleofLandBuildDtls`, 'Schedule CG Sl. No. A(1)'],
+    [`${cg}.LongTermCapGain.SaleofLandBuild.SaleofLandBuildDtls`, 'Schedule CG Sl. No. B(1)'],
+  ];
+  for (const [tbl, where] of landRows) {
+    arr(at(j, tbl)).forEach((r, i) => {
+      const consid = Math.max(
+        num(prop(r, 'FullConsideration')),
+        num(prop(r, 'FullConsideration50C')),
+        num(prop(r, 'PropertyValuation')),
+      );
+      if (consid <= 0) return;
+      if (isEmpty(prop(r, 'DateofSale'))) {
+        err(`${tbl}[${i}].DateofSale`, `${where} row ${i + 1}: the date of sale / transfer of the immovable property is mandatory once a consideration is entered`, 'A-410');
+      }
+      if (isEmpty(prop(r, 'DateofPurchase'))) {
+        err(`${tbl}[${i}].DateofPurchase`, `${where} row ${i + 1}: the date of purchase / acquisition of the immovable property is mandatory once a consideration is entered`, 'A-411');
+      }
+    });
+  }
+
+  /* ── A-445 — CGAS deposits need the date, the account number and the IFSC ── */
+  const cgasTables = ['DeducClaimDtlsUs54D', 'DeducClaimDtlsUs54G', 'DeducClaimDtlsUs54GA'];
+  for (const t of cgasTables) {
+    const tbl = `${cg}.DeducClaimInfo.${t}`;
+    arr(at(j, tbl)).forEach((r, i) => {
+      if (num(prop(r, 'AmtDeposited')) <= 0) return;
+      for (const k of ['DepositDate', 'AccountNo', 'IFSC'] as const) {
+        if (isEmpty(prop(r, k))) {
+          err(`${tbl}[${i}].${k}`, `An amount is deposited in the Capital Gains Accounts Scheme before the due date (Schedule CG, Table D, ${t.replace('DeducClaimDtlsUs', 'section ')}) — ${humanise(k)} cannot be left blank`, 'A-445');
+        }
+      }
+    });
+  }
+
+  /* ── A-446 — a buy-back capital loss presupposes the deemed dividend u/s 2(22)(f) ── */
+  const buyBackLoss = num(at(j, `${cg}.ShortTermCapGain.CapitalLossBuyBackShares.TotalCapitalLossBuyBackShares`))
+    + num(at(j, `${cg}.LongTermCapGain.CapitalLossBuyBackShares.TotalCapitalLossBuyBackShares`));
+  if (buyBackLoss > 0
+      && num(at(j, `${P}.ScheduleOS.IncOthThanOwnRaceHorse.Dividend22f`)) <= 0) {
+    err(`${P}.ScheduleOS.IncOthThanOwnRaceHorse.Dividend22f`, 'A capital loss on the buy-back of shares is reported in Schedule CG — the dividend income u/s 2(22)(f) at Sl. No. 1a(iii) of Schedule OS is mandatory', 'A-446');
+  }
+
+  /* ── A-611 — non-cash donations in Schedule 80G need the payment particulars ── */
+  for (const sec of ['Don100Percent', 'Don50PercentNoApprReqd', 'Don100PercentApprReqd', 'Don50PercentApprReqd']) {
+    const tbl = `${P}.Schedule80G.${sec}.DoneeDetail`;
+    arr(at(j, tbl)).forEach((r, i) => {
+      if (num(prop(r, 'DonationAmtOtherMode')) <= 0) return;
+      if (isEmpty(prop(r, 'TransactionRefNum')) && isEmpty(prop(r, 'IFSCCode'))) {
+        err(`${tbl}[${i}].TransactionRefNum`, `Schedule 80G, ${humanise(sec)} row ${i + 1}: for a contribution made in a mode other than cash the transaction reference number (UPI / cheque / IMPS / NEFT / RTGS) and / or the IFSC code of the bank must be filled`, 'A-611');
+      }
+    });
+  }
+
+  /* ── A-642 — 80P needs Schedule 80P *and* the P&L account ── */
+  const claim80P = num(at(j, `${P}.ScheduleVIA.UsrDeductUndChapVIA.Section80P`))
+    + num(at(j, `${P}.ScheduleVIA.DeductUndChapVIA.Section80P`));
+  if (claim80P > 0
+      && !hasData(at(j, `${P}.PARTA_PL.CreditsToPL`))
+      && !hasData(at(j, `${P}.PARTA_PL.DebitsToPL`))
+      && !hasData(at(j, `${P}.PARTA_PL.NoBooksOfAccPL`))) {
+    err(`${P}.PARTA_PL`, 'A deduction u/s 80P is claimed — Schedule 80P and the Part A profit-and-loss account must both be filled, failing which the deduction will not be allowed', 'A-642');
+  }
+
+  /* ── A-741 / A-742 — Schedule EI "any other income" rows ── */
+  const DESC_SUBCATS = ['Incmexmptcircular', 'Incmexmptnotification', 'Receiptnotincme'];
+  const eiTbl = `${P}.ScheduleEI.OthersInc.OthersIncDtls`;
+  arr(at(j, eiTbl)).forEach((r, i) => {
+    if (num(prop(r, 'OthAmount')) <= 0) return;
+    const sub = str(prop(r, 'SubCategory'));
+    if (isEmpty(prop(r, 'Category'))) {
+      err(`${eiTbl}[${i}].Category`, `Schedule EI row ${i + 1}: an exempt amount is reported — the category of the exempt income must be selected`, 'A-742');
+    }
+    if (sub === '') {
+      err(`${eiTbl}[${i}].SubCategory`, `Schedule EI row ${i + 1}: an exempt amount is reported — the sub-category of the exempt income must be selected`, 'A-742');
+    }
+    if (DESC_SUBCATS.includes(sub) && isEmpty(prop(r, 'Description'))) {
+      err(`${eiTbl}[${i}].Description`, `Schedule EI row ${i + 1}: for "income exempt as per a CBDT circular / notification" or "receipts not in the nature of income" the description is mandatory`, 'A-741');
+    }
+  });
+
+  /* Soft cross-check: Schedule 80P filled but no deduction carried to Schedule VI-A */
+  if (claim80P <= 0 && hasData(at(j, `${P}.Schedule80P`))) {
+    warn(`${P}.ScheduleVIA.UsrDeductUndChapVIA.Section80P`, 'Schedule 80P carries particulars but no deduction u/s 80P is claimed in Schedule VI-A', 'A-642');
+  }
+}
+
 /* ── the checker ───────────────────────────────────────────────────────────── */
 
 export const checkMandatory: MandatoryChecker = (json: unknown): MandatoryReport => {
@@ -1522,6 +1700,7 @@ export const checkMandatory: MandatoryChecker = (json: unknown): MandatoryReport
       schemaFormatChecks(json, errors, warnings);
       categoryAChecks(json, errors, warnings);
       categoryAChecks2(json, errors, warnings);
+      categoryAChecks3(json, errors, warnings);
     }
   } catch {
     warnings.push({

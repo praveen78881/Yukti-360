@@ -12,7 +12,13 @@ import {
 } from '@/lib/accounting/gstr3bJson';
 import { getEntityData, upsertEntityData } from '@/lib/offlineDb';
 import { recentFinancialYears } from '@/lib/gst/sandbox/period';
-import { BookOpen, FileDown, CheckCircle } from 'lucide-react';
+import { getSessionToken } from '@/lib/gst/session';
+import { useGstSession } from '@/components/gst/GstSessionProvider';
+import {
+  GSTR3B_SOURCES, SOURCE_LABELS, applyGstr3bPatch, getGstr3bPeriod, saveGstr3bPeriod,
+  type Gstr3bSourceEntry, type Gstr3bPeriodRecord, type Gstr3bSource, type Gstr3bFieldKey,
+} from '@/lib/gst/gstr3b';
+import { BookOpen, FileDown, CheckCircle, ChevronDown, Loader2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +50,39 @@ function fyMonth(startYear: number, mi: number): { year: number; month: number }
 const sum4 = (x: Split4) => x.igst + x.cgst + x.sgst + x.cess;
 
 const fmt = (n: number) => (n === 0 ? '—' : formatIndianCurrency(n));
+
+/** True when any figure in the month is non-zero (drives the silent migration). */
+function hasFigures(m: Gstr3bMonthData): boolean {
+  return Object.values(m).some((v) =>
+    typeof v === 'number'
+      ? v !== 0
+      : v && typeof v === 'object'
+        ? Object.values(v as Record<string, number>).some((n) => n !== 0)
+        : false,
+  );
+}
+
+/** Top-level keys whose value differs — the manual patch a cell edit produces. */
+function diffMonth(before: Gstr3bMonthData, after: Gstr3bMonthData): Partial<Gstr3bMonthData> {
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(after) as Gstr3bFieldKey[]) {
+    if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) out[k] = after[k];
+  }
+  return out as Partial<Gstr3bMonthData>;
+}
+
+const STATUS_STYLE: Record<string, string> = {
+  draft: 'border-gray-200 bg-gray-100 text-gray-600',
+  imported: 'border-amber-200 bg-amber-50 text-amber-700',
+  filed: 'border-green-200 bg-green-50 text-green-700',
+};
+
+const hhmm = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
 
 /* Cell renderers live at module scope so their component identity is stable —
    defined inline they would remount (and drop focus) on every keystroke. */
@@ -85,20 +124,79 @@ export default function GSTR3BPage() {
   const loadedRef = useRef(false);
   const saveTimer = useRef<number | undefined>(undefined);
 
-  // Restore the saved matrix for this company + FY.
+  // ── Per-period drafting (additive) ─────────────────────────────────────────
+  // Every month also lives on its own in entity_data as a Gstr3bPeriodRecord, so
+  // any month can be drafted, sourced and provenance-tracked independently of the
+  // FY matrix. The matrix and its per-FY autosave keep working exactly as before
+  // and remain the fallback for anything saved before period records existed.
+  const gstSession = useGstSession();
+  const gstin = company?.gst_details?.gstin?.trim() ?? '';
+  const [recs, setRecs] = useState<(Gstr3bPeriodRecord | null)[]>(() => MONTHS.map(() => null));
+  const [srcOpen, setSrcOpen] = useState(false);
+  const [running, setRunning] = useState<Gstr3bSource | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const pendingManual = useRef<Map<number, Partial<Gstr3bMonthData>>>(new Map());
+  const manualTimer = useRef<number | undefined>(undefined);
+
+  // Restore the saved matrix for this company + FY, then let each month's own
+  // period record (when one exists) win over the FY copy.
   useEffect(() => {
-    if (!companyId) return;
+    // Wait for the company so the migrated records carry the right GSTIN.
+    if (!companyId || companyLoading) return;
     loadedRef.current = false;
     const rec = getEntityData(companyId, MODULE_KEY, fyLabel)?.data as { months?: Gstr3bMonthData[] } | undefined;
-    setMonths(
+    const fyMonths: Gstr3bMonthData[] =
       rec?.months?.length === 12
         ? rec.months.map((m) => ({ ...emptyGstr3bMonth(), ...m }))
-        : MONTHS.map(() => emptyGstr3bMonth())
-    );
+        : MONTHS.map(() => emptyGstr3bMonth());
+
+    const nextRecs: (Gstr3bPeriodRecord | null)[] = [];
+    const nextMonths = fyMonths.map((m, mi) => {
+      const { year, month } = fyMonth(startYear, mi);
+      const period = toRetPeriodMmYyyy(year, month);
+      let pr: Gstr3bPeriodRecord | null = null;
+      try { pr = getGstr3bPeriod(companyId, period); } catch { pr = null; }
+      if (pr) {
+        nextRecs[mi] = pr;
+        return { ...emptyGstr3bMonth(), ...pr.data };
+      }
+      // Silent one-time migration: a month that only exists in the FY matrix gets
+      // its own record so it can be drafted/sourced. Provenance is left empty —
+      // the origin of pre-migration figures is unknown, so a source may still fill
+      // them; every edit made from now on is stamped 'manual' and protected.
+      if (hasFigures(m)) {
+        const now = new Date().toISOString();
+        const seeded: Gstr3bPeriodRecord = {
+          gstin, period, data: m, status: 'draft', provenance: {},
+          applied: [{ source: 'manual', at: now, notes: `Carried over from the FY ${fyLabel} summary matrix.` }],
+          updatedAt: now,
+        };
+        try { saveGstr3bPeriod(companyId, seeded); } catch { /* matrix keeps working */ }
+        nextRecs[mi] = seeded;
+      } else {
+        nextRecs[mi] = null;
+      }
+      return m;
+    });
+
+    setMonths(nextMonths);
+    setRecs(nextRecs);
     // Let the restore settle before autosave arms itself.
     const t = window.setTimeout(() => { loadedRef.current = true; }, 0);
     return () => window.clearTimeout(t);
-  }, [companyId, fyLabel]);
+  }, [companyId, companyLoading, fyLabel, startYear, gstin]);
+
+  // Close the source menu on an outside click / Escape.
+  useEffect(() => {
+    if (!srcOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setSrcOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSrcOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [srcOpen]);
 
   // Debounced autosave of every edit.
   useEffect(() => {
@@ -135,10 +233,105 @@ export default function GSTR3BPage() {
     return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
-  const gstin = company.gst_details?.gstin?.trim() ?? '';
+  const periodOf = (mi: number) => {
+    const { year, month } = fyMonth(startYear, mi);
+    return toRetPeriodMmYyyy(year, month);
+  };
+  const monthLabel = (mi: number) => `${MONTHS[mi]} ${fyMonth(startYear, mi).year}`;
+
+  /** Write the queued hand-edits into their period records as source 'manual',
+   *  which is what stops any later source run from overwriting them. */
+  const flushManual = () => {
+    window.clearTimeout(manualTimer.current);
+    manualTimer.current = undefined;
+    if (!companyId || pendingManual.current.size === 0) return;
+    const entries = [...pendingManual.current.entries()];
+    pendingManual.current.clear();
+    const at = new Date().toISOString();
+    const updates: [number, Gstr3bPeriodRecord][] = [];
+    for (const [mi, values] of entries) {
+      try {
+        updates.push([mi, applyGstr3bPatch(companyId, periodOf(mi), gstin, {
+          source: 'manual', values, at, calls: 0, notes: 'Edited by hand in the summary matrix.',
+        })]);
+      } catch { /* the per-FY autosave still holds the figures */ }
+    }
+    if (updates.length) {
+      setRecs((prev) => {
+        const next = [...prev];
+        for (const [mi, r] of updates) next[mi] = r;
+        return next;
+      });
+    }
+  };
+
+  const queueManual = (mi: number, before: Gstr3bMonthData, after: Gstr3bMonthData) => {
+    const values = diffMonth(before, after);
+    if (Object.keys(values).length === 0) return;
+    pendingManual.current.set(mi, { ...(pendingManual.current.get(mi) ?? {}), ...values });
+    window.clearTimeout(manualTimer.current);
+    manualTimer.current = window.setTimeout(flushManual, 700);
+  };
 
   const patch = (mi: number, updater: (m: Gstr3bMonthData) => Gstr3bMonthData) => {
-    setMonths((prev) => prev.map((m, i) => (i === mi ? updater(m) : m)));
+    const before = months[mi];
+    const after = updater(before);
+    setMonths((prev) => prev.map((m, i) => (i === mi ? (m === before ? after : updater(m)) : m)));
+    queueManual(mi, before, after);
+  };
+
+  /** Run one source adapter against the SELECTED month and merge its patch.
+   *  Offline sources never see a token; online ones get the shared session only
+   *  if it is already open — we never force an OTP from here, and a source that
+   *  can answer from its own cache still works with no session at all. */
+  const runSource = async (entry: Gstr3bSourceEntry) => {
+    if (!companyId) return;
+    // Only the portal-bound sources need a GSTIN. The offline ones read local
+    // invoices/journal/cached downloads, so they must stay usable without one.
+    if (entry.online && !gstin) { toast.error('Add this company’s GSTIN in Settings first.'); return; }
+    setSrcOpen(false);
+    const mi = jsonMonth;
+    const period = periodOf(mi);
+    const label = monthLabel(mi);
+    setRunning(entry.source);
+    try {
+      const token = entry.online ? (getSessionToken(gstin) ?? undefined) : undefined;
+      const res = await entry.run({ companyId, gstin, period, sessionToken: token });
+
+      if (res.needsSession) {
+        toast.error(`${entry.label} needs the GST portal — connect the taxpayer session for ${gstin}, then run it again.`, {
+          duration: 10000,
+          description: 'Books & accounts, manual editing and the JSON download keep working offline.',
+          action: { label: 'Connect', onClick: () => { void gstSession.ensureToken(); } },
+        });
+        return;
+      }
+      if (!res.ok) { toast.error(res.error || `${entry.label} could not be read for ${label}.`); return; }
+      const values = res.patch?.values ?? {};
+      if (res.noData || Object.keys(values).length === 0) {
+        toast.message(`Nothing to import for ${label}`, {
+          description: res.patch?.notes || `${entry.label} has no figures for this period.`,
+          duration: 7000,
+        });
+        return;
+      }
+
+      const applied = res.patch!;
+      const rec = applyGstr3bPatch(companyId, period, gstin, applied);
+      setRecs((prev) => prev.map((r, i) => (i === mi ? rec : r)));
+      setMonths((prev) => prev.map((m, i) => (i === mi ? { ...emptyGstr3bMonth(), ...rec.data } : m)));
+      const kept = Object.keys(values).filter((k) => rec.provenance[k as Gstr3bFieldKey] !== applied.source);
+      toast.success(`${entry.label} → ${label}`, {
+        duration: 9000,
+        description:
+          (applied.notes || `${Object.keys(values).length} field(s) filled.`) +
+          (kept.length ? ` ${kept.length} hand-edited field(s) were kept.` : ''),
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : `${entry.label} failed for ${label}.`);
+    } finally {
+      setRunning(null);
+    }
   };
 
   /** Fill sales / tax / ITC for all 12 months from the invoice registers.
@@ -147,15 +340,18 @@ export default function GSTR3BPage() {
   const loadFromBooks = () => {
     const sales = companyId ? listInvoicesV2(companyId) : [];
     const purchases = companyId ? listPurchaseInvoices(companyId) : [];
-    setMonths((prev) => prev.map((m, mi) => {
+    const at = new Date().toISOString();
+    flushManual();                       // never let a queued hand-edit land after this
+    const nextRecs = [...recs];
+    let kept = 0;
+    const nextMonths = months.map((m, mi) => {
       const { year, month } = fyMonth(startYear, mi);
       const { from, to } = calendarMonthRangeIso(year, month);
       const s = computeGSTR3BFromInvoices(
         sales.filter((x) => x.invoice_date >= from && x.invoice_date <= to),
         purchases.filter((x) => x.invoice_date >= from && x.invoice_date <= to),
       );
-      return {
-        ...m,
+      const values: Partial<Gstr3bMonthData> = {
         txval31a: round2(s.outwardSupplies.taxableValue),
         taxNonRcm: { igst: round2(s.outwardSupplies.igst), cgst: round2(s.outwardSupplies.cgst), sgst: round2(s.outwardSupplies.sgst), cess: 0 },
         itcNonRcm: {
@@ -165,8 +361,25 @@ export default function GSTR3BPage() {
           cess: 0,
         },
       };
-    }));
-    toast.success(`Sales, tax and ITC loaded from books for FY ${fyLabel}`);
+      if (!companyId) return { ...m, ...values };
+      try {
+        const rec = applyGstr3bPatch(companyId, toRetPeriodMmYyyy(year, month), gstin, {
+          source: 'books', values, at, calls: 0,
+          notes: `Sales, tax and ITC read from the invoice registers for ${MONTHS[mi]} ${year}.`,
+        });
+        nextRecs[mi] = rec;
+        kept += Object.keys(values).filter((k) => rec.provenance[k as Gstr3bFieldKey] !== 'books').length;
+        return { ...emptyGstr3bMonth(), ...rec.data };
+      } catch {
+        return { ...m, ...values };      // storage failed — the matrix still updates
+      }
+    });
+    setMonths(nextMonths);
+    setRecs(nextRecs);
+    toast.success(
+      `Sales, tax and ITC loaded from books for FY ${fyLabel}`,
+      kept ? { description: `${kept} hand-edited figure(s) were kept.` } : undefined,
+    );
   };
 
   const downloadJson = () => {
@@ -314,6 +527,12 @@ export default function GSTR3BPage() {
     },
   ];
 
+  // Per-period status + provenance for the month the month-dropdown selects.
+  const selRec = recs[jsonMonth] ?? null;
+  const selStatus = selRec?.status ?? 'draft';
+  const selApplied = selRec?.applied ?? [];
+  const sessionState = gstin ? gstSession.status().state : 'none';
+
   return (
     <div className="space-y-4">
       <PageHeader title="GSTR-3B" description="Summary report — month-wise return matrix with portal JSON export">
@@ -376,7 +595,7 @@ export default function GSTR3BPage() {
             <span className="mx-2 text-gray-300">|</span>
             GSTIN: <span className="font-mono text-gray-900">{gstin || '—'}</span>
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-3">
             {savedAt && (
               <span className="flex items-center gap-1 text-[11px] font-medium text-green-600">
                 <CheckCircle className="h-3 w-3" /> Saved {savedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -385,7 +604,80 @@ export default function GSTR3BPage() {
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
               GSTR-3B Summary Report ({startYear}-{startYear + 1}) · {view === 'month' ? `${MONTHS[jsonMonth]} ${fyMonth(startYear, jsonMonth).year}` : view === 'quarter' ? `Q${qSel + 1}` : 'Full Year'}
             </p>
+
+            {/* Fill the SELECTED month from any source. Offline sources never need
+                a session; online ones use the shared one only if it's already open. */}
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setSrcOpen((o) => !o)}
+                disabled={!!running}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                Fill {monthLabel(jsonMonth)} from
+                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+              </button>
+              {srcOpen && (
+                <div className="absolute right-0 z-40 mt-1 w-80 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-lg">
+                  <p className="border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                    Source for {monthLabel(jsonMonth)}
+                  </p>
+                  {GSTR3B_SOURCES.map((entry) => (
+                    <button
+                      key={entry.source}
+                      type="button"
+                      onClick={() => void runSource(entry)}
+                      disabled={!!running}
+                      className="flex w-full items-start gap-2 border-b border-gray-50 px-3 py-2 text-left hover:bg-blue-50/60 disabled:opacity-60"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[11px] font-semibold text-gray-800">{entry.label}</span>
+                        <span className="block text-[10px] leading-snug text-gray-500">{entry.hint}</span>
+                      </span>
+                      <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                        entry.online ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+                      }`}>
+                        {entry.online ? 'Portal' : 'Offline'}
+                      </span>
+                    </button>
+                  ))}
+                  <p className="px-3 py-1.5 text-[10px] leading-snug text-gray-500">
+                    {sessionState === 'active'
+                      ? 'GST portal connected.'
+                      : 'No portal session — anything already downloaded still works offline; a source that truly needs the portal will offer to connect.'}
+                    {' '}Figures you typed yourself are never overwritten by a source run.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Per-month status + provenance: which source last filled this month. */}
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-gray-100 bg-white px-4 py-1.5 text-[10px]">
+          <span className="font-semibold text-gray-500">{monthLabel(jsonMonth)}</span>
+          <span className={`rounded border px-1.5 py-0.5 font-bold uppercase tracking-wide ${STATUS_STYLE[selStatus] ?? STATUS_STYLE.draft}`}>
+            {selStatus}
+          </span>
+          {selRec?.arn && <span className="font-mono text-gray-500">ARN {selRec.arn}</span>}
+          {selApplied.length === 0 ? (
+            <span className="text-gray-400">No source applied yet — edit any cell, or fill the month from a source.</span>
+          ) : (
+            <>
+              <span className="text-gray-400">filled by</span>
+              {selApplied.map((a) => (
+                <span
+                  key={a.source}
+                  title={a.notes || undefined}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 font-medium text-gray-600"
+                >
+                  {SOURCE_LABELS[a.source] ?? a.source}
+                  <span className="ml-1 text-gray-400">· {hhmm(a.at)}</span>
+                </span>
+              ))}
+            </>
+          )}
         </div>
 
         {view !== 'month' && (
