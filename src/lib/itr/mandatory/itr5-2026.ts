@@ -41,18 +41,15 @@ type ReqNode = 1 | { [key: string]: ReqNode };
 const REQUIRED_TREE: { [key: string]: ReqNode } = {
   ITR: {
     ITR5: {
-      CreationInfo: {
-        SWVersionNo: 1, SWCreatedBy: 1, JSONCreatedBy: 1, JSONCreationDate: 1, IntermediaryCity: 1,
-        Digest: 1,
-      },
+      CreationInfo: { SWVersionNo: 1, SWCreatedBy: 1, JSONCreatedBy: 1, JSONCreationDate: 1, IntermediaryCity: 1, Digest: 1 },
       Form_ITR5: { FormName: 1, Description: 1, AssessmentYear: 1, SchemaVer: 1, FormVer: 1 },
       PartA_GEN1: {
         OrgFirmInfo: {
           AssesseeName: { SurNameOrOrgName: 1 },
           PAN: 1,
           Address: {
-            ResidenceNo: 1, LocalityOrArea: 1, CityOrTownOrDistrict: 1, StateCode: 1, CountryCode: 1,
-            CountryCodeMobile: 1, MobileNo: 1, EmailAddress: 1,
+            ResidenceNo: 1, LocalityOrArea: 1, CityOrTownOrDistrict: 1, StateCode: 1, CountryCode: 1, CountryCodeMobile: 1, MobileNo: 1,
+            EmailAddress: 1,
           },
           DateOFFormOrIncorp: 1,
           StatusOrCompanyType: 1,
@@ -73,17 +70,12 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
           ifMSME: 1,
         },
       },
-      PartA_GEN2: {
-        LiableSec44AAflg: 1, IncDclrdUs: 1, LiableSec44ABflg: 1, LiableSec92Eflg: 1,
-        PrevYrMemPartChange: 1,
-      },
+      PartA_GEN2: { LiableSec44AAflg: 1, IncDclrdUs: 1, LiableSec44ABflg: 1, LiableSec92Eflg: 1, PrevYrMemPartChange: 1 },
       PARTA_BS: {
         FundSrc: {
           PartnerOrMemberFund: {
             PartnerOrMemberCap: 1,
-            ResrNSurp: {
-              RevResr: 1, CapResr: 1, StatResr: 1, OthResr: 1, CreditBalOfPLAccount: 1, TotResrNSurp: 1,
-            },
+            ResrNSurp: { RevResr: 1, CapResr: 1, StatResr: 1, OthResr: 1, CreditBalOfPLAccount: 1, TotResrNSurp: 1 },
             TotPartnerOrMemberFund: 1,
           },
           LoanFunds: {
@@ -129,10 +121,7 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
           },
           CurrAssetLoanAdv: {
             CurrAsset: {
-              Inventories: {
-                RawMatl: 1, WorkInProgress: 1, FinOrTradGood: 1, StkInTrade: 1, StoresConsumables: 1,
-                LooseTools: 1, Others: 1, TotInventries: 1,
-              },
+              Inventories: { RawMatl: 1, WorkInProgress: 1, FinOrTradGood: 1, StkInTrade: 1, StoresConsumables: 1, LooseTools: 1, Others: 1, TotInventries: 1 },
               SundryDebtorDtls: { OutstandindMorethanOneYr: 1, Others: 1, TotalSundryDebtors: 1 },
               CashOrBankBal: { BankBal: 1, CashinHand: 1, Others: 1, TotCashOrBankBal: 1 },
               OthCurrAsset: 1,
@@ -168,9 +157,8 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
       PARTA_PL: {
         CreditsToPL: {
           OthIncome: {
-            RentInc: 1, Comissions: 1, Dividends: 1, InterestInc: 1, ProfitOnSaleFixedAsset: 1,
-            ProfitOnInvChrSTT: 1, ProfitOnOthInv: 1, ProfitOnCurrFluct: 1,
-            ProfitOnCnvInvntryToCapAsst: 1, ProfitOnAgriIncome: 1, MiscOthIncome: 1, TotOthIncome: 1,
+            RentInc: 1, Comissions: 1, Dividends: 1, InterestInc: 1, ProfitOnSaleFixedAsset: 1, ProfitOnInvChrSTT: 1, ProfitOnOthInv: 1,
+            ProfitOnCurrFluct: 1, ProfitOnCnvInvntryToCapAsst: 1, ProfitOnAgriIncome: 1, MiscOthIncome: 1, TotOthIncome: 1,
           },
           TotCreditsToPL: 1,
         },
@@ -183,9 +171,8 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
             RepairsBldg: 1,
             RepairMach: 1,
             EmployeeComp: {
-              SalsWages: 1, Bonus: 1, MedExpReimb: 1, LeaveEncash: 1, LeaveTravelBenft: 1,
-              ContToSuperAnnFund: 1, ContToPF: 1, ContToGratFund: 1, ContToOthFund: 1,
-              OthEmpBenftExpdr: 1, TotEmployeeComp: 1,
+              SalsWages: 1, Bonus: 1, MedExpReimb: 1, LeaveEncash: 1, LeaveTravelBenft: 1, ContToSuperAnnFund: 1, ContToPF: 1, ContToGratFund: 1,
+              ContToOthFund: 1, OthEmpBenftExpdr: 1, TotEmployeeComp: 1,
             },
             Insurances: { MedInsur: 1, LifeInsur: 1, KeyManInsur: 1, OthInsur: 1, TotInsurances: 1 },
             StaffWelfareExp: 1,
@@ -210,9 +197,8 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
             Donation: 1,
             RatesTaxesPays: {
               ExciseCustomsVAT: {
-                UnionExciseDuty: 1, ServiceTax: 1, VATorSaleTax: 1, CentralGoodServiceTax: 1,
-                StateGoodServiceTax: 1, IntegratedGoodServiceTax: 1, UnionTerrGoodServiceTax: 1,
-                OthDutyTaxCess: 1, TotExciseCustomsVAT: 1,
+                UnionExciseDuty: 1, ServiceTax: 1, VATorSaleTax: 1, CentralGoodServiceTax: 1, StateGoodServiceTax: 1, IntegratedGoodServiceTax: 1,
+                UnionTerrGoodServiceTax: 1, OthDutyTaxCess: 1, TotExciseCustomsVAT: 1,
               },
             },
             AuditFee: 1,
@@ -240,10 +226,8 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
         PersumptiveInc44ADA: { GrsReceipt: 1 },
         TotalPrsumptvIncUs44E: 1,
         NoBooksOfAccPL: {
-          GrossReceipt: 1, GrsRcptAccPayeeOrBankMode: 1, GrsRcptOtherMode: 1, GrossProfit: 1,
-          Expenses: 1, NetProfit: 1, GrossReceiptPrf: 1, GrsRcptAccPayeeOrBankModePrf: 1,
-          GrsRcptOtherModePrf: 1, GrossProfitPrf: 1, ExpensesPrf: 1, NetProfitPrf: 1,
-          TotBusinessProfession: 1,
+          GrossReceipt: 1, GrsRcptAccPayeeOrBankMode: 1, GrsRcptOtherMode: 1, GrossProfit: 1, Expenses: 1, NetProfit: 1, GrossReceiptPrf: 1,
+          GrsRcptAccPayeeOrBankModePrf: 1, GrsRcptOtherModePrf: 1, GrossProfitPrf: 1, ExpensesPrf: 1, NetProfitPrf: 1, TotBusinessProfession: 1,
         },
         TurnverFrmSpecActivity: 1,
         NetIncomeFrmSpecActivity: 1,
@@ -253,20 +237,16 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
           ProfBfrTaxPL: 1,
           NetPLFromSpecBus: 1,
           NetProfLossSpecifiedBus: 1,
-          IncRecCredPLOthHeadDtls: {
-            HouseProperty: 1, CapitalGains: 1, OtherSources: 1, UnderSec115BBF: 1, UnderSec115BBG: 1,
-            Dividend: 1, OtherThanDividend: 1,
-          },
+          IncRecCredPLOthHeadDtls: { HouseProperty: 1, CapitalGains: 1, OtherSources: 1, UnderSec115BBF: 1, UnderSec115BBG: 1, Dividend: 1, OtherThanDividend: 1 },
           PLUs44sChapXIIGOthrUs115B: 1,
           ProfitLossInclRefrdSec: {
-            ProfitLossUs44AD: 1, ProfitLossUs44ADA: 1, ProfitLossUs44AE: 1, ProfitLossUs44B: 1,
-            ProfitLossUs44BB: 1, ProfitLossUs44BBA: 1, ProfitLossUs44BBC: 1, ProfitLossUs44BBD: 1,
-            ProfitLossUs44DA: 1, FirstSchITActOthr115B: 1,
+            ProfitLossUs44AD: 1, ProfitLossUs44ADA: 1, ProfitLossUs44AE: 1, ProfitLossUs44B: 1, ProfitLossUs44BB: 1, ProfitLossUs44BBA: 1,
+            ProfitLossUs44BBC: 1, ProfitLossUs44BBD: 1, ProfitLossUs44DA: 1, FirstSchITActOthr115B: 1,
           },
           TotalProfitFrmActCvrd: 1,
           ProfitFrmActCvrd: {
-            ProfitFrmActCvrdUndrRule7: 1, ProfitFrmActCvrdUndrRule7A: 1, ProfitFrmActCvrdUndrRule7B1: 1,
-            ProfitFrmActCvrdUndrRule7B1A: 1, ProfitFrmActCvrdUndrRule8: 1,
+            ProfitFrmActCvrdUndrRule7: 1, ProfitFrmActCvrdUndrRule7A: 1, ProfitFrmActCvrdUndrRule7B1: 1, ProfitFrmActCvrdUndrRule7B1A: 1,
+            ProfitFrmActCvrdUndrRule8: 1,
           },
           IncCredPL: { FirmShareInc: 1, AOPBOISharInc: 1, OthExempInc: 1, TotExempInc: 1 },
           BalancePLOthThanSpecBus: 1,
@@ -305,9 +285,8 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
           TotDeductionAmts: 1,
           PLAftAdjDedBusOthThanSpec: 1,
           DeemedProfitBusUs: {
-            Section44AD: 1, Section44ADA: 1, Section44AE: 1, Section44B: 1, Section44BB: 1,
-            Section44BBA: 1, Section44BBC: 1, Section44BBD: 1, Section44DA: 1, FirstSchTActOther: 1,
-            TotDeemedProfitBusUs: 1,
+            Section44AD: 1, Section44ADA: 1, Section44AE: 1, Section44B: 1, Section44BB: 1, Section44BBA: 1, Section44BBC: 1, Section44BBD: 1,
+            Section44DA: 1, FirstSchTActOther: 1, TotDeemedProfitBusUs: 1,
           },
           NetPLAftAdjBusOthThanSpec: 1,
           NetPLBusOthThanSpec7A7B7C: 1,
@@ -320,24 +299,15 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
           BalIncDeemedFrmAgri: 1,
         },
         SpecBusinessInc: { NetPLFrmSpecBus: 1, AdditionUs28to44DB: 1, DeductUs28to44DB: 1, AdjustedPLFrmSpecuBus: 1 },
-        IncSpecifiedBusiness: {
-          NetPLFrmSpecifiedBus: 1, AddSec28to44DB: 1, DedSec28to44DBOTDedSec35AD: 1,
-          ProfitLossSpecifiedBusiness: 1, ProfitLossSpecifiedBusFinal: 1,
-        },
+        IncSpecifiedBusiness: { NetPLFrmSpecifiedBus: 1, AddSec28to44DB: 1, DedSec28to44DBOTDedSec35AD: 1, ProfitLossSpecifiedBusiness: 1, ProfitLossSpecifiedBusFinal: 1 },
         IncChrgUnHdProftGain: 1,
         BusSetoffCurrYr: { LossSetOffOnBusLoss: 1, TotLossSetOffOnBus: 1, LossRemainSetOffOnBus: 1 },
       },
       "PartB-TI": {
         IncomeFromHP: 1,
-        ProfBusGain: {
-          ProfGainNoSpecBus: 1, ProfGainSpecBus: 1, ProfGainSpecifiedBus: 1, IncChrgblTaxSplRate: 1,
-          TotProfBusGain: 1,
-        },
+        ProfBusGain: { ProfGainNoSpecBus: 1, ProfGainSpecBus: 1, ProfGainSpecifiedBus: 1, IncChrgblTaxSplRate: 1, TotProfBusGain: 1 },
         CapGain: {
-          ShortTerm: {
-            ShortTerm20Per: 1, ShortTerm30Per: 1, ShortTermAppRate: 1, ShortTermSplRateDTAA: 1,
-            TotalShortTerm: 1,
-          },
+          ShortTerm: { ShortTerm20Per: 1, ShortTerm30Per: 1, ShortTermAppRate: 1, ShortTermSplRateDTAA: 1, TotalShortTerm: 1 },
           LongTerm: { LongTerm12_5Per: 1, LongTermSplRateDTAA: 1, TotalLongTerm: 1 },
           TotalCapGains: 1,
           ShortTermLongTermTotal: 1,
@@ -362,20 +332,15 @@ const REQUIRED_TREE: { [key: string]: ReqNode } = {
         ComputationOfTaxLiability: {
           TaxPayableOnDeemedTI: { TaxDeemedTISec115JC: 1, Surcharge: 1, EducationCess: 1, TotalTax: 1 },
           TaxPayableOnTI: {
-            TaxAtNormalRates: 1, TaxAtSpecialRates: 1, RebateOnAgriInc: 1, TaxPayableOnTotInc: 1,
-            Surcharge25ofSI: 1, SurchargeOnTaxPayable: 1, Surcharge25ofSIBeforeMarginal: 1,
-            SurchargeOnTaxPayableBeforeMarginal: 1, TotalSurcharge: 1, EducationCess: 1,
-            GrossTaxLiability: 1,
+            TaxAtNormalRates: 1, TaxAtSpecialRates: 1, RebateOnAgriInc: 1, TaxPayableOnTotInc: 1, Surcharge25ofSI: 1, SurchargeOnTaxPayable: 1,
+            Surcharge25ofSIBeforeMarginal: 1, SurchargeOnTaxPayableBeforeMarginal: 1, TotalSurcharge: 1, EducationCess: 1, GrossTaxLiability: 1,
           },
           GrossTaxPayable: 1,
           CreditUS115JD: 1,
           TaxPaidUnderCredit: 1,
           TaxRelief: { Section90: 1, Section91: 1, TotTaxRelief: 1 },
           NetTaxLiability: 1,
-          IntrstPay: {
-            IntrstPayUs234A: 1, IntrstPayUs234B: 1, IntrstPayUs234C: 1, LateFilingFee234F: 1,
-            TotalIntrstPay: 1,
-          },
+          IntrstPay: { IntrstPayUs234A: 1, IntrstPayUs234B: 1, IntrstPayUs234C: 1, LateFilingFee234F: 1, TotalIntrstPay: 1 },
           AggregateTaxInterestLiability: 1,
         },
         TaxPaid: {
