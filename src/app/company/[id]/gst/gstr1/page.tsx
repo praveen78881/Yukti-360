@@ -20,6 +20,7 @@ import { getSessionInfo } from '@/lib/gst/sandbox/store';
 import { importCombinedFiled, saveCombinedFiled, getCombinedFiled, type CombinedFiled } from '@/lib/gst/sandbox/gstr1FiledCombined';
 import type { FiledSection } from '@/lib/gst/sandbox/gstr1FiledDetail';
 import { exportGstr1YearDetailExcel } from '@/lib/gst/sandbox/gstr1AnnualExcel';
+import { getFyImport } from '@/lib/gst/sandbox/gstr1Portal';
 import { parsePeriod, fyOf } from '@/lib/gst/sandbox/period';
 import { useTaxpayerSession } from '@/components/gst/useTaxpayerSession';
 import { fetchFiledReturns, findGstr1Filing } from '@/lib/gst/sandbox/trackReturns';
@@ -2699,15 +2700,23 @@ export default function GSTR1Page() {
     setYearXlsx(true); setYearXlsxMsg('');
     taxSession.run(async (token: string) => {
       try {
+        const fyLbl = fyLabelOfPeriod(period);
         const r = await exportGstr1YearDetailExcel({
           gstin,
           companyName: company?.name,
           fyStartYear,
           sessionToken: token,
           registrationDate: company?.gst_details?.registrationDate,
+          // Reuse anything the GSTR-1 Annual import already pulled for this FY —
+          // each re-fetched month costs 19 portal calls.
+          stored: companyId ? getFyImport(companyId, fyLbl) : null,
           onProgress: (p) => setYearXlsxMsg(p.label ? `${p.done}/${p.total} ${p.label}` : ''),
         });
-        setImportMsg(`FY ${fyLabelOfPeriod(period)} exported — ${r.rows} document(s) across ${r.months} month(s) with data.`);
+        setImportMsg(
+          `FY ${fyLbl} exported — ${r.rows} document(s) across ${r.months} month(s) with data.` +
+          (r.reused ? ` ${r.reused} month(s) came from the stored import (no portal calls).` : '') +
+          (r.fetched ? ` ${r.fetched} month(s) fetched from the portal.` : ''),
+        );
       } catch (e) {
         setImportMsg(e instanceof Error ? e.message : 'Could not build the annual Excel.');
       } finally {

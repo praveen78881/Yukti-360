@@ -8,7 +8,8 @@
 // (summary_type=long) → per-section summaries (sec_sum).
 
 import { sandboxClient } from './client';
-import { fetchGstr1MonthDetail, ALL_GSTR1_SECTIONS } from './gstr1FiledDetail';
+import { fetchGstr1MonthDetail, ALL_GSTR1_SECTIONS, type FiledSection } from './gstr1FiledDetail';
+import { fetchFiledReturns, findGstr1Filing } from './trackReturns';
 import { getEntityData, upsertEntityData } from '@/lib/offlineDb';
 
 export interface SecSum {
@@ -30,6 +31,9 @@ export interface PeriodImport {
   hasData: boolean;
   secSum: SecSum[];
   totals: { rec: number; val: number; igst: number; cgst: number; sgst: number; cess: number; tax: number };
+  /** Documents actually read from the portal, when the summary was empty and we
+   *  had to probe. Stored so a later export never re-fetches the same year. */
+  sections?: FiledSection[];
   error?: string;
 }
 
@@ -82,6 +86,7 @@ export async function importGstr1FY(
     }
     let totals = sumTotals(secSum);
     let hasData = totals.rec > 0 || totals.val > 0;
+    let sections: FiledSection[] | undefined;
 
     // `sec_sum` is the PRE-FILING summary of saved data — the portal clears it
     // once the return is FILED, so a fully-filed month reports nothing here.
@@ -89,8 +94,17 @@ export async function importGstr1FY(
     // the totals from them, otherwise a filed year imports as entirely nil.
     if (!hasData && r.ok) {
       try {
+        // An empty summary means either "filed, summary cleared" or "nothing was
+        // ever filed". Probing 19 sections for a month with no return is pure
+        // waste, so confirm with one cheap track call first.
+        const filedList = await fetchFiledReturns(p.year, p.month, sessionToken);
+        if (!findGstr1Filing(filedList, p.period)) {
+          out.push({ ...p, hasData: false, secSum, totals, error });
+          continue;                       // not filed — nothing to fetch
+        }
         const secs = await fetchGstr1MonthDetail(p.year, p.month, sessionToken, ALL_GSTR1_SECTIONS, 'gstr1');
         if (secs.length) {
+          sections = secs;
           const t = { rec: 0, val: 0, igst: 0, cgst: 0, sgst: 0, cess: 0, tax: 0 };
           for (const s of secs) {
             for (const row of s.rows) {
@@ -118,7 +132,7 @@ export async function importGstr1FY(
       } catch { /* probing is best-effort — keep the summary result */ }
     }
 
-    out.push({ ...p, hasData, secSum, totals, error });
+    out.push({ ...p, hasData, secSum, totals, sections, error });
   }
   onProgress?.(periods.length, periods.length, '');
   const fyLabel = `${fyStartYear}-${String((fyStartYear + 1) % 100).padStart(2, '0')}`;

@@ -11,7 +11,7 @@
  */
 
 import { fetchGstr1MonthDetail, ALL_GSTR1_SECTIONS, type FiledSection, type FiledRow } from './gstr1FiledDetail';
-import { fyPeriods } from './gstr1Portal';
+import { fyPeriods, type FyImport } from './gstr1Portal';
 import { isOnOrAfterRegistration } from './period';
 
 interface MonthTotals { taxable: number; igst: number; cgst: number; sgst: number; cess: number; val: number }
@@ -71,8 +71,11 @@ export async function exportGstr1YearDetailExcel(opts: {
   sessionToken: string;
   /** Skip months before the GSTIN existed. */
   registrationDate?: string | null;
+  /** Previously imported FY snapshot — months already pulled are reused, so a
+   *  repeat export of the same year costs no portal calls. */
+  stored?: FyImport | null;
   onProgress?: (p: AnnualExportProgress) => void;
-}): Promise<{ ok: boolean; months: number; rows: number; error?: string }> {
+}): Promise<{ ok: boolean; months: number; rows: number; reused: number; fetched: number; error?: string }> {
   const { gstin, companyName, fyStartYear, sessionToken, onProgress } = opts;
   const XLSX = await import('xlsx');
   // Months before the GSTIN was registered have no return — skip them entirely.
@@ -84,15 +87,33 @@ export async function exportGstr1YearDetailExcel(opts: {
   const summary: Record<string, string | number>[] = [];
   let totalRows = 0;
   let monthsWithData = 0;
+  let reused = 0;      // months served from the stored import — zero portal calls
+  let fetched = 0;     // months that actually hit the portal (19 calls each)
 
   for (const [i, m] of months.entries()) {
     onProgress?.({ done: i, total: months.length, label: m.label });
     let sections: FiledSection[] = [];
-    try {
-      sections = await fetchGstr1MonthDetail(m.year, m.month, sessionToken, ALL_GSTR1_SECTIONS, 'gstr1');
-    } catch {
-      summary.push({ Month: m.label, Sections: 0, Documents: 0, Taxable: 0, IGST: 0, CGST: 0, SGST: 0, Cess: 0, 'Invoice Value': 0, Status: 'Could not read' });
+
+    // Reuse what the annual import already pulled — re-fetching a month costs 19
+    // portal calls, so a second export of the same year should cost nothing.
+    const cached = opts.stored?.periods.find((pp) => pp.period === m.period);
+    if (cached?.sections?.length) {
+      sections = cached.sections;
+      reused++;
+    } else if (cached && cached.hasData === false && !cached.error) {
+      // Import already established this month has no filed return — don't ask again.
+      summary.push({ Month: m.label, Sections: 0, Documents: 0, Taxable: 0, IGST: 0, CGST: 0, SGST: 0, Cess: 0, 'Invoice Value': 0, Status: 'Nil / not filed' });
+      const wsNil = XLSX.utils.aoa_to_sheet([[`${companyName ?? ''}  ·  GSTIN ${gstin}`], [`GSTR-1 — ${m.label} (FY ${fyLabel})`], [], ['No return filed for this month.']]);
+      XLSX.utils.book_append_sheet(wb, wsNil, m.label.slice(0, 31));
       continue;
+    } else {
+      try {
+        sections = await fetchGstr1MonthDetail(m.year, m.month, sessionToken, ALL_GSTR1_SECTIONS, 'gstr1');
+        fetched++;
+      } catch {
+        summary.push({ Month: m.label, Sections: 0, Documents: 0, Taxable: 0, IGST: 0, CGST: 0, SGST: 0, Cess: 0, 'Invoice Value': 0, Status: 'Could not read' });
+        continue;
+      }
     }
 
     const rows = sections.flatMap((s) => s.rows.map((r) => toSheetRow(s, r)));
@@ -167,5 +188,5 @@ export async function exportGstr1YearDetailExcel(opts: {
   wb.Sheets['Annual Summary'] = sws;
 
   XLSX.writeFile(wb, `GSTR1_${gstin}_FY${fyLabel}_detail.xlsx`);
-  return { ok: true, months: monthsWithData, rows: totalRows };
+  return { ok: true, months: monthsWithData, rows: totalRows, reused, fetched };
 }
