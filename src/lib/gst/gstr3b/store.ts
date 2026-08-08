@@ -45,8 +45,9 @@ export function saveGstr3bPeriod(companyId: string, rec: Gstr3bPeriodRecord): vo
 /** Apply a source patch to the stored period and persist. Returns the new record. */
 export function applyGstr3bPatch(
   companyId: string, period: string, gstin: string, patch: Gstr3bPatch,
+  opts: { force?: boolean } = {},
 ): Gstr3bPeriodRecord {
-  const next = applyPatch(getOrCreateGstr3bPeriod(companyId, period, gstin), patch);
+  const next = applyPatch(getOrCreateGstr3bPeriod(companyId, period, gstin), patch, opts);
   saveGstr3bPeriod(companyId, next);
   return next;
 }

@@ -317,15 +317,22 @@ export default function GSTR3BPage() {
       }
 
       const applied = res.patch!;
-      const rec = applyGstr3bPatch(companyId, period, gstin, applied);
+      // Running a source is always an explicit user action, so a re-import
+      // REPLACES what is there — including hand-edited cells — and can be run as
+      // many times as needed. Whatever gets replaced is named in the toast so a
+      // manual figure is never silently lost.
+      const before = recs[mi];
+      const overwritten = before
+        ? Object.keys(values).filter((k) => before.provenance[k as Gstr3bFieldKey] === 'manual')
+        : [];
+      const rec = applyGstr3bPatch(companyId, period, gstin, applied, { force: true });
       setRecs((prev) => prev.map((r, i) => (i === mi ? rec : r)));
       setMonths((prev) => prev.map((m, i) => (i === mi ? { ...emptyGstr3bMonth(), ...rec.data } : m)));
-      const kept = Object.keys(values).filter((k) => rec.provenance[k as Gstr3bFieldKey] !== applied.source);
       toast.success(`${entry.label} → ${label}`, {
         duration: 9000,
         description:
           (applied.notes || `${Object.keys(values).length} field(s) filled.`) +
-          (kept.length ? ` ${kept.length} hand-edited field(s) were kept.` : ''),
+          (overwritten.length ? ` ${overwritten.length} hand-edited figure(s) were replaced.` : ''),
       });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : `${entry.label} failed for ${label}.`);

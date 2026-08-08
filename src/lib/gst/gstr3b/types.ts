@@ -80,13 +80,21 @@ export interface Gstr3bPeriodRecord {
 }
 
 /** Merge a patch into a record: manual entries are never clobbered by an
- *  automatic source, and provenance is recorded per field. */
-export function applyPatch(rec: Gstr3bPeriodRecord, patch: Gstr3bPatch): Gstr3bPeriodRecord {
+ *  automatic source, and provenance is recorded per field.
+ *
+ *  `force` overrides that protection — it is what a deliberate RE-IMPORT does,
+ *  so a CA who wants the portal's figures back can always get them. Only ever
+ *  set it from an explicit user action, never from an automatic run. */
+export function applyPatch(
+  rec: Gstr3bPeriodRecord,
+  patch: Gstr3bPatch,
+  opts: { force?: boolean } = {},
+): Gstr3bPeriodRecord {
   const data = { ...rec.data };
   const provenance = { ...rec.provenance };
   for (const [k, v] of Object.entries(patch.values)) {
     const key = k as Gstr3bFieldKey;
-    if (provenance[key] === 'manual' && patch.source !== 'manual') continue; // CA's value wins
+    if (!opts.force && provenance[key] === 'manual' && patch.source !== 'manual') continue; // CA's value wins
     (data as Record<string, unknown>)[key] = v;
     provenance[key] = patch.source;
   }
