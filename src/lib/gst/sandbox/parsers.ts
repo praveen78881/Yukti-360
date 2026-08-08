@@ -106,6 +106,48 @@ function parseSupplierSection(list: any[] | undefined, section: string, docKey: 
   return rows;
 }
 
+/** Credit/debit notes to UNREGISTERED persons: a flat note list, no ctin grouping. */
+function parseFlatNotes(list: any[] | undefined, section: string): GstInvoiceRow[] {
+  return (list ?? []).map((d: any) => ({
+    section,
+    supplierGstin: str(d?.ctin ?? ''),
+    supplierName: str(d?.trdnm ?? d?.lgnm ?? ''),
+    docNo: str(d?.nt_num ?? d?.ntnum ?? d?.inum),
+    docDate: str(d?.nt_dt ?? d?.ntdt ?? d?.idt),
+    docType: str(d?.ntty ?? d?.typ ?? ''),
+    pos: str(d?.pos ?? ''),
+    reverseCharge: str(d?.rev ?? d?.rchrg ?? ''),
+    invoiceValue: num(d?.val),
+    ...invoiceTax(d),
+  }));
+}
+
+/** TDS deducted (GSTR-2A TDS): one row per deductor, no invoice document. */
+function parseTds(list: any[] | undefined): GstInvoiceRow[] {
+  return (list ?? []).map((d: any) => ({
+    section: 'TDS',
+    supplierGstin: str(d?.gstin_ded ?? d?.ctin ?? ''),
+    supplierName: str(d?.trdnm ?? d?.lgnm ?? ''),
+    docNo: '', docDate: str(d?.dt ?? ''), docType: '', pos: '', reverseCharge: '',
+    invoiceValue: num(d?.amt_ded),
+    taxableValue: num(d?.amt_ded),
+    igst: num(d?.iamt), cgst: num(d?.camt), sgst: num(d?.samt), cess: 0,
+  }));
+}
+
+/** TCS collected (GSTR-2A TCS): one row per e-commerce operator. */
+function parseTcs(list: any[] | undefined): GstInvoiceRow[] {
+  return (list ?? []).map((d: any) => ({
+    section: 'TCS',
+    supplierGstin: str(d?.etin ?? d?.ctin ?? ''),
+    supplierName: str(d?.trdnm ?? d?.lgnm ?? ''),
+    docNo: str(d?.m_id ?? ''), docDate: '', docType: '', pos: '', reverseCharge: '',
+    invoiceValue: num(d?.sup_val),
+    taxableValue: num(d?.tx_val),
+    igst: num(d?.iamt), cgst: num(d?.camt), sgst: num(d?.samt), cess: num(d?.csamt),
+  }));
+}
+
 /** Import of goods (IMPG / IMPGSEZ): flat bill-of-entry rows, IGST only. */
 function parseImpg(list: any[] | undefined, section: string): GstInvoiceRow[] {
   const rows: GstInvoiceRow[] = [];
@@ -145,6 +187,14 @@ export function parseReturn(_type: GstReturnType, raw: any): { rows: GstInvoiceR
     ...parseSupplierSection(doc?.isda, 'ISDA', 'inv'),
     ...parseImpg(doc?.impg, 'IMPG'),
     ...parseImpg(doc?.impgsez, 'IMPGSEZ'),
+    // Sections isNoData() counts but that previously produced no rows — a period
+    // holding only these looked "downloaded" while the table stayed empty.
+    ...parseSupplierSection(doc?.ecom, 'ECOM', 'inv'),
+    ...parseSupplierSection(doc?.ecoma, 'ECOMA', 'inv'),
+    ...parseFlatNotes(doc?.cdnur, 'CDNUR'),
+    ...parseFlatNotes(doc?.cdnura, 'CDNURA'),
+    ...parseTds(doc?.tds),
+    ...parseTcs(doc?.tcs),
   ];
 
   // ITC summary (2B) — best-effort from itcsumm; fall back to summing the rows.

@@ -420,6 +420,19 @@ function GstReturnView({
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
           The portal returned no {label} data for {periodLabel(record.period)}.
         </div>
+      ) : record.rows.length === 0 ? (
+        /* The portal DID return sections, but none of them produced rows — never
+           show a silently empty table; say so and keep the raw JSON reachable. */
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
+          <p className="text-sm font-semibold text-amber-800">
+            {label} downloaded, but no rows could be read from it.
+          </p>
+          <p className="mx-auto mt-1 max-w-lg text-xs text-amber-700">
+            The portal returned data for {periodLabel(record.period)} in a section this reader does not
+            recognise yet. Nothing is lost — the original response is stored. Use “Export to Excel” to
+            inspect it, and send it over so the section can be mapped.
+          </p>
+        </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           {/* Section tabs */}
