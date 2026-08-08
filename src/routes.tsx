@@ -60,6 +60,7 @@ const EInvoicingPage = lazy(() => import('@/app/company/[id]/gst/e-invoicing/pag
 const Gstr9Page = lazy(() => import('@/app/company/[id]/gst/annuals/page').then(m => ({ default: m.default })));
 const Gstr2aPage = lazy(() => import('@/app/company/[id]/gst/gstr2a/page').then(m => ({ default: m.default })));
 const Gstr2bPage = lazy(() => import('@/app/company/[id]/gst/gstr2b/page').then(m => ({ default: m.default })));
+const Gstr1AnnualPage = lazy(() => import('@/app/company/[id]/gst/gstr1-annual/page').then(m => ({ default: m.default })));
 const IncomeTaxPage = lazy(() => import('@/app/company/[id]/income-tax/page').then(m => ({ default: m.default })));
 const TdsRegisterPage = lazy(() => import('@/app/company/[id]/tds-register/page').then(m => ({ default: m.default })));
 const TcsRegisterPage = lazy(() => import('@/app/company/[id]/tcs-register/page').then(m => ({ default: m.default })));
@@ -168,6 +169,7 @@ export const router = createBrowserRouter([
       { path: 'gst/annuals', element: <Suspense fallback={<PageLoader />}><Gstr9Page /></Suspense> },
       { path: 'gst/gstr2a', element: <Suspense fallback={<PageLoader />}><Gstr2aPage /></Suspense> },
       { path: 'gst/gstr2b', element: <Suspense fallback={<PageLoader />}><Gstr2bPage /></Suspense> },
+      { path: 'gst/gstr1-annual', element: <Suspense fallback={<PageLoader />}><Gstr1AnnualPage /></Suspense> },
       { path: 'gst/gstr3b', element: <Suspense fallback={<PageLoader />}><Gstr3bPage /></Suspense> },
       { path: 'gst/itc-register', element: <Suspense fallback={<PageLoader />}><ItcRegisterPage /></Suspense> },
       { path: 'gst/ledgers', element: <Suspense fallback={<PageLoader />}><LedgersPage /></Suspense> },

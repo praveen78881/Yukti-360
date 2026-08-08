@@ -8,6 +8,7 @@
 // (summary_type=long) → per-section summaries (sec_sum).
 
 import { sandboxClient } from './client';
+import { fetchGstr1MonthDetail, ALL_GSTR1_SECTIONS } from './gstr1FiledDetail';
 import { getEntityData, upsertEntityData } from '@/lib/offlineDb';
 
 export interface SecSum {
@@ -79,8 +80,45 @@ export async function importGstr1FY(
     } else {
       error = r.error;
     }
-    const totals = sumTotals(secSum);
-    out.push({ ...p, hasData: totals.rec > 0 || totals.val > 0, secSum, totals, error });
+    let totals = sumTotals(secSum);
+    let hasData = totals.rec > 0 || totals.val > 0;
+
+    // `sec_sum` is the PRE-FILING summary of saved data — the portal clears it
+    // once the return is FILED, so a fully-filed month reports nothing here.
+    // Fall back to reading the filed documents section by section and rebuild
+    // the totals from them, otherwise a filed year imports as entirely nil.
+    if (!hasData && r.ok) {
+      try {
+        const secs = await fetchGstr1MonthDetail(p.year, p.month, sessionToken, ALL_GSTR1_SECTIONS, 'gstr1');
+        if (secs.length) {
+          const t = { rec: 0, val: 0, igst: 0, cgst: 0, sgst: 0, cess: 0, tax: 0 };
+          for (const s of secs) {
+            for (const row of s.rows) {
+              t.rec += 1;
+              t.val += row.value || 0;
+              t.igst += row.igst || 0; t.cgst += row.cgst || 0;
+              t.sgst += row.sgst || 0; t.cess += row.cess || 0;
+            }
+          }
+          t.tax = t.igst + t.cgst + t.sgst + t.cess;
+          if (t.rec > 0) {
+            totals = t;
+            hasData = true;
+            // Present the probed sections in the same sec_sum shape the UI expects.
+            secSum = secs.map((s) => ({
+              sec_nm: s.label, ttl_rec: s.rows.length,
+              ttl_val: s.rows.reduce((a, x) => a + (x.value || 0), 0),
+              ttl_igst: s.rows.reduce((a, x) => a + (x.igst || 0), 0),
+              ttl_cgst: s.rows.reduce((a, x) => a + (x.cgst || 0), 0),
+              ttl_sgst: s.rows.reduce((a, x) => a + (x.sgst || 0), 0),
+              ttl_cess: s.rows.reduce((a, x) => a + (x.cess || 0), 0),
+            })) as SecSum[];
+          }
+        }
+      } catch { /* probing is best-effort — keep the summary result */ }
+    }
+
+    out.push({ ...p, hasData, secSum, totals, error });
   }
   onProgress?.(periods.length, periods.length, '');
   const fyLabel = `${fyStartYear}-${String((fyStartYear + 1) % 100).padStart(2, '0')}`;

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Download, Loader2, KeyRound, Settings, RefreshCw, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Download, Loader2, KeyRound, Settings, RefreshCw, ChevronRight, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import { useCompany } from '@/hooks/useCompany';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { sandboxClient } from '@/lib/gst/sandbox/client';
@@ -28,6 +28,69 @@ export function Gstr1PortalImport() {
   const [progress, setProgress] = useState({ done: 0, total: 12, label: '' });
   const [imp, setImp] = useState<FyImport | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  /** Export the whole imported year to Excel: a month-wise summary sheet plus one
+   *  sheet per month listing every section that reported data. Works offline —
+   *  it reads only the stored snapshot. */
+  const exportYearToExcel = async () => {
+    if (!imp) { toast.error('Import the year first.'); return; }
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+
+    const summary = imp.periods.map((p) => ({
+      Month: p.label,
+      Period: p.period,
+      Status: p.error ? 'Error' : p.hasData ? 'Filed — data' : 'Nil / no data',
+      Records: p.totals.rec,
+      'Invoice Value': p.totals.val,
+      IGST: p.totals.igst,
+      CGST: p.totals.cgst,
+      SGST: p.totals.sgst,
+      Cess: p.totals.cess,
+      'Total Tax': p.totals.tax,
+      Note: p.error ?? '',
+    }));
+    const t = imp.periods.reduce(
+      (a, p) => ({
+        rec: a.rec + p.totals.rec, val: a.val + p.totals.val, igst: a.igst + p.totals.igst,
+        cgst: a.cgst + p.totals.cgst, sgst: a.sgst + p.totals.sgst, cess: a.cess + p.totals.cess,
+        tax: a.tax + p.totals.tax,
+      }),
+      { rec: 0, val: 0, igst: 0, cgst: 0, sgst: 0, cess: 0, tax: 0 },
+    );
+    summary.push({
+      Month: 'TOTAL', Period: '', Status: '', Records: t.rec, 'Invoice Value': t.val,
+      IGST: t.igst, CGST: t.cgst, SGST: t.sgst, Cess: t.cess, 'Total Tax': t.tax, Note: '',
+    });
+
+    const head = [
+      [company?.name ?? ''],
+      [`GSTIN: ${imp.gstin}`],
+      [`GSTR-1 — Annual (FY ${imp.fyLabel})`],
+      [`Imported: ${new Date(imp.importedAt).toLocaleString('en-IN')}`],
+      [],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(head);
+    XLSX.utils.sheet_add_json(ws, summary, { origin: -1 });
+    XLSX.utils.book_append_sheet(wb, ws, 'Annual Summary');
+
+    for (const p of imp.periods) {
+      if (!p.secSum?.length) continue;
+      const rows = p.secSum.map((s: any) => ({
+        Section: s.sec_nm,
+        Records: s.ttl_rec ?? 0,
+        Value: s.ttl_val ?? 0,
+        IGST: s.ttl_igst ?? 0,
+        CGST: s.ttl_cgst ?? 0,
+        SGST: s.ttl_sgst ?? 0,
+        Cess: s.ttl_cess ?? 0,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), p.label.slice(0, 31));
+    }
+
+    XLSX.writeFile(wb, `GSTR1_Annual_${imp.gstin}_FY${imp.fyLabel}.xlsx`);
+    toast.success(`GSTR-1 annual data for FY ${imp.fyLabel} exported to Excel`);
+  };
 
   // Load any previously-imported snapshot for the selected FY.
   useEffect(() => {
@@ -112,6 +175,17 @@ export function Gstr1PortalImport() {
         </div>
         <div className="flex items-center gap-2">
           {imp && <span className="text-[11px] text-gray-400">Last imported {new Date(imp.importedAt).toLocaleString()}</span>}
+          {imp && (
+            <button
+              type="button"
+              onClick={exportYearToExcel}
+              title={`Export the whole of FY ${fyLabel} to Excel`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+              Annual data → Excel
+            </button>
+          )}
           {hasSession ? (
             <button type="button" onClick={() => runImport()} disabled={phase === 'importing'}
               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">

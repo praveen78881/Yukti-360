@@ -16,13 +16,24 @@ function str(x: unknown): string {
   return x == null ? '' : String(x);
 }
 
-/** Peel the Sandbox envelope ({ code, data: … }, 2B double-wraps) down to the GSTN payload. */
+/** Peel the Sandbox envelope down to the object that actually holds the sections.
+ *
+ *  Depth varies by return, so a fixed number of hops is wrong:
+ *    2A: { code, data: { status_cd, data: { b2b … } } }            → 2 hops
+ *    2B: { code, data: { status_cd, data: { chksum, data: {        → 3 hops
+ *           gstin, rtnprd, itcsumm, docdata: { b2b … } } } } }
+ *  (verified against the official Sandbox response schema for gstr-2b/document).
+ *  Descend through `.data` until we reach a level that carries `docdata` or a
+ *  known section — peeling a fixed 2 levels made every 2B read as nil. */
 function unwrap(raw: any): any {
   let p = raw;
-  if (p && typeof p === 'object' && p.data && typeof p.data === 'object') p = p.data;
-  // 2B is often { data: { data: { docdata … } } }
-  if (p && typeof p === 'object' && p.data && typeof p.data === 'object'
-      && !('docdata' in p) && !('b2b' in p)) p = p.data;
+  for (let hop = 0; hop < 6; hop++) {
+    if (!p || typeof p !== 'object') break;
+    if ('docdata' in p) return p;
+    if (ALL_SECTIONS.some((k) => k in p)) return p;
+    if (p.data && typeof p.data === 'object') { p = p.data; continue; }
+    break;
+  }
   return p ?? {};
 }
 
@@ -92,7 +103,8 @@ function parseSupplierSection(list: any[] | undefined, section: string, docKey: 
         supplierGstin,
         supplierName,
         docNo: str(d?.inum ?? d?.nt_num ?? d?.ntnum),
-        docDate: str(d?.idt ?? d?.nt_dt ?? d?.ntdt),
+        // 2A uses idt / nt_dt; 2B uses a plain `dt` on every document.
+        docDate: str(d?.idt ?? d?.nt_dt ?? d?.ntdt ?? d?.dt),
         docType: str(d?.typ ?? d?.ntty ?? ''),
         pos: str(d?.pos ?? ''),
         reverseCharge: str(d?.rev ?? d?.rchrg ?? ''),
@@ -197,15 +209,23 @@ export function parseReturn(_type: GstReturnType, raw: any): { rows: GstInvoiceR
     ...parseTcs(doc?.tcs),
   ];
 
-  // ITC summary (2B) — best-effort from itcsumm; fall back to summing the rows.
+  // ITC summary (2B). itcsumm.itcavl is NOT a flat tax object — it splits into
+  // nonrevsup / isdsup / revsup / imports / othersup, each carrying its own
+  // igst/cgst/sgst/cess. Reading it as flat returned zeros for every KPI, so sum
+  // the buckets. (Shape verified against the official gstr-2b response schema.)
   let itcSummary: ItcSummary | null = null;
-  const s: any = p?.itcsumm;
+  const s: any = (p?.itcsumm ?? p?.data?.itcsumm);
   if (s && typeof s === 'object') {
-    const src = s.itcavl ?? s.itc_avl ?? s;
-    const igst = num(src.igst ?? src.iamt);
-    const cgst = num(src.cgst ?? src.camt);
-    const sgst = num(src.sgst ?? src.samt);
-    const cess = num(src.cess ?? src.csamt);
+    const avl: any = s.itcavl ?? s.itc_avl ?? s;
+    let igst = 0, cgst = 0, sgst = 0, cess = 0;
+    const add = (o: any) => {
+      igst += num(o?.igst ?? o?.iamt); cgst += num(o?.cgst ?? o?.camt);
+      sgst += num(o?.sgst ?? o?.samt); cess += num(o?.cess ?? o?.csamt);
+    };
+    const buckets = ['nonrevsup', 'isdsup', 'revsup', 'imports', 'othersup']
+      .map((k) => avl?.[k]).filter((b) => b && typeof b === 'object');
+    if (buckets.length) buckets.forEach(add);
+    else add(avl);                       // older/flat shape
     if (igst || cgst || sgst || cess) itcSummary = { igst, cgst, sgst, cess, total: igst + cgst + sgst + cess };
   }
   if (!itcSummary && rows.length) {
