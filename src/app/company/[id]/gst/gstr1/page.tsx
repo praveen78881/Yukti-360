@@ -19,6 +19,8 @@ import { formatRemaining } from '@/lib/gst/sandbox/session';
 import { getSessionInfo } from '@/lib/gst/sandbox/store';
 import { importCombinedFiled, saveCombinedFiled, getCombinedFiled, type CombinedFiled } from '@/lib/gst/sandbox/gstr1FiledCombined';
 import type { FiledSection } from '@/lib/gst/sandbox/gstr1FiledDetail';
+import { exportGstr1YearDetailExcel } from '@/lib/gst/sandbox/gstr1AnnualExcel';
+import { parsePeriod, fyOf } from '@/lib/gst/sandbox/period';
 import { useTaxpayerSession } from '@/components/gst/useTaxpayerSession';
 import { fetchFiledReturns, findGstr1Filing } from '@/lib/gst/sandbox/trackReturns';
 import { sandboxClient } from '@/lib/gst/sandbox/client';
@@ -2485,6 +2487,9 @@ export default function GSTR1Page() {
   const [validationErrors, setValidationErrors] = useState<ValidationError[] | null>(null);
   const [showPeriodPicker, setShowPeriodPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  // Full-FY document-level Excel export (⋮ → Download FY … as Excel).
+  const [yearXlsx, setYearXlsx] = useState(false);
+  const [yearXlsxMsg, setYearXlsxMsg] = useState('');
   // ── Part 3: the validation gate. `gate` holds the last validation result and the
   // content-hash it was run against; if the live hash drifts, the gate re-locks. ──
   const [gate, setGate] = useState<{ result: Gstr1ValidateResult; hash: string } | null>(null);
@@ -2678,6 +2683,39 @@ export default function GSTR1Page() {
     }
   };
 
+  /** FY label ("2025-26") of the financial year the given period falls in. */
+  const fyLabelOfPeriod = (fp: string) => {
+    const { year, month } = parsePeriod(fp);
+    const s = fyOf(year, month).startYear;
+    return `${s}-${String((s + 1) % 100).padStart(2, '0')}`;
+  };
+
+  /** ⋮ → Download the whole financial year as Excel, one sheet per month, with
+   *  every filed document (party, GSTIN, doc no/date, POS, rate, tax split). */
+  const handleYearExcel = () => {
+    if (!gstin) { setImportMsg('Set the company GSTIN in Company Settings before exporting.'); return; }
+    const { year, month } = parsePeriod(period);
+    const fyStartYear = fyOf(year, month).startYear;
+    setYearXlsx(true); setYearXlsxMsg('');
+    taxSession.run(async (token: string) => {
+      try {
+        const r = await exportGstr1YearDetailExcel({
+          gstin,
+          companyName: company?.name,
+          fyStartYear,
+          sessionToken: token,
+          registrationDate: company?.gst_details?.registrationDate,
+          onProgress: (p) => setYearXlsxMsg(p.label ? `${p.done}/${p.total} ${p.label}` : ''),
+        });
+        setImportMsg(`FY ${fyLabelOfPeriod(period)} exported — ${r.rows} document(s) across ${r.months} month(s) with data.`);
+      } catch (e) {
+        setImportMsg(e instanceof Error ? e.message : 'Could not build the annual Excel.');
+      } finally {
+        setYearXlsx(false); setYearXlsxMsg('');
+      }
+    }).catch(() => { setYearXlsx(false); setYearXlsxMsg(''); });
+  };
+
   const handleImport = () => {
     if (!companyId) return;
     if (!gstin) { setImportMsg('Set the company GSTIN in Company Settings (GST & e-Way Bill tab) before importing.'); return; }
@@ -2728,6 +2766,11 @@ export default function GSTR1Page() {
                 <div className="fixed inset-0 z-40" onClick={()=>setShowMenu(false)} />
                 <div className="absolute right-0 z-50 mt-1 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                   <button type="button" disabled={importing} onClick={()=>{ setShowMenu(false); handleImport(); }} className="block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">{importing ? 'Importing…' : 'Import (GSTR-1 + 1A)'}</button>
+                  <button type="button" disabled={yearXlsx} onClick={()=>{ setShowMenu(false); handleYearExcel(); }}
+                    title={`Download every filed document of FY ${fyLabelOfPeriod(period)} as Excel — one sheet per month`}
+                    className="block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                    {yearXlsx ? `Building Excel… ${yearXlsxMsg}` : `Download FY ${fyLabelOfPeriod(period)} as Excel`}
+                  </button>
                   <div className="my-1 h-px bg-gray-100" />
                   {isFiledLocked ? (
                     <>
