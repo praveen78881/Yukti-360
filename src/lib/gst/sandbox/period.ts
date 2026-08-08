@@ -76,12 +76,49 @@ export function recentFinancialYears(count = 5, today = new Date()): { startYear
 //   • GSTR-2A is dynamic; we simply require the month to have ended.
 // Returns { available, reason } — reason is a human note for the disabled state.
 
+/** First return period the GSTIN can have — the month it was registered in.
+ *  Anything earlier simply does not exist on the portal, so pulling it can only
+ *  ever error. Accepts ISO (YYYY-MM-DD) or the portal's DD/MM/YYYY. */
+export function registrationPeriod(registrationDate?: string | null): string | null {
+  const s = String(registrationDate ?? '').trim();
+  if (!s) return null;
+  let y: number, m: number;
+  let mt = s.match(/^(\d{4})-(\d{2})-(\d{2})/);            // ISO
+  if (mt) { y = +mt[1]; m = +mt[2]; }
+  else {
+    mt = s.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);        // DD/MM/YYYY
+    if (!mt) return null;
+    y = +mt[3]; m = +mt[2];
+  }
+  if (!y || !m || m < 1 || m > 12) return null;
+  return toPeriod(y, m);
+}
+
+/** True when `fp` is on/after the registration month (or registration is unknown). */
+export function isOnOrAfterRegistration(fp: string, registrationDate?: string | null): boolean {
+  const reg = registrationPeriod(registrationDate);
+  if (!reg) return true; // unknown registration date — don't block anything
+  const a = parsePeriod(fp), b = parsePeriod(reg);
+  return a.year > b.year || (a.year === b.year && a.month >= b.month);
+}
+
 export function availability(
   type: 'GSTR2A' | 'GSTR2B',
   fp: string,
   now = new Date(),
+  registrationDate?: string | null,
 ): { available: boolean; reason: string } {
   const { year, month } = parsePeriod(fp);
+
+  // Before the GSTIN existed there is nothing to fetch — the portal errors out.
+  if (!isOnOrAfterRegistration(fp, registrationDate)) {
+    const reg = registrationPeriod(registrationDate)!;
+    const rp = parsePeriod(reg);
+    return {
+      available: false,
+      reason: `This GSTIN was registered in ${monthShort(rp.month)}-${rp.year}. ${periodLabel(fp)} is before registration, so no return exists for it.`,
+    };
+  }
 
   if (type === 'GSTR2B') {
     // Available from the 14th of the next month.

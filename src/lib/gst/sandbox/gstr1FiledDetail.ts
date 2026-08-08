@@ -168,6 +168,11 @@ function normalizeSec(nm: string): string {
   return SECTIONS[stripped] ? stripped : u;
 }
 
+/** Every section we know how to read — used when the summary can't tell us which
+ *  ones hold data (a FILED return often returns an empty pre-file `sec_sum`, so
+ *  section-by-section probing is the only way to see what was actually filed). */
+export const ALL_GSTR1_SECTIONS: string[] = Object.keys(SECTIONS);
+
 /** Fetch + parse the detail for the sections that reported data in the month.
  *  `variant` selects the return: GSTR-1 or its amendment return GSTR-1A. */
 export async function fetchGstr1MonthDetail(
