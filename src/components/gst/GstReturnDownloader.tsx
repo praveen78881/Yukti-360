@@ -5,7 +5,7 @@ import { useCompany } from '@/hooks/useCompany';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { GstPeriodPicker } from './GstPeriodPicker';
 import { sandboxClient } from '@/lib/gst/sandbox/client';
-import { parseReturn, isNoData } from '@/lib/gst/sandbox/parsers';
+import { parseReturn, isNoData, gstnBusinessError, isNoDataError } from '@/lib/gst/sandbox/parsers';
 import {
   getDownload, saveDownload, getSessionToken, setSessionToken, clearSessionToken,
 } from '@/lib/gst/sandbox/store';
@@ -61,7 +61,22 @@ export function GstReturnDownloader({ type }: { type: GstReturnType }) {
       }
       toast.error(r.error || 'Download failed'); setPhase('idle'); return;
     }
-    const noData = isNoData(r.data);
+    // GSTN reports business failures as HTTP 200 + { status_cd:'0', error }. Only
+    // a genuine "no data found" is an empty period — every other code is a real
+    // failure (expired session, API access not enabled, return not filed) and must
+    // be shown as-is instead of being saved as a misleading empty record.
+    const bizErr = gstnBusinessError(r.data);
+    if (bizErr && !isNoDataError(bizErr)) {
+      if (/AUTH/i.test(bizErr.code)) clearSessionToken(gstin);
+      toast.error(`${label} not fetched — ${bizErr.message}`, {
+        description: bizErr.code ? `GST portal code ${bizErr.code}` : undefined,
+        duration: 9000,
+      });
+      setPhase('idle');
+      return;
+    }
+
+    const noData = isNoData(r.data) || isNoDataError(bizErr);
     const { rows, itcSummary } = parseReturn(type, r.data);
     saveDownload(companyId, {
       type, period, gstin, rows, itcSummary, noData, raw: r.data, fetchedAt: new Date().toISOString(),

@@ -29,6 +29,31 @@ function unwrap(raw: any): any {
 const ALL_SECTIONS = ['b2b', 'b2ba', 'cdn', 'cdna', 'cdnr', 'cdnra', 'cdnur', 'cdnura',
   'isd', 'isda', 'impg', 'impgsez', 'tcs', 'tds', 'ecom', 'ecoma'];
 
+/** GSTN business-failure envelope: HTTP 200 with { data: { status_cd:'0', error } }.
+ *  These are NOT transport errors, so the HTTP layer reports success — but the
+ *  request genuinely failed and the reason must be shown, never mistaken for an
+ *  empty period. */
+export function gstnBusinessError(raw: any): { code: string; message: string } | null {
+  const envelope = raw?.data ?? raw;
+  const err = envelope?.error ?? envelope?.data?.error;
+  const statusCd = String(envelope?.status_cd ?? envelope?.data?.status_cd ?? '');
+  if (!err && statusCd !== '0') return null;
+  if (!err) return null;
+  return {
+    code: str(err.error_cd ?? err.errorCode ?? ''),
+    message: str(err.message ?? err.error_desc ?? 'The GST portal rejected the request.'),
+  };
+}
+
+/** GSTN codes / messages that genuinely mean "this period is empty", not a failure. */
+const NO_DATA_CODES = new Set(['RET13509', 'RET11416', 'RT-3BAS1009', 'RET2B1023', 'RET2B1016']);
+
+/** True when a business error is really just "nothing filed for this period". */
+export function isNoDataError(e: { code: string; message: string } | null): boolean {
+  if (!e) return false;
+  return NO_DATA_CODES.has(e.code.toUpperCase()) || /no\s*(data|records?)\s*(found|available)?/i.test(e.message);
+}
+
 /** True when the portal returned an empty period (no populated section). */
 export function isNoData(raw: any): boolean {
   const p = unwrap(raw);
