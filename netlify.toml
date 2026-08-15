@@ -13,7 +13,10 @@
   # so the scanner will BLOCK the deploy if it ever leaks into the client bundle.
   # VITE_GEMINI_API_KEY is intentionally NOT listed — the client must never carry a
   # Gemini key; if one reappears in the bundle the scanner should fail the build.
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_MODEL"
+  # SANDBOX_ENV is a mode flag ("test"/"live"), not a credential — its value is a
+  # plain word that appears all over docs and code, so the scanner false-positives.
+  # The actual Sandbox credentials (SANDBOX_*_KEY / SANDBOX_*_SECRET) stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_MODEL,SANDBOX_ENV"
 
 # Netlify serverless functions
 [functions]
