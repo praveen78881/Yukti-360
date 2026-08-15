@@ -10,6 +10,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const templatePath = path.resolve(process.cwd(), '..', 'GSTR1-SAVE-TEMPLATE.json');
+if (!fs.existsSync(templatePath)) {
+  // The frozen template lives outside the repo (local dev machine only) —
+  // on CI/deploy clones it is absent, so the diff has nothing to run against.
+  console.log(`SKIPPED: ${templatePath} not found — template diff only runs where the frozen template exists.`);
+  process.exit(0);
+}
 const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
 
 const it6 = (rt: number, txval: number, iamt = 0, camt = 0, samt = 0, csamt = 0) => ({ num: 1, itm_det: { rt, txval, iamt, camt, samt, csamt } });
