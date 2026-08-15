@@ -20,6 +20,7 @@ import { getSessionInfo } from '@/lib/gst/sandbox/store';
 import { importCombinedFiled, saveCombinedFiled, getCombinedFiled, type CombinedFiled } from '@/lib/gst/sandbox/gstr1FiledCombined';
 import type { FiledSection } from '@/lib/gst/sandbox/gstr1FiledDetail';
 import { exportGstr1YearDetailExcel } from '@/lib/gst/sandbox/gstr1AnnualExcel';
+import { buildPartyNameIndex, resolvePartyName } from '@/lib/gst/partyNames';
 import { getFyImport } from '@/lib/gst/sandbox/gstr1Portal';
 import { parsePeriod, fyOf } from '@/lib/gst/sandbox/period';
 import { useTaxpayerSession } from '@/components/gst/useTaxpayerSession';
@@ -1862,6 +1863,20 @@ function FiledTable({ section, amend }: { section: FiledSection; amend?: boolean
   const td = 'px-2 py-1 whitespace-nowrap';
   const tdr = 'px-2 py-1 text-right tabular-nums whitespace-nowrap';
   const rows = section.rows;
+  // A filed GSTR-1 stores only the counterparty's GSTIN — the portal never
+  // returns their name — so it is looked up from the local party registry.
+  const { companyId: cid } = useCompany();
+  const partyNames = useMemo(() => (cid ? buildPartyNameIndex(cid) : new Map<string, string>()), [cid]);
+  const partyCell = (gstin?: string) => {
+    if (!gstin) return <td className={`${td} font-mono text-[10px]`}>—</td>;
+    const nm = resolvePartyName(partyNames, gstin);
+    return (
+      <td className={`${td} max-w-[220px]`}>
+        <div className="font-mono text-[10px] text-gray-500">{gstin}</div>
+        {nm && <div className="truncate text-[11px] font-medium text-gray-800" title={nm}>{nm}</div>}
+      </td>
+    );
+  };
   let head: React.ReactNode;
   let body: React.ReactNode;
   if (section.kind === 'hsn') {
@@ -1878,7 +1893,7 @@ function FiledTable({ section, amend }: { section: FiledSection; amend?: boolean
     body = rows.map((r, i) => <tr key={i} className="border-t border-gray-100">{amend && <td className={`${td} text-amber-700`}>{r.odate || '—'}</td>}<td className={td}>{r.pos || '—'}</td><td className={td}>{r.type || '—'}</td><td className={tdr}>{r.rate ?? '—'}</td><td className={tdr}>{fmtNum(r.taxable)}</td><td className={tdr}>{fmtNum(r.igst)}</td><td className={tdr}>{fmtNum(r.cgst)}</td><td className={tdr}>{fmtNum(r.sgst)}</td><td className={tdr}>{fmtNum(r.cess)}</td></tr>);
   } else {
     head = <tr>{amend && <th className={th}>Orig. Doc</th>}{amend && <th className={th}>Orig. Date</th>}<th className={th}>Party</th><th className={th}>Doc</th><th className={th}>Date</th><th className={th}>POS</th><th className={thr}>Rate</th><th className={thr}>Taxable</th><th className={thr}>IGST</th><th className={thr}>CGST</th><th className={thr}>SGST</th><th className={thr}>Cess</th><th className={thr}>Value</th></tr>;
-    body = rows.map((r, i) => <tr key={i} className="border-t border-gray-100">{amend && <td className={`${td} font-medium text-amber-700`}>{r.odoc || '—'}</td>}{amend && <td className={`${td} text-amber-700/80`}>{r.odate || '—'}</td>}<td className={`${td} font-mono text-[10px]`}>{r.party || '—'}</td><td className={td}>{r.doc || '—'}</td><td className={td}>{r.date || '—'}</td><td className={td}>{r.pos || '—'}</td><td className={tdr}>{r.rate ?? '—'}</td><td className={tdr}>{fmtNum(r.taxable)}</td><td className={tdr}>{fmtNum(r.igst)}</td><td className={tdr}>{fmtNum(r.cgst)}</td><td className={tdr}>{fmtNum(r.sgst)}</td><td className={tdr}>{fmtNum(r.cess)}</td><td className={tdr}>{fmtNum(r.value)}</td></tr>);
+    body = rows.map((r, i) => <tr key={i} className="border-t border-gray-100">{amend && <td className={`${td} font-medium text-amber-700`}>{r.odoc || '—'}</td>}{amend && <td className={`${td} text-amber-700/80`}>{r.odate || '—'}</td>}{partyCell(r.party)}<td className={td}>{r.doc || '—'}</td><td className={td}>{r.date || '—'}</td><td className={td}>{r.pos || '—'}</td><td className={tdr}>{r.rate ?? '—'}</td><td className={tdr}>{fmtNum(r.taxable)}</td><td className={tdr}>{fmtNum(r.igst)}</td><td className={tdr}>{fmtNum(r.cgst)}</td><td className={tdr}>{fmtNum(r.sgst)}</td><td className={tdr}>{fmtNum(r.cess)}</td><td className={tdr}>{fmtNum(r.value)}</td></tr>);
   }
   return (
     <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
@@ -2703,6 +2718,7 @@ export default function GSTR1Page() {
         const fyLbl = fyLabelOfPeriod(period);
         const r = await exportGstr1YearDetailExcel({
           gstin,
+          companyId,
           companyName: company?.name,
           fyStartYear,
           sessionToken: token,

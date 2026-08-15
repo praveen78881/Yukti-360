@@ -5,10 +5,15 @@ import { Loader2 } from 'lucide-react';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { getSessionToken } from '@/lib/gst/sandbox/store';
 import { fetchGstr1MonthDetail, type FiledSection } from '@/lib/gst/sandbox/gstr1FiledDetail';
+import { useCompany } from '@/hooks/useCompany';
+import { buildPartyNameIndex, resolvePartyName } from '@/lib/gst/partyNames';
 
 const money = (n?: number) => (n && n !== 0 ? formatIndianCurrency(n) : '—');
 
 export function Gstr1MonthPreview({ gstin, year, month, secNames }: { gstin: string; year: string; month: string; secNames: string[] }) {
+  // GSTR-1 returns only the counterparty GSTIN — names come from the registry.
+  const { companyId } = useCompany();
+  const partyNames = useMemo(() => (companyId ? buildPartyNameIndex(companyId) : new Map<string, string>()), [companyId]);
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<FiledSection[]>([]);
   const [active, setActive] = useState('');
@@ -109,7 +114,18 @@ export function Gstr1MonthPreview({ gstin, year, month, secNames }: { gstin: str
             <tbody>
               {current?.rows.map((r, i) => (
                 <tr key={i} className="border-b border-gray-50 hover:bg-blue-50/30">
-                  <td className="px-2 py-1 font-mono text-[12px]">{r.party || '—'}</td>
+                  <td className="px-2 py-1 max-w-[220px]">
+                    {r.party ? (
+                      <>
+                        <div className="font-mono text-[11px] text-gray-500">{r.party}</div>
+                        {resolvePartyName(partyNames, r.party) && (
+                          <div className="truncate font-medium text-gray-800" title={resolvePartyName(partyNames, r.party)}>
+                            {resolvePartyName(partyNames, r.party)}
+                          </div>
+                        )}
+                      </>
+                    ) : '—'}
+                  </td>
                   <td className="px-2 py-1 font-medium">{r.doc || '—'}</td>
                   <td className="px-2 py-1 whitespace-nowrap text-gray-500">{r.date || '—'}</td>
                   <td className="px-2 py-1 text-gray-500">{r.type || '—'}</td>

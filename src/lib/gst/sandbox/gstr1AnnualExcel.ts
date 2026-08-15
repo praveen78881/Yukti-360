@@ -13,6 +13,7 @@
 import { fetchGstr1MonthDetail, ALL_GSTR1_SECTIONS, type FiledSection, type FiledRow } from './gstr1FiledDetail';
 import { fyPeriods, type FyImport } from './gstr1Portal';
 import { isOnOrAfterRegistration } from './period';
+import { buildPartyNameIndex, resolvePartyName, type PartyNameIndex } from '../partyNames';
 
 interface MonthTotals { taxable: number; igst: number; cgst: number; sgst: number; cess: number; val: number }
 interface GrandTotals { docs: number; taxable: number; igst: number; cgst: number; sgst: number; cess: number; val: number }
@@ -23,11 +24,15 @@ export interface AnnualExportProgress {
   label: string;
 }
 
-/** One flat spreadsheet line — every column a CA expects to see. */
-function toSheetRow(section: FiledSection, r: FiledRow): Record<string, string | number> {
+/** One flat spreadsheet line — every column a CA expects to see.
+ *  A filed GSTR-1 records only the counterparty's GSTIN, never their name, so
+ *  the name comes from the local party registry (built from GSTR-2B trade names,
+ *  GSTIN searches and the books) rather than from the portal. */
+function toSheetRow(section: FiledSection, r: FiledRow, names?: PartyNameIndex): Record<string, string | number> {
   return {
     Section: section.label,
-    'Party / GSTIN': r.party ?? '',
+    'Party GSTIN': r.party ?? '',
+    'Party Name': r.party && names ? resolvePartyName(names, r.party) : '',
     'Doc No': r.doc ?? '',
     'Doc Date': r.date ?? '',
     Type: r.type ?? '',
@@ -66,6 +71,8 @@ function toSheetRow(section: FiledSection, r: FiledRow): Record<string, string |
  */
 export async function exportGstr1YearDetailExcel(opts: {
   gstin: string;
+  /** Company whose party-name registry supplies the counterparty names. */
+  companyId?: string;
   companyName?: string;
   fyStartYear: number;
   sessionToken: string;
@@ -78,6 +85,7 @@ export async function exportGstr1YearDetailExcel(opts: {
 }): Promise<{ ok: boolean; months: number; rows: number; reused: number; fetched: number; error?: string }> {
   const { gstin, companyName, fyStartYear, sessionToken, onProgress } = opts;
   const XLSX = await import('xlsx');
+  const names = opts.companyId ? buildPartyNameIndex(opts.companyId) : undefined;
   // Months before the GSTIN was registered have no return — skip them entirely.
   const months = fyPeriods(fyStartYear)
     .filter((m) => isOnOrAfterRegistration(m.period, opts.registrationDate));
@@ -116,7 +124,7 @@ export async function exportGstr1YearDetailExcel(opts: {
       }
     }
 
-    const rows = sections.flatMap((s) => s.rows.map((r) => toSheetRow(s, r)));
+    const rows = sections.flatMap((s) => s.rows.map((r) => toSheetRow(s, r, names)));
     const tot = rows.reduce<MonthTotals>(
       (a, r) => ({
         taxable: a.taxable + (Number(r['Taxable Value']) || 0),

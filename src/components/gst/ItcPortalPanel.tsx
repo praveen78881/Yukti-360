@@ -8,6 +8,7 @@ import { sandboxClient } from '@/lib/gst/sandbox/client';
 import { parseReturn, isNoData } from '@/lib/gst/sandbox/parsers';
 import { getDownload, saveDownload, deleteDownload, getSessionToken, setSessionToken, clearSessionToken } from '@/lib/gst/sandbox/store';
 import { availability, toPeriod, periodLabel, toApiYearMonth } from '@/lib/gst/sandbox/period';
+import { buildPartyNameIndex, harvestNamesFromRows, resolvePartyName } from '@/lib/gst/partyNames';
 
 const money = (n?: number) => (n && n !== 0 ? formatIndianCurrency(n) : '—');
 
@@ -22,7 +23,14 @@ export function ItcPortalPanel({ gstin, username, companyId, year, month }: {
   const [otp, setOtp] = useState('');
   const [version, setVersion] = useState(0);
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null);
-  const stored = useMemo(() => getDownload(companyId, 'GSTR2B', period), [companyId, period, version]);
+  const stored = useMemo(() => {
+    const rec = getDownload(companyId, 'GSTR2B', period);
+    if (!rec) return rec;
+    // Fill any row saved before supplier names were harvested.
+    const idx = buildPartyNameIndex(companyId);
+    if (!idx.size) return rec;
+    return { ...rec, rows: rec.rows.map((r) => (r.supplierName ? r : { ...r, supplierName: resolvePartyName(idx, r.supplierGstin) })) };
+  }, [companyId, period, version]);
 
   useEffect(() => {
     if (!ctx) return;
@@ -43,6 +51,7 @@ export function ItcPortalPanel({ gstin, username, companyId, year, month }: {
     }
     const noData = isNoData(r.data);
     const { rows, itcSummary } = parseReturn('GSTR2B', r.data);
+    harvestNamesFromRows(companyId, rows);   // 2B names feed 2A and GSTR-1 too
     saveDownload(companyId, { type: 'GSTR2B', period, gstin, rows, itcSummary, noData, raw: r.data, fetchedAt: new Date().toISOString() });
     setPhase('idle'); setOtp(''); setVersion((v) => v + 1);
     toast.success(noData ? `No ITC filed for ${periodLabel(period)}` : `ITC imported — ${rows.length} rows`);

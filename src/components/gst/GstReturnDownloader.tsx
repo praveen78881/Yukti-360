@@ -10,6 +10,7 @@ import {
   getDownload, saveDownload, getSessionToken, setSessionToken, clearSessionToken,
 } from '@/lib/gst/sandbox/store';
 import { availability, toApiYearMonth, periodLabel, toPeriod, parsePeriod, fyOf, quarterMonths } from '@/lib/gst/sandbox/period';
+import { buildPartyNameIndex, harvestNamesFromRows, resolvePartyName } from '@/lib/gst/partyNames';
 import type { GstDownloadRecord, GstInvoiceRow, GstReturnType } from '@/lib/gst/sandbox/types';
 
 function defaultPeriod(now = new Date()): string {
@@ -56,10 +57,17 @@ export function GstReturnDownloader({ type }: { type: GstReturnType }) {
   const [usernameDraft, setUsernameDraft] = useState('');
   const [version, setVersion] = useState(0); // bump to re-read the store after save
 
-  const stored = useMemo<GstDownloadRecord | null>(
-    () => (companyId ? getDownload(companyId, type, period) : null),
-    [companyId, type, period, version],
-  );
+  const stored = useMemo<GstDownloadRecord | null>(() => {
+    if (!companyId) return null;
+    const rec = getDownload(companyId, type, period);
+    if (!rec) return null;
+    // GSTR-2A carries no supplier name at all, and older 2B records were saved
+    // before names were harvested — fill both from the registry so the Supplier
+    // column is populated on screen and in the export.
+    const idx = buildPartyNameIndex(companyId);
+    if (!idx.size) return rec;
+    return { ...rec, rows: rec.rows.map((r) => (r.supplierName ? r : { ...r, supplierName: resolvePartyName(idx, r.supplierGstin) })) };
+  }, [companyId, type, period, version]);
   // Registration date gates every period: months before the GSTIN existed have no
   // return on the portal, so fetching them can only error.
   const regDate = company?.gst_details?.registrationDate;
@@ -103,6 +111,9 @@ export function GstReturnDownloader({ type }: { type: GstReturnType }) {
 
     const noData = isNoData(r.data) || isNoDataError(bizErr);
     const { rows, itcSummary } = parseReturn(type, r.data);
+    // GSTR-2B is the only return that carries supplier names — bank them so
+    // GSTR-2A and GSTR-1, which the portal sends without any name, can show one.
+    harvestNamesFromRows(companyId, rows);
     saveDownload(companyId, {
       type, period, gstin, rows, itcSummary, noData, raw: r.data, fetchedAt: new Date().toISOString(),
     });
@@ -155,6 +166,7 @@ export function GstReturnDownloader({ type }: { type: GstReturnType }) {
       }
       const noData = isNoData(r.data) || isNoDataError(bizErr);
       const { rows, itcSummary } = parseReturn(type, r.data);
+      harvestNamesFromRows(companyId, rows);
       saveDownload(companyId, {
         type, period: fp, gstin, rows, itcSummary, noData, raw: r.data, fetchedAt: new Date().toISOString(),
       });
