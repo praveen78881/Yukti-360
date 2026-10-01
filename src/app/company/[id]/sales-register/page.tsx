@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { DocumentWizard } from '@/components/invoices/document-wizard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useCompany } from '@/hooks/useCompany';
@@ -8,12 +9,14 @@ import {
   deleteInvoiceV2,
   deleteSalesInvoice,
   DOC_TYPE_OPTIONS,
+  getInvoiceV2,
   getStateCodeFromGSTIN,
   listInvoicesV2,
   listSalesInvoices,
   type InvoiceV2,
   type SalesInvoice,
 } from '@/lib/accounting/gstInvoices';
+import { getFiling } from '@/lib/gstr1/gstr1Db';
 
 function inr(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -47,6 +50,7 @@ type CtxMenu = { x: number; y: number; row: CombinedInvoice };
 export default function SalesRegisterPage() {
   const { company, companyId, loading } = useCompany();
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [editing, setEditing] = useState<InvoiceV2 | null>(null);
   const [tick, setTick] = useState(0);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
 
@@ -124,12 +128,27 @@ export default function SalesRegisterPage() {
   );
 
   const handleDelete = (row: CombinedInvoice) => {
+    if (!window.confirm(`Delete invoice ${row.invoice_no}?`)) return;
     if (row.isLegacy) {
       deleteSalesInvoice(row.id);
     } else {
       deleteInvoiceV2(row.id);
     }
     setTick((x) => x + 1);
+  };
+
+  // Older-format rows have no update path; everything else opens in the wizard.
+  // An invoice already on the portal (IRN) or in a filed GSTR-1 can still be
+  // corrected in the books, but the user is told the return will not change.
+  const startEdit = (row: CombinedInvoice) => {
+    if (row.isLegacy) return;
+    const inv = getInvoiceV2(row.id);
+    if (!inv) return;
+    const notes: string[] = [];
+    if (inv.irn) notes.push('an IRN has been generated for it, so the e-invoice on the portal will not change');
+    if (getFiling(companyId || '', inv.period)?.filed) notes.push(`GSTR-1 for ${inv.period} is marked filed, so the return will not change`);
+    if (notes.length && !window.confirm(`Edit ${inv.invoice_no}? Note: ${notes.join('; ')}. Only your books will be updated.`)) return;
+    setEditing(inv);
   };
 
   if (loading || !company || !companyId) {
@@ -153,13 +172,14 @@ export default function SalesRegisterPage() {
         </button>
       </PageHeader>
 
-      {isWizardOpen && (
+      {(isWizardOpen || editing) && (
         <DocumentWizard
+          key={editing?.id ?? 'new'}
           mode="sales_invoice"
           companyId={companyId}
           sellerStateCode={sellerStateCode}
-          initialInvoice={null}
-          onClose={() => setIsWizardOpen(false)}
+          initialInvoice={editing}
+          onClose={() => { setIsWizardOpen(false); setEditing(null); }}
           onSave={() => setTick((x) => x + 1)}
         />
       )}
@@ -206,12 +226,13 @@ export default function SalesRegisterPage() {
                 <th className="px-3 py-2 text-right">SGST</th>
                 <th className="px-3 py-2 text-right">IGST</th>
                 <th className="px-3 py-2 text-right">Total</th>
+                <th className="px-3 py-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {combinedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-3 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={11} className="px-3 py-10 text-center text-sm text-gray-500">
                     No invoices yet. Click "+ New Invoice" to create one.
                   </td>
                 </tr>
@@ -221,6 +242,8 @@ export default function SalesRegisterPage() {
                     key={r.id}
                     className="cursor-default select-none border-t border-gray-100 hover:bg-gray-50/50"
                     onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, row: r }); }}
+                    onDoubleClick={() => startEdit(r)}
+                    title={r.isLegacy ? undefined : 'Double-click to edit'}
                   >
                     <td className="px-3 py-2 font-mono text-xs">{compactInvoiceNo(r.invoice_no)}</td>
                     <td className="px-3 py-2">{r.invoice_date}</td>
@@ -234,6 +257,16 @@ export default function SalesRegisterPage() {
                     <td className="px-3 py-2 text-right">{inr(r.sgst)}</td>
                     <td className="px-3 py-2 text-right">{inr(r.igst)}</td>
                     <td className="px-3 py-2 text-right font-semibold">{inr(r.total)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center gap-1">
+                        <button type="button" onClick={() => startEdit(r)} disabled={r.isLegacy} className="rounded-md p-1 text-[var(--navy)] hover:bg-[var(--navy-soft)] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Edit ${r.invoice_no}`} title={r.isLegacy ? 'Older-format invoice — delete and re-enter it to change it' : 'Edit'}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(r)} className="rounded-md p-1 text-[var(--bad)] hover:bg-[var(--bad-soft)]" aria-label={`Delete ${r.invoice_no}`} title="Delete">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </td>
                   </tr>
                 ))
               )}
@@ -250,6 +283,15 @@ export default function SalesRegisterPage() {
             className="fixed z-50 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-xl"
             style={{ top: ctxMenu.y, left: ctxMenu.x }}
           >
+            {!ctxMenu.row.isLegacy && (
+              <button
+                onClick={() => { startEdit(ctxMenu.row); setCtxMenu(null); }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </button>
+            )}
             <button
               onClick={() => { handleDelete(ctxMenu.row); setCtxMenu(null); }}
               className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50"

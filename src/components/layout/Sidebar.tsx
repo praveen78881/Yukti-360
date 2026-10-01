@@ -23,6 +23,7 @@ import { clearLocalDataOnSignOut } from '@/lib/sync/cloudSync';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
 import { BrandLogo } from './BrandLogo';
 import { prefetchRoute } from '@/lib/routePrefetch';
+import { assignMnemonics, menuDestinations, type Mnemonic } from '@/lib/shortcuts';
 
 interface NavItem { label: string; href: string; icon: LucideIcon }
 /** `standalone` groups render as a single top-level link (no heading row). */
@@ -163,6 +164,18 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     setRenaming(null);
   }, [companyId, renaming, renameVal]);
 
+  /* The highlighted letter on each menu item — the key that opens the page
+     (src/lib/shortcuts.ts). Looked up by the item's path under the company. */
+  const mnemonics = useMemo(
+    () => (company && config ? assignMnemonics(menuDestinations(config.nav, company.entity_type)) : new Map<string, Mnemonic>()),
+    [company, config],
+  );
+  const mnemonicFor = (href: string): Mnemonic | undefined => {
+    const root = `/company/${companyId}`;
+    const path = href === root ? '' : href.startsWith(`${root}/`) ? href.slice(root.length + 1) : href;
+    return mnemonics.get(path);
+  };
+
   /* nav groups (memoised, no workspace items here) */
   const groups = useMemo(() => {
     if (!config || !companyId) return null;
@@ -240,6 +253,8 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     if (nav.tdsRegister !== 'never' || nav.tcsRegister !== 'never') taxItems.push({ label: 'TDS & TCS', href: `${base}/tds-register`, icon: FileSpreadsheet });
     if (nav.advanceTax) taxItems.push({ label: 'Advance Tax', href: `${base}/advance-tax`, icon: IndianRupee });
     if (nav.deferredTax) taxItems.push({ label: 'Deferred Tax', href: `${base}/deferred-tax`, icon: Clock });
+    // The bank ledgers themselves — listed wherever the bank tools are.
+    if (nav.brs || nav.bankImport) taxItems.push({ label: 'Bank Accounts', href: `${base}/bank-accounts`, icon: Landmark });
     if (nav.brs) taxItems.push({ label: 'Bank Reconciliation', href: `${base}/brs`, icon: ArrowLeftRight });
     if (nav.bankImport) taxItems.push({ label: 'Bank Import', href: `${base}/bank-import`, icon: FileUp });
     if (nav.audit !== 'never') taxItems.push({ label: 'Audit', href: `${base}/audit`, icon: ShieldCheck });
@@ -325,6 +340,8 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
   const base = `/company/${companyId}`;
   const dashActive = pathname === base;
   const settingsActive = pathname === `${base}/settings`;
+  const dashM = mnemonics.get('');
+  const settingsM = mnemonics.get('settings');
   const showWorkspace = mode !== 'business' && company?.entity_type !== 'individual';
   const wsActive = pathname.includes('/folders');
   const isGroupOpen = (h: string) =>
@@ -367,10 +384,12 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
   const navItemLink = (item: NavItem, onClick?: () => void, top = false) => {
     const active = isHrefActive(item.href);
     const Icon = item.icon;
+    const m = mnemonicFor(item.href);
     return (
-      <Link key={item.href} to={item.href} onClick={onClick} onMouseEnter={() => prefetchRoute(item.href)} onFocus={() => prefetchRoute(item.href)} className={`nav-pill ${top ? 'nav-top' : ''} ${active ? 'nav-pill-active' : ''}`}>
+      <Link key={item.href} to={item.href} onClick={onClick} onMouseEnter={() => prefetchRoute(item.href)} onFocus={() => prefetchRoute(item.href)} className={`nav-pill ${top ? 'nav-top' : ''} ${active ? 'nav-pill-active' : ''}`} title={m ? `Shortcut: ${m.keys.join(' ')}` : undefined}>
         {top && <span className="nav-group-tile"><Icon className="h-[15px] w-[15px]" /></span>}
-        <span className="truncate">{item.label}</span>
+        <span className="truncate"><MnemonicLabel text={item.label} m={m} /></span>
+        {m && <kbd className="mn-key">{m.keys.join(' ')}</kbd>}
       </Link>
     );
   };
@@ -431,9 +450,10 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
             </div>
           ) : (
             <>
-              <Link to={base} onMouseEnter={() => prefetchRoute(base)} onFocus={() => prefetchRoute(base)} className={`nav-pill nav-top mb-1 ${dashActive ? 'nav-pill-active' : ''}`}>
+              <Link to={base} onMouseEnter={() => prefetchRoute(base)} onFocus={() => prefetchRoute(base)} className={`nav-pill nav-top mb-1 ${dashActive ? 'nav-pill-active' : ''}`} title={dashM ? `Shortcut: ${dashM.keys.join(' ')}` : undefined}>
                 <span className="nav-group-tile"><LayoutDashboard className="h-[15px] w-[15px]" /></span>
-                <span>Dashboard</span>
+                <span><MnemonicLabel text="Dashboard" m={dashM} /></span>
+                {dashM && <kbd className="mn-key">{dashM.keys.join(' ')}</kbd>}
               </Link>
 
               {groups.map((group) => {
@@ -512,9 +532,10 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
           {userEmail && (
             <p className="px-2.5 pb-1.5 text-[11px] font-medium text-[var(--ink-3)] truncate" title={userEmail}>{userEmail}</p>
           )}
-          <Link to={`${base}/settings`} onMouseEnter={() => prefetchRoute(`${base}/settings`)} onFocus={() => prefetchRoute(`${base}/settings`)} className={`nav-pill nav-top ${settingsActive ? 'nav-pill-active' : ''}`}>
+          <Link to={`${base}/settings`} onMouseEnter={() => prefetchRoute(`${base}/settings`)} onFocus={() => prefetchRoute(`${base}/settings`)} className={`nav-pill nav-top ${settingsActive ? 'nav-pill-active' : ''}`} title={settingsM ? `Shortcut: ${settingsM.keys.join(' ')}` : undefined}>
             <span className="nav-group-tile"><Settings className="h-[15px] w-[15px]" /></span>
-            <span>Settings</span>
+            <span><MnemonicLabel text="Settings" m={settingsM} /></span>
+            {settingsM && <kbd className="mn-key">{settingsM.keys.join(' ')}</kbd>}
           </Link>
           {/* SIGN OUT SUSPENDED while login is disabled. With no login screen this
               button only wipes local data and bounces back to /companies, so it is
@@ -546,5 +567,19 @@ function CtxItem({ label, onClick, danger }: { label: string; onClick: () => voi
     >
       {label}
     </button>
+  );
+}
+
+/** A menu label with its shortcut letter marked — the first letter, weighted
+    by tier: the plain key heaviest, then Ctrl + key, then Shift + key. */
+function MnemonicLabel({ text, m }: { text: string; m?: Mnemonic }) {
+  const i = text.search(/[a-z]/i);
+  if (!m || i < 0 || text[i].toLowerCase() !== m.letter) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className={`mn t${m.tier}`}>{text[i]}</span>
+      {text.slice(i + 1)}
+    </>
   );
 }

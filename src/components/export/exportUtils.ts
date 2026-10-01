@@ -60,28 +60,32 @@ export async function exportToPDF(
 
   const doc = new jsPDF(options?.orientation || 'portrait');
 
+  // The built-in Helvetica has no ₹ glyph (it printed as rubbish), so the
+  // symbol reads "Rs" in the PDF: "Rs 1,00,000.00", "(Rs)" in the headings.
+  const pdfText = (s: string) => s.replace(/₹\s*(?=\d)/g, 'Rs ').replace(/₹/g, 'Rs');
+
   // HEADER — clean professional type: company, entity, statement, as-on date
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text(companyName, 14, 15);
+  doc.text(pdfText(companyName), 14, 15);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text(`Entity: ${entityType}`, 14, 22);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text(title, 14, 32);
+  doc.text(pdfText(title), 14, 32);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text(dateRange, 14, 38);
+  doc.text(pdfText(dateRange), 14, 38);
 
   // TABLE - CRITICAL: JE-XXXX codes are NEVER included
   autoTable(doc, {
     startY: 42,
-    head: [columns.map(c => c.header)],
+    head: [columns.map(c => pdfText(c.header))],
     body: data.map(row => columns.map(c => {
       const val = row[c.key];
-      if (typeof val === 'number') return formatIndianCurrency(val);
-      return (val == null || val === '') ? '-' : String(val);
+      if (typeof val === 'number') return pdfText(formatIndianCurrency(val));
+      return (val == null || val === '') ? '-' : pdfText(String(val));
     })),
     styles: { font: 'helvetica', fontSize: 9, cellPadding: 2 },
     headStyles: {

@@ -7,6 +7,7 @@ import { Trash2 } from 'lucide-react';
 import type { InvoiceV2Draft, LineItem } from '@/lib/accounting/gstInvoices';
 import { GST_RATES, UQC_OPTIONS, isCessApplicable, getCessInfo, createEmptyLineItem } from '@/lib/accounting/gstInvoices';
 import { Switch, inr } from '../ui';
+import { HsnField } from './HsnField';
 
 interface LineItemsSectionProps {
   invoice: InvoiceV2Draft;
@@ -54,12 +55,12 @@ export function LineItemsSection({ invoice, updateItem, removeItem }: LineItemsS
                   value={item.description}
                   onChange={(e) => updateItem(idx, { description: e.target.value })}
                 />
-                <input
-                  aria-label={`Item ${idx + 1} HSN or SAC`}
-                  className="yk-in sm mono"
+                <HsnField
+                  ariaLabel={`Item ${idx + 1} HSN or SAC`}
                   value={item.hsn}
-                  onChange={(e) => {
-                    const hsn = e.target.value;
+                  description={item.description}
+                  onSuggestDescription={(description) => updateItem(idx, { description })}
+                  onChange={(hsn) => {
                     const updates: Partial<LineItem> = { hsn };
                     if (isCessApplicable(hsn)) {
                       const cess = getCessInfo(hsn);

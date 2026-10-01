@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DocumentMode, SalesTotals, PurchaseTotals } from './types';
 import { WIZARD_CONFIG } from './config';
 import {
@@ -36,6 +36,7 @@ import {
 } from '@/lib/accounting/gstInvoices';
 import { createSalesJournalEntry, createPurchaseJournalEntry } from '@/lib/accounting/invoiceJournalSync';
 import { listJournalEntries, deleteJournalEntry } from '@/lib/offlineDb';
+import { isValidHsnSac } from '@/lib/gst/hsnLookup';
 
 interface UseSalesDocumentState {
   kind: 'sales';
@@ -109,6 +110,10 @@ export interface PurchaseFields {
 
 export type DocumentState = UseSalesDocumentState | UsePurchaseDocumentState;
 
+/** Voucher types an invoice posts under — an edit replaces only these. */
+const SALES_VOUCHER_TYPES = new Set<string>(['SLS', 'CN', 'SR']);
+const PURCHASE_VOUCHER_TYPES = new Set<string>(['PUR', 'DN', 'PR']);
+
 function initPurchaseFields(
   mode: 'purchase_invoice' | 'purchase_return',
   initial: PurchaseInvoice | null | undefined,
@@ -116,6 +121,12 @@ function initPurchaseFields(
 ): PurchaseFields {
   const today = new Date().toISOString().slice(0, 10);
   if (initial) {
+    // The discount is not stored — read it back from qty × rate against the
+    // taxable value, so an edit shows (and keeps) what was given.
+    const gross = (initial.item_qty ?? 0) * (initial.item_rate ?? 0);
+    const storedDiscount = gross > 0 && initial.taxable_value > 0 && initial.taxable_value < gross
+      ? String(Math.round((1 - initial.taxable_value / gross) * 10000) / 100)
+      : '0';
     return {
       invoiceDate: initial.invoice_date,
       bucket: mode === 'purchase_return' ? 'CDNR' : initial.bucket,
@@ -125,7 +136,7 @@ function initPurchaseFields(
       itemHsn: initial.item_hsn || '',
       itemQty: String(initial.item_qty ?? 1),
       itemRate: String(initial.item_rate ?? 0),
-      itemDiscount: '0',
+      itemDiscount: storedDiscount,
       posState: initial.place_of_supply_state || companyStateName,
       supplyType: initial.supply_type,
       taxable: String(initial.taxable_value || 0),
@@ -364,16 +375,22 @@ function useSalesState(
     const roundOff = Math.round(subtotal) - subtotal;
     const totalAmount = Math.round(subtotal);
 
+    // Settlements already booked against the invoice being edited that are not
+    // in amount_received (a credit note reduces amount_pending directly) — kept,
+    // so an edit re-derives what is pending instead of resetting it.
+    const settledElsewhere = initialInvoice
+      ? Math.max(0, (initialInvoice.total_amount ?? 0) - (initialInvoice.amount_pending ?? initialInvoice.total_amount ?? 0) - (initialInvoice.amount_received ?? 0))
+      : 0;
     let amtPending = 0;
     let amtReceived = invoice.amount_received || 0;
     if (invoice.payment_mode === 'CASH' || invoice.payment_mode === 'ONLINE') {
       amtPending = 0;
       amtReceived = totalAmount;
     } else if (invoice.payment_mode === 'CREDIT') {
-      amtPending = totalAmount;
+      amtPending = Math.max(0, totalAmount - settledElsewhere);
       amtReceived = 0;
     } else if (invoice.payment_mode === 'PARTIAL') {
-      amtPending = Math.max(0, totalAmount - amtReceived);
+      amtPending = Math.max(0, totalAmount - amtReceived - settledElsewhere);
     }
 
     setInvoice((prev) => ({
@@ -518,11 +535,14 @@ function useSalesState(
     try {
       if (initialInvoice?.id) {
         const updated = updateInvoiceV2(initialInvoice.id, invoice);
-        // Sync ledgers: delete old JE(s) linked to this invoice, then recreate
+        // Sync ledgers: drop what this invoice posted — the entry it is linked to
+        // (invoices raised from a journal entry) and/or the sales-voucher entry
+        // carrying its number — then post the edited invoice afresh.
+        const linkedSalesJe = (initialInvoice as { linked_journal_id?: string }).linked_journal_id;
         listJournalEntries(companyId)
-          .filter((e) => e.voucher_number === initialInvoice.invoice_no)
+          .filter((e) => e.id === linkedSalesJe || (e.voucher_number === initialInvoice.invoice_no && SALES_VOUCHER_TYPES.has(e.voucher_type)))
           .forEach((e) => deleteJournalEntry(e.id));
-        createSalesJournalEntry(companyId, { ...invoice, id: initialInvoice.id } as InvoiceV2);
+        createSalesJournalEntry(companyId, updated ?? ({ ...invoice, id: initialInvoice.id } as InvoiceV2));
         // If editing a credit note: adjust original invoice pending by the amount delta
         if (updated && initialInvoice.doc_type === 'CREDIT_NOTE' && updated.original_invoice_no) {
           const origInv = listInvoicesV2(companyId).find(
@@ -589,14 +609,21 @@ function usePurchaseState(
   const [error, setError] = useState<string | null>(null);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [gstinLocked, setGstinLocked] = useState(false);
+  // Editing: the stored figures stand until the inputs that derive them are
+  // actually changed — recomputing on open overwrote a taxable value entered
+  // without a rate, and bumped a 0% B2B line to 18%.
+  const itemTouched = useRef(!initialPurchase);
+  const bucketSeen = useRef<string | null>(initialPurchase ? initialPurchase.bucket : null);
 
   const updateField = useCallback(<K extends keyof PurchaseFields>(key: K, value: PurchaseFields[K]) => {
+    if (key === 'itemQty' || key === 'itemRate' || key === 'itemDiscount') itemTouched.current = true;
     setFields((prev) => ({ ...prev, [key]: value }));
     setInvalidFields((prev) => prev.filter((f) => f !== key));
   }, []);
 
   // Auto-calc taxable from qty * rate * (1 - discountPct/100)
   useEffect(() => {
+    if (!itemTouched.current) return;
     const qty = Number(fields.itemQty || 0);
     const rate = Number(fields.itemRate || 0);
     const discountPct = Number(fields.itemDiscount || 0);
@@ -615,6 +642,11 @@ function usePurchaseState(
     const totalGst = taxable * gstRate / 100;
     const totalAmount = Math.round(taxable + totalGst);
 
+    // As in the sales hook: settlements already booked against the purchase
+    // being edited that are not in amount_paid (a debit note reduces pending).
+    const settledElsewhere = initialPurchase
+      ? Math.max(0, (initialPurchase.total ?? 0) - (initialPurchase.amount_pending ?? initialPurchase.total ?? 0) - (initialPurchase.amount_paid ?? 0))
+      : 0;
     let pending = 0;
     let paid = Number(fields.amountPaid || 0);
 
@@ -622,10 +654,10 @@ function usePurchaseState(
       pending = 0;
       paid = totalAmount;
     } else if (fields.paymentMode === 'CREDIT') {
-      pending = totalAmount;
+      pending = Math.max(0, totalAmount - settledElsewhere);
       paid = 0;
     } else if (fields.paymentMode === 'PARTIAL') {
-      pending = Math.max(0, totalAmount - paid);
+      pending = Math.max(0, totalAmount - paid - settledElsewhere);
     }
 
     setFields((prev) => ({
@@ -645,8 +677,11 @@ function usePurchaseState(
     setFields((prev) => prev.supplyType === autoSupply ? prev : { ...prev, supplyType: autoSupply });
   }, [fields.vendorGstin, fields.posState]);
 
-  // Auto-adjust GST rate based on bucket selection
+  // Auto-adjust GST rate when the bucket changes (not on opening an existing
+  // purchase, whose rate is what was recorded)
   useEffect(() => {
+    if (bucketSeen.current === fields.bucket) return;
+    bucketSeen.current = fields.bucket;
     if (fields.bucket === 'URD' || fields.bucket === 'EXEMPT_NIL') {
       setFields((prev) => prev.gstRate === '0' ? prev : { ...prev, gstRate: '0' });
     } else if (fields.bucket === 'B2B' && fields.gstRate === '0') {
@@ -723,6 +758,8 @@ function usePurchaseState(
       errors.push('vendorGstin');
     }
     if (taxableVal <= 0) errors.push('taxable');
+    // HSN / SAC is optional on a purchase, but must be a real code when given.
+    if (fields.itemHsn.trim() && !isValidHsnSac(fields.itemHsn)) errors.push('itemHsn');
 
     if (errors.length > 0) {
       setInvalidFields(errors);
@@ -785,11 +822,13 @@ function usePurchaseState(
     try {
       if (initialPurchase?.id) {
         const updated = updatePurchaseInvoice(initialPurchase.id, payload);
-        // Sync ledgers: delete old JE(s) linked to this purchase, then recreate
+        // Sync ledgers: drop what this purchase posted (its linked entry and/or the
+        // purchase-voucher entry carrying its number), then post the saved record —
+        // the draft alone has no total, so posting it would silently skip.
         listJournalEntries(companyId)
-          .filter((e) => e.voucher_number === initialPurchase.invoice_no)
+          .filter((e) => e.id === initialPurchase.linked_journal_id || (e.voucher_number === initialPurchase.invoice_no && PURCHASE_VOUCHER_TYPES.has(e.voucher_type)))
           .forEach((e) => deleteJournalEntry(e.id));
-        createPurchaseJournalEntry(companyId, { ...payload, id: initialPurchase.id } as PurchaseInvoice);
+        if (updated) createPurchaseJournalEntry(companyId, updated);
         // If editing a debit note: adjust original purchase pending by the amount delta
         if (updated && initialPurchase.bucket === 'CDNR' && updated.original_invoice_no) {
           const origPurchase = listPurchaseInvoices(companyId).find(

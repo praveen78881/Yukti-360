@@ -98,14 +98,14 @@ export function DocumentWizard({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
-      <div className="ca-modal-panel dw-modal flex h-full w-full max-w-[1180px] max-h-[94vh] flex-col overflow-hidden bg-white">
+      <div className="ca-modal-panel dw-modal flex h-full w-full max-w-[1220px] max-h-[94vh] flex-col overflow-hidden bg-white">
         {/* ── Top bar: title · bold click-to-change date · close ── */}
         <div className="dw-skin yk-top">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="yk-top-brand">
             <span className="yk-tile lg"><TitleIcon className="h-[18px] w-[18px]" aria-hidden /></span>
             <div className="min-w-0">
               <h2 className="yk-title">{isEditing ? `Edit ${config.title}` : config.title}</h2>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
                 {config.showGstr1Badge && state.kind === 'sales' ? (
                   <span className="yk-pill">{GSTR1_TABLE_LABELS[state.totals.gstr1Table] || state.totals.gstr1Table}</span>
                 ) : (
@@ -114,7 +114,7 @@ export function DocumentWizard({
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="yk-top-ctl">
             <DateChip label={dateLabel} value={docDate} onChange={setDocDate} invalid={dateInvalid} testId="doc-date" />
             <button type="button" onClick={onClose} className="yk-icon-btn" aria-label="Close" title="Close">
               <X className="h-5 w-5" aria-hidden />

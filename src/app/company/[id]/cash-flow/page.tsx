@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { CashFlowAs3Format } from '@/components/formats/CashFlowAs3Format';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
-import { getCurrentFY } from '@/lib/utils/dateUtils';
+import { useReportDateRange } from '@/hooks/useReportDateRange';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { computeTradingAccount } from '@/lib/accounting/tradingAccountCompute';
 import { computeProfitLoss } from '@/lib/accounting/profitLossCompute';
@@ -22,9 +22,7 @@ const inr = (n: number) => n.toLocaleString('en-IN', { minimumFractionDigits: 2,
 export default function CashFlowPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { company, companyId, loading: companyLoading } = useCompany();
-  const fy = getCurrentFY();
-  const [fromDate, setFromDate] = useState(fy.start);
-  const [toDate, setToDate] = useState(fy.end);
+  const { fromDate, toDate, setFromDate, setToDate } = useReportDateRange(companyId);
   const initialFormat =
     (searchParams.get('method') as 'direct' | 'indirect' | null) ?? 'indirect';
   const [format, setFormat] = useState<'direct' | 'indirect'>(initialFormat);

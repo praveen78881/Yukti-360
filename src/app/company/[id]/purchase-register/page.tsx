@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DocumentWizard } from '@/components/invoices/document-wizard';
 import { useCompany } from '@/hooks/useCompany';
@@ -27,6 +28,7 @@ type CtxMenu = { x: number; y: number; row: PurchaseInvoice };
 export default function PurchaseRegisterPage() {
   const { company, companyId, loading } = useCompany();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<PurchaseInvoice | null>(null);
   const [tick, setTick] = useState(0);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
 
@@ -52,6 +54,12 @@ export default function PurchaseRegisterPage() {
     [rows],
   );
 
+  const handleDelete = (row: PurchaseInvoice) => {
+    if (!window.confirm(`Delete purchase ${row.invoice_no}?`)) return;
+    deletePurchaseInvoice(row.id);
+    setTick((x) => x + 1);
+  };
+
   if (loading || !company || !companyId) {
     return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -67,13 +75,14 @@ export default function PurchaseRegisterPage() {
         </button>
       </PageHeader>
 
-      {isCreateOpen && (
+      {(isCreateOpen || editing) && (
         <DocumentWizard
-          mode="purchase_invoice"
+          key={editing?.id ?? 'new'}
+          mode={editing?.bucket === 'CDNR' ? 'purchase_return' : 'purchase_invoice'}
           companyId={companyId}
           sellerStateCode={sellerStateCode || undefined}
-          initialPurchase={null}
-          onClose={() => setIsCreateOpen(false)}
+          initialPurchase={editing}
+          onClose={() => { setIsCreateOpen(false); setEditing(null); }}
           onSave={() => setTick((x) => x + 1)}
         />
       )}
@@ -121,11 +130,12 @@ export default function PurchaseRegisterPage() {
                 <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase text-gray-500">Taxable</th>
                 <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase text-gray-500">GST</th>
                 <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase text-gray-500">Total</th>
+                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={9} className="px-3 py-10 text-center text-xs text-gray-500">No purchase invoices yet. Click "+ New Purchase" to create one.</td></tr>
+                <tr><td colSpan={10} className="px-3 py-10 text-center text-xs text-gray-500">No purchase invoices yet. Click "+ New Purchase" to create one.</td></tr>
               ) : rows.map((r) => {
                 const gstTotal = r.cgst + r.sgst + r.igst;
                 return (
@@ -133,6 +143,8 @@ export default function PurchaseRegisterPage() {
                     key={r.id}
                     className="cursor-default select-none border-t border-gray-100 hover:bg-gray-50/50"
                     onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, row: r }); }}
+                    onDoubleClick={() => setEditing(r)}
+                    title="Double-click to edit"
                   >
                     <td className="px-3 py-2 font-mono text-[11px]">{compactInvoiceNo(r.invoice_no)}</td>
                     <td className="px-3 py-2 text-[11px]">{r.invoice_date}</td>
@@ -149,6 +161,16 @@ export default function PurchaseRegisterPage() {
                     <td className="px-3 py-2 text-right font-mono text-[11px]">{inr(r.taxable_value)}</td>
                     <td className="px-3 py-2 text-right font-mono text-[11px] text-gray-500">{inr(gstTotal)}</td>
                     <td className="px-3 py-2 text-right font-mono text-[11px] font-semibold">{inr(r.total)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center gap-1">
+                        <button type="button" onClick={() => setEditing(r)} className="rounded-md p-1 text-[var(--navy)] hover:bg-[var(--navy-soft)]" aria-label={`Edit ${r.invoice_no}`} title="Edit">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(r)} className="rounded-md p-1 text-[var(--bad)] hover:bg-[var(--bad-soft)]" aria-label={`Delete ${r.invoice_no}`} title="Delete">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </td>
                   </tr>
                 );
               })}
@@ -166,7 +188,14 @@ export default function PurchaseRegisterPage() {
             style={{ top: ctxMenu.y, left: ctxMenu.x }}
           >
             <button
-              onClick={() => { deletePurchaseInvoice(ctxMenu.row.id); setTick((x) => x + 1); setCtxMenu(null); }}
+              onClick={() => { setEditing(ctxMenu.row); setCtxMenu(null); }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </button>
+            <button
+              onClick={() => { handleDelete(ctxMenu.row); setCtxMenu(null); }}
               className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

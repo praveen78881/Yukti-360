@@ -1,5 +1,6 @@
 import { emitInvoiceDataChanged } from '@/lib/journalSync';
 import { mirrorUpsert, mirrorDelete } from '@/lib/sync/cloudSync';
+import { isValidHsnSac } from '@/lib/gst/hsnLookup';
 
 export type SalesBucket = 'B2B' | 'B2CL' | 'B2CS' | 'EXP' | 'CDNR' | 'CDNUR';
 export type PurchaseBucket =
@@ -1169,8 +1170,8 @@ export function validateSalesWizardStep3(inv: InvoiceV2Draft): WizardValidationR
       return { ok: false, error: `Line ${idx}: Rate cannot be negative` };
     }
     const hsn = item.hsn?.trim() || '';
-    if (hsn.length < 4) {
-      return { ok: false, error: `Line ${idx}: HSN / SAC is required (at least 4 characters)` };
+    if (!isValidHsnSac(hsn)) {
+      return { ok: false, error: `Line ${idx}: HSN / SAC must be 4, 6 or 8 digits` };
     }
   }
 

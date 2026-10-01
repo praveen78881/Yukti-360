@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
+import { isValidHsnSac } from '@/lib/gst/hsnLookup';
 import {
   computeInventoryFromRegisters,
   issueToProduction,
@@ -174,7 +175,12 @@ export default function InventoryPage() {
                       className="border-t border-gray-50 hover:bg-gray-50/60 cursor-pointer"
                     >
                       <td className="px-4 py-2.5 text-[11px] font-medium text-gray-800">{item.itemName}</td>
-                      <td className="px-4 py-2.5 font-mono text-[11px] text-gray-500">{item.itemHsn || '—'}</td>
+                      <td className="px-4 py-2.5 font-mono text-[11px] text-gray-500">
+                        {item.itemHsn || '—'}
+                        {item.itemHsn && !isValidHsnSac(item.itemHsn) && (
+                          <span className="status-bad ml-1.5 !px-1.5 !text-[9px]" title="HSN / SAC must be 4, 6 or 8 digits">Invalid</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5 text-right font-mono text-[11px] text-emerald-700">{item.totalInwardQty + item.totalReturnInQty}</td>
                       <td className="px-4 py-2.5 text-right font-mono text-[11px] text-emerald-700">{inr(item.totalInwardValue + item.totalReturnInValue)}</td>
                       <td className="px-4 py-2.5 text-right font-mono text-[11px] text-red-600">{item.totalOutwardQty + item.totalReturnOutQty}</td>

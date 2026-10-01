@@ -4,41 +4,78 @@ import { useMemo, useState } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { AddBankAccountDialog } from '@/components/banking/AddBankAccountDialog';
+import { getBankDetails, maskAccountNumber } from '@/components/banking/bankDetails';
 import { computeAllBalances } from '@/lib/accounting/computeEngine';
 import { computeLedger } from '@/lib/accounting/ledgerCompute';
-import { Landmark, Wallet } from 'lucide-react';
+import { normalizeAccountName } from '@/lib/chartOfAccounts';
+import { getCustomAccounts } from '@/lib/offlineDb';
+import { LEDGER_GROUPS, classifyAccount, getGroupById, type LedgerGroup } from '@/lib/coa';
+import { Landmark, Plus, Wallet } from 'lucide-react';
 
 function inr(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+const drCr = (signed: number) => (signed >= 0 ? 'Dr' : 'Cr');
+const keyOf = (name: string) => normalizeAccountName(name).toLowerCase();
 
-/** A ledger is a bank/cash account if its group or name says so. */
-function isBankCash(group: string, name: string): boolean {
-  const g = (group || '').toLowerCase();
-  const n = (name || '').toLowerCase();
-  return /bank|cash/.test(g) || n.includes('bank') || n.includes('cash');
+const BANK_GROUP = getGroupById('bank_accounts')!;
+const CASH_GROUP = getGroupById('cash_in_hand')!;
+// Lines carry the Schedule III sub-group ('Bank Balances') or, from the bulk
+// workflow, the Tally-style label ('Bank Accounts') — both name the group.
+const groupNames = (g: LedgerGroup) => [g.scheduleIII, g.label];
+const KNOWN_GROUPS = new Set(LEDGER_GROUPS.flatMap(groupNames));
+
+/** Bank, cash or neither — by the ledger's group, so "Bank Charges" (Finance
+ *  Costs) and "Bank Overdraft" (Short-term Borrowings) are not listed. The
+ *  name decides only when the group says nothing: blank, 'Auto', the legacy
+ *  'Cash & Bank', or anything else outside the chart. */
+function bankCashKind(group: string, name: string): 'bank' | 'cash' | null {
+  if (groupNames(BANK_GROUP).includes(group)) return 'bank';
+  if (groupNames(CASH_GROUP).includes(group)) return 'cash';
+  if (KNOWN_GROUPS.has(group)) return null;
+  const guess = classifyAccount(name)?.id;
+  if (guess === BANK_GROUP.id) return 'bank';
+  if (guess === CASH_GROUP.id || (!guess && /\bcash\b/i.test(name))) return 'cash';
+  return null;
 }
-const isBank = (group: string, name: string) => /bank/.test((group + ' ' + name).toLowerCase());
 
 export default function BankAccountsPage() {
   const { company, companyId, loading } = useCompany();
   const { entries, loading: entriesLoading } = useJournalEntries({ companyId: companyId || '', enabled: !!companyId });
   const [selected, setSelected] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  // Bumped after an account is added — the account registry raises no change event.
+  const [registryTick, setRegistryTick] = useState(0);
 
+  // Posted bank & cash ledgers, plus registered ones with no postings yet (at
+  // nil): a bank account added here has no entries until it is first used.
   const accounts = useMemo(() => {
-    return computeAllBalances(entries)
-      .filter((b) => isBankCash(b.account_group, b.account_name))
-      .map((b) => ({
-        name: b.account_name,
-        group: b.account_group,
-        signed: b.balance_type === 'Dr' ? b.balance : -b.balance,
-        isBank: isBank(b.account_group, b.account_name),
-      }))
+    if (!companyId) return [];
+    const custom = getCustomAccounts(companyId);
+    const details = getBankDetails(companyId);
+    const idOf = new Map(custom.map((a) => [keyOf(a.name), a.id]));
+    const posted = computeAllBalances(entries).map((b) => ({
+      name: b.account_name,
+      group: b.account_group,
+      signed: b.balance_type === 'Dr' ? b.balance : -b.balance,
+      hasEntries: true,
+    }));
+    const seen = new Set(posted.map((a) => keyOf(a.name)));
+    const unused = custom
+      .filter((a) => !seen.has(keyOf(a.name)))
+      .map((a) => ({ name: a.name, group: a.account_group, signed: 0, hasEntries: false }));
+    return [...posted, ...unused]
+      .flatMap((a) => {
+        const kind = bankCashKind(a.group, a.name);
+        return kind ? [{ ...a, kind, details: details.get(idOf.get(keyOf(a.name)) ?? '') }] : [];
+      })
       .sort((a, b) => Math.abs(b.signed) - Math.abs(a.signed));
-  }, [entries]);
+  }, [companyId, entries, registryTick]);
 
-  const totalBank = accounts.filter((a) => a.isBank).reduce((s, a) => s + a.signed, 0);
-  const totalCash = accounts.filter((a) => !a.isBank).reduce((s, a) => s + a.signed, 0);
+  const totalBank = accounts.filter((a) => a.kind === 'bank').reduce((s, a) => s + a.signed, 0);
+  const totalCash = accounts.filter((a) => a.kind === 'cash').reduce((s, a) => s + a.signed, 0);
+  const hasBank = accounts.some((a) => a.kind === 'bank');
 
   const ledgerRows = useMemo(() => (selected ? computeLedger(entries, selected) : []), [entries, selected]);
 
@@ -48,94 +85,166 @@ export default function BankAccountsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Bank Accounts" description="Bank & cash ledgers with balances and transactions" />
+      <PageHeader title="Bank Accounts" description="Bank & cash ledgers with balances and transactions">
+        <button type="button" onClick={() => setAdding(true)} className="btn-pill-primary">
+          <Plus className="h-4 w-4" /> Add Bank Account
+        </button>
+      </PageHeader>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bank Balances</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-gray-900"><span className="text-sm text-gray-400">&#8377;</span>{inr(Math.abs(totalBank))} <span className="text-xs text-gray-400">{totalBank >= 0 ? 'Dr' : 'Cr'}</span></p>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Cash in Hand</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-gray-900"><span className="text-sm text-gray-400">&#8377;</span>{inr(Math.abs(totalCash))} <span className="text-xs text-gray-400">{totalCash >= 0 ? 'Dr' : 'Cr'}</span></p>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Accounts</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-gray-900">{accounts.length}</p>
-        </div>
+        <Kpi label="Bank Balances" value={`₹${inr(Math.abs(totalBank))}`} suffix={drCr(totalBank)} />
+        <Kpi label="Cash in Hand" value={`₹${inr(Math.abs(totalCash))}`} suffix={drCr(totalCash)} />
+        <Kpi label="Accounts" value={String(accounts.length)} />
       </div>
 
       {/* Account list */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-4 py-2.5"><h3 className="text-sm font-bold text-gray-800">Bank &amp; Cash Accounts</h3></div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-xs">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Type</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.length === 0 ? (
-                <tr><td colSpan={3} className="px-4 py-12 text-center text-gray-400">No bank or cash accounts found.</td></tr>
-              ) : accounts.map((a) => (
-                <tr key={a.name} onClick={() => setSelected(a.name)}
-                  className={`cursor-pointer border-t border-gray-50 transition-colors ${selected === a.name ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'}`}>
-                  <td className="px-4 py-2.5 text-[11px] font-semibold text-gray-800">
-                    <span className="inline-flex items-center gap-1.5">
-                      {a.isBank ? <Landmark className="h-3.5 w-3.5 text-blue-500" /> : <Wallet className="h-3.5 w-3.5 text-emerald-500" />}
-                      {a.name}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-[11px] text-gray-500">{a.isBank ? 'Bank' : 'Cash'}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(Math.abs(a.signed))} {a.signed >= 0 ? 'Dr' : 'Cr'}</td>
+      <section className="panel" aria-label="Bank and cash accounts">
+        <header className="panel-head">
+          <h2>Bank &amp; Cash Accounts</h2>
+        </header>
+        {accounts.length === 0 ? (
+          <NoAccounts onAdd={() => setAdding(true)} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="acc-table min-w-[680px]">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th>Type</th>
+                  <th>A/c No.</th>
+                  <th>IFSC</th>
+                  <th className="r">Balance</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </thead>
+              <tbody>
+                {accounts.map((a) => {
+                  const bankLine = [a.details?.bank_name, a.details?.branch].filter(Boolean).join(' · ');
+                  // Bank rows say "not known" with a dash; for cash the columns don't apply.
+                  const unknown = a.kind === 'bank' ? <span className="text-[var(--ink-3)]">—</span> : null;
+                  return (
+                    <tr key={a.name} onClick={() => setSelected(a.name)}
+                      className={`cursor-pointer ${selected === a.name ? '!bg-[var(--navy-soft)]/50' : ''}`}>
+                      <td>
+                        <div className="flex items-center gap-2.5">
+                          {a.kind === 'bank'
+                            ? <Landmark className="h-4 w-4 shrink-0 text-[var(--slate-blue)]" />
+                            : <Wallet className="h-4 w-4 shrink-0 text-[var(--slate-blue)]" />}
+                          <div className="min-w-0">
+                            <p className="font-semibold text-[var(--ink)]">{a.name}</p>
+                            {bankLine && <p className="text-[11px] text-[var(--ink-3)]">{bankLine}</p>}
+                          </div>
+                          {!a.hasEntries && <span className="status-idle">No entries</span>}
+                        </div>
+                      </td>
+                      <td>{a.kind === 'bank' ? 'Bank' : 'Cash'}</td>
+                      <td>{a.details?.account_number ? <span className="code-pill">{maskAccountNumber(a.details.account_number)}</span> : unknown}</td>
+                      <td>{a.details?.ifsc ? <span className="code-pill">{a.details.ifsc}</span> : unknown}</td>
+                      <td className="r">
+                        {a.hasEntries
+                          ? <>{inr(Math.abs(a.signed))} <span className="text-[10px] text-[var(--ink-3)]">{drCr(a.signed)}</span></>
+                          : <span className="text-[var(--ink-3)]">—</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!hasBank && (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="flex flex-wrap items-center gap-3 py-1">
+                        <span className="quick-tile-icon !h-8 !w-8"><Landmark className="h-4 w-4" /></span>
+                        <p className="min-w-0 flex-1 text-[12.5px]">No bank account yet — add the company's current or savings account.</p>
+                        <button type="button" onClick={() => setAdding(true)} className="btn-pill-outline !h-8">
+                          <Plus className="h-3.5 w-3.5" /> Add Bank Account
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* Selected account bank book */}
       {selected && (
-        <div className="rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
-            <h3 className="text-sm font-bold text-gray-800">{selected} — Transactions</h3>
-            <button onClick={() => setSelected(null)} className="text-[11px] font-bold text-gray-400 hover:text-gray-600">Close</button>
-          </div>
+        <section className="panel" aria-label={`${selected} transactions`}>
+          <header className="panel-head">
+            <h2 className="min-w-0 truncate">{selected} — Transactions</h2>
+            <button type="button" onClick={() => setSelected(null)}
+              className="shrink-0 rounded-[8px] px-2 py-1 text-[11.5px] font-semibold text-[var(--navy)] transition-colors duration-[160ms] hover:bg-[var(--navy-soft)]">
+              Close
+            </button>
+          </header>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-xs">
+            <table className="acc-table min-w-[640px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/80">
-                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Date</th>
-                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Particulars</th>
-                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Voucher</th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Deposit (Dr)</th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Withdrawal (Cr)</th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Balance</th>
+                <tr>
+                  <th>Date</th>
+                  <th>Particulars</th>
+                  <th>Voucher</th>
+                  <th className="r">Deposit (Dr)</th>
+                  <th className="r">Withdrawal (Cr)</th>
+                  <th className="r">Balance</th>
                 </tr>
               </thead>
               <tbody>
                 {ledgerRows.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No transactions for this account.</td></tr>
+                  <tr><td colSpan={6}><p className="py-8 text-center text-[var(--ink-3)]">No transactions for this account yet.</p></td></tr>
                 ) : ledgerRows.map((r, i) => (
-                  <tr key={i} className="border-t border-gray-50 hover:bg-gray-50/60">
-                    <td className="px-4 py-2 font-mono text-[11px] text-gray-600">{r.date}</td>
-                    <td className="px-4 py-2 text-[11px] text-gray-700 max-w-[260px] truncate">{r.particulars}</td>
-                    <td className="px-4 py-2 text-[11px] text-gray-500">{r.voucher_type}</td>
-                    <td className="px-4 py-2 text-right font-mono text-[11px] text-gray-700">{r.debit ? inr(r.debit) : '-'}</td>
-                    <td className="px-4 py-2 text-right font-mono text-[11px] text-gray-700">{r.credit ? inr(r.credit) : '-'}</td>
-                    <td className="px-4 py-2 text-right font-mono text-[11px] font-semibold text-gray-800">{inr(r.running_balance)} {r.balance_type}</td>
+                  <tr key={i}>
+                    <td><span className="font-mono">{r.date}</span></td>
+                    <td className="max-w-[260px] truncate">{r.particulars}</td>
+                    <td>{r.voucher_type}</td>
+                    <td className="r">{r.debit ? inr(r.debit) : '—'}</td>
+                    <td className="r">{r.credit ? inr(r.credit) : '—'}</td>
+                    <td className="r font-semibold">{inr(r.running_balance)} {r.balance_type}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       )}
+
+      {adding && (
+        <AddBankAccountDialog
+          companyId={companyId}
+          onCreated={() => { setAdding(false); setRegistryTick((t) => t + 1); }}
+          onClose={() => setAdding(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Stat tile — eyebrow label over an Inter figure (the bills KpiTile look). */
+function Kpi({ label, value, suffix }: { label: string; value: string; suffix?: string }) {
+  return (
+    <div className="rounded-[14px] border border-[var(--sand)] bg-white p-4 shadow-[var(--shadow-rest)]">
+      <p className="eyebrow">{label}</p>
+      <p className="mt-2 font-mono text-[21px] font-semibold leading-none text-[var(--ink)] proportional-nums">
+        {value}
+        {suffix && <span className="ml-1 text-[11px] font-medium text-[var(--ink-3)]">{suffix}</span>}
+      </p>
+    </div>
+  );
+}
+
+/** No bank or cash ledger at all yet — the one thing to do here is add the bank account. */
+function NoAccounts({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center px-6 py-14 text-center">
+      <span className="icon-badge mb-4"><Landmark className="h-5 w-5" /></span>
+      <h3>No bank accounts yet</h3>
+      <p className="mt-2 max-w-sm text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+        Add the company's current or savings account. It becomes a ledger under Bank Accounts,
+        ready for receipts, payments and bank reconciliation.
+      </p>
+      <button type="button" onClick={onAdd} className="btn-pill-primary mt-5">
+        <Plus className="h-4 w-4" /> Add Bank Account
+      </button>
     </div>
   );
 }

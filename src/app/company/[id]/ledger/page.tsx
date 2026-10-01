@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -12,6 +13,8 @@ import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { exportElementAsImagePDF } from '@/components/export/exportUtils';
 import { ManualEntryDialog } from '@/components/entries/ManualEntryDialog';
+import { NewAccountDialog } from '@/components/entries/AccountComboBox';
+import { findExistingAccountName, normalizeAccountName } from '@/lib/chartOfAccounts';
 import { getCurrentFY } from '@/lib/utils/dateUtils';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
@@ -21,9 +24,15 @@ import type { LedgerRow } from '@/lib/accounting/ledgerCompute';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { AccountBalance } from '@/lib/accounting/computeEngine';
 import type { EntityType } from '@/types/company';
-import { listJournalEntries, deleteJournalEntry, updateAccountGroupInAllEntries, updateJournalEntry } from '@/lib/offlineDb';
-import { LEDGER_GROUPS } from '@/lib/coa';
-import type { PrimaryGroup } from '@/lib/coa';
+import {
+  listJournalEntries, deleteJournalEntry, updateAccountGroupInAllEntries, updateJournalEntry,
+  getCustomAccounts, registerCustomAccount, renameCustomAccount, deleteCustomAccount,
+} from '@/lib/offlineDb';
+import { LEDGER_GROUPS, getGroupByScheduleIII } from '@/lib/coa';
+import type { PrimaryGroup, JournalNature } from '@/lib/coa';
+
+/** Accounts match by name regardless of case and spacing ("Sudhir " == "sudhir"). */
+const accountKey = (name: string) => normalizeAccountName(name).toLowerCase();
 
 // ── Edit Group Dialog ────────────────────────────────────────────────────────
 
@@ -167,6 +176,16 @@ function RenameAccountDialog({ accountName, companyId, onClose }: {
         l.account_name === accountName ? { ...l, account_name: trimmed } : l
       );
       updateJournalEntry(entry.id, { lines: updatedLines });
+    }
+    // The registered account moves too — the list shows registered accounts
+    // that have no entries, so the old name would otherwise linger there (and a
+    // ledger with no entries yet could not be renamed at all). Renaming onto an
+    // account that is already registered merges into it.
+    const custom = getCustomAccounts(companyId);
+    const reg = custom.find(a => accountKey(a.name) === accountKey(accountName));
+    if (reg) {
+      if (custom.some(a => a.id !== reg.id && accountKey(a.name) === accountKey(trimmed))) deleteCustomAccount(companyId, reg.id);
+      else renameCustomAccount(companyId, reg.id, trimmed);
     }
     onClose();
   };
@@ -317,6 +336,10 @@ export default function LedgerPage() {
   const [moveTxDialog, setMoveTxDialog] = useState<{ entryId: string; accountName: string } | null>(null);
   const [bulkMoveDialog, setBulkMoveDialog] = useState(false);
   const [renameDialog, setRenameDialog] = useState<{ accountName: string } | null>(null);
+  const [showNewLedger, setShowNewLedger] = useState(false);
+  // Bumped when this page changes the account registry (new ledger, rename) —
+  // the registry raises no change event of its own.
+  const [registryTick, setRegistryTick] = useState(0);
   const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set());
   const lastSelectedIdxRef = useRef<number | null>(null);
   const detailRef = useRef<HTMLDivElement | null>(null);
@@ -328,10 +351,30 @@ export default function LedgerPage() {
     enabled: !!companyId,
   });
 
-  // The ledger lists only accounts that appear in at least one journal entry.
-  // Custom-registered accounts with no postings stay available in the entry
-  // dialogs' account dropdowns, but don't occupy a ledger row until used.
-  const balances = useMemo((): AccountBalance[] => computeAllBalances(entries), [entries]);
+  // Every entry of the company, whatever the period — re-read whenever the
+  // entries in view change.
+  const allEntries = useMemo(() => (companyId ? listJournalEntries(companyId) : []), [companyId, entries]);
+
+  // Registered (custom) accounts with no postings at all yet, in any period.
+  const unusedAccounts = useMemo(() => {
+    if (!companyId) return [];
+    const used = new Set<string>();
+    for (const e of allEntries) for (const l of e.lines) used.add(accountKey(l.account_name));
+    return getCustomAccounts(companyId).filter(a => !used.has(accountKey(a.name)));
+  }, [companyId, allEntries, registryTick]);
+  const unusedNames = useMemo(() => new Set(unusedAccounts.map(a => a.name)), [unusedAccounts]);
+
+  // The ledger lists every account posted in the period, plus the unused
+  // registered accounts above at nil — so a ledger made with "New Ledger" shows
+  // up straight away. An account whose postings all fall outside the period
+  // still drops out of the list, as before.
+  const balances = useMemo((): AccountBalance[] => [
+    ...computeAllBalances(entries),
+    ...unusedAccounts.map((a): AccountBalance => ({
+      account_name: a.name, account_group: a.account_group, nature: a.nature,
+      total_debit: 0, total_credit: 0, balance: 0, balance_type: 'Dr',
+    })),
+  ], [entries, unusedAccounts]);
 
   const sortedBalances = useMemo(
     () => [...balances].sort((a, b) => a.account_name.localeCompare(b.account_name)),
@@ -348,12 +391,10 @@ export default function LedgerPage() {
   }, [entries]);
 
   const allRange = useMemo(() => {
-    if (!companyId) return null;
-    const all = listJournalEntries(companyId);
-    if (!all.length) return null;
-    const dates = all.map((e) => e.entry_date).sort();
+    if (!allEntries.length) return null;
+    const dates = allEntries.map((e) => e.entry_date).sort();
     return { from: dates[0], to: dates[dates.length - 1] };
-  }, [companyId, entries]);
+  }, [allEntries]);
 
   // Auto-expand date range so entries outside default FY are visible
   const rangeExpanded = useRef(false);
@@ -584,6 +625,22 @@ export default function LedgerPage() {
     setBulkMoveDialog(false);
   };
 
+  // Same create flow as the account picker's "+ Create" (handleNewAccount in
+  // AccountComboBox): one ledger per name, registered so it exists before —
+  // and after — any entry uses it. A duplicate keeps the dialog open to rename.
+  const handleNewLedger = (name: string, _primaryGroup: PrimaryGroup, subGroup: string) => {
+    if (!companyId) return;
+    const normalized = normalizeAccountName(name);
+    const existing = findExistingAccountName(companyId, normalized);
+    if (existing) { toast.error(`A ledger named “${existing}” already exists`); return; }
+    const group = getGroupByScheduleIII(subGroup);
+    const nature: JournalNature = group?.nature ?? 'expense';
+    registerCustomAccount(companyId, normalized, subGroup, nature);
+    setShowNewLedger(false);
+    setRegistryTick(t => t + 1);
+    toast.success(`Ledger “${normalized}” created`);
+  };
+
   if (companyLoading || !company) {
     return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -613,7 +670,7 @@ export default function LedgerPage() {
       account_name: b.account_name,
       total_debit: b.total_debit,
       total_credit: b.total_credit,
-      balance_display: `${formatIndianCurrency(b.balance)} ${b.balance_type}`,
+      balance_display: unusedNames.has(b.account_name) ? formatIndianCurrency(0) : `${formatIndianCurrency(b.balance)} ${b.balance_type}`,
     }));
 
     return (
@@ -627,6 +684,9 @@ export default function LedgerPage() {
               allRange={allRange}
             />
             <div className="flex items-center gap-2">
+              <button onClick={() => setShowNewLedger(true)} className="btn-pill-outline !h-8 !text-xs">
+                <Plus className="h-3.5 w-3.5" /> New Ledger
+              </button>
               <button onClick={() => setShowNewEntry(true)} className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <Plus className="h-3.5 w-3.5" /> New Entry
               </button>
@@ -644,7 +704,7 @@ export default function LedgerPage() {
               <p className="text-xs text-gray-400 mt-0.5">{fromDate} to {toDate}</p>
             </div>
             {balances.length === 0 ? (
-              <div className="text-center py-14"><p className="text-sm text-gray-400">No ledger accounts found. Create journal entries first.</p></div>
+              <div className="text-center py-14"><p className="text-sm text-gray-400">No ledger accounts yet. Create one with New Ledger, or post a journal entry.</p></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -658,29 +718,40 @@ export default function LedgerPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedBalances.map((b, i) => (
-                      <tr
-                        key={b.account_name}
-                        className={`border-b border-gray-100 hover:bg-blue-50/40 cursor-pointer transition-colors ${i % 2 === 1 ? 'bg-gray-50/30' : ''}`}
-                        onClick={() => {
-                          setSelectedAccount(b.account_name);
-                          setViewMode('running');
-                          setSearchParams({ account: b.account_name, view: 'running' });
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setAcctCtxMenu({ x: e.clientX, y: e.clientY, accountName: b.account_name });
-                        }}
-                      >
-                        <td className="px-3 py-2 text-xs text-gray-400">{i + 1}</td>
-                        <td className="px-3 py-2 font-medium text-blue-600 text-sm">{b.account_name}</td>
-                        <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-dr">{b.total_debit > 0 ? formatIndianCurrency(b.total_debit) : ''}</td>
-                        <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-cr">{b.total_credit > 0 ? formatIndianCurrency(b.total_credit) : ''}</td>
-                        <td className={`px-3 py-2 text-right font-mono text-[13px] tabular-nums font-semibold ${b.balance_type === 'Dr' ? 'text-dr' : 'text-cr'}`}>
-                          {formatIndianCurrency(b.balance)} <span className="text-[10px] text-gray-400">{b.balance_type}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {sortedBalances.map((b, i) => {
+                      // A registered ledger nothing has been posted to yet: nil, no Dr/Cr.
+                      const unused = unusedNames.has(b.account_name);
+                      return (
+                        <tr
+                          key={b.account_name}
+                          className={`border-b border-gray-100 hover:bg-blue-50/40 cursor-pointer transition-colors ${i % 2 === 1 ? 'bg-gray-50/30' : ''}`}
+                          onClick={() => {
+                            setSelectedAccount(b.account_name);
+                            setViewMode('running');
+                            setSearchParams({ account: b.account_name, view: 'running' });
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setAcctCtxMenu({ x: e.clientX, y: e.clientY, accountName: b.account_name });
+                          }}
+                        >
+                          <td className="px-3 py-2 text-xs text-gray-400">{i + 1}</td>
+                          <td className="px-3 py-2 font-medium text-blue-600 text-sm">
+                            {b.account_name}
+                            {unused && <span className="status-idle ml-2 align-middle">No entries</span>}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-dr">{b.total_debit > 0 ? formatIndianCurrency(b.total_debit) : ''}</td>
+                          <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-cr">{b.total_credit > 0 ? formatIndianCurrency(b.total_credit) : ''}</td>
+                          {unused ? (
+                            <td className="px-3 py-2 text-right font-mono text-[13px] tabular-nums text-gray-400">{formatIndianCurrency(0)}</td>
+                          ) : (
+                            <td className={`px-3 py-2 text-right font-mono text-[13px] tabular-nums font-semibold ${b.balance_type === 'Dr' ? 'text-dr' : 'text-cr'}`}>
+                              {formatIndianCurrency(b.balance)} <span className="text-[10px] text-gray-400">{b.balance_type}</span>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -694,6 +765,10 @@ export default function LedgerPage() {
           companyId={companyId || ''}
           onSave={handleSave}
         />
+
+        {showNewLedger && (
+          <NewAccountDialog name="" onConfirm={handleNewLedger} onCancel={() => setShowNewLedger(false)} />
+        )}
 
         {/* Account right-click context menu (list view) */}
         {acctCtxMenu && (
@@ -735,7 +810,8 @@ export default function LedgerPage() {
             companyId={companyId || ''} onClose={() => setEditGroupDialog(null)} />
         )}
         {renameDialog && (
-          <RenameAccountDialog accountName={renameDialog.accountName} companyId={companyId || ''} onClose={() => setRenameDialog(null)} />
+          <RenameAccountDialog accountName={renameDialog.accountName} companyId={companyId || ''}
+            onClose={() => { setRenameDialog(null); setRegistryTick(t => t + 1); }} />
         )}
       </div>
     );
@@ -1213,7 +1289,7 @@ export default function LedgerPage() {
         <RenameAccountDialog
           accountName={renameDialog.accountName}
           companyId={companyId || ''}
-          onClose={() => setRenameDialog(null)}
+          onClose={() => { setRenameDialog(null); setRegistryTick(t => t + 1); }}
         />
       )}
     </div>

@@ -5,6 +5,9 @@ import React, { Component, type ReactNode } from 'react';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /** A caught error clears when this changes. The company layout passes the
+   *  pathname, so one page that threw doesn't blank every page after it. */
+  resetKey?: unknown;
 }
 
 interface State {
@@ -20,6 +23,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   render() {

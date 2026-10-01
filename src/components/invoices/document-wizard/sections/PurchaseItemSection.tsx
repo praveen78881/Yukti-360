@@ -7,6 +7,7 @@ import type { PurchaseFields } from '../useDocumentState';
 import type { DocumentMode, PurchaseTotals } from '../types';
 import { Trash2 } from 'lucide-react';
 import { Switch, inr } from '../ui';
+import { HsnField } from './HsnField';
 
 interface PurchaseItemSectionProps {
   fields: PurchaseFields;
@@ -64,7 +65,14 @@ export function PurchaseItemSection({ fields, updateField, mode, invalidFields, 
             value={fields.itemDescription}
             onChange={(e) => updateField('itemDescription', e.target.value)}
           />
-          <input aria-label="HSN or SAC" className="yk-in sm mono" value={fields.itemHsn} onChange={(e) => updateField('itemHsn', e.target.value)} />
+          <HsnField
+            ariaLabel="HSN or SAC"
+            value={fields.itemHsn}
+            description={fields.itemDescription}
+            onSuggestDescription={(description) => updateField('itemDescription', description)}
+            onChange={(hsn) => updateField('itemHsn', hsn)}
+            invalid={invalidFields?.includes('itemHsn')}
+          />
           <input aria-label="Quantity" type="number" className="yk-in sm num" value={fields.itemQty} onChange={(e) => updateField('itemQty', e.target.value)} min={0} />
           <input aria-label="Rate" type="number" className="yk-in sm num" value={Number(fields.itemRate) === 0 ? '' : fields.itemRate} onChange={(e) => updateField('itemRate', e.target.value)} min={0} />
           <input

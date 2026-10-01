@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TAccountFormat } from '@/components/formats/TAccountFormat';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
-import { getCurrentFY } from '@/lib/utils/dateUtils';
+import { useReportDateRange } from '@/hooks/useReportDateRange';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { computeAllBalances } from '@/lib/accounting/computeEngine';
@@ -15,9 +15,7 @@ import type { EntityType } from '@/types/company';
 
 export default function IncomeExpenditurePage() {
   const { company, companyId, loading: companyLoading } = useCompany();
-  const fy = getCurrentFY();
-  const [fromDate, setFromDate] = useState(fy.start);
-  const [toDate, setToDate] = useState(fy.end);
+  const { fromDate, toDate, setFromDate, setToDate } = useReportDateRange(companyId);
 
   const { entries, loading } = useJournalEntries({
     companyId: companyId || '',

@@ -4,6 +4,9 @@ import { useMemo, useState } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { ScheduleIIIAgeingCard } from '@/components/formats/ScheduleIIIAgeingCard';
+import { useAgeingBasis, useInvoiceDueDates } from '@/components/bills/ageingBasis';
+import { localISODate } from '@/components/bills/shared/format';
 import { computeCreditorAgeing } from '@/lib/accounting/ageingCompute';
 
 function inr(n: number): string {
@@ -38,18 +41,20 @@ export default function CreditorsPage() {
   const { company, companyId, loading } = useCompany();
   const { entries, loading: entriesLoading } = useJournalEntries({ companyId: companyId || '', enabled: !!companyId });
   const [selectedParty, setSelectedParty] = useState<string | null>(null);
+  const [basis, setBasis] = useAgeingBasis();
+  const dueDates = useInvoiceDueDates(companyId, 'payable');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate();
 
   const ageingRows = useMemo(() => {
     if (!entries.length) return [];
-    return computeCreditorAgeing(entries, today, 'schedule_iii')
+    return computeCreditorAgeing(entries, today, 'schedule_iii', { basis, dueDates })
       .sort((a, b) => b.ageing.total - a.ageing.total);
-  }, [entries, today]);
+  }, [entries, today, basis, dueDates]);
 
   const totalOutstanding = ageingRows.reduce((s, r) => s + r.ageing.total, 0);
   const partyCount = ageingRows.length;
-  const over6m = ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing ? r.scheduleIIIAgeing.total - r.scheduleIIIAgeing.lessThan6Months : r.ageing.days_over_180), 0);
+  const over6m = ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing ? r.scheduleIIIAgeing.total - r.scheduleIIIAgeing.lessThan6Months - (r.scheduleIIIAgeing.notYetDue ?? 0) : r.ageing.days_over_180), 0);
 
   const selectedRow = ageingRows.find((r) => r.accountName === selectedParty) || null;
   const selectedInvoices = useMemo(() => {
@@ -83,7 +88,7 @@ export default function CreditorsPage() {
           <p className={`mt-1 font-mono text-2xl font-bold tabular-nums ${over6m > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
             <span className="text-sm text-gray-400">&#8377;</span>{inr(over6m)}
           </p>
-          <p className="mt-0.5 text-[11px] text-gray-500">Long outstanding</p>
+          <p className="mt-0.5 text-[11px] text-gray-500">{basis === 'due' ? 'Over 6 months past due' : 'Long outstanding'}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Suppliers</p>
@@ -93,77 +98,17 @@ export default function CreditorsPage() {
       </div>
 
       {/* Ageing Table */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
-          <h3 className="text-sm font-bold text-gray-800">Creditors Ageing (Schedule III)</h3>
-          <span className="text-[11px] text-gray-400">As at {today}</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-xs">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Party Name</th>
-                <th className="px-3 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">&lt; 6 Months</th>
-                <th className="px-3 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">6m - 1 Year</th>
-                <th className="px-3 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">1 - 2 Years</th>
-                <th className="px-3 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">2 - 3 Years</th>
-                <th className="px-3 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">&gt; 3 Years</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ageingRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-xs text-gray-400">
-                    No outstanding creditors. All payables are settled.
-                  </td>
-                </tr>
-              ) : (
-                <>
-                  {ageingRows.map((row) => {
-                    const s3 = row.scheduleIIIAgeing!;
-                    return (
-                      <tr
-                        key={row.accountName}
-                        onClick={() => setSelectedParty(row.accountName)}
-                        className={`cursor-pointer border-t border-gray-50 transition-colors ${selectedParty === row.accountName ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'}`}
-                      >
-                        <td className="px-4 py-2.5 text-[11px] font-semibold text-gray-800 max-w-[200px] truncate">{row.accountName}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-700">{s3.lessThan6Months ? inr(s3.lessThan6Months) : '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-700">{s3.sixMonthsTo1Year ? inr(s3.sixMonthsTo1Year) : '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-700">{s3.oneYearTo2Years ? inr(s3.oneYearTo2Years) : '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-700">{s3.twoYearsTo3Years ? inr(s3.twoYearsTo3Years) : '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-700">{s3.moreThan3Years ? inr(s3.moreThan3Years) : '-'}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(s3.total)}</td>
-                      </tr>
-                    );
-                  })}
-                  {/* Totals row */}
-                  <tr className="border-t-2 border-gray-200 bg-gray-50/50 font-bold">
-                    <td className="px-4 py-2.5 text-[11px] text-gray-700">Total</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-900">
-                      {inr(ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing?.lessThan6Months || 0), 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-900">
-                      {inr(ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing?.sixMonthsTo1Year || 0), 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-900">
-                      {inr(ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing?.oneYearTo2Years || 0), 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-900">
-                      {inr(ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing?.twoYearsTo3Years || 0), 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[11px] text-gray-900">
-                      {inr(ageingRows.reduce((s, r) => s + (r.scheduleIIIAgeing?.moreThan3Years || 0), 0))}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-[11px] text-gray-900">{inr(totalOutstanding)}</td>
-                  </tr>
-                </>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ScheduleIIIAgeingCard
+        title="Creditors Ageing (Schedule III)"
+        rows={ageingRows}
+        asAt={today}
+        nameHeader="Party Name"
+        emptyText="No outstanding creditors. All payables are settled."
+        basis={basis}
+        onBasisChange={setBasis}
+        onSelect={setSelectedParty}
+        selectedName={selectedParty}
+      />
 
       {/* Slide-Out Drawer — party detail */}
       {selectedRow && (
@@ -202,6 +147,7 @@ export default function CreditorsPage() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Ageing Breakdown</p>
                   <div className="space-y-1.5">
                     {[
+                      { label: 'Not Yet Due', value: selectedRow.scheduleIIIAgeing.notYetDue ?? 0 },
                       { label: '< 6 Months', value: selectedRow.scheduleIIIAgeing.lessThan6Months },
                       { label: '6m - 1 Year', value: selectedRow.scheduleIIIAgeing.sixMonthsTo1Year },
                       { label: '1 - 2 Years', value: selectedRow.scheduleIIIAgeing.oneYearTo2Years },
@@ -226,17 +172,20 @@ export default function CreditorsPage() {
                   <p className="text-[11px] text-gray-400 italic">No transactions found</p>
                 ) : (
                   <div className="space-y-1">
-                    {selectedInvoices.map((inv, i) => (
-                      <div key={i} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
-                        <div>
-                          <p className="font-mono text-[11px] font-semibold text-gray-800">{inv.voucherNo}</p>
-                          <p className="text-[10px] text-gray-400">{inv.date} &middot; {inv.type}</p>
+                    {selectedInvoices.map((inv, i) => {
+                      const due = inv.amount > 0 ? dueDates.get(inv.voucherNo) : undefined;
+                      return (
+                        <div key={i} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
+                          <div>
+                            <p className="font-mono text-[11px] font-semibold text-gray-800">{inv.voucherNo}</p>
+                            <p className="text-[10px] text-gray-400">{inv.date} &middot; {inv.type}{due && <> &middot; Due {due}</>}</p>
+                          </div>
+                          <span className={`font-mono text-[11px] font-bold ${inv.amount > 0 ? 'text-gray-900' : 'text-emerald-600'}`}>
+                            {inv.amount > 0 ? '' : '-'}{inr(Math.abs(inv.amount))}
+                          </span>
                         </div>
-                        <span className={`font-mono text-[11px] font-bold ${inv.amount > 0 ? 'text-gray-900' : 'text-emerald-600'}`}>
-                          {inv.amount > 0 ? '' : '-'}{inr(Math.abs(inv.amount))}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

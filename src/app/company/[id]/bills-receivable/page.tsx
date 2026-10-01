@@ -5,6 +5,8 @@ import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ScheduleIIIAgeingCard } from '@/components/formats/ScheduleIIIAgeingCard';
+import { useAgeingBasis, useInvoiceDueDates } from '@/components/bills/ageingBasis';
+import { daysBetween, localISODate } from '@/components/bills/shared/format';
 import { computeDebtorAgeing } from '@/lib/accounting/ageingCompute';
 import {
   listInvoicesV2,
@@ -36,10 +38,9 @@ interface ReceivableRow {
   source: 'v2' | 'legacy';
 }
 
-function daysOverdue(dueDate: string): number {
-  if (!dueDate) return 0;
-  const diff = Date.now() - new Date(dueDate).getTime();
-  return diff > 0 ? Math.floor(diff / 86400000) : 0;
+/** Whole days past `dueDate` as at `today` (0 when not yet due or no due date). */
+function daysOverdue(dueDate: string, today: string): number {
+  return dueDate ? Math.max(0, daysBetween(dueDate, today)) : 0;
 }
 
 export default function BillsReceivablePage() {
@@ -47,12 +48,18 @@ export default function BillsReceivablePage() {
   const { entries } = useJournalEntries({ companyId: companyId || '', enabled: !!companyId });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [basis, setBasis] = useAgeingBasis();
+  const dueDates = useInvoiceDueDates(companyId, 'receivable');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate();
   const debtorAgeing = useMemo(
-    () => (entries.length ? computeDebtorAgeing(entries, today, 'schedule_iii').sort((a, b) => b.ageing.total - a.ageing.total) : []),
-    [entries, today],
+    () => (entries.length ? computeDebtorAgeing(entries, today, 'schedule_iii', { basis, dueDates }).sort((a, b) => b.ageing.total - a.ageing.total) : []),
+    [entries, today, basis, dueDates],
   );
+
+  /** Days O/s on the chosen basis: since the bill date, or past the due date
+      (the bill date when there's none) — negative while not yet due. */
+  const daysOutstanding = (r: ReceivableRow) => daysBetween(basis === 'due' && r.dueDate ? r.dueDate : r.date, today);
 
   useEffect(() => {
     const handler = () => setTick((x) => x + 1);
@@ -67,7 +74,7 @@ export default function BillsReceivablePage() {
       .filter((inv) => inv.doc_type !== 'CREDIT_NOTE' && (inv.amount_pending ?? 0) > 0)
       .map((inv: InvoiceV2) => {
         const due = inv.due_date || '';
-        const od = daysOverdue(due);
+        const od = daysOverdue(due, today);
         return {
           id: inv.id,
           date: inv.invoice_date,
@@ -90,7 +97,7 @@ export default function BillsReceivablePage() {
       .filter((inv) => (inv.amount_pending ?? 0) > 0)
       .map((inv: SalesInvoice) => {
         const due = inv.due_date || '';
-        const od = daysOverdue(due);
+        const od = daysOverdue(due, today);
         return {
           id: inv.id,
           date: inv.invoice_date,
@@ -110,7 +117,7 @@ export default function BillsReceivablePage() {
       });
 
     return [...v2Rows, ...legacyRows].sort((a, b) => b.date.localeCompare(a.date));
-  }, [companyId, tick]);
+  }, [companyId, tick, today]);
 
   const selected = rows.find((r) => r.id === selectedId) || null;
 
@@ -179,7 +186,12 @@ export default function BillsReceivablePage() {
                 <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Party</th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Pending</th>
                 <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Due Date</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Days O/s</th>
+                <th
+                  className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400"
+                  title={basis === 'due' ? 'Days past the due date (the bill date when there is none)' : 'Days since the bill date'}
+                >
+                  {basis === 'due' ? 'Days Past Due' : 'Days O/s'}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -190,33 +202,42 @@ export default function BillsReceivablePage() {
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
-                  <tr
-                    key={r.id}
-                    onClick={() => setSelectedId(r.id)}
-                    className={`cursor-pointer border-t border-gray-50 transition-colors ${selectedId === r.id ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'}`}
-                  >
-                    <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.date}</td>
-                    <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-gray-800">{r.invoiceNo}</td>
-                    <td className="max-w-[200px] truncate px-4 py-2.5 text-[11px] font-medium text-gray-700">{r.party}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(r.pending)}</td>
-                    <td className="px-4 py-2.5 text-[11px]">
-                      {r.dueDate ? (
-                        <span className={`inline-flex items-center gap-1 font-mono ${r.isOverdue ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
-                          {r.dueDate}
-                          {r.isOverdue && (
-                            <span className="rounded bg-red-50 px-1 py-px text-[9px] font-bold text-red-500">{r.overdueDays}d</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-[11px]">
-                      {r.overdueDays > 0 ? <span className="font-semibold text-red-600">{r.overdueDays}</span> : <span className="text-gray-300">0</span>}
-                    </td>
-                  </tr>
-                ))
+                rows.map((r) => {
+                  const days = daysOutstanding(r);
+                  return (
+                    <tr
+                      key={r.id}
+                      onClick={() => setSelectedId(r.id)}
+                      className={`cursor-pointer border-t border-gray-50 transition-colors ${selectedId === r.id ? 'bg-blue-50/60' : 'hover:bg-gray-50/60'}`}
+                    >
+                      <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.date}</td>
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-gray-800">{r.invoiceNo}</td>
+                      <td className="max-w-[200px] truncate px-4 py-2.5 text-[11px] font-medium text-gray-700">{r.party}</td>
+                      <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(r.pending)}</td>
+                      <td className="px-4 py-2.5 text-[11px]">
+                        {r.dueDate ? (
+                          <span className={`inline-flex items-center gap-1 font-mono ${r.isOverdue ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
+                            {r.dueDate}
+                            {r.isOverdue && (
+                              <span className="rounded bg-red-50 px-1 py-px text-[9px] font-bold text-red-500">{r.overdueDays}d</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono text-[11px]">
+                        {basis === 'due' && days < 0 ? (
+                          <span className="font-sans text-gray-400">Not due</span>
+                        ) : days > 0 ? (
+                          <span className={r.isOverdue ? 'font-semibold text-red-600' : 'text-gray-700'}>{days}</span>
+                        ) : (
+                          <span className="text-gray-300">0</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -230,6 +251,8 @@ export default function BillsReceivablePage() {
         asAt={today}
         nameHeader="Party Name"
         emptyText="No outstanding debtors. All receivables are settled."
+        basis={basis}
+        onBasisChange={setBasis}
       />
 
       {/* ── Slide-Out Drawer ── */}

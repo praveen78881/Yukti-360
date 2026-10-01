@@ -9,7 +9,7 @@ import { VerticalStatementFormat } from '@/components/formats/VerticalStatementF
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { exportElementAsImagePDF } from '@/components/export/exportUtils';
-import { getCurrentFY } from '@/lib/utils/dateUtils';
+import { useReportDateRange } from '@/hooks/useReportDateRange';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { getEntityConfig } from '@/lib/entityConfig';
@@ -18,7 +18,6 @@ import { computeProfitLoss } from '@/lib/accounting/profitLossCompute';
 import { computeBalanceSheet, computeScheduleIIIBalanceSheet } from '@/lib/accounting/balanceSheetCompute';
 import { BsNotesDrawer } from '@/components/financials/BsNotesDrawer';
 import type { EntityType } from '@/types/company';
-import { listJournalEntries } from '@/lib/offlineDb';
 import { loadPyValues, savePyValues, type PyValues } from '@/lib/accounting/pyOverrides';
 
 /** Maps each BS Schedule III label → scheduleIII group strings for the notes drawer */
@@ -56,9 +55,7 @@ function subtractOneYear(date: string): string {
 
 export default function BalanceSheetPage() {
   const { company, companyId, loading: companyLoading } = useCompany();
-  const fy = getCurrentFY();
-  const [fromDate, setFromDate] = useState(fy.start);
-  const [toDate, setToDate] = useState(fy.end);
+  const { fromDate, toDate, setFromDate, setToDate } = useReportDateRange(companyId, { cumulative: true });
 
   // Previous year date range (1 FY prior)
   const prevFromDate = subtractOneYear(fromDate);
@@ -85,24 +82,6 @@ export default function BalanceSheetPage() {
   // Previous year profit (for balance sheet retained earnings)
   const prevTradingAccount = useMemo(() => computeTradingAccount(prevEntries), [prevEntries]);
   const prevProfitLoss = useMemo(() => computeProfitLoss(prevEntries, prevTradingAccount.grossProfit), [prevEntries, prevTradingAccount.grossProfit]);
-
-  const allRange = useMemo(() => {
-    if (!companyId) return null;
-    const all = listJournalEntries(companyId);
-    if (!all.length) return null;
-    const dates = all.map((e) => e.entry_date).sort();
-    return { from: dates[0], to: dates[dates.length - 1] };
-  }, [companyId, entries]);
-
-  // Auto-expand date range so entries outside default FY are visible
-  const rangeExpanded = useRef(false);
-  useEffect(() => {
-    if (!allRange || rangeExpanded.current) return;
-    let changed = false;
-    if (allRange.from < fromDate) { setFromDate(allRange.from); changed = true; }
-    if (allRange.to > toDate) { setToDate(allRange.to); changed = true; }
-    if (changed) rangeExpanded.current = true;
-  }, [allRange, fromDate, toDate]);
 
   if (companyLoading || !company) {
     return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;

@@ -24,7 +24,8 @@ const PG_COLORS: Record<PrimaryGroup, { card: string; badge: string; border: str
   'Expenses':             { card: 'hover:border-red-300 hover:bg-red-50',     badge: 'bg-red-100 text-red-700',     border: 'border-red-300 bg-red-50' },
 };
 
-function NewAccountDialog({ name, onConfirm, onCancel }: NewAccountDialogProps) {
+/** Also opened on its own by the Ledger page's "New Ledger" button. */
+export function NewAccountDialog({ name, onConfirm, onCancel }: NewAccountDialogProps) {
   const [accountName, setAccountName] = useState(name);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [activePG, setActivePG] = useState<PrimaryGroup>('Assets');

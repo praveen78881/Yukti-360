@@ -1,17 +1,21 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Menu } from 'lucide-react';
+import { ChevronLeft, Menu, Search } from 'lucide-react';
 import { useCompany } from '@/hooks/useCompany';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
 import { runBackInterceptor } from '@/lib/appBack';
+import { GO_TO_ARIA, GO_TO_KEYS } from '@/lib/shortcuts';
 import { BrandLogo } from './BrandLogo';
+import { Keys } from './ShortcutHelp';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
   onAlezaToggle?: () => void;
   alezaOpen?: boolean;
+  /** Opens Go to — the button twin of Ctrl/⌘ K. */
+  onGoTo?: () => void;
 }
 
-export function Header({ onMenuToggle, onAlezaToggle, alezaOpen }: HeaderProps) {
+export function Header({ onMenuToggle, onAlezaToggle, alezaOpen, onGoTo }: HeaderProps) {
   const { company, loading } = useCompany();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -92,6 +96,23 @@ export function Header({ onMenuToggle, onAlezaToggle, alezaOpen }: HeaderProps) 
       </span>
 
       <div className="flex-1" />
+
+      {/* Go to — wears its key so the shortcut teaches itself. Not on phones:
+          no keyboard there, and the drawer has its own search. */}
+      {onGoTo && (
+        <button
+          type="button"
+          onClick={onGoTo}
+          className="hidden sm:inline-flex h-8 items-center gap-2 pl-3 pr-1.5 rounded-full text-[var(--ink-2)] border-[1.5px] border-[var(--sand)] bg-white/60 hover:border-[var(--sand-2)] hover:text-[var(--navy)] transition-colors duration-[160ms] shrink-0"
+          title={`Go to a page (${GO_TO_KEYS.join(' ')}) · ? lists every shortcut`}
+          aria-label="Go to a page"
+          aria-keyshortcuts={GO_TO_ARIA}
+        >
+          <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} />
+          <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.14em]">Go to</span>
+          <Keys keys={GO_TO_KEYS} />
+        </button>
+      )}
 
       {onAlezaToggle && (
         <button

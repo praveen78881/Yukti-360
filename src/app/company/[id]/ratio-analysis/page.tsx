@@ -1,12 +1,12 @@
  'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
 import { ExportButtons } from '@/components/export/ExportButtons';
-import { getCurrentFY } from '@/lib/utils/dateUtils';
+import { useReportDateRange } from '@/hooks/useReportDateRange';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import type { EntityType } from '@/types/company';
 import { computeRatioAnalysis } from '@/lib/accounting/ratioAnalysisCompute';
@@ -14,9 +14,7 @@ import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 
 export default function RatioAnalysisPage() {
   const { company, companyId, loading: companyLoading } = useCompany();
-  const fy = getCurrentFY();
-  const [fromDate, setFromDate] = useState(fy.start);
-  const [toDate, setToDate] = useState(fy.end);
+  const { fromDate, toDate, setFromDate, setToDate } = useReportDateRange(companyId);
 
   const { entries, loading } = useJournalEntries({
     companyId: companyId || '',
