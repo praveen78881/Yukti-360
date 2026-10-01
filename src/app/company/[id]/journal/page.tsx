@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Search, Download, FileDown, FileText, FileSpreadsheet, Loader2, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, Download, FileDown, FileText, FileSpreadsheet, Loader2, SlidersHorizontal } from 'lucide-react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -13,12 +13,20 @@ import { ManualEntryDialog } from '@/components/entries/ManualEntryDialog';
 import { getCurrentFY } from '@/lib/utils/dateUtils';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { AlertBanner } from '@/components/layout/AlertBanner';
-import { getJournalDateRange, deleteJournalEntry, listJournalEntries } from '@/lib/offlineDb';
-import { generateUniqueEntryCode } from '@/lib/utils/entryCodeGenerator';
-import { buildJournalPayload, parseJournalJson, bookPeriodFromDate } from '@/lib/accounting/journalTransfer';
+import { getJournalDateRange, deleteJournalEntry } from '@/lib/offlineDb';
 import type { EntityType } from '@/types/company';
-import type { JournalLine } from '@/types/journal';
 import type { JournalEntry as ComputeJournalEntry } from '@/lib/accounting/computeEngine';
+
+/** The code filter matches stored codes by substring (JE00001…). The table now
+ *  shows voucher numbers as JE001, so a 3–4 digit "JE…" query is read as that
+ *  voucher number exactly (JE001 → JE00001); otherwise the query is used as typed.
+ *  Without this, "JE001" would substring-match JE00100–JE00199 instead of entry 1. */
+function normalizeEntryCodeQuery(raw: string): string | undefined {
+  const q = raw.trim();
+  if (!q) return undefined;
+  const m = /^JE(\d{3,4})$/i.exec(q);
+  return m ? `JE${String(Number(m[1])).padStart(5, '0')}` : q;
+}
 
 
 export default function JournalPage() {
@@ -35,7 +43,6 @@ export default function JournalPage() {
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [showTransferMenu, setShowTransferMenu] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState<string | null>(null);
   const transferMenuRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
@@ -102,7 +109,7 @@ export default function JournalPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 500;
 
-  const entryCodeQuery = entryCodeFilter.trim() || undefined;
+  const entryCodeQuery = normalizeEntryCodeQuery(entryCodeFilter);
   const { entries, loading, createEntry, deleteEntry, refresh } = useJournalEntries({
     companyId: companyId || '',
     fromDate,
@@ -116,6 +123,34 @@ export default function JournalPage() {
 
   const allRange = useMemo(() => getJournalDateRange(companyId || ''), [companyId]);
 
+  // These hooks must run on every render, so they sit ABOVE the loading return
+  // below (they were after it, which broke the Rules of Hooks: a render while the
+  // company was still loading had fewer hooks than the next one → React #310).
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
+  const [editingEntry, setEditingEntry] = useState<ComputeJournalEntry | null>(null);
+  // Selection is on request only: right-click the journal → Select / Select all.
+  // Until then no checkbox column is shown.
+  const [selectMode, setSelectMode] = useState(false);
+
+  // Clear selection and pagination when filters or company change
+  useEffect(() => {
+    setSelectedCodes(new Set());
+    setCurrentPage(1);
+  }, [voucherFilter, accountFilter, entryCodeFilter, fromDate, toDate, companyId]);
+
+  // Esc leaves selection mode (and clears it) — unless something on top of the
+  // table (a dialog, the download menu, the filters) is what Esc is closing.
+  useEffect(() => {
+    if (!selectMode) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (showNewEntry || editingEntry || showTransferMenu || showFilters) return;
+      setSelectedCodes(new Set());
+      setSelectMode(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectMode, showNewEntry, editingEntry, showTransferMenu, showFilters]);
   if (companyLoading || !company) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -167,27 +202,8 @@ export default function JournalPage() {
     { header: 'Narration', key: 'narration' },
   ];
 
-  const downloadJsonFromObject = (filename: string, data: unknown) => {
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportJournalJson = () => {
-    if (!companyId) return;
-    // Certified transfer format (vaarta_journal_import_v2) — same structure the Journal
-    // and Companies pages import. See src/lib/accounting/journalTransfer.ts.
-    const payload = buildJournalPayload(company.name || 'Company', entries);
-    const filename = `journal_export_${(company.name || 'company').replace(/\s+/g, '_')}_${fromDate}_to_${toDate}.json`;
-    downloadJsonFromObject(filename, payload);
-    setShowTransferMenu(false);
-  };
-
+  // Journal JSON export/import now lives on the companies page (right-click a
+  // company → Export company; New Company → Import) — see journalTransfer.ts.
   const handleDownload = async (type: 'pdf' | 'excel' | 'csv') => {
     setDownloadLoading(type);
     setShowTransferMenu(false);
@@ -197,90 +213,6 @@ export default function JournalPage() {
       else exportToCSV(exportColumns, exportData, 'Journal');
     } finally {
       setDownloadLoading(null);
-    }
-  };
-
-  const readTextFromFile = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
-    });
-
-  const handleImportJournalJson = async (file: File) => {
-    if (!companyId) return;
-    setShowTransferMenu(false);
-    setImporting(true);
-    try {
-      const raw = await readTextFromFile(file);
-      const parsed = parseJournalJson(raw); // vaarta_journal_import_v2 (+ legacy v1)
-
-      if (!parsed.ok) {
-        window.alert(parsed.error || 'Unsupported journal JSON.');
-        return;
-      }
-      // Cross-company guard: v2 carries company_name, legacy v1 carried company_id.
-      if (parsed.companyId && parsed.companyId !== companyId) {
-        if (!window.confirm('This JSON was exported from a different company. Import into the current company anyway?')) return;
-      } else if (parsed.companyName && company.name && parsed.companyName.trim().toLowerCase() !== company.name.trim().toLowerCase()) {
-        if (!window.confirm(`This JSON is for "${parsed.companyName}". Import into "${company.name}" anyway?`)) return;
-      }
-
-      if (parsed.entries.length === 0) {
-        window.alert('No valid entries found in the JSON file.');
-        return;
-      }
-
-      let importedCount = 0;
-      const invalidCount = parsed.skipped;
-      let failedCount = 0;
-      const importedDates: string[] = [];
-      for (const item of parsed.entries) {
-        try {
-          // eslint-disable-next-line no-await-in-loop
-          await createEntry({
-            company_id: companyId,
-            entry_code: generateUniqueEntryCode(companyId),
-            entry_date: item.entry_date,
-            voucher_type: item.voucher_type,
-            voucher_number: item.voucher_number ?? undefined,
-            lines: item.lines as unknown as JournalLine[],
-            narration: item.narration ?? '',
-            book_period: bookPeriodFromDate(item.entry_date),
-            is_opening: false,
-            is_closing: false,
-          });
-          importedCount += 1;
-          importedDates.push(item.entry_date);
-        } catch {
-          failedCount += 1;
-        }
-      }
-
-      // Auto-expand the visible date range so imported entries are not filtered out
-      if (importedDates.length > 0) {
-        const minDate = importedDates.reduce((a, b) => (a < b ? a : b));
-        const maxDate = importedDates.reduce((a, b) => (a > b ? a : b));
-        if (minDate < fromDate) setFromDate(minDate);
-        if (maxDate > toDate) setToDate(maxDate);
-      }
-
-      if (importedCount === 0) {
-        window.alert('No entries were imported. Check JSON format and entry balances.');
-      } else {
-        const suffix: string[] = [];
-        if (invalidCount > 0) suffix.push(`${invalidCount} invalid skipped`);
-        if (failedCount > 0) suffix.push(`${failedCount} failed validation`);
-        window.alert(
-          `Imported ${importedCount} journal entr${importedCount === 1 ? 'y' : 'ies'} successfully with new JE codes.` +
-            (suffix.length ? ` (${suffix.join(', ')})` : ''),
-        );
-      }
-    } catch (err: any) {
-      window.alert(err?.message || 'Import failed');
-    } finally {
-      setImporting(false);
     }
   };
 
@@ -319,17 +251,15 @@ export default function JournalPage() {
       if (entry) deleteJournalEntry(entry.id);
     }
     setSelectedCodes(new Set());
+    setSelectMode(false);
     await refresh();
   };
 
-  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
-  const [editingEntry, setEditingEntry] = useState<ComputeJournalEntry | null>(null);
-
-  // Clear selection and pagination when filters or company change
-  useEffect(() => {
+  const exitSelectMode = () => {
     setSelectedCodes(new Set());
-    setCurrentPage(1);
-  }, [voucherFilter, accountFilter, entryCodeFilter, fromDate, toDate, companyId]);
+    setSelectMode(false);
+  };
+
 
   const hasActiveFilter =
     voucherFilter !== '' ||
@@ -350,14 +280,35 @@ export default function JournalPage() {
             >
               <Plus className="h-3 w-3" /> New Entry
             </button>
-            {selectedCodes.size > 0 && (
-              <button
-                onClick={handleDeleteSelected}
-                disabled={loading}
-                className="inline-flex items-center gap-1 h-7 px-2.5 text-xs font-semibold border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-40 transition-colors"
+            {/* Selection mode (entered from the right-click menu): a calm pill with
+                the count, the bulk delete, and the way out. Esc also exits. */}
+            {selectMode && (
+              <div
+                role="toolbar"
+                aria-label="Selection"
+                className="inline-flex items-center h-7 gap-0.5 rounded-full border border-[var(--sand)] bg-white/85 pl-3 pr-0.5 shadow-[var(--shadow-rest)]"
               >
-                <Trash2 className="h-3 w-3" /> Delete ({selectedCodes.size})
-              </button>
+                <span className="pr-1.5 text-[11.5px] text-[var(--ink-2)] whitespace-nowrap">
+                  <span className="font-mono tabular-nums font-semibold text-[var(--ink)]">{selectedCodes.size}</span> selected
+                </span>
+                {selectedCodes.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteSelected}
+                    disabled={loading}
+                    className="h-6 px-2.5 rounded-full text-[11.5px] font-semibold text-[var(--bad)] hover:bg-[var(--bad-soft)] disabled:text-[var(--ink-3)] transition-colors duration-[160ms]"
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={exitSelectMode}
+                  className="h-6 px-2.5 rounded-full text-[11.5px] font-semibold text-[var(--navy)] hover:bg-[var(--navy-soft)] transition-colors duration-[160ms]"
+                >
+                  Done
+                </button>
+              </div>
             )}
 
             {/* Date Filters */}
@@ -374,7 +325,7 @@ export default function JournalPage() {
                 type="button"
                 onClick={() => setShowTransferMenu(v => !v)}
                 className="inline-flex items-center justify-center h-7 w-7 border border-gray-200 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors"
-                title="Download / Export"
+                title="Download"
               >
                 {downloadLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               </button>
@@ -392,27 +343,6 @@ export default function JournalPage() {
                     className="w-full h-8 px-2 text-left text-xs text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2 disabled:opacity-40">
                     <FileDown className="h-3.5 w-3.5" /> CSV
                   </button>
-                  <div className="border-t border-gray-100 my-1" />
-                  <button type="button" onClick={handleExportJournalJson}
-                    className="w-full h-8 px-2 text-left text-xs text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2">
-                    <FileDown className="h-3.5 w-3.5" /> Export JSON
-                  </button>
-                  <label className="w-full h-8 px-2 text-left text-xs text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2 cursor-pointer">
-                    <FileText className="h-3.5 w-3.5" />
-                    {importing ? 'Importing...' : 'Import JSON'}
-                    <input
-                      type="file"
-                      accept="application/json,.json"
-                      className="hidden"
-                      disabled={importing}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        await handleImportJournalJson(file);
-                        e.currentTarget.value = '';
-                      }}
-                    />
-                  </label>
                 </div>
               )}
             </div>
@@ -462,7 +392,7 @@ export default function JournalPage() {
                         <input
                           value={entryCodeFilter}
                           onChange={e => setEntryCodeFilter(e.target.value)}
-                          placeholder="JE code…"
+                          placeholder="Voucher no. e.g. JE001"
                           maxLength={8}
                           className="w-full h-7 pl-7 pr-2 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
@@ -507,6 +437,8 @@ export default function JournalPage() {
               emptyMessage="No journal entries yet. Use New Entry to create your first journal."
               selectedCodes={selectedCodes}
               onSelectionChange={setSelectedCodes}
+              selectionMode={selectMode}
+              onSelectionModeChange={(on) => { if (on) setSelectMode(true); else exitSelectMode(); }}
               onEditEntry={handleEditEntry}
               onDeleteEntry={handleDeleteEntry}
             />

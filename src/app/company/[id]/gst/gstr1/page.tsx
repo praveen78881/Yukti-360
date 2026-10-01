@@ -341,7 +341,7 @@ function PeriodPickerModal({ period, onSelect, onClose }: { period:string; onSel
   const isFuture=(p:string)=>{ const y=parseInt(p.slice(2)),mm=parseInt(p.slice(0,2)); return y>today.getFullYear()||(y===today.getFullYear()&&mm>today.getMonth()+1); };
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl p-5 w-72" onClick={e=>e.stopPropagation()}>
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl p-5 w-72" onClick={e=>e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <button type="button" onClick={()=>setFY(f=>f-1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 font-bold text-lg">‹</button>
           <div className="text-center">
@@ -1557,7 +1557,7 @@ function DocSection({ filing, onChange, allInvoices }: { filing:GSTR1Filing; onC
 function ValidationModal({ errors, onClose }: { errors:ValidationError[]; onClose:()=>void }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4" onClick={e=>e.stopPropagation()}>
+      <div className="ca-modal-panel bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4" onClick={e=>e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold">{errors.length===0?'✓ Validation Passed':`${errors.length} Validation Error${errors.length>1?'s':''}`}</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
@@ -1831,7 +1831,7 @@ function SectionBlock({ id, title, tableNum, subtitle, children }: { id: string;
 function OtpModal({ gstin, otp, setOtp, onVerify, onCancel }: { gstin: string; otp: string; setOtp: (v: string) => void; onVerify: () => void; onCancel: () => void }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={onCancel}>
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="ca-modal-panel w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-bold text-gray-900">GST portal OTP</h3>
         <p className="mt-1 text-xs text-gray-500">An OTP was sent to the mobile/email registered against <span className="font-mono text-gray-700">{gstin}</span>. Enter it to open a ~6h session — reused for every fetch, no repeat OTP.</p>
         <input autoFocus value={otp} onChange={(e) => setOtp(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onVerify(); }} placeholder="Enter OTP" inputMode="numeric"
@@ -2210,7 +2210,7 @@ function EFileModal({ fullFiling, gstin, period, companyId, taxSession, onClose,
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="ca-modal-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-gray-900">e-File GSTR-1 · {periodLabel(period)}{isNil ? ' · NIL' : ''}</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Close">✕</button>
@@ -2618,10 +2618,9 @@ export default function GSTR1Page() {
   const currentHash = useMemo(() => (fullFiling ? hashFiling(fullFiling) : ''), [fullFiling]);
   const gateFresh = gate != null && gate.hash === currentHash;
   const needsRevalidation = gate != null && !gateFresh;
-  const gateOpen =
-    gateFresh &&
-    gate!.result.status !== 'BLOCKERS' &&
-    (gate!.result.status === 'PASS' || ackWarnings);
+  // Gate unlocked: validation stays available (and its findings panel still shows),
+  // but Download JSON / e-File are no longer blocked on a fresh PASS.
+  const gateOpen = true;
 
   const runGate = () => {
     if (!fullFiling) return;

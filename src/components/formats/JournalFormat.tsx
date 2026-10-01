@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { Package, X } from 'lucide-react';
 import type { InventorySubLine } from '@/types/journal';
@@ -32,15 +33,15 @@ interface JournalFormatProps {
   emptyMessage?: string;
   selectedCodes?: Set<string>;
   onSelectionChange?: (codes: Set<string>) => void;
+  /** Opt-in selection mode. When provided, the checkbox column only shows while
+      it is true — the page turns it on from the right-click menu. Omitted →
+      legacy behaviour: checkboxes whenever onSelectionChange is given. */
+  selectionMode?: boolean;
+  /** Lets the right-click menu enter / leave selection mode. */
+  onSelectionModeChange?: (on: boolean) => void;
   onDeleteEntry?: (entryCode: string) => void;
   onEditEntry?: (entryCode: string) => void;
 }
-
-const VTYPE_CLASS: Record<string, string> = {
-  JRN: 'vtype-JRN', SLS: 'vtype-SLS', PUR: 'vtype-PUR',
-  RCT: 'vtype-RCT', PMT: 'vtype-PMT', CNT: 'vtype-CNT',
-  DN:  'vtype-DN',  CN:  'vtype-CN',  PAY: 'vtype-PAY',
-};
 
 const VTYPE_LABEL: Record<string, string> = {
   JRN: 'Journal', SLS: 'Sales', PUR: 'Purchase',
@@ -48,12 +49,38 @@ const VTYPE_LABEL: Record<string, string> = {
   DN: 'Debit Note', CN: 'Credit Note', PAY: 'Payroll',
 };
 
+/** Voucher number for display: stored codes are JE + 5 digits (JE00001); show
+ *  them with surplus leading zeros dropped, keeping at least 3 digits
+ *  (JE00001 → JE001, JE00123 → JE123, JE01234 → JE1234). Any code that is not
+ *  "JE" + digits is shown unchanged. Display only — stored codes never change. */
+export function formatVoucherNo(code: string): string {
+  const m = /^JE(\d+)$/i.exec(code.trim());
+  if (!m) return code;
+  return `JE${m[1].replace(/^0+(?=\d{3})/, '')}`;
+}
+
+/** Menu row for the right-click menu. */
+function MenuItem({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className={`w-full text-left px-3.5 py-1.5 text-[13px] transition-colors duration-[160ms] ${
+        danger ? 'text-[var(--bad)] hover:bg-[var(--bad-soft)]' : 'text-[var(--ink-2)] hover:bg-[var(--cream-2)] hover:text-[var(--ink)]'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 // ── Inventory detail popup ────────────────────────────────────────────────────
 function InventoryPopup({ subLines, onClose }: { subLines: InventorySubLine[]; onClose: () => void }) {
   const summary = summarizeInventorySubLines(subLines);
   return (
     <div className="fixed inset-0 bg-black/40 z-[70] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="ca-modal-panel bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
           <div className="flex items-center gap-1.5">
             <Package className="h-3.5 w-3.5 text-blue-600" />
@@ -116,18 +143,36 @@ export function JournalFormat({
   companyName, period, entries,
   highlightEntryCode, emptyMessage = 'No journal entries found for this period.',
   selectedCodes, onSelectionChange,
+  selectionMode, onSelectionModeChange,
   onDeleteEntry, onEditEntry,
 }: JournalFormatProps) {
   const [inventoryPopup, setInventoryPopup] = useState<InventorySubLine[] | null>(null);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; entryCode: string } | null>(null);
+  /* Right-click menu. entryCode is null when the click landed on the panel
+     rather than on an entry (then only the selection items apply). */
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; entryCode: string | null } | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Close context menu on outside click / scroll
+  // Close the menu on outside click, scroll, resize, blur or Esc. Esc is taken
+  // in the capture phase and stopped there, so it only closes the menu — it
+  // doesn't also leave selection mode.
   React.useEffect(() => {
     if (!ctxMenu) return;
     const close = () => setCtxMenu(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); setCtxMenu(null); }
+    };
     window.addEventListener('mousedown', close);
     window.addEventListener('scroll', close, true);
-    return () => { window.removeEventListener('mousedown', close); window.removeEventListener('scroll', close, true); };
+    window.addEventListener('resize', close);
+    window.addEventListener('blur', close);
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('blur', close);
+      window.removeEventListener('keydown', onKey, true);
+    };
   }, [ctxMenu]);
   const scrollToRef = useRef<HTMLTableRowElement | null>(null);
   const lastClickedIndexRef = useRef<number>(-1);
@@ -138,8 +183,50 @@ export function JournalFormat({
     : -1;
 
   const isSelectable = !!onSelectionChange;
+  /* Checkboxes show only in selection mode when the page opts in; otherwise
+     (selectionMode omitted) they show whenever selection is wired, as before. */
+  const showSelection = isSelectable && (selectionMode === undefined || selectionMode);
+  const canEnterSelection = isSelectable && !!onSelectionModeChange;
   const allSelected = isSelectable && entries.length > 0 && entries.every(e => selectedCodes?.has(e.entryCode));
   const someSelected = isSelectable && entries.some(e => selectedCodes?.has(e.entryCode));
+
+  const openMenu = (e: React.MouseEvent, entryCode: string | null) => {
+    const entryActions = !!entryCode && (!!onEditEntry || !!onDeleteEntry);
+    if (!canEnterSelection && !entryActions) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // Keyboard-invoked (menu key / Shift+F10) can report 0,0 — anchor to the element.
+    let { clientX: x, clientY: y } = e;
+    if (x === 0 && y === 0) {
+      const r = (e.target as HTMLElement).getBoundingClientRect();
+      x = r.left + 12;
+      y = r.top + r.height / 2;
+    }
+    setCtxMenu({ x, y, entryCode });
+  };
+
+  const enterSelection = (entryCode: string | null) => {
+    onSelectionModeChange?.(true);
+    if (entryCode) {
+      onSelectionChange?.(new Set([...(selectedCodes ?? []), entryCode]));
+      lastClickedIndexRef.current = entries.findIndex(e => e.entryCode === entryCode);
+    }
+  };
+  const toggleEntry = (entryCode: string) => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedCodes ?? []);
+    if (next.has(entryCode)) next.delete(entryCode); else next.add(entryCode);
+    lastClickedIndexRef.current = entries.findIndex(e => e.entryCode === entryCode);
+    onSelectionChange(next);
+  };
+  const selectAllFromMenu = () => {
+    onSelectionModeChange?.(true);
+    onSelectionChange?.(allSelected && showSelection ? new Set() : new Set(entries.map(e => e.entryCode)));
+  };
+  const exitSelection = () => {
+    onSelectionChange?.(new Set());
+    onSelectionModeChange?.(false);
+  };
 
   useEffect(() => {
     if (highlightIndex >= 0 && scrollToRef.current) {
@@ -201,7 +288,7 @@ export function JournalFormat({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden" onContextMenu={(e) => openMenu(e, null)}>
       {/* Header */}
       <div className="text-center py-2 border-b border-gray-200 bg-gray-50/50">
         <p className="text-[10px] text-gray-400 uppercase tracking-wide">{companyName}</p>
@@ -213,7 +300,7 @@ export function JournalFormat({
         <table className="w-full text-xs md:text-[13px] min-w-[800px]">
           <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            {isSelectable && (
+            {showSelection && (
               <th className="px-2 py-1.5 w-8 border-r border-gray-100 text-center">
                 <input
                   ref={selectAllRef}
@@ -244,13 +331,9 @@ export function JournalFormat({
                     key={`${ei}-${li}`}
                     ref={isHighlighted && li === 0 ? scrollToRef : undefined}
                     className={`border-b border-gray-100 ${hlClass} hover:bg-blue-50/20 transition-colors`}
-                    onContextMenu={(e) => {
-                      if (!onDeleteEntry && !onEditEntry) return;
-                      e.preventDefault();
-                      setCtxMenu({ x: e.clientX, y: e.clientY, entryCode: entry.entryCode });
-                    }}
+                    onContextMenu={(e) => openMenu(e, entry.entryCode)}
                   >
-                    {li === 0 && isSelectable && (
+                    {li === 0 && showSelection && (
                       <td
                         className="px-2 py-1 align-top border-r border-gray-100 text-center"
                         rowSpan={entry.lines.length + 1}
@@ -265,17 +348,17 @@ export function JournalFormat({
                       </td>
                     )}
                     {li === 0 && (
+                      /* Focusable so the keyboard menu key / Shift+F10 opens the entry menu. */
                       <td
+                        tabIndex={0}
                         className="px-2 py-1 align-top border-r border-gray-100"
                         rowSpan={entry.lines.length + 1}
+                        title={`${VTYPE_LABEL[entry.voucherType] ?? entry.voucherType} · ${entry.entryCode}`}
                       >
-                        <div className="text-[10px] md:text-xs text-gray-500 whitespace-nowrap">{entry.date}</div>
-                        <div className="mt-0.5">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[8px] md:text-[9px] font-semibold ${VTYPE_CLASS[entry.voucherType] ?? 'vtype-JRN'}`}>
-                            {VTYPE_LABEL[entry.voucherType] ?? entry.voucherType}
-                          </span>
+                        <div className="font-mono tabular-nums text-[10.5px] md:text-[11.5px] text-gray-500 whitespace-nowrap">{entry.date}</div>
+                        <div className="mt-1">
+                          <span className="code-pill !px-2 !py-px !text-[10.5px]">{formatVoucherNo(entry.entryCode)}</span>
                         </div>
-                        <div className="mt-0.5 text-[8px] md:text-[9px] font-mono font-semibold text-blue-600">{entry.entryCode}</div>
                       </td>
                     )}
                     <td className={`px-2 py-1 border-r border-gray-100 ${!line.isDebit ? 'pl-6' : ''}`}>
@@ -327,7 +410,7 @@ export function JournalFormat({
                   </tr>
                 ))}
                 {/* Narration row */}
-                <tr className={`border-b-2 border-gray-200 ${hlClass}`}>
+                <tr className={`border-b-2 border-gray-200 ${hlClass}`} onContextMenu={(e) => openMenu(e, entry.entryCode)}>
                   <td className="px-2 py-1.5 pl-6 text-[10px] md:text-xs text-gray-400 italic border-r border-gray-100" colSpan={4}>
                     ({entry.narration || 'No narration'})
                   </td>
@@ -338,7 +421,7 @@ export function JournalFormat({
         </tbody>
         <tfoot>
           <tr className="bg-gray-50 border-t-2 border-gray-300">
-            {isSelectable && <td className="px-2 py-1.5 border-r border-gray-100" />}
+            {showSelection && <td className="px-2 py-1.5 border-r border-gray-100" />}
             <td className="px-2 py-1.5 border-r border-gray-100" />
             <td className="px-2 py-1.5 font-bold text-gray-900 text-xs md:text-[13px] border-r border-gray-100">Total</td>
             <td className="px-2 py-1.5 border-r border-gray-100" />
@@ -357,32 +440,56 @@ export function JournalFormat({
         <InventoryPopup subLines={inventoryPopup} onClose={() => setInventoryPopup(null)} />
       )}
 
-      {/* Right-click context menu */}
-      {ctxMenu && (
-        <div
-          className="fixed z-[80] bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[160px]"
-          style={{ left: ctxMenu.x, top: ctxMenu.y }}
-          onMouseDown={e => e.stopPropagation()}
-        >
-          {onEditEntry && (
-            <button
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
-              onClick={() => { onEditEntry(ctxMenu.entryCode); setCtxMenu(null); }}
+      {/* Right-click menu — portalled to <body> so no ancestor's overflow or
+          containing block can clip it; clamped to stay inside the viewport. */}
+      {ctxMenu && createPortal(
+        (() => {
+          const entryCode = ctxMenu.entryCode;
+          const entrySelected = !!entryCode && !!selectedCodes?.has(entryCode);
+          const hasEntryActions = !!entryCode && (!!onEditEntry || !!onDeleteEntry);
+          const rows = (canEnterSelection ? (showSelection ? (entryCode ? 3 : 2) : 2) : 0) + (hasEntryActions ? 2 : 0);
+          const left = Math.max(8, Math.min(ctxMenu.x, window.innerWidth - 196));
+          const top = Math.max(8, Math.min(ctxMenu.y, window.innerHeight - (rows * 32 + 24)));
+          return (
+            <div
+              ref={menuRef}
+              role="menu"
+              className="fixed z-[80] min-w-[180px] rounded-[12px] border border-[var(--sand)] bg-white py-1.5 shadow-[var(--shadow-lift)]"
+              style={{ left, top }}
+              onMouseDown={e => e.stopPropagation()}
+              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); }}
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg>
-              Edit Entry
-            </button>
-          )}
-          {onDeleteEntry && (
-            <button
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-              onClick={() => { onDeleteEntry(ctxMenu.entryCode); setCtxMenu(null); }}
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-              Delete Entry
-            </button>
-          )}
-        </div>
+              {canEnterSelection && (
+                showSelection ? (
+                  <>
+                    {entryCode && (
+                      <MenuItem onClick={() => { toggleEntry(entryCode); setCtxMenu(null); }}>
+                        {entrySelected ? 'Deselect' : 'Select'}
+                      </MenuItem>
+                    )}
+                    <MenuItem onClick={() => { selectAllFromMenu(); setCtxMenu(null); }}>
+                      {allSelected ? 'Clear selection' : 'Select all'}
+                    </MenuItem>
+                    <MenuItem onClick={() => { exitSelection(); setCtxMenu(null); }}>Done selecting</MenuItem>
+                  </>
+                ) : (
+                  <>
+                    <MenuItem onClick={() => { enterSelection(entryCode); setCtxMenu(null); }}>Select</MenuItem>
+                    <MenuItem onClick={() => { selectAllFromMenu(); setCtxMenu(null); }}>Select all</MenuItem>
+                  </>
+                )
+              )}
+              {canEnterSelection && hasEntryActions && <div className="my-1 border-t border-[var(--cream)]" />}
+              {entryCode && onEditEntry && (
+                <MenuItem onClick={() => { onEditEntry(entryCode); setCtxMenu(null); }}>Edit entry</MenuItem>
+              )}
+              {entryCode && onDeleteEntry && (
+                <MenuItem danger onClick={() => { onDeleteEntry(entryCode); setCtxMenu(null); }}>Delete entry</MenuItem>
+              )}
+            </div>
+          );
+        })(),
+        document.body,
       )}
     </div>
   );

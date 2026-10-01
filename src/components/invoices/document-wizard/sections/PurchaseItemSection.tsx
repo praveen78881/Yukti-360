@@ -1,55 +1,77 @@
+/* Purchase item row. The purchase model holds ONE item (item_description / hsn /
+   qty / rate + taxable value), so there is one row — every handler below is the
+   same one the previous screen used. "GST applicable" maps onto the existing
+   bucket: on = B2B, off = EXEMPT_NIL (the bucket's own effect sets the rate). */
+import { GST_RATES } from '@/lib/accounting/gstInvoices';
 import type { PurchaseFields } from '../useDocumentState';
-import type { DocumentMode } from '../types';
-import { PURCHASE_BUCKETS } from '../config';
+import type { DocumentMode, PurchaseTotals } from '../types';
+import { Trash2 } from 'lucide-react';
+import { Switch, inr } from '../ui';
 
 interface PurchaseItemSectionProps {
   fields: PurchaseFields;
   updateField: <K extends keyof PurchaseFields>(key: K, value: PurchaseFields[K]) => void;
   mode: DocumentMode;
   invalidFields?: string[];
+  totals?: PurchaseTotals;
 }
 
-export function PurchaseItemSection({ fields, updateField, mode, invalidFields }: PurchaseItemSectionProps) {
+export function PurchaseItemSection({ fields, updateField, mode, invalidFields, totals }: PurchaseItemSectionProps) {
   const gross = (Number(fields.itemQty || 0) * Number(fields.itemRate || 0));
   const discountPct = Number(fields.itemDiscount || 0);
   const discountAmt = Math.round(gross * discountPct) / 100;
   const showGross = Number(fields.itemQty || 0) > 0 && Number(fields.itemRate || 0) > 0;
   const taxableInvalid = invalidFields?.includes('taxable');
 
+  const isReturn = mode === 'purchase_return';
+  const registered = fields.bucket !== 'URD';
+  const gstApplicable = fields.bucket !== 'EXEMPT_NIL';
+  const showGst = registered;
+  const rateOptions = GST_RATES.map(String).includes(String(Number(fields.gstRate)))
+    ? GST_RATES
+    : [...GST_RATES, Number(fields.gstRate) || 0].sort((a, b) => a - b);
+  const tax = totals ? totals.cgst + totals.sgst + totals.igst : 0;
+  // The model holds one item, so deleting it resets the row to a fresh form's defaults.
+  const clearItem = () => {
+    updateField('itemDescription', '');
+    updateField('itemHsn', '');
+    updateField('itemQty', '1');
+    updateField('itemRate', '0');
+    updateField('itemDiscount', '0');
+    updateField('taxable', '0');
+  };
+
   return (
-    <section className="dw-section">
-      <div className="shead"><h2 className="dw-h">Item &amp; tax</h2></div>
-      <div className="row">
-        {mode === 'purchase_invoice' && (
-          <div className="f c3">
-            <label>Bucket</label>
-            <select value={fields.bucket} onChange={(e) => updateField('bucket', e.target.value as any)}>
-              {PURCHASE_BUCKETS.map((b) => <option key={b.code} value={b.code}>{b.label}</option>)}
-            </select>
-          </div>
-        )}
-        <div className={`f ${mode === 'purchase_invoice' ? 'c6' : 'c9'}`}>
-          <label>Description</label>
-          <input value={fields.itemDescription} onChange={(e) => updateField('itemDescription', e.target.value)} placeholder="e.g. Steel Rod 10mm" />
+    <div className="yk-lines" data-testid="purchase-items">
+      <div className="yk-lines-scroll">
+      <div className={`yk-lines-grid purchase ${showGst ? 'with-gst' : ''}`} role="table" aria-label="Item">
+        <div className="yk-lines-head" role="row">
+          <span role="columnheader">Item / service</span>
+          <span role="columnheader">HSN / SAC</span>
+          <span role="columnheader" className="r">Qty</span>
+          <span role="columnheader" className="r">Rate</span>
+          <span role="columnheader" className="r">Disc %</span>
+          <span role="columnheader" className="r">Taxable</span>
+          {showGst && <span role="columnheader">GST</span>}
+          {showGst && <span role="columnheader" className="r">Tax</span>}
+          <span role="columnheader" className="r">Total</span>
+          <span role="columnheader" aria-label="Remove" />
         </div>
-        <div className="f c3">
-          <label>HSN / SAC</label>
-          <input className="mono" value={fields.itemHsn} onChange={(e) => updateField('itemHsn', e.target.value)} placeholder="7207" />
-        </div>
-        <div className="f c3">
-          <label>Qty</label>
-          <input type="number" className="num" value={fields.itemQty} onChange={(e) => updateField('itemQty', e.target.value)} min={0} />
-        </div>
-        <div className="f c3">
-          <label>Rate</label>
-          <input type="number" className="num" value={fields.itemRate} onChange={(e) => updateField('itemRate', e.target.value)} min={0} />
-        </div>
-        <div className="f c3">
-          <label>Discount %</label>
+        <div className="yk-lines-row" role="row">
           <input
+            aria-label="Item or service name"
+            className="yk-in sm"
+            value={fields.itemDescription}
+            onChange={(e) => updateField('itemDescription', e.target.value)}
+          />
+          <input aria-label="HSN or SAC" className="yk-in sm mono" value={fields.itemHsn} onChange={(e) => updateField('itemHsn', e.target.value)} />
+          <input aria-label="Quantity" type="number" className="yk-in sm num" value={fields.itemQty} onChange={(e) => updateField('itemQty', e.target.value)} min={0} />
+          <input aria-label="Rate" type="number" className="yk-in sm num" value={Number(fields.itemRate) === 0 ? '' : fields.itemRate} onChange={(e) => updateField('itemRate', e.target.value)} min={0} />
+          <input
+            aria-label="Discount percent"
             type="number"
-            className="num"
-            value={fields.itemDiscount}
+            className="yk-in sm num"
+            value={Number(fields.itemDiscount) === 0 ? '' : fields.itemDiscount}
             onChange={(e) => {
               const pct = e.target.value;
               updateField('itemDiscount', pct);
@@ -61,31 +83,48 @@ export function PurchaseItemSection({ fields, updateField, mode, invalidFields }
             min={0}
             max={100}
             step={0.01}
-            placeholder="0"
           />
-        </div>
-        <div className={`f c3${taxableInvalid ? ' err' : ''}`}>
-          <label>
-            Taxable value <b>*</b>
-            {showGross && discountPct > 0 && (
-              <span className="hint" style={{ display: 'inline', marginLeft: 4 }}>
-                (₹{gross.toLocaleString('en-IN')} − ₹{discountAmt.toLocaleString('en-IN')})
-              </span>
-            )}
-          </label>
           <input
+            aria-label="Taxable value"
+            aria-invalid={taxableInvalid || undefined}
             type="number"
-            className="num"
-            value={fields.taxable}
+            className={`yk-in sm num strong ${taxableInvalid ? 'bad' : ''}`}
+            value={Number(fields.taxable) === 0 ? '' : fields.taxable}
             onChange={(e) => updateField('taxable', e.target.value)}
           />
-          <span className="msg">Taxable value must be &gt; 0</span>
-        </div>
-        <div className="f c3">
-          <label>GST %</label>
-          <input type="number" className="num" value={fields.gstRate} onChange={(e) => updateField('gstRate', e.target.value)} min={0} />
+          {showGst && (
+            <div className="yk-gstcell">
+              {!isReturn && (
+                <Switch
+                  checked={gstApplicable}
+                  onChange={(v) => updateField('bucket', v ? 'B2B' : 'EXEMPT_NIL')}
+                  label="GST applicable on this item"
+                  testId="purchase-gst-applicable"
+                />
+              )}
+              {gstApplicable ? (
+                <select aria-label="GST rate" className="yk-in sm" value={String(Number(fields.gstRate) || 0)} onChange={(e) => updateField('gstRate', e.target.value)}>
+                  {rateOptions.map((r) => <option key={r} value={String(r)}>{r}%</option>)}
+                </select>
+              ) : (
+                <span className="yk-pill muted">No GST</span>
+              )}
+            </div>
+          )}
+          {showGst && <span className="yk-cell num">{inr(tax)}</span>}
+          <span className="yk-cell num strong">{inr(totals ? totals.total : Number(fields.taxable || 0))}</span>
+          <span className="yk-cell c">
+            <button type="button" className="yk-icon-btn danger" onClick={clearItem} title="Remove item" aria-label="Remove item">
+              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </span>
         </div>
       </div>
-    </section>
+      </div>
+      {showGross && discountPct > 0 && (
+        <p className="yk-hint mt-2">Gross ₹{inr(gross)} − discount ₹{inr(discountAmt)} = taxable ₹{inr(Math.max(0, gross - discountAmt))}</p>
+      )}
+      {taxableInvalid && <p className="yk-err mt-2" role="alert">Taxable value must be more than 0</p>}
+    </div>
   );
 }

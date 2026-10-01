@@ -224,7 +224,7 @@ function OtpModal({
 }) {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={onCancel}>
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="ca-modal-panel w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-bold text-gray-900">GST portal OTP</h3>
         <p className="mt-1 text-xs text-gray-500">
           An OTP was sent to the mobile/email registered against{' '}

@@ -23,8 +23,13 @@ if (!isSupabaseConfigured && import.meta.env.DEV) {
   );
 }
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(url as string, anonKey as string, {
-      auth: { persistSession: true, autoRefreshToken: true },
-    })
-  : null;
+// The raw build-time vars lead the condition on purpose: in a build without them
+// Vite inlines `undefined`, the bundler can prove createClient is unreachable, and
+// the ~200 kB supabase-js library (sideEffects:false) drops out of the bundle.
+// When they are present the result is exactly `isSupabaseConfigured ? … : null`.
+export const supabase: SupabaseClient | null =
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && isSupabaseConfigured
+    ? createClient(url as string, anonKey as string, {
+        auth: { persistSession: true, autoRefreshToken: true },
+      })
+    : null;

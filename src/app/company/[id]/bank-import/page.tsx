@@ -45,7 +45,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -105,7 +105,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
             <div className="flex flex-wrap gap-2">
               <a
                 href="/sample-bank-statement-1.csv"
-                download="CA-Studio-Sample-Bank-Statement.csv"
+                download="Yukti360-Sample-Bank-Statement.csv"
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 font-medium transition-colors shadow-sm"
               >
                 <Download className="h-3.5 w-3.5" />
@@ -113,7 +113,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
               </a>
               <a
                 href="/sample-bank-statement-2.xls"
-                download="CA-Studio-Sample-Bank-Statement.xls"
+                download="Yukti360-Sample-Bank-Statement.xls"
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 font-medium transition-colors shadow-sm"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -290,7 +290,7 @@ function ProgressOverlay({ done, total }: { done: number; total: number }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 text-center">
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl p-6 w-80 text-center">
         <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-3" />
         <p className="text-sm font-medium text-gray-800">Creating journal entries...</p>
         <p className="text-lg font-bold text-blue-700 mt-1">{done} / {total}</p>

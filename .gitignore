@@ -54,3 +54,8 @@ mcp-server/node_modules/
 
 # Local docs mirror (inner git clone, not part of the app)
 /docs/sandbox-it-docs/
+
+# ITR split build tooling (manifests + splitter + verifiers)
+/.itr-build/
+# Original single-file Yukti bundles (source of truth for the split build)
+/ITR ORIGINAL/

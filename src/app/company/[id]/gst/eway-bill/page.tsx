@@ -102,7 +102,7 @@ function EWayBillPageUnlocked() {
     if (!token) { toast.error('Connect the EWB portal in the Generate tab first'); setTab('generate'); return; }
     const reason = window.prompt('Cancellation reason — 1: Duplicate, 2: Order cancelled, 3: Data entry error, 4: Others', '2');
     if (!reason) return;
-    const r = await sandboxClient.ewbCancel(token, rec.ewbNo, Number(reason), 'Cancelled via CA Studio');
+    const r = await sandboxClient.ewbCancel(token, rec.ewbNo, Number(reason), 'Cancelled via Yukti 360');
     const d: any = r.data?.data ?? r.data;
     if (r.ok && !d?.error?.errorCodes) {
       if (companyId) updateEwbBill(companyId, rec.ewbNo, { status: 'cancelled' });

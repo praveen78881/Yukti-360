@@ -455,27 +455,27 @@ export default function GSTPage() {
       {/* ── Current Period Summary — KPI Widgets ── */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400">Current Period Summary</h2>
+          <h2 className="eyebrow">Current Period Summary</h2>
           <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500">{fy.label}</span>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {kpiCards.map((kpi) => (
             <div
               key={kpi.label}
-              className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md hover:shadow-gray-100"
+              className="group relative overflow-hidden rounded-[14px] border border-[var(--sand)] bg-white p-4 shadow-[var(--shadow-rest)] transition-[box-shadow,transform,border-color] duration-[160ms] hover:-translate-y-0.5 hover:border-[var(--sand-2)] hover:shadow-[var(--shadow-lift)]"
             >
-              <div className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-gray-50 transition-transform duration-300 group-hover:scale-125" />
+              <div className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-[var(--cream-2)]" />
               <div className="relative">
                 <div className="flex items-center justify-between">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[var(--navy-soft)] text-[var(--navy)]">
                     {kpi.icon}
                   </div>
                   <TrendBadge trend={kpi.trend} label={kpi.trendLabel} />
                 </div>
-                <p className="mt-3 font-mono text-2xl font-bold tabular-nums text-gray-900">
+                <p className="stat-figure mt-3">
                   {kpi.value}
                 </p>
-                <p className="mt-0.5 text-[11px] font-semibold text-gray-400">{kpi.label}</p>
+                <p className="eyebrow mt-1">{kpi.label}</p>
               </div>
             </div>
           ))}
@@ -484,7 +484,7 @@ export default function GSTPage() {
 
       {/* ── Monthly / Quarterly Compliance ── */}
       <div>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Monthly / Quarterly Compliance</h2>
+        <h2 className="eyebrow mb-3">Monthly / Quarterly Compliance</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {complianceModules.map((m) => (
             <ModuleCard key={m.href} companyId={companyId} {...m} statusChip={m.href === 'gst/gstr1' ? gstr1FiledChip : undefined} />
@@ -494,7 +494,7 @@ export default function GSTPage() {
 
       {/* ── Core Systems & Annuals ── */}
       <div>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Core Systems & Annuals</h2>
+        <h2 className="eyebrow mb-3">Core Systems & Annuals</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {coreModules.map((m) => (
             <ModuleCard key={m.href} companyId={companyId} {...m} />

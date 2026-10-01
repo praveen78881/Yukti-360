@@ -31,6 +31,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { getIcon } from '@/lib/constants/entityIcons';
+import { formsForEntity, ITR_META, type ItrKey } from '../income-tax/lib/itrForms';
 
 type Tab = 'general' | 'gst-portal' | 'financial-year' | 'chart-of-accounts' | 'book-closing' | 'export' | 'ai-rules';
 
@@ -363,6 +364,8 @@ export default function SettingsPage() {
   const [pan, setPan] = useState('');
   const [gstin, setGstin] = useState('');
   const [disclosureLevel, setDisclosureLevel] = useState<'I' | 'II' | 'III' | 'IV' | ''>('');
+  // The income-tax return, for legal forms that may file more than one
+  const [itrForm, setItrForm] = useState<ItrKey | ''>('');
 
   // GST & e-Way Bill portal credentials (captured once, used silently)
   const [portalUsername, setPortalUsername] = useState('');
@@ -398,6 +401,7 @@ export default function SettingsPage() {
     setGstin(company.gst_details?.gstin || '');
     const level = (company.entity_details as { disclosureLevel?: 'I' | 'II' | 'III' | 'IV' } | undefined)?.disclosureLevel;
     setDisclosureLevel(level || '');
+    setItrForm(company.entity_details?.itrForm || '');
     setPortalUsername(company.gst_details?.portalUsername || '');
     setEwbUsername(company.gst_details?.ewbUsername || '');
     setEwbPassword(company.gst_details?.ewbPassword || '');
@@ -412,6 +416,7 @@ export default function SettingsPage() {
         address: address || undefined,
         pan: pan || undefined,
         ...(disclosureLevel ? { disclosureLevel: disclosureLevel as 'I' | 'II' | 'III' | 'IV' } : {}),
+        ...(itrForm ? { itrForm } : {}),
       };
       const trimmedGstin = gstin.trim();
       // Adding a valid GSTIN to an unregistered company registers it, so the GST
@@ -430,7 +435,7 @@ export default function SettingsPage() {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [companyId, company, companyName, address, pan, gstin, disclosureLevel, updateCompany]);
+  }, [companyId, company, companyName, address, pan, gstin, disclosureLevel, itrForm, updateCompany]);
 
   const handleSaveGst = useCallback(async () => {
     if (!companyId || !company) return;
@@ -528,8 +533,15 @@ export default function SettingsPage() {
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
   const entityConfig = getEntityConfig(company.entity_type);
   const showDisclosureLevel = entityConfig?.nav?.relatedPartyByLevel === true;
+  const itrChoices = formsForEntity(company.entity_type as EntityType);
 
-  const tabs: { key: Tab; label: string; icon: string; isLocked?: boolean }[] = [
+  // An individual keeps no books and files only an ITR, so GST, the chart of
+  // accounts, book closing and the audit / statement-format tiles don't apply.
+  // They are HIDDEN only — every stored value is left exactly as it is.
+  const isIndividual = company.entity_type === 'individual';
+  const HIDDEN_FOR_INDIVIDUAL = new Set<Tab>(['gst-portal', 'chart-of-accounts', 'book-closing']);
+
+  const tabs: { key: Tab; label: string; icon: string; isLocked?: boolean }[] = ([
     { key: 'general', label: 'General', icon: 'Settings' },
     { key: 'gst-portal', label: 'GST & e-Way Bill', icon: 'Landmark' },
     { key: 'financial-year', label: 'Financial Year', icon: 'Calendar' },
@@ -537,7 +549,8 @@ export default function SettingsPage() {
     { key: 'book-closing', label: 'Book Closing', icon: 'FolderClosed' },
     { key: 'export', label: 'Export & Print', icon: 'Printer' },
     { key: 'ai-rules', label: 'AI Rules', icon: 'Sparkles' },
-  ];
+  ] as { key: Tab; label: string; icon: string; isLocked?: boolean }[])
+    .filter((t) => !(isIndividual && HIDDEN_FOR_INDIVIDUAL.has(t.key)));
 
   return (
     <div className="space-y-6">
@@ -603,20 +616,22 @@ export default function SettingsPage() {
                 <Field label="PAN">
                   <input type="text" value={pan} onChange={e => setPan(e.target.value.toUpperCase())} placeholder="AAAAA0000A" maxLength={10} className={`${inp} font-mono uppercase`} />
                 </Field>
-                <Field label="GSTIN">
-                  <input type="text" value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} className={`${inp} font-mono uppercase`} />
-                </Field>
+                {!isIndividual && (
+                  <Field label="GSTIN">
+                    <input type="text" value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} className={`${inp} font-mono uppercase`} />
+                  </Field>
+                )}
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-150">
                 <h4 className="text-sm font-bold text-slate-900 mb-4">Statutory & System Configuration</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
-                    { label: 'ITR Form', val: entityConfig.itrForm, Icon: FileText },
+                    { label: 'ITR Form', val: itrForm ? ITR_META[itrForm].label : entityConfig.itrForm, Icon: FileText },
                     { label: 'Audit Form', val: entityConfig.nav.auditForm, Icon: FileCheck },
                     { label: 'P&L Format', val: entityConfig.nav.profitLossFormat, Icon: BarChart3 },
                     { label: 'BS Format', val: entityConfig.nav.balanceSheetFormat, Icon: BookOpen }
-                  ].map(({ label, val, Icon }) => {
+                  ].filter(({ label }) => !isIndividual || label === 'ITR Form').map(({ label, val, Icon }) => {
                     return (
                       <div key={label} className="bg-slate-50/40 border border-slate-200/60 rounded-2xl p-4 flex flex-col items-start shadow-sm hover:border-blue-200 hover:bg-blue-50/10 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
@@ -628,6 +643,31 @@ export default function SettingsPage() {
                     );
                   })}
                 </div>
+                {itrChoices.length > 1 && (
+                  <div className="mt-6 rounded-[14px] border border-[var(--sand)] bg-[var(--cream-2)]/50 p-5">
+                    <label className="mb-1 block font-display text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-2)]">Income-tax return</label>
+                    <p className="mb-3 text-[11.5px] text-[var(--ink-3)]">The Income Tax page opens straight on this form. Save changes to apply.</p>
+                    <div role="radiogroup" aria-label="Income-tax return" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                      {itrChoices.map((k) => {
+                        const on = itrForm === k;
+                        return (
+                          <button key={k} type="button" role="radio" aria-checked={on} onClick={() => setItrForm(k)}
+                            className={`flex items-start gap-3 rounded-[12px] border p-3.5 text-left transition-[background-color,border-color] duration-[160ms] ${
+                              on ? 'border-[var(--navy)] bg-[var(--navy-soft)]/60' : 'border-[var(--sand)] bg-white hover:border-[var(--sand-2)]'
+                            }`}>
+                            <span className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${on ? 'bg-[var(--navy)] text-white' : 'border-[1.5px] border-[var(--sand-2)] bg-white'}`}>
+                              {on && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-display text-[13px] font-semibold uppercase tracking-[0.05em] text-[var(--ink)]">{ITR_META[k].label}</span>
+                              <span className="mt-0.5 block text-[11.5px] leading-snug text-[var(--ink-2)]">{ITR_META[k].note}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {showDisclosureLevel && (
                   <div className="mt-6 bg-slate-50/30 border border-slate-200/60 rounded-2xl p-5">
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">ICAI disclosure level (non-corporate)</label>
@@ -777,7 +817,7 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="text-sm font-bold text-slate-800">Year-end closing is automatic</h4>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    CA Studio computes your financial statements live from journal entries. Revenue and expense
+                    Yukti 360 computes your financial statements live from journal entries. Revenue and expense
                     balances flow into the Trading / P&amp;L statement automatically, and the resulting net profit
                     is carried into Capital &amp; Reserves on the Balance Sheet — with no manual closing journal to
                     post. Just set the financial year boundary below and open a fresh year; opening balances carry

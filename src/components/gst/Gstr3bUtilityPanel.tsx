@@ -48,21 +48,21 @@ function Row5({
   disabled?: boolean;
 }) {
   return (
-    <tr className="border-b border-[#c5d9c5] hover:bg-white/90">
-      <td className="border-r border-[#c5d9c5] px-2 py-1.5 align-top">
+    <tr className="border-b border-[#D4E2F0] hover:bg-white/90">
+      <td className="border-r border-[#D4E2F0] px-2 py-1.5 align-top">
         <p className="text-[13px] font-medium text-gray-900">{label}</p>
         {sub ? <p className="text-[11px] text-gray-600 leading-snug">{sub}</p> : null}
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={row.txval} disabled={disabled} onChange={(txval) => onPatch({ txval })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={row.iamt} disabled={disabled} onChange={(iamt) => onPatch({ iamt })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={row.camt} disabled={disabled} onChange={(camt) => onPatch({ camt })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={row.samt} disabled={disabled} onChange={(samt) => onPatch({ samt })} />
       </td>
       <td>
@@ -86,12 +86,12 @@ function RowTxvalOnly({
   disabled?: boolean;
 }) {
   return (
-    <tr className="border-b border-[#c5d9c5] hover:bg-white/90">
-      <td className="border-r border-[#c5d9c5] px-2 py-1.5 align-top">
+    <tr className="border-b border-[#D4E2F0] hover:bg-white/90">
+      <td className="border-r border-[#D4E2F0] px-2 py-1.5 align-top">
         <p className="text-[13px] font-medium text-gray-900">{label}</p>
         {sub ? <p className="text-[11px] text-gray-600 leading-snug">{sub}</p> : null}
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={txval} disabled={disabled} onChange={onTxval} />
       </td>
       <td colSpan={4} className="bg-gray-50/80 px-2 py-2 text-center text-[11px] text-gray-500">
@@ -113,20 +113,20 @@ function Itc4({
   disabled?: boolean;
 }) {
   return (
-    <tr className="border-b border-[#c5d9c5] hover:bg-white/90">
-      <td className="border-r border-[#c5d9c5] px-2 py-1.5">
+    <tr className="border-b border-[#D4E2F0] hover:bg-white/90">
+      <td className="border-r border-[#D4E2F0] px-2 py-1.5">
         <p className="text-[13px] font-medium text-gray-900">{label}</p>
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={v.iamt} disabled={disabled} onChange={(iamt) => onPatch({ iamt })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={v.camt} disabled={disabled} onChange={(camt) => onPatch({ camt })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={v.samt} disabled={disabled} onChange={(samt) => onPatch({ samt })} />
       </td>
-      <td className="border-r border-[#c5d9c5]">
+      <td className="border-r border-[#D4E2F0]">
         <Cell value={v.csamt} disabled={disabled} onChange={(csamt) => onPatch({ csamt })} />
       </td>
     </tr>
@@ -249,20 +249,20 @@ export function Gstr3bUtilityPanel({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border-2 border-[#217346] shadow-sm">
-        <div className="flex items-center justify-between gap-2 bg-[#217346] px-3 py-2 text-white">
+      <div className="overflow-x-auto rounded-lg border-2 border-[#17457F] shadow-sm">
+        <div className="flex items-center justify-between gap-2 bg-[#17457F] px-3 py-2 text-white">
           <span className="text-sm font-bold tracking-tight">GSTR-3B — Portal (summary)</span>
           <span className="text-[11px] font-semibold opacity-90">Editable grid</span>
         </div>
-        <table className="w-full min-w-[720px] border-collapse bg-[#f6fff6] text-sm">
+        <table className="w-full min-w-[720px] border-collapse bg-[#F5FAFE] text-sm">
           <thead>
-            <tr className="bg-[#e6f4e6] text-xs font-bold uppercase tracking-wide text-gray-800">
-              <th className="border border-[#c5d9c5] px-2 py-2 text-left">Particulars</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">Taxable value</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">IGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">CGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">SGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">Cess</th>
+            <tr className="bg-[#DFEAF9] text-xs font-bold uppercase tracking-wide text-gray-800">
+              <th className="border border-[#D4E2F0] px-2 py-2 text-left">Particulars</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">Taxable value</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">IGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">CGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">SGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">Cess</th>
             </tr>
           </thead>
           <tbody>
@@ -298,16 +298,16 @@ export function Gstr3bUtilityPanel({
         </table>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border-2 border-[#217346] shadow-sm">
-        <div className="bg-[#217346] px-3 py-2 text-sm font-bold text-white">Section 4 — Eligible ITC (₹)</div>
-        <table className="w-full min-w-[640px] border-collapse bg-[#f6fff6] text-sm">
+      <div className="overflow-x-auto rounded-lg border-2 border-[#17457F] shadow-sm">
+        <div className="bg-[#17457F] px-3 py-2 text-sm font-bold text-white">Section 4 — Eligible ITC (₹)</div>
+        <table className="w-full min-w-[640px] border-collapse bg-[#F5FAFE] text-sm">
           <thead>
-            <tr className="bg-[#e6f4e6] text-xs font-bold uppercase tracking-wide text-gray-800">
-              <th className="border border-[#c5d9c5] px-2 py-2 text-left">Description</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">IGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">CGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">SGST</th>
-              <th className="border border-[#c5d9c5] px-2 py-2 text-right">Cess</th>
+            <tr className="bg-[#DFEAF9] text-xs font-bold uppercase tracking-wide text-gray-800">
+              <th className="border border-[#D4E2F0] px-2 py-2 text-left">Description</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">IGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">CGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">SGST</th>
+              <th className="border border-[#D4E2F0] px-2 py-2 text-right">Cess</th>
             </tr>
           </thead>
           <tbody>

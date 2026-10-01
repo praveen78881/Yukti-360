@@ -1,14 +1,17 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { listCompanies, deleteCompany, createCompany, createInitialBookPeriod, createJournalEntry } from '@/lib/offlineDb';
+import { listCompanies, deleteCompany, createCompany, createInitialBookPeriod, createJournalEntry, listJournalEntries } from '@/lib/offlineDb';
 import { initEntityData } from '@/entities/initEntity';
-import { parseJournalJson, bookPeriodFromDate } from '@/lib/accounting/journalTransfer';
+import { parseJournalJson, bookPeriodFromDate, buildJournalPayload, orderForTransfer } from '@/lib/accounting/journalTransfer';
 import { generateUniqueEntryCode } from '@/lib/utils/entryCodeGenerator';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
-import { Plus, Search, Trash2, ChevronRight, Building2, PhoneCall, Phone, Award, ShieldCheck, Upload, Loader2 } from 'lucide-react';
+import { Plus, Search, Trash2, ChevronRight, ChevronDown, Building2, PhoneCall, Phone, Award, ShieldCheck, Upload, Download, Loader2, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Company } from '@/types/company';
 import SignUpForm, { type UserRegistration } from './SignUpForm';
+import { BrandLogo } from '@/components/layout/BrandLogo';
+import { prefetchRoute } from '@/lib/routePrefetch';
 
 const ENTITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   sole_proprietorship: { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-100' },
@@ -24,6 +27,12 @@ const ENTITY_COLORS: Record<string, { bg: string; text: string; border: string }
   aop_boi:            { bg: 'bg-lime-50',    text: 'text-lime-700',   border: 'border-lime-100' },
   cooperative:        { bg: 'bg-cyan-50',    text: 'text-cyan-700',   border: 'border-cyan-100' },
 };
+
+// ── SIGN-UP / REGISTRATION GATE SUSPENDED (hidden, NOT deleted) ──────────────
+// The onboarding form ("Welcome to CA Studio") is turned off. The app opens
+// straight on the companies list and never asks for contact details.
+// TO RESTORE THE SIGN-UP GATE: set this back to true.
+const REGISTRATION_GATE_ENABLED = false;
 
 // Read registration status synchronously — runs once before the very first render.
 // This means the form can NEVER appear if the user has already registered,
@@ -43,6 +52,12 @@ function readRegistration(): UserRegistration | null {
   } catch {
     // If anything goes wrong, fall back to showing the form
   }
+  // GATE SUSPENDED: treat an unregistered visitor as registered (placeholder
+  // profile) so the sign-up form never renders. Nothing is written to
+  // localStorage, so flipping the flag above restores the original behaviour.
+  if (!REGISTRATION_GATE_ENABLED) {
+    return { name: '', phone: '', email: '', state: '', city: '', profession: '', expertise: [] };
+  }
   return null;
 }
 
@@ -56,6 +71,74 @@ export default function CompaniesPage() {
   const [importingCo, setImportingCo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  // "New Company" is one button that opens a two-option menu (Create / Import).
+  // The menu is position:fixed because the navy hero clips its overflow.
+  const [newMenu, setNewMenu] = useState<{ top: number; right: number } | null>(null);
+  const newBtnRef = useRef<HTMLButtonElement>(null);
+  const newMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!newMenu) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (newMenuRef.current?.contains(t) || newBtnRef.current?.contains(t)) return;
+      setNewMenu(null);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setNewMenu(null); };
+    const onShift = () => setNewMenu(null);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onShift);
+    window.addEventListener('scroll', onShift, true);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onShift);
+      window.removeEventListener('scroll', onShift, true);
+    };
+  }, [newMenu]);
+  const toggleNewMenu = () => {
+    const r = newBtnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    setNewMenu((m) => (m ? null : { top: r.bottom + 8, right: window.innerWidth - r.right }));
+  };
+
+  // Right-click (or the context-menu key / Shift+F10) on a company card opens
+  // its options — Export company and Delete. Portalled to <body> and closed on
+  // outside click, Esc, scroll, resize or window blur.
+  const [cardMenu, setCardMenu] = useState<{ x: number; y: number; company: Company; viaKeyboard: boolean } | null>(null);
+  const cardMenuRef = useRef<HTMLDivElement>(null);
+  const cardMenuOrigin = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!cardMenu) return;
+    const close = () => setCardMenu(null);
+    const onDown = (e: MouseEvent) => {
+      if (cardMenuRef.current?.contains(e.target as Node)) return;
+      close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      close();
+      cardMenuOrigin.current?.focus();
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('blur', close);
+    // Keyboard users land on the first option straight away.
+    if (cardMenu.viaKeyboard) {
+      requestAnimationFrame(() => cardMenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus());
+    }
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('blur', close);
+    };
+  }, [cardMenu]);
 
   // Load companies list whenever we have registration data
   useEffect(() => {
@@ -81,9 +164,74 @@ export default function CompaniesPage() {
     return <SignUpForm onSuccess={(data) => setRegistrationData(data)} />;
   }
 
-  const handleDelete = (e: React.MouseEvent, company: Company) => {
+  /* ── Company card options (right-click menu) ── */
+  const MENU_W = 208, MENU_H = 128;
+  const openCardMenu = (el: HTMLElement, company: Company, at?: { x: number; y: number }) => {
+    cardMenuOrigin.current = el;
+    let x: number, y: number;
+    if (at) { x = at.x; y = at.y; }
+    else { const r = el.getBoundingClientRect(); x = r.left + 16; y = r.top + 44; }
+    x = Math.max(8, Math.min(x, window.innerWidth - MENU_W - 8));
+    y = Math.max(8, Math.min(y, window.innerHeight - MENU_H - 8));
+    setCardMenu({ x, y, company, viaKeyboard: !at });
+  };
+  const onCardContextMenu = (e: React.MouseEvent<HTMLElement>, company: Company) => {
     e.preventDefault();
     e.stopPropagation();
+    // A keyboard-invoked context menu reports no pointer position (button ≠ 2).
+    const fromPointer = e.button === 2 && (e.clientX !== 0 || e.clientY !== 0);
+    openCardMenu(e.currentTarget, company, fromPointer ? { x: e.clientX, y: e.clientY } : undefined);
+  };
+  const onCardKeyDown = (e: React.KeyboardEvent<HTMLElement>, company: Company) => {
+    if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+      e.preventDefault();
+      openCardMenu(e.currentTarget, company);
+    }
+  };
+  const onCardMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    const items = Array.from(cardMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    const next =
+      e.key === 'Home' ? 0
+      : e.key === 'End' ? items.length - 1
+      : e.key === 'ArrowDown' ? (i + 1) % items.length
+      : (i - 1 + items.length) % items.length;
+    items[next].focus();
+  };
+
+  // Same file the Journal page's "Export JSON" produced (vaarta_journal_import_v2,
+  // same keys, same pretty-printing, same filename pattern) — for ALL of the
+  // company's journal entries, not a date-filtered view.
+  const downloadJson = (filename: string, data: unknown) => {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  const handleExportCompany = (company: Company) => {
+    setCardMenu(null);
+    const entries = listJournalEntries(company.id);
+    if (entries.length === 0) {
+      toast.error(`"${company.name}" has no journal entries to export.`);
+      return;
+    }
+    const payload = buildJournalPayload(company.name || 'Company', entries);
+    const fromDate = payload.entries[0].entry_date;
+    const toDate = payload.entries[payload.entries.length - 1].entry_date;
+    const filename = `journal_export_${(company.name || 'company').replace(/\s+/g, '_')}_${fromDate}_to_${toDate}.json`;
+    downloadJson(filename, payload);
+    toast.success(`Exported ${payload.count} journal entr${payload.count === 1 ? 'y' : 'ies'} from "${company.name}".`);
+  };
+
+  const handleDeleteCompany = (company: Company) => {
+    setCardMenu(null);
     if (!confirm(`Delete "${company.name}"?\n\nAll journal entries for this company will be permanently deleted.`)) return;
     deleteCompany(company.id);
     setCompanies(listCompanies());
@@ -120,12 +268,34 @@ export default function CompaniesPage() {
       createInitialBookPeriod(company.id);
       try { initEntityData(company); } catch { /* non-fatal */ }
 
+      // Create entries in the canonical transfer order (the Journal's display
+      // order: date, then position in the file), so a company exported from here
+      // comes back in exactly the same sequence. Codes follow that same order per
+      // voucher type (JE00001…, S00001…, P00001…) the way in-app entries get them;
+      // they are counted locally rather than rescanning the store for every entry.
+      const prefixOf = new Map<string, string>();   // voucher type → code prefix
+      const nextNum = new Map<string, number>();    // code prefix  → next number
+      const takeCode = (voucherType: string): { code: string; undo: () => void } => {
+        let prefix = prefixOf.get(voucherType);
+        if (prefix === undefined) {
+          const seed = generateUniqueEntryCode(company.id, voucherType); // e.g. S00001
+          prefix = seed.replace(/\d+$/, '');
+          prefixOf.set(voucherType, prefix);
+          if (!nextNum.has(prefix)) nextNum.set(prefix, parseInt(seed.slice(prefix.length), 10) || 1);
+        }
+        const p = prefix;
+        const n = nextNum.get(p)!;
+        nextNum.set(p, n + 1);
+        return { code: p + String(n).padStart(5, '0'), undo: () => nextNum.set(p, n) };
+      };
+
       let ok = 0, failed = 0;
-      for (const item of parsed.entries) {
+      for (const item of orderForTransfer(parsed.entries)) {
+        const { code, undo } = takeCode(item.voucher_type);
         try {
           createJournalEntry({
             company_id: company.id,
-            entry_code: generateUniqueEntryCode(company.id),
+            entry_code: code,
             entry_date: item.entry_date,
             voucher_type: item.voucher_type,
             voucher_number: item.voucher_number ?? undefined,
@@ -136,7 +306,7 @@ export default function CompaniesPage() {
             is_closing: false,
           });
           ok += 1;
-        } catch { failed += 1; }
+        } catch { undo(); failed += 1; }
       }
       setCompanies(listCompanies());
       toast.success(`Imported "${name}" with ${ok} entr${ok === 1 ? 'y' : 'ies'}${parsed.skipped || failed ? ` (${parsed.skipped + failed} skipped)` : ''}. Set entity & GST details in Settings.`);
@@ -159,13 +329,16 @@ export default function CompaniesPage() {
     <div className="min-h-screen app-surface">
       {/* ── Hero header ── */}
       <header className="px-4 pt-4 sm:px-6 sm:pt-6">
-        <div className="hero max-w-6xl mx-auto px-6 sm:px-8 py-7 flex items-center justify-between gap-4">
+        <div className="hero px-6 sm:px-8 py-7 flex items-center justify-between gap-4">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border border-white/10" />
-          <div className="relative">
-            <p className="hero-muted text-xs font-semibold mb-1.5">Professional accounting software for India</p>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-              <span className="hero-accent">CA</span> Studio Workspace
+          {/* The logo carries the product name — it is the heading, not typed text. */}
+          <div className="relative flex items-center gap-4 min-w-0">
+            <h1 className="m-0 inline-flex shrink-0 items-center rounded-[14px] bg-white px-4 py-2.5 shadow-[0_8px_24px_-12px_rgba(7,22,44,0.6)]">
+              <BrandLogo height={38} />
             </h1>
+            <p className="hero-muted hidden sm:block text-[12.5px] font-semibold leading-snug max-w-[24ch]">
+              Professional accounting software for India
+            </p>
           </div>
           <div className="relative flex shrink-0 items-center gap-2">
             <input
@@ -175,25 +348,112 @@ export default function CompaniesPage() {
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportCompany(f); }}
             />
+            {/* App-level settings. PLACEHOLDER — the user will define its use later;
+                until then it only says so. Replace the onClick when that lands. */}
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importingCo}
-              title="Import a company from a journal JSON (vaarta_journal_import_v2)"
-              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-xs font-bold text-slate-700 bg-white/90 border border-white/40 hover:bg-white transition-all shadow-sm disabled:opacity-60 cursor-pointer"
+              onClick={() => toast('Settings are coming soon.')}
+              title="Settings"
+              aria-label="Settings"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-white bg-white/10 hover:bg-white/20 transition-colors duration-[160ms] cursor-pointer"
             >
-              {importingCo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {importingCo ? 'Importing…' : 'Import Company'}
+              <SettingsIcon className="h-[18px] w-[18px]" />
             </button>
-            <Link to="/companies/create" className="btn-pill-primary">
-              <Plus className="h-4 w-4" />
-              New Company
-            </Link>
+            <button
+              ref={newBtnRef}
+              type="button"
+              onClick={toggleNewMenu}
+              disabled={importingCo}
+              aria-haspopup="menu"
+              aria-expanded={!!newMenu}
+              className="btn-pill-primary cursor-pointer disabled:cursor-wait"
+            >
+              {importingCo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {importingCo ? 'Importing…' : 'New Company'}
+              {!importingCo && (
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-[160ms] ${newMenu ? 'rotate-180' : ''}`} />
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      {/* New Company → Create / Import. Same two actions as before; only the UI changed. */}
+      {newMenu && (
+        <div
+          ref={newMenuRef}
+          role="menu"
+          style={{ position: 'fixed', top: newMenu.top, right: newMenu.right, zIndex: 80 }}
+          className="reveal w-72 rounded-[12px] border border-[var(--sand)] bg-white p-1.5 shadow-[var(--shadow-lift)]"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { setNewMenu(null); navigate('/companies/create'); }}
+            className="flex w-full items-center gap-3 rounded-[10px] px-2.5 py-2.5 text-left transition-colors duration-[160ms] hover:bg-[var(--cream-2)] cursor-pointer"
+          >
+            <span className="quick-tile-icon"><Building2 className="h-4 w-4" /></span>
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-bold text-[var(--ink)]">Create</span>
+              <span className="block text-[11.5px] text-[var(--ink-3)]">Set up a new company step by step</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { setNewMenu(null); fileInputRef.current?.click(); }}
+            title="Import a company from a journal JSON (vaarta_journal_import_v2)"
+            className="flex w-full items-center gap-3 rounded-[10px] px-2.5 py-2.5 text-left transition-colors duration-[160ms] hover:bg-[var(--cream-2)] cursor-pointer"
+          >
+            <span className="quick-tile-icon"><Upload className="h-4 w-4" /></span>
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-bold text-[var(--ink)]">Import</span>
+              <span className="block text-[11.5px] text-[var(--ink-3)]">Bring in a company from a journal file (.json)</span>
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Company options — right-click a card (or the context-menu key / Shift+F10) */}
+      {cardMenu && createPortal(
+        <div
+          ref={cardMenuRef}
+          role="menu"
+          aria-label={`${cardMenu.company.name} — options`}
+          onKeyDown={onCardMenuKeyDown}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ position: 'fixed', left: cardMenu.x, top: cardMenu.y, width: MENU_W, zIndex: 90 }}
+          className="reveal rounded-[12px] border border-[var(--sand)] bg-white p-1.5 shadow-[var(--shadow-lift)]"
+        >
+          <p className="truncate px-2.5 pt-1 pb-1.5 text-[11px] font-semibold text-[var(--ink-3)]" title={cardMenu.company.name}>
+            {cardMenu.company.name}
+          </p>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => handleExportCompany(cardMenu.company)}
+            className="flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[13px] font-semibold text-[var(--ink)] transition-colors duration-[160ms] hover:bg-[var(--cream-2)] focus-visible:bg-[var(--cream-2)] cursor-pointer"
+          >
+            <Download className="h-4 w-4 shrink-0 text-[var(--slate-blue)]" />
+            Export company
+          </button>
+          <div className="my-1 h-px bg-[var(--cream)]" aria-hidden="true" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => handleDeleteCompany(cardMenu.company)}
+            className="flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[13px] font-semibold text-[var(--bad)] transition-colors duration-[160ms] hover:bg-[var(--bad-soft)] focus-visible:bg-[var(--bad-soft)] cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4 shrink-0" />
+            Delete
+          </button>
+        </div>,
+        document.body,
+      )}
+
+      {/* Full width, same side gutter as the banner above — cards start at the
+          left edge and as many fit per row as the screen allows. */}
+      <main className="px-4 sm:px-6 py-8">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -237,7 +497,7 @@ export default function CompaniesPage() {
             </div>
 
             {/* ── Cards ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))]">
               {filtered.map(company => {
                 const meta   = ENTITY_TYPES[company.entity_type as EntityType];
                 const colors = ENTITY_COLORS[company.entity_type] ?? { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200' };
@@ -245,13 +505,17 @@ export default function CompaniesPage() {
                   <Link
                     key={company.id}
                     to={`/company/${company.id}`}
+                    onContextMenu={(e) => onCardContextMenu(e, company)}
+                    onKeyDown={(e) => onCardKeyDown(e, company)}
+                    onMouseEnter={() => prefetchRoute(`/company/${company.id}`)}
+                    onFocus={() => prefetchRoute(`/company/${company.id}`)}
                     className="group stat-card hover:border-blue-200 !p-5 block"
                   >
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start mb-3">
                       <div className="flex items-start gap-3 min-w-0">
                         <span className="icon-badge icon-badge-sm mt-0.5 shrink-0"><Building2 className="h-4 w-4" /></span>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors text-sm">
+                          <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-blue-700 transition-colors text-sm" title={company.name}>
                             {company.name}
                           </h3>
                           <span className={`inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${colors.bg} ${colors.text} ${colors.border}`}>
@@ -259,13 +523,6 @@ export default function CompaniesPage() {
                           </span>
                         </div>
                       </div>
-                      <button
-                        onClick={e => handleDelete(e, company)}
-                        className="ml-2 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                        title="Delete company"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
                     </div>
 
                     <div className="space-y-1 text-xs text-gray-500">
@@ -298,35 +555,10 @@ export default function CompaniesPage() {
           </>
         )}
 
-        {/* ── Contact Us Banner ── */}
-        <footer className="mt-12 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm shadow-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 bg-gradient-to-b from-blue-600 to-indigo-600 h-full" />
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
-              <PhoneCall className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Questions or need assistance?</h3>
-              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed font-medium">
-                You can pre-register for upcoming modules or get support from our activation agents immediately.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <button onClick={() => setShowDetailsModal(true)} className="flex-1 md:flex-none inline-flex items-center justify-center h-10 px-5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm cursor-pointer">
-              View Registered Profile
-            </button>
-            <div className="flex-1 md:flex-none inline-flex flex-col items-center justify-center gap-0.5 h-10 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-[0_3px_10px_0_rgba(37,99,235,0.25)]">
-              <span className="text-[10px] font-semibold opacity-80 leading-none">Pre-register / Contact Us</span>
-              <span className="text-xs font-bold tracking-wide leading-none">9740018205 &nbsp;·&nbsp; 87222 51178</span>
-            </div>
-          </div>
-        </footer>
-
         {/* ── Registered Profile Details Modal ── */}
         {showDetailsModal && registrationData && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowDetailsModal(false)}>
-            <div className="bg-white border border-slate-200 rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="ca-modal-panel bg-white border border-slate-200 rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
                 <div>

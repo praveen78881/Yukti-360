@@ -22,6 +22,7 @@ import { queriesDeclarations, queriesExecutors } from './queries';
 import { validationDeclarations, validationExecutors } from './validation';
 import { excelDeclarations, excelExecutors } from './excel';
 import { bulkDeclarations, bulkExecutors } from './bulk';
+import { projectorDeclarations, projectorExecutors } from './projector';
 
 // Re-export types
 export type { ToolResult, ToolDeclaration, WorkspaceFile, ToolExecutor } from './types';
@@ -57,6 +58,8 @@ export const CARP_TOOLS: ToolDeclaration[] = [
   ...excelDeclarations,
   // Bulk Workspace (8)
   ...bulkDeclarations,
+  // Projector (1) — shows reports as a hologram on the dashboard
+  ...projectorDeclarations,
 ];
 
 /* ── Executor map ── */
@@ -76,6 +79,7 @@ const executorMap: Record<string, ToolExecutor> = {
   ...validationExecutors,
   ...excelExecutors,
   ...bulkExecutors,
+  ...projectorExecutors,
 };
 
 /* ── Unified executor ── */

@@ -378,6 +378,43 @@ export function registerCustomAccount(
   if (acct) mirrorUpsert('custom_accounts', acct);
 }
 
+/** Batch form of registerCustomAccount: the same per-account rules applied in
+ *  order, but with ONE load and ONE save for the whole list. The seed routines
+ *  run on every page load and register ~110 accounts; calling the single form
+ *  in a loop re-parsed and re-serialised the entire database per account. */
+export function registerCustomAccounts(
+  companyId: string,
+  accounts: ReadonlyArray<{ name: string; group: string; nature: string }>,
+): void {
+  if (accounts.length === 0) return;
+  const db = loadDb();
+  if (!db.custom_accounts) db.custom_accounts = [];
+  const touched: CustomAccount[] = [];
+  for (const { name, group: accountGroup, nature } of accounts) {
+    const key = name.trim().replace(/\s+/g, ' ').toLowerCase();
+    const existing = db.custom_accounts.find(
+      (a) => a.company_id === companyId && a.name.trim().replace(/\s+/g, ' ').toLowerCase() === key
+    );
+    if (existing) {
+      if (accountGroup) { existing.account_group = accountGroup; existing.nature = nature; }
+      touched.push(existing);
+    } else {
+      const acct: CustomAccount = {
+        id: generateId(),
+        company_id: companyId,
+        name: name.trim().replace(/\s+/g, ' '),
+        account_group: accountGroup,
+        nature,
+        created_at: new Date().toISOString(),
+      };
+      db.custom_accounts.push(acct);
+      touched.push(acct);
+    }
+  }
+  saveDb(db);
+  for (const acct of touched) mirrorUpsert('custom_accounts', acct);
+}
+
 /** Delete a custom account from the registry by id. */
 export function deleteCustomAccount(companyId: string, id: string): void {
   const db = loadDb();

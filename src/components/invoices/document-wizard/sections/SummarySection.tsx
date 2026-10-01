@@ -1,4 +1,5 @@
 import type { SalesTotals, PurchaseTotals, DocumentMode } from '../types';
+import { inr } from '../ui';
 
 interface SalesSummaryProps {
   kind: 'sales';
@@ -14,51 +15,38 @@ interface PurchaseSummaryProps {
 
 type SummarySectionProps = SalesSummaryProps | PurchaseSummaryProps;
 
-function inr(n: number): string {
-  return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function Row({ label, value, muted }: { label: string; value: number; muted?: boolean }) {
+  return (
+    <div className={`yk-sum-row ${muted ? 'muted' : ''}`}>
+      <span>{label}</span>
+      <span className="num">{inr(value)}</span>
+    </div>
+  );
 }
 
-/** Right column of the "Payment & routing" paygrid — the summary box. */
+/** Bill summary — displays the totals the wizard state already computed. */
 export function SummarySection(props: SummarySectionProps) {
-  if (props.kind === 'sales') {
-    const { totals } = props;
-    return (
-      <div className="sumbox">
-        <div className="hd">Summary</div>
-        <div className="sr"><span>Taxable</span><span>{inr(totals.taxable)}</span></div>
-        {totals.isIntra ? (
-          <>
-            <div className="sr"><span>CGST</span><span>{inr(totals.cgst)}</span></div>
-            <div className="sr"><span>SGST</span><span>{inr(totals.sgst)}</span></div>
-          </>
-        ) : (
-          <div className="sr"><span>IGST</span><span>{inr(totals.igst)}</span></div>
-        )}
-        {totals.cess > 0 && (
-          <div className="sr"><span>Cess</span><span>{inr(totals.cess)}</span></div>
-        )}
-        <div className="sr off"><span>Round-off</span><span>{inr(totals.roundOff)}</span></div>
-        <div className="sr tot"><span>Total</span><span>₹ {inr(totals.total)}</span></div>
-        {totals.amountInWords && <div className="swords">{totals.amountInWords}</div>}
-      </div>
-    );
-  }
-
-  // Purchase summary
   const { totals } = props;
+  const isSales = props.kind === 'sales';
+  const sales = isSales ? (props.totals as SalesTotals) : null;
   return (
-    <div className="sumbox">
-      <div className="hd">Summary</div>
-      <div className="sr"><span>Taxable</span><span>{inr(totals.taxable)}</span></div>
+    <div className="yk-sum" data-testid="bill-summary">
+      <Row label="Taxable value" value={totals.taxable} />
       {totals.isIntra ? (
         <>
-          <div className="sr"><span>CGST</span><span>{inr(totals.cgst)}</span></div>
-          <div className="sr"><span>SGST</span><span>{inr(totals.sgst)}</span></div>
+          <Row label="CGST" value={totals.cgst} />
+          <Row label="SGST" value={totals.sgst} />
         </>
       ) : (
-        <div className="sr"><span>IGST</span><span>{inr(totals.igst)}</span></div>
+        <Row label="IGST" value={totals.igst} />
       )}
-      <div className="sr tot"><span>Total</span><span>₹ {inr(totals.total)}</span></div>
+      {sales && sales.cess > 0 && <Row label="Cess" value={sales.cess} />}
+      {sales && <Row label="Round-off" value={sales.roundOff} muted />}
+      <div className="yk-sum-total">
+        <span>Total</span>
+        <span className="num" data-testid="bill-total">₹ {inr(totals.total)}</span>
+      </div>
+      {sales?.amountInWords && <p className="yk-sum-words">{sales.amountInWords}</p>}
     </div>
   );
 }

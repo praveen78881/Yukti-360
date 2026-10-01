@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Trash2, X, CalendarDays, AlertCircle, Check } from 'lucide-react';
 import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { generateUniqueEntryCode } from '@/lib/utils/entryCodeGenerator';
 import { updateJournalEntry } from '@/lib/offlineDb';
@@ -58,6 +58,62 @@ const emptyLine = (): LineItem => ({ account_name: '', debit: '', credit: '' });
 
 const noSpinner = '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
+/* ── Presentation helpers (display only — nothing here feeds the posting logic) ── */
+
+/** JE00003 → JE003, JE01234 → JE1234 (surplus leading zeros dropped, min 3 digits).
+    Anything that isn't "JE" + digits is shown unchanged. */
+function formatVoucherNo(code: string): string {
+  const m = /^JE(\d+)$/.exec(code);
+  if (!m) return code;
+  return 'JE' + m[1].replace(/^0+(?=\d)/, '').padStart(3, '0');
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** '2026-09-27' → '27 Sep 2026' (read straight off the ISO string — no timezone shift). */
+function formatDisplayDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso || 'Pick a date';
+  return `${m[3]} ${MONTHS[Number(m[2]) - 1] ?? m[2]} ${m[1]}`;
+}
+
+/** Today as YYYY-MM-DD on the user's LOCAL calendar. toISOString() would give the
+    UTC date, which in India shows yesterday between 00:00 and 05:30. */
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Which side a line sits on, for the green (Dr) / red (Cr) cue. Visual only. */
+function lineSide(line: { debit: string; credit: string }): 'dr' | 'cr' | null {
+  const has = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v)) && Number(v) !== 0;
+  if (has(line.debit)) return 'dr';
+  if (has(line.credit)) return 'cr';
+  return null;
+}
+
+/* Field styling for this dialog. Un-layered on purpose: it must beat the Tailwind
+   utilities AccountComboBox puts on its own input (border-gray-200, bg-white,
+   ring-blue), and un-layered CSS always wins over @layer utilities. Debit fields
+   carry the app's ok-green, credit fields its bad-red, softer at rest and full on
+   focus, so Dr and Cr read apart at a glance. */
+const FIELD_CSS = `
+.je-field{border:1.5px solid var(--sand);border-radius:10px;background:var(--cream-2);color:var(--ink);
+  transition:background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease}
+.je-field:hover{border-color:var(--sand-2)}
+.je-field:focus{outline:none;background:#fff;border-color:var(--slate-blue);box-shadow:0 0 0 3px rgba(23,69,127,.12)}
+.je-field.je-dr{border-color:rgba(47,125,90,.45)}
+.je-field.je-dr:hover{border-color:rgba(47,125,90,.72)}
+.je-field.je-dr:focus{border-color:#2F7D5A;box-shadow:0 0 0 3px rgba(47,125,90,.16)}
+.je-field.je-cr{border-color:rgba(178,59,51,.42)}
+.je-field.je-cr:hover{border-color:rgba(178,59,51,.7)}
+.je-field.je-cr:focus{border-color:#B23B33;box-shadow:0 0 0 3px rgba(178,59,51,.14)}
+.je-field::placeholder{color:var(--ink-3)}
+`;
+
+/* One grid for the column headers, every line and the totals row, so each total
+   sits exactly under its own column. */
+const LINE_GRID = 'grid grid-cols-[minmax(0,1fr)_104px_104px_32px] sm:grid-cols-[minmax(0,1fr)_132px_132px_36px] gap-2';
+
 export function ManualEntryDialog({
   open,
   onOpenChange,
@@ -68,7 +124,7 @@ export function ManualEntryDialog({
   initialEntry,
 }: ManualEntryDialogProps) {
   const { company } = useCompany();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localToday();
   const isEditMode = !!initialEntry;
   const [date, setDate] = useState(initialEntry?.entry_date ?? today);
   const voucherType = 'JRN';
@@ -121,7 +177,7 @@ export function ManualEntryDialog({
         nature: l.nature as Nature | undefined,
       })));
     } else {
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(localToday());
       setNarration('');
       setLines(defaultLines ? defaultLines.map(dl => ({ ...emptyLine(), ...dl })) : [emptyLine(), emptyLine()]);
       setGstMeta(g => ({ ...g, enabled: false, mode: null, cgstAmt: '', sgstAmt: '', igstAmt: '', gstLineIdx: -1 }));
@@ -130,6 +186,24 @@ export function ManualEntryDialog({
     setError('');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // The voucher number this entry will get. generateUniqueEntryCode is a pure read
+  // (highest existing code + 1 — it writes and reserves nothing), and handleSave
+  // calls it with these same arguments at post time, so the preview is exactly
+  // what posting assigns. Recomputed each time the dialog opens.
+  const nextEntryCode = useMemo(
+    () => (open && !isEditMode ? generateUniqueEntryCode(companyId, voucherType) : ''),
+    [open, isEditMode, companyId, voucherType],
+  );
+  const voucherLabel = formatVoucherNo(isEditMode ? (initialEntry?.entry_code ?? '') : nextEntryCode);
+
+  // Clicking anywhere on the date opens the calendar.
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const openDatePicker = () => {
+    const el = dateInputRef.current;
+    if (!el) return;
+    try { el.showPicker(); } catch { el.focus(); }
+  };
 
   const handleGstChange = (field: keyof typeof gstMeta, value: any) => {
     setGstMeta(prev => {
@@ -386,155 +460,206 @@ export function ManualEntryDialog({
 
   if (!open) return null;
 
+  const totalTone = isBalanced
+    ? 'text-[var(--ok)]'
+    : hasMovement ? 'text-[var(--bad)]' : 'text-[var(--ink-3)]';
+
   return (
     <>
+      <style>{FIELD_CSS}</style>
+
       {/* ── Main Dialog ── */}
       {/* Backdrop deliberately has no close handler — the entry form closes only via the ✕ / Cancel buttons, so a stray click can't discard in-progress edits. */}
       <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col"
+          className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col"
           onClick={e => e.stopPropagation()}
         >
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-4">
-              <h2 className="text-sm font-bold text-gray-900">{isEditMode ? `Edit Entry — ${initialEntry?.entry_code}` : 'New Journal Entry'}</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Date</span>
+          {/* Header — title + the voucher number on the left; date and close on the right */}
+          <div className="flex items-start justify-between gap-4 px-4 sm:px-6 pt-5 pb-4 border-b border-[var(--cream)] shrink-0">
+            <div className="min-w-0">
+              <h2 className="font-display text-[16px] font-semibold uppercase tracking-[0.045em] leading-none text-[var(--ink)]">
+                Journal Entry
+              </h2>
+              <div className="mt-2 flex items-center gap-2">
+                <span
+                  className="code-pill"
+                  title={isEditMode ? 'Voucher number' : 'Voucher number this entry will get when posted'}
+                >
+                  {voucherLabel}
+                </span>
+                {isEditMode && <span className="status-idle">Editing</span>}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* The whole chip is the date control: a click anywhere opens the calendar. */}
+              <div
+                className="relative inline-flex h-9 items-center gap-2 rounded-[10px] border-[1.5px] border-[var(--sand)] bg-[var(--cream-2)] pl-3 pr-3.5 text-[13px] font-semibold text-[var(--ink)] transition-[background-color,border-color,box-shadow] duration-[160ms] hover:border-[var(--sand-2)] focus-within:border-[var(--slate-blue)] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(23,69,127,0.12)]"
+              >
+                <CalendarDays className="h-4 w-4 text-[var(--slate-blue)]" />
+                <span className="font-mono tabular-nums whitespace-nowrap">{formatDisplayDate(date)}</span>
                 <input
+                  ref={dateInputRef}
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="h-7 w-36 px-2 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400"
+                  onClick={openDatePicker}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDatePicker(); } }}
+                  aria-label="Entry date"
+                  title="Change date"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={saving}
+                aria-label="Close"
+                title="Close"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-[var(--ink-3)] transition-colors duration-[160ms] hover:bg-[var(--cream-2)] hover:text-[var(--ink)] disabled:opacity-40"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <button onClick={handleClose} disabled={saving} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40">
-              <X className="h-4 w-4" />
-            </button>
           </div>
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto">
 
             {/* Lines section */}
-            <div className="px-6 pt-5 pb-4">
+            <div className="px-4 sm:px-6 pb-4">
 
-              {/* Column headers */}
-              <div className="grid grid-cols-[1fr_116px_116px_32px] gap-2 mb-1.5 px-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Account</span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Debit (₹)</span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Credit (₹)</span>
-                <span />
+              {/* Column headers — stay pinned while a long entry scrolls; the + adds a line */}
+              <div className={`${LINE_GRID} items-end sticky top-0 z-10 bg-white pt-4 pb-2`}>
+                <span className="label-caps">Account</span>
+                <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.16em] text-right pr-[13.5px] text-[var(--ok)]">Debit (₹)</span>
+                <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.16em] text-right pr-[13.5px] text-[var(--bad)]">Credit (₹)</span>
+                <button
+                  type="button"
+                  onClick={addLine}
+                  aria-label="Add line"
+                  title="Add line"
+                  className="inline-flex h-8 w-8 items-center justify-center justify-self-center rounded-[9px] border-[1.5px] border-[var(--sand)] bg-white text-[var(--navy)] transition-colors duration-[160ms] hover:border-[var(--navy)] hover:bg-[var(--navy-soft)]"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
 
               {/* Lines */}
-              <div className="space-y-1">
-                {lines.map((line, idx) => (
-                    <div key={idx} className="grid grid-cols-[1fr_116px_116px_32px] gap-2 items-center">
+              <div className="space-y-1.5">
+                {lines.map((line, idx) => {
+                  const side = lineSide(line);
+                  return (
+                    <div key={idx} className={`${LINE_GRID} items-center`}>
                       <AccountComboBox
                         companyId={companyId}
                         value={line.account_name}
                         onChange={(name, meta?: any) => handleAccountNameChange(idx, name, meta)}
                         placeholder="Account name"
-                        className="h-8 text-sm"
+                        className={`je-field h-9 text-sm ${side === 'dr' ? 'je-dr' : side === 'cr' ? 'je-cr' : ''}`}
                       />
                       <input
                         type="number"
                         value={line.debit}
                         onChange={e => { updateLine(idx, 'debit', e.target.value); if (e.target.value) updateLine(idx, 'credit', ''); }}
-                        placeholder="0.00"
-                        className={`w-full h-8 px-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 text-right font-mono ${noSpinner}`}
+                        aria-label={`Debit, line ${idx + 1}`}
+                        className={`je-field je-dr w-full h-9 px-3 text-sm text-right font-mono tabular-nums ${noSpinner}`}
                         step="0.01"
                       />
                       <input
                         type="number"
                         value={line.credit}
                         onChange={e => { updateLine(idx, 'credit', e.target.value); if (e.target.value) updateLine(idx, 'debit', ''); }}
-                        placeholder="0.00"
-                        className={`w-full h-8 px-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 text-right font-mono ${noSpinner}`}
+                        aria-label={`Credit, line ${idx + 1}`}
+                        className={`je-field je-cr w-full h-9 px-3 text-sm text-right font-mono tabular-nums ${noSpinner}`}
                         step="0.01"
                       />
                       <button
+                        type="button"
                         onClick={() => removeLine(idx)}
                         disabled={lines.length <= 2}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-colors"
+                        aria-label={`Remove line ${idx + 1}`}
+                        title="Remove line"
+                        className="inline-flex h-8 w-8 items-center justify-center justify-self-center rounded-[9px] text-[var(--ink-3)] transition-colors duration-[160ms] hover:bg-[var(--bad-soft)] hover:text-[var(--bad)] disabled:pointer-events-none disabled:opacity-25"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                ))}
+                  );
+                })}
               </div>
 
-              {/* Add Line + Totals row */}
-              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                <button
-                  onClick={addLine}
-                  className="inline-flex items-center gap-1.5 h-7 px-3 text-xs font-semibold text-blue-600 border border-blue-200 border-dashed rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  <Plus className="h-3 w-3" /> Add Line
-                </button>
-
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-400 font-medium">Total</span>
-                  <span className={`font-mono font-bold px-2 py-1 rounded ${isBalanced ? 'text-emerald-700' : hasMovement ? 'text-red-600' : 'text-gray-500'}`}>
-                    Dr {formatIndianCurrency(rd)}
-                  </span>
-                  <span className="text-gray-300">=</span>
-                  <span className={`font-mono font-bold px-2 py-1 rounded ${isBalanced ? 'text-emerald-700' : hasMovement ? 'text-red-600' : 'text-gray-500'}`}>
-                    Cr {formatIndianCurrency(rc)}
-                  </span>
-                </div>
+              {/* Totals — each total sits exactly under its own column */}
+              <div className={`${LINE_GRID} items-center mt-3 pt-3 border-t-[1.5px] border-[var(--sand-2)]`}>
+                <span className="label-caps">Total</span>
+                <span className={`pr-[13.5px] text-right font-mono text-[13.5px] font-semibold tabular-nums whitespace-nowrap ${totalTone}`}>
+                  {formatIndianCurrency(rd)}
+                </span>
+                <span className={`pr-[13.5px] text-right font-mono text-[13.5px] font-semibold tabular-nums whitespace-nowrap ${totalTone}`}>
+                  {formatIndianCurrency(rc)}
+                </span>
+                <span />
               </div>
             </div>
 
             {/* Divider */}
-            <div className="mx-6 border-t border-gray-100" />
+            <div className="mx-4 sm:mx-6 border-t border-[var(--cream)]" />
 
             {/* Narration */}
-            <div className="px-6 py-4">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Narration</label>
+            <label className="block px-4 sm:px-6 pt-4 pb-5">
+              <span className="label-caps mb-2 block">Narration</span>
               <textarea
                 value={narration}
                 onChange={e => setNarration(e.target.value)}
                 placeholder="Being — describe this journal entry (e.g., Being rent paid for office premises for June 2026)"
                 rows={3}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 resize-none placeholder:text-gray-300 leading-relaxed"
+                className="je-field block w-full px-3 py-2.5 text-sm resize-none leading-relaxed"
               />
-            </div>
+            </label>
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-3.5 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl shrink-0">
-            <div>
-              {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
-              {!error && isBalanced && (
-                <div className="flex items-center gap-1.5">
-                  <div className="h-4 w-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <svg className="h-2.5 w-2.5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                  </div>
-                  <span className="text-xs text-emerald-700 font-semibold">Balanced · {formatIndianCurrency(rd)}</span>
-                </div>
-              )}
-              {!error && !isBalanced && hasMovement && (
-                <p className="text-xs text-amber-600 font-medium">
-                  Difference: <span className="font-mono">{formatIndianCurrency(Math.abs(rd - rc))}</span>
-                  <span className="text-amber-400 ml-1">({rd > rc ? 'Dr excess' : 'Cr excess'})</span>
+          {/* Footer — status on the left, actions on the right */}
+          <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3.5 border-t border-[var(--cream)] bg-[var(--cream-2)] rounded-b-[13px] shrink-0">
+            <div className="min-w-0 text-[12px]">
+              {error && (
+                <p className="flex items-center gap-1.5 font-semibold text-[var(--bad)]">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{error}</span>
                 </p>
               )}
-              {!error && !hasMovement && <p className="text-[11px] text-gray-400">Enter amounts above to post</p>}
+              {!error && isBalanced && (
+                <p className="flex items-center gap-1.5 font-semibold text-[var(--ok)]">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--ok-soft)] shrink-0">
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                  </span>
+                  <span>Balanced · <span className="font-mono tabular-nums">{formatIndianCurrency(rd)}</span></span>
+                </p>
+              )}
+              {!error && !isBalanced && hasMovement && (
+                <p className="font-semibold text-[var(--bad)]">
+                  Difference <span className="font-mono tabular-nums">{formatIndianCurrency(Math.abs(rd - rc))}</span>
+                  <span className="ml-1 font-medium opacity-75">· {rd > rc ? 'Dr excess' : 'Cr excess'}</span>
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={handleClose} disabled={saving} className="h-8 px-4 text-xs font-medium border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={saving}
+                className="chamfer inline-flex h-9 items-center px-6 font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--navy)] bg-white border-[1.5px] border-[var(--sand)] transition-colors duration-[160ms] hover:border-[var(--sand-2)] disabled:text-[var(--ink-3)]"
+              >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving || !isBalanced}
-                className="inline-flex items-center gap-2 h-8 px-5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="chamfer inline-flex h-9 items-center gap-2 px-7 font-display text-[12.5px] font-semibold uppercase tracking-[0.1em] text-white bg-[var(--navy)] [filter:drop-shadow(0_8px_18px_rgba(23,69,127,0.42))] transition-[background-color,filter,transform] duration-[160ms] hover:bg-[var(--navy-2)] hover:-translate-y-px disabled:pointer-events-none disabled:bg-[var(--sand)] disabled:text-[var(--ink-3)] disabled:[filter:none]"
               >
-                {saving ? <><div className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving…</> : isEditMode ? 'Save Changes' : 'Post Entry'}
+                {saving ? <><span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />Saving…</> : isEditMode ? 'Save Changes' : 'Post Entry'}
               </button>
             </div>
           </div>
@@ -544,7 +669,7 @@ export function ManualEntryDialog({
       {/* ── GST Details Popup (new 4-way intra/inter input/output system) ── */}
       {gstPopupOpen && gstMeta.mode && (
         <div className="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4" onClick={handleGstPopupDismiss}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+          <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">

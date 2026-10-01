@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCompany } from '@/hooks/useCompany';
 import { useEntityConfig } from '@/hooks/useEntityConfig';
@@ -15,17 +16,48 @@ import {
   FileCheck, FileSignature, PieChart, Link2, CheckSquare, Package,
   Settings, Sparkles, FolderOpen, File, FileCode, FilePlus, FileUp,
   Trash2, Pencil, Check, X, LayoutGrid, Search, LogOut, type LucideIcon,
+  ChevronDown, ChevronsLeft, ChevronsRight, ChevronsUpDown, LayoutDashboard,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { clearLocalDataOnSignOut } from '@/lib/sync/cloudSync';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
+import { BrandLogo } from './BrandLogo';
+import { prefetchRoute } from '@/lib/routePrefetch';
 
 interface NavItem { label: string; href: string; icon: LucideIcon }
-interface NavGroup { heading: string; items: NavItem[] }
-interface SidebarProps { onAlezaToggle?: () => void }
+/** `standalone` groups render as a single top-level link (no heading row). */
+interface NavGroup { heading: string; items: NavItem[]; standalone?: boolean }
+interface SidebarProps {
+  /** Kept for API compatibility — the nav no longer carries an Aleza launcher. */
+  onAlezaToggle?: () => void;
+}
 
 type AccessMode = 'professional' | 'business';
 const ACCESS_MODE_KEY = 'ca_access_mode';
+/** Which nav groups the viewer has opened — a per-browser convenience only. */
+const NAV_GROUPS_KEY = 'yukti_nav_groups';
+
+function titleCase(s: string) {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/* ── group icon tile ── purely decorative: each nav group heading reads as a
+      rounded row with a small tile rather than a bare ruled label ── */
+const GROUP_ICONS: Record<string, LucideIcon> = {
+  CORE: BookOpen,
+  REGISTERS: ClipboardList,
+  LEDGERS: Users,
+  'FINANCIAL STATEMENTS': BarChart3,
+  INTEGRATIONS: ArrowLeftRight,
+  'SPECIAL ACCOUNTS': Briefcase,
+  'TAX & COMPLIANCE': Percent,
+  INVENTORY: Package,
+  'BULK WORKFLOW': LayoutGrid,
+  WORKSPACE: FolderOpen,
+};
+function groupIcon(heading: string): LucideIcon {
+  return GROUP_ICONS[heading] ?? LayoutGrid;
+}
 
 /* ── file type icon ── */
 function fileIcon(type: WorkspaceFile['type']) {
@@ -42,7 +74,7 @@ interface CtxMenu {
   file?: WorkspaceFile;
 }
 
-export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarProps) {
+export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { company, companyId, loading } = useCompany();
@@ -137,6 +169,15 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
     const base = `/company/${companyId}`;
     const nav = config.nav;
 
+    // An individual only ever needs their return and TDS/TCS — no books,
+    // registers, statements, GST or inventory.
+    if (company?.entity_type === 'individual') {
+      return [{ heading: 'TAX & COMPLIANCE', items: [
+        { label: 'Income Tax', href: `${base}/income-tax`, icon: Calculator },
+        { label: 'TDS & TCS', href: `${base}/tds-register`, icon: FileSpreadsheet },
+      ] }] as NavGroup[];
+    }
+
     // Both Professional and Business now see the full (unlocked) menu.
     const g: NavGroup[] = [];
 
@@ -154,11 +195,11 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
     if (nav.billsPayable) registerItems.push({ label: 'Bills Payable', href: `${base}/bills-payable`, icon: FileText });
     if (registerItems.length > 0) g.push({ heading: 'REGISTERS', items: registerItems });
 
-    const ledgerItems: NavItem[] = [];
-    if (nav.ledger) ledgerItems.push({ label: 'Ledger Accounts', href: `${base}/ledger`, icon: BookOpen });
-    if (nav.debtors) ledgerItems.push({ label: 'Debtors', href: `${base}/debtors`, icon: Users });
-    if (nav.creditors) ledgerItems.push({ label: 'Creditors', href: `${base}/creditors`, icon: Users });
-    if (ledgerItems.length > 0) g.push({ heading: 'LEDGERS', items: ledgerItems });
+    // Ledger is one standalone link (user request, 2026-09-27) — Debtors and
+    // Creditors are no longer listed; their pages still exist at their URLs.
+    if (nav.ledger) g.push({ heading: 'LEDGER', standalone: true, items: [
+      { label: 'Ledger', href: `${base}/ledger`, icon: ScrollText },
+    ] });
 
     const fsItems: NavItem[] = [];
     if (nav.trialBalance) fsItems.push({ label: 'Trial Balance', href: `${base}/trial-balance`, icon: Scale });
@@ -173,15 +214,10 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
       // particular inside the Balance Sheet itself (BsNotesDrawer).
     }
     if (nav.cashFlowStatement !== 'never') fsItems.push({ label: 'Cash Flow Statement', href: `${base}/cash-flow`, icon: ArrowRightLeft });
-    if (nav.fundsFlowStatement !== 'never') fsItems.push({ label: 'Funds Flow Statement', href: `${base}/funds-flow`, icon: ArrowRightLeft });
+    // Funds Flow Statement removed from the nav (user request, 2026-09-27); page still at /funds-flow.
     if (nav.ratioAnalysis) fsItems.push({ label: 'Ratio Analysis', href: `${base}/ratio-analysis`, icon: BarChart3 });
     if (nav.incomeExpenditure) fsItems.push({ label: 'Income & Expenditure', href: `${base}/income-expenditure`, icon: Receipt });
     if (nav.receiptsPayments) fsItems.push({ label: 'Receipts & Payments', href: `${base}/receipts-payments`, icon: Receipt });
-    // Integrations — Tally viewer + cross-ERP import & reconciliation
-    g.push({ heading: 'INTEGRATIONS', items: [
-      { label: 'Tally', href: `${base}/tally`, icon: FileText },
-      { label: 'ERP Bridge', href: `${base}/erp-bridge`, icon: ArrowLeftRight },
-    ] });
 
     if (fsItems.length > 0) g.push({ heading: 'FINANCIAL STATEMENTS', items: fsItems });
 
@@ -189,8 +225,8 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
     if (nav.partnersCapital) specialItems.push({ label: "Partners' Capital", href: `${base}/partners-capital`, icon: Briefcase });
     if (nav.revaluation) specialItems.push({ label: 'Revaluation Account', href: `${base}/revaluation`, icon: RefreshCw });
     if (nav.realisation) specialItems.push({ label: 'Realisation Account', href: `${base}/realisation`, icon: FileText });
-    if (nav.shareCapital) specialItems.push({ label: 'Share Capital', href: `${base}/share-capital`, icon: Landmark });
-    if (nav.debentures !== 'never') specialItems.push({ label: 'Debentures', href: `${base}/debentures`, icon: ScrollText });
+    // Share Capital and Debentures are no longer listed here (user request,
+    // 2026-09-27). Their pages still exist at /share-capital and /debentures.
     if (nav.kartaCapital) specialItems.push({ label: "Karta's Capital", href: `${base}/karta-capital`, icon: Home });
     if (nav.fundAccounts) specialItems.push({ label: 'Fund Accounts', href: `${base}/fund-accounts`, icon: PiggyBank });
     if (nav.incompleteRecords) specialItems.push({ label: 'Incomplete Records', href: `${base}/incomplete-records`, icon: FileQuestion });
@@ -219,6 +255,13 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
       { label: 'Bank Statement Importer', href: `${base}/bulk-workspace`, icon: LayoutGrid },
     ]});
 
+    // Integrations — Tally viewer + cross-ERP import & reconciliation. Last of
+    // the groups, just above Workspace (the user's chosen position).
+    g.push({ heading: 'INTEGRATIONS', items: [
+      { label: 'Tally', href: `${base}/tally`, icon: FileText },
+      { label: 'ERP Bridge', href: `${base}/erp-bridge`, icon: ArrowLeftRight },
+    ] });
+
     return g;
   }, [config, companyId, company, mode]);
 
@@ -241,21 +284,38 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
       });
   }, [q, groups]);
 
+  /* ── Group open/closed state. The group holding the current page always opens,
+        so the navy "you are here" pill is never hidden inside a shut group. ── */
+  const isHrefActive = useCallback(
+    (href: string) => pathname === href || pathname?.startsWith(href + '/'),
+    [pathname],
+  );
+  const activeHeading = useMemo(
+    () => groups?.find((g) => g.items.some((it) => isHrefActive(it.href)))?.heading ?? null,
+    [groups, isHrefActive],
+  );
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem(NAV_GROUPS_KEY) || '{}') ?? {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(openGroups)); } catch { /* storage blocked */ }
+  }, [openGroups]);
+  useEffect(() => {
+    if (!activeHeading) return;
+    setOpenGroups((o) => (activeHeading in o ? o : { ...o, [activeHeading]: true }));
+  }, [activeHeading]);
+
+  const searchRef = useRef<HTMLInputElement>(null);
+
   if (loading || !groups) {
     return (
-      <aside className="w-full side-surface border-r border-gray-200 h-full shrink-0 flex flex-col min-h-0">
-        <div className="px-3 pt-3 pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <span className="brand-mark h-9 w-9 text-[13px]">CA</span>
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
-              <div className="h-2 w-16 bg-gray-100 rounded animate-pulse" />
-            </div>
-          </div>
+      <aside className="w-full side-surface h-full shrink-0 flex flex-col min-h-0">
+        <div className="px-3 pt-3.5 pb-2.5">
+          <div className="h-9 rounded-[10px] bg-[var(--cream-2)] border-[1.5px] border-[var(--sand)]" />
         </div>
         <div className="p-3 space-y-2 flex-1 overflow-y-auto min-h-0">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-7 bg-gray-100 rounded-md animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--cream)] rounded-[10px] animate-pulse" />
           ))}
         </div>
       </aside>
@@ -263,244 +323,227 @@ export const Sidebar = React.memo(function Sidebar({ onAlezaToggle }: SidebarPro
   }
 
   const base = `/company/${companyId}`;
+  const dashActive = pathname === base;
+  const settingsActive = pathname === `${base}/settings`;
+  const showWorkspace = mode !== 'business' && company?.entity_type !== 'individual';
+  const wsActive = pathname.includes('/folders');
+  const isGroupOpen = (h: string) =>
+    openGroups[h] ?? (h === activeHeading || h === 'CORE' || (h === 'WORKSPACE' && wsActive));
+  const toggleGroup = (h: string) => setOpenGroups((o) => ({ ...o, [h]: !isGroupOpen(h) }));
 
+  /* Workspace file row */
+  const renderFile = (f: WorkspaceFile) => {
+    const fileHref = `${base}/folders?file=${f.id}`;
+    const isActive = pathname.includes('/folders') && pathname.includes(f.id) ||
+      (typeof window !== 'undefined' && window.location.search.includes(f.id));
+    return (
+      <div key={f.id} className="relative" onContextMenu={(e) => openFileCtx(e, f)}>
+        {renaming === f.id ? (
+          <div className="flex items-center gap-1.5 px-2.5 py-1">
+            <input
+              autoFocus
+              value={renameVal}
+              onChange={(e) => setRenameVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitRename();
+                if (e.key === 'Escape') setRenaming(null);
+              }}
+              onBlur={commitRename}
+              aria-label="File name"
+              className="flex-1 min-w-0 text-xs border-[1.5px] border-[var(--slate-blue)] rounded-[8px] px-1.5 py-0.5 bg-white focus:outline-none"
+            />
+          </div>
+        ) : (
+          <Link to={fileHref} className={`nav-pill ${isActive ? 'nav-pill-active' : ''}`}>
+            <span className="truncate text-xs">{f.name}</span>
+          </Link>
+        )}
+      </div>
+    );
+  };
+
+  /** `top` = a top-level link (standalone group): it leads with the icon tile
+      like the group rows. Items inside a group stay text only. */
+  const navItemLink = (item: NavItem, onClick?: () => void, top = false) => {
+    const active = isHrefActive(item.href);
+    const Icon = item.icon;
+    return (
+      <Link key={item.href} to={item.href} onClick={onClick} onMouseEnter={() => prefetchRoute(item.href)} onFocus={() => prefetchRoute(item.href)} className={`nav-pill ${top ? 'nav-top' : ''} ${active ? 'nav-pill-active' : ''}`}>
+        {top && <span className="nav-group-tile"><Icon className="h-[15px] w-[15px]" /></span>}
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
+  };
+
+  /* Custom context menu — portalled: the nav's frosted surface creates a
+     containing block that would otherwise trap a fixed-position menu. */
+  const ctxMenu = ctx ? (
+    <div
+      ref={ctxRef}
+      onMouseDown={(e) => e.stopPropagation()}
+      style={{ position: 'fixed', left: ctx.x, top: ctx.y, zIndex: 9999 }}
+      className="bg-white border border-[var(--sand)] rounded-[12px] shadow-[var(--shadow-lift)] py-1.5 min-w-[160px] text-[13px] overflow-hidden"
+    >
+      {ctx.kind === 'workspace-bg' && (
+        <CtxItem label="New file" onClick={handleNewFile} />
+      )}
+      {ctx.kind === 'file' && ctx.file && (
+        <>
+          <CtxItem label="Rename" onClick={() => startRename(ctx.file!)} />
+          <div className="my-1 border-t border-[var(--cream)]" />
+          <CtxItem label="Delete" onClick={() => handleDeleteFile(ctx.file!)} danger />
+        </>
+      )}
+    </div>
+  ) : null;
+
+  /* The panel — navigation items only, text only. The logo and the company
+     name live in the top bar; opening/closing belongs to the bookmark tab. */
   return (
     <>
-      <aside className="w-full side-surface border-r border-gray-200 h-full shrink-0 flex flex-col min-h-0">
-        {/* Brand + active company header — gives the sidebar a solid, official top */}
-        <div className="px-3 pt-3 pb-3 border-b border-gray-100 shrink-0">
-          <Link to="/companies" className="flex items-center gap-2.5 group" title="All companies">
-            <span className="brand-mark h-9 w-9 text-[13px]">CA</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-extrabold tracking-tight text-gray-900 leading-none truncate group-hover:text-blue-700 transition-colors">
-                {company?.name ?? 'CA Studio'}
-              </p>
-              <p className="text-[10px] font-semibold text-gray-400 mt-1 truncate">
-                {entityMeta?.label ?? 'Workspace'}
-              </p>
-            </div>
-          </Link>
+      <aside className="side-surface w-full h-full shrink-0 flex flex-col min-h-0" aria-label="Main navigation">
+        {/* Quick search — type the start of an entry to float it to the top */}
+        <div className="px-3 pt-3.5 pb-2.5 shrink-0">
+          <input
+            ref={searchRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && matches.length) { navigate(matches[0].href); setQuery(''); }
+              if (e.key === 'Escape') setQuery('');
+            }}
+            placeholder="Search menu…"
+            aria-label="Search menu"
+            className="w-full h-9 px-3 text-[13px] bg-[var(--cream-2)] border-[1.5px] border-[var(--sand)] rounded-[10px] focus:outline-none focus:bg-white focus:border-[var(--slate-blue)] focus:shadow-[0_0_0_3px_rgba(23,69,127,0.12)] placeholder:text-[var(--ink-3)] transition-[background-color,border-color,box-shadow] duration-[160ms]"
+          />
         </div>
 
-        <nav className="py-2 flex-1 overflow-y-auto min-h-0">
-          {/* Aleza — AI agent launcher (a subtle gradient pill so it reads as the hero action) */}
-          <div className="mb-2.5 px-1.5">
-            <button
-              onClick={onAlezaToggle}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-blue-700 border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors group"
-            >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm shrink-0">
-                <Sparkles className="h-3.5 w-3.5" />
-              </span>
-              <span className="truncate">Ask Aleza AI</span>
-            </button>
-          </div>
-
-          {/* Quick search — type the start of an entry to float it to the top */}
-          <div className="mb-2 px-1.5">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && matches.length) { navigate(matches[0].href); setQuery(''); }
-                  if (e.key === 'Escape') setQuery('');
-                }}
-                placeholder="Search menu…"
-                className="w-full h-8 pl-8 pr-7 text-[13px] bg-gray-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 transition-colors"
-              />
-              {query && (
-                <button onClick={() => setQuery('')} title="Clear"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200">
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </div>
-
+        <nav className="list-fade flex-1 min-h-0 overflow-y-auto px-2 pt-1 pb-3">
           {q ? (
-          /* ── Search results (matches float to the top) ── */
-          <div className="mb-1">
-            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest px-3 py-1.5 mt-1">
-              Results{matches.length ? ` (${matches.length})` : ''}
-            </p>
-            {matches.length === 0 ? (
-              <p className="text-[11px] text-gray-400 px-4 py-1 italic">No matching menu items</p>
-            ) : matches.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => setQuery('')}
-                  className={`flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                    isActive ? 'bg-blue-600 text-white shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--primary)_70%,transparent)]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-          ) : (
-          <>
-          {/* Nav groups */}
-          {groups.map((group) => (
-            <div key={group.heading} className="mb-1">
-              <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest px-3 py-1.5 mt-1">
-                {group.heading}
+            /* ── Search results (matches float to the top) ── */
+            <div>
+              <p className="nav-heading-static">
+                Results{matches.length ? ` · ${matches.length}` : ''}
               </p>
-              {group.items.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={`flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                      isActive ? 'bg-blue-600 text-white shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--primary)_70%,transparent)]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
+              {matches.length === 0
+                ? <p className="text-[11.5px] text-[var(--ink-3)] px-2.5 py-1">No matching menu items</p>
+                : matches.map((item) => navItemLink(item, () => setQuery('')))}
             </div>
-          ))}
+          ) : (
+            <>
+              <Link to={base} onMouseEnter={() => prefetchRoute(base)} onFocus={() => prefetchRoute(base)} className={`nav-pill nav-top mb-1 ${dashActive ? 'nav-pill-active' : ''}`}>
+                <span className="nav-group-tile"><LayoutDashboard className="h-[15px] w-[15px]" /></span>
+                <span>Dashboard</span>
+              </Link>
 
-          {/* WORKSPACE — file tree (hidden in Business mode) */}
-          {mode !== 'business' && (
-          <div className="mb-1" onContextMenu={openWorkspaceBg}>
-            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest px-3 py-1.5 mt-1 flex items-center justify-between">
-              <span>WORKSPACE</span>
-              <button
-                onClick={handleNewFile}
-                title="New file"
-                className="p-0.5 rounded hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors"
-              >
-                <FilePlus className="h-3 w-3" />
-              </button>
-            </p>
-
-            {wsFiles.length === 0 ? (
-              <p className="text-[11px] text-gray-400 px-4 py-1 italic">
-                No files yet
-              </p>
-            ) : (
-              wsFiles.map((f) => {
-                const Icon = fileIcon(f.type);
-                const fileHref = `${base}/folders?file=${f.id}`;
-                const isActive = pathname.includes('/folders') && pathname.includes(f.id) ||
-                  (typeof window !== 'undefined' && window.location.search.includes(f.id));
-
+              {groups.map((group) => {
+                if (group.standalone && group.items[0]) {
+                  return <div key={group.heading} className="mt-0.5">{navItemLink(group.items[0], undefined, true)}</div>;
+                }
+                const open = isGroupOpen(group.heading);
+                const GIcon = groupIcon(group.heading);
                 return (
-                  <div key={f.id} className="relative" onContextMenu={(e) => openFileCtx(e, f)}>
-                    {renaming === f.id ? (
-                      <div className="flex items-center gap-1 px-3 py-1 mx-1.5">
-                        <Icon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                        <input
-                          autoFocus
-                          value={renameVal}
-                          onChange={(e) => setRenameVal(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') commitRename();
-                            if (e.key === 'Escape') setRenaming(null);
-                          }}
-                          onBlur={commitRename}
-                          className="flex-1 text-xs border border-blue-400 rounded px-1 py-0.5 focus:outline-none"
-                        />
-                        <button onClick={commitRename} className="text-green-500 hover:text-green-700"><Check className="h-3 w-3" /></button>
-                        <button onClick={() => setRenaming(null)} className="text-gray-400 hover:text-gray-600"><X className="h-3 w-3" /></button>
+                  <div key={group.heading} className="mt-0.5">
+                    <button
+                      type="button"
+                      className="nav-group-row gap-2.5"
+                      data-active={group.heading === activeHeading}
+                      aria-expanded={open}
+                      onClick={() => toggleGroup(group.heading)}
+                    >
+                      <span className="nav-group-tile"><GIcon className="h-[15px] w-[15px]" /></span>
+                      <span className="flex-1 min-w-0 truncate text-left">{titleCase(group.heading)}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[var(--ink-3)] transition-transform duration-[200ms] ${open ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className="nav-collapse" data-open={open}>
+                      <div inert={!open}>
+                        <div className="nav-items">
+                          {group.items.map((item) => navItemLink(item))}
+                        </div>
                       </div>
-                    ) : (
-                      <Link
-                        to={fileHref}
-                        className={`flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                          isActive ? 'bg-blue-600 text-white shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--primary)_70%,transparent)]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                        <span className="truncate text-xs">{f.name}</span>
-                      </Link>
-                    )}
+                    </div>
                   </div>
                 );
-              })
-            )}
-          </div>
-          )}
-          </>
+              })}
+
+              {/* WORKSPACE — file tree (hidden in Business mode and for individuals) */}
+              {showWorkspace && (() => {
+                const open = isGroupOpen('WORKSPACE');
+                return (
+                  <div className="mt-0.5" onContextMenu={openWorkspaceBg}>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        className="nav-group-row flex-1 min-w-0 gap-2.5"
+                        data-active={wsActive}
+                        aria-expanded={open}
+                        onClick={() => toggleGroup('WORKSPACE')}
+                      >
+                        <span className="nav-group-tile"><FolderOpen className="h-[15px] w-[15px]" /></span>
+                        <span className="flex-1 min-w-0 truncate text-left">Workspace</span>
+                        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[var(--ink-3)] transition-transform duration-[200ms] ${open ? 'rotate-180' : ''}`} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNewFile}
+                        className="shrink-0 rounded-[8px] px-2 py-1 text-[11.5px] font-semibold text-[var(--navy)] hover:bg-[var(--navy-soft)] transition-colors duration-[160ms]"
+                      >
+                        New file
+                      </button>
+                    </div>
+                    <div className="nav-collapse" data-open={open}>
+                      <div inert={!open}>
+                        <div className="nav-items">
+                          {wsFiles.length === 0
+                            ? <p className="text-[11.5px] text-[var(--ink-3)] px-2.5 py-1">No files yet</p>
+                            : wsFiles.map(renderFile)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           )}
         </nav>
 
-        {/* Footer — signed-in user + settings / sign out */}
-        <div className="border-t border-gray-200 mt-1 pt-1.5 pb-2 shrink-0">
+        {/* Footer — settings / sign out */}
+        <div className="px-2 pt-2 pb-2.5 shrink-0 shadow-[0_-1px_0_rgba(212,226,240,0.7)]">
           {userEmail && (
-            <div className="flex items-center gap-2.5 px-3 py-1.5 mx-1.5 mb-0.5 rounded-lg">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold shrink-0 uppercase">
-                {userEmail[0] ?? 'U'}
-              </span>
-              <span className="text-[11px] font-medium text-gray-500 truncate" title={userEmail}>{userEmail}</span>
-            </div>
+            <p className="px-2.5 pb-1.5 text-[11px] font-medium text-[var(--ink-3)] truncate" title={userEmail}>{userEmail}</p>
           )}
-          <Link
-            to={`${base}/settings`}
-            className={`flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-              pathname === `${base}/settings` ? 'bg-blue-600 text-white shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--primary)_70%,transparent)]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
-          >
-            <Settings className={`h-3.5 w-3.5 shrink-0 ${pathname === `${base}/settings` ? 'text-white' : 'text-gray-400'}`} />
+          <Link to={`${base}/settings`} onMouseEnter={() => prefetchRoute(`${base}/settings`)} onFocus={() => prefetchRoute(`${base}/settings`)} className={`nav-pill nav-top ${settingsActive ? 'nav-pill-active' : ''}`}>
+            <span className="nav-group-tile"><Settings className="h-[15px] w-[15px]" /></span>
             <span>Settings</span>
           </Link>
-          {isSupabaseConfigured && (
+          {/* SIGN OUT SUSPENDED while login is disabled. With no login screen this
+              button only wipes local data and bounces back to /companies, so it is
+              force-hidden even if Supabase is later configured.
+              TO RESTORE: change `false &&` back to `isSupabaseConfigured &&`. */}
+          {false && isSupabaseConfigured && (
             <button
               onClick={async () => { try { await supabase?.auth.signOut(); } catch { /* ignore */ } clearLocalDataOnSignOut(); navigate('/auth'); }}
-              className="w-full flex items-center gap-2.5 px-3 py-1.5 mx-1.5 rounded-lg text-[13px] font-medium transition-colors text-gray-600 hover:bg-red-50 hover:text-red-600"
+              className="w-full nav-pill hover:bg-[var(--bad-soft)] hover:text-[var(--bad)]"
             >
-              <LogOut className="h-3.5 w-3.5 shrink-0 text-gray-400" />
               <span>Sign Out</span>
             </button>
           )}
         </div>
       </aside>
 
-      {/* Custom context menu */}
-      {ctx && (
-        <div
-          ref={ctxRef}
-          onMouseDown={(e) => e.stopPropagation()}
-          style={{ position: 'fixed', left: ctx.x, top: ctx.y, zIndex: 9999 }}
-          className="bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[160px] text-sm overflow-hidden"
-        >
-          {ctx.kind === 'workspace-bg' && (
-            <>
-              <CtxItem icon={<FilePlus className="h-3.5 w-3.5" />} label="New File" onClick={handleNewFile} />
-            </>
-          )}
-          {ctx.kind === 'file' && ctx.file && (
-            <>
-              <CtxItem icon={<Pencil className="h-3.5 w-3.5" />} label="Rename" onClick={() => startRename(ctx.file!)} />
-              <div className="my-1 border-t border-gray-100" />
-              <CtxItem icon={<Trash2 className="h-3.5 w-3.5" />} label="Delete" onClick={() => handleDeleteFile(ctx.file!)} danger />
-            </>
-          )}
-        </div>
-      )}
+      {ctxMenu && createPortal(ctxMenu, document.body)}
     </>
   );
 });
 
-function CtxItem({ icon, label, onClick, danger }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
+function CtxItem({ label, onClick, danger }: { label: string; onClick: () => void; danger?: boolean }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-[13px] transition-colors text-left ${
-        danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-50'
+      className={`w-full flex items-center px-3.5 py-1.5 text-[13px] transition-colors duration-[160ms] text-left ${
+        danger ? 'text-[var(--bad)] hover:bg-[var(--bad-soft)]' : 'text-[var(--ink-2)] hover:bg-[var(--cream-2)]'
       }`}
     >
-      {icon}
       {label}
     </button>
   );

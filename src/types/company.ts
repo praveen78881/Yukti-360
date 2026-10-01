@@ -82,6 +82,11 @@ export interface EntityDetails {
 
   /** Non-corporate: ICAI disclosure level (I–IV) by turnover/borrowings; drives related party, AS checklist, etc. */
   disclosureLevel?: 'I' | 'II' | 'III' | 'IV';
+
+  /** The income-tax return this entity files, when its legal form allows more
+   *  than one (e.g. an individual: ITR-1 or ITR-2). Chosen at creation, editable
+   *  in Settings; the Income Tax page opens straight on it. Unset = first form. */
+  itrForm?: 'itr1' | 'itr2' | 'itr3' | 'itr4' | 'itr5' | 'itr6' | 'itr7';
 }
 
 export interface GSTDetails {

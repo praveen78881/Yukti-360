@@ -23,7 +23,7 @@ export function WizardSteps({ steps, currentStep }: WizardStepsProps) {
               <div 
                 className="absolute top-4 left-1/2 w-full h-[2px] origin-left transition-all duration-700 ease-in-out z-0" 
                 style={{ 
-                  backgroundColor: isPast ? '#2563eb' : 'transparent',
+                  backgroundColor: isPast ? '#17457F' : 'transparent',
                   transform: isPast ? 'scaleX(1)' : 'scaleX(0)'
                 }} 
               />
@@ -31,7 +31,7 @@ export function WizardSteps({ steps, currentStep }: WizardStepsProps) {
             
             {/* Step Node */}
             <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-[2.5px] transition-all duration-500 ease-out
-              ${isActive ? 'border-blue-600 bg-white shadow-[0_0_0_6px_rgba(37,99,235,0.1)] scale-110' 
+              ${isActive ? 'border-blue-600 bg-white shadow-[0_0_0_6px_rgba(23,69,127,0.12)] scale-110'
                 : isPast ? 'border-blue-600 bg-blue-600 scale-100' 
                 : 'border-slate-200 bg-white scale-100'}`}
             >

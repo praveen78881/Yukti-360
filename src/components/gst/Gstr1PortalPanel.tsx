@@ -186,7 +186,7 @@ export function Gstr1PortalPanel() {
       {/* Confirm-upload dialog */}
       {confirmOpen && saveBody && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setConfirmOpen(false)}>
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="ca-modal-panel w-full max-w-md rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-sm font-bold text-gray-900">Upload GSTR-1 for {periodLabel(period)}</h3>
             <p className="mt-1 text-xs text-gray-500">This saves a <b>draft</b> on the portal (reversible via Reset) — it does <b>not</b> file the return.</p>
 

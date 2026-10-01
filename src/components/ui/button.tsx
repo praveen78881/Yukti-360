@@ -4,33 +4,47 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/* Buttons are Oswald uppercase 12.5px at .1em. The chamfer — cut top-left and
+   bottom-right — is the product signature and lives ONLY here and on step
+   badges. clip-path would cut a box-shadow, so the navy glow is drawn with
+   drop-shadow so it follows the cut edge. Disabled goes sand on ink-3 and
+   loses its shadow — never a faded navy. */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 font-display text-[12.5px] font-semibold uppercase tracking-[0.1em] whitespace-nowrap outline-none transition-[background-color,color,transform,filter,box-shadow] duration-[160ms] ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--navy)] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_color-mix(in_srgb,var(--primary)_70%,transparent)] hover:bg-primary/90",
+        default:
+          "chamfer bg-[var(--navy)] text-white [filter:drop-shadow(0_8px_18px_rgba(23,69,127,0.42))] hover:bg-[var(--navy-2)] hover:-translate-y-px active:translate-y-0 disabled:bg-[var(--sand)] disabled:text-[var(--ink-3)] disabled:[filter:none]",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+          "chamfer bg-[var(--bad)] text-white [filter:drop-shadow(0_8px_18px_rgba(178,59,51,0.38))] hover:bg-[#93302A] hover:-translate-y-px active:translate-y-0 disabled:bg-[var(--sand)] disabled:text-[var(--ink-3)] disabled:[filter:none]",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "chamfer border-[1.5px] border-[var(--sand)] bg-white/70 text-[var(--navy)] hover:border-[var(--sand-2)] hover:bg-white hover:-translate-y-px active:translate-y-0 disabled:border-[var(--sand)] disabled:bg-transparent disabled:text-[var(--ink-3)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "chamfer border-[1.5px] border-[var(--sand)] bg-white/70 text-[var(--navy)] hover:border-[var(--sand-2)] hover:bg-white hover:-translate-y-px active:translate-y-0 disabled:border-[var(--sand)] disabled:bg-transparent disabled:text-[var(--ink-3)]",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+          "rounded-[10px] text-[var(--ink-2)] hover:bg-[var(--navy-soft)] hover:text-[var(--navy-2)] disabled:text-[var(--ink-3)]",
+        link: "rounded-[10px] font-sans text-sm normal-case tracking-normal text-[var(--navy)] underline-offset-4 hover:underline disabled:text-[var(--ink-3)]",
       },
       size: {
-        default: "h-9 px-5 py-2 has-[>svg]:px-4",
-        xs: "h-6 gap-1 rounded-full px-2.5 text-xs has-[>svg]:px-2 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-full px-3.5 has-[>svg]:px-3",
-        lg: "h-11 rounded-full px-7 has-[>svg]:px-5",
-        icon: "size-9 rounded-full",
-        "icon-xs": "size-6 rounded-full [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8 rounded-full",
-        "icon-lg": "size-10 rounded-full",
+        default: "h-9 px-7 has-[>svg]:px-6",
+        xs: "h-8 gap-1 px-4 text-[10.5px] tracking-[0.12em] has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 gap-1.5 px-5 text-[11.5px] has-[>svg]:px-4",
+        lg: "h-11 px-9 text-[13.5px] has-[>svg]:px-7",
+        icon: "size-9 rounded-[10px] px-0",
+        "icon-xs": "size-7 rounded-lg px-0 [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-8 rounded-[9px] px-0",
+        "icon-lg": "size-10 rounded-[11px] px-0",
       },
     },
+    compoundVariants: [
+      /* Icon-only buttons keep a soft tile, never the chamfer — the restraint
+         is what keeps the cut a signature. */
+      { size: "icon", class: "[clip-path:none]" },
+      { size: "icon-xs", class: "[clip-path:none]" },
+      { size: "icon-sm", class: "[clip-path:none]" },
+      { size: "icon-lg", class: "[clip-path:none]" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

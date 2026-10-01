@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Building2, Briefcase, Check, ArrowRight, ArrowLeft, User, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { syncOnSignIn } from '@/lib/sync/cloudSync';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 
 // Access mode is chosen here and persisted; the sidebar reads it (no selector there).
 const ACCESS_MODE_KEY = 'ca_access_mode';
@@ -200,9 +201,10 @@ export default function AuthPage() {
               fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <div className="relative">
-            <span className="brand-mark h-11 w-11 text-base mb-6">CA</span>
+            <span className="mb-6 inline-flex items-center rounded-[14px] bg-white px-4 py-2.5 shadow-[0_8px_24px_-12px_rgba(7,22,44,0.6)]">
+              <BrandLogo height={34} />
+            </span>
             <h2 className="text-4xl font-extrabold tracking-tight leading-none">WELCOME</h2>
-            <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] hero-muted">CA Studio</p>
             <p className="mt-5 max-w-xs text-sm leading-relaxed hero-muted">
               Your complete accounting workspace — ledgers, GST, financial statements and Tally import, all in one place.
             </p>

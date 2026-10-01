@@ -1,6 +1,8 @@
+import { Banknote, Smartphone, Clock3, SplitSquareHorizontal, type LucideIcon } from 'lucide-react';
 import type { DocumentMode } from '../types';
 import type { InvoiceV2Draft } from '@/lib/accounting/gstInvoices';
 import type { PurchaseFields } from '../useDocumentState';
+import { DateChip, Field, inr } from '../ui';
 
 interface SalesPaymentProps {
   kind: 'sales';
@@ -18,18 +20,23 @@ interface PurchasePaymentProps {
 
 type PaymentSectionProps = SalesPaymentProps | PurchasePaymentProps;
 
-const MODES: Array<{ v: 'CASH' | 'ONLINE' | 'CREDIT' | 'PARTIAL'; label: string }> = [
-  { v: 'CASH', label: 'Cash' },
-  { v: 'ONLINE', label: 'Online' },
-  { v: 'CREDIT', label: 'Credit' },
-  { v: 'PARTIAL', label: 'Partial' },
+const MODES: Array<{ v: 'CASH' | 'ONLINE' | 'CREDIT' | 'PARTIAL'; label: string; sub: string; icon: LucideIcon }> = [
+  { v: 'CASH', label: 'Cash', sub: 'Settled in cash now', icon: Banknote },
+  { v: 'ONLINE', label: 'Online', sub: 'Bank, UPI or card now', icon: Smartphone },
+  { v: 'CREDIT', label: 'Credit', sub: 'Pay later, by due date', icon: Clock3 },
+  { v: 'PARTIAL', label: 'Partial', sub: 'Split into two parts', icon: SplitSquareHorizontal },
 ];
 
+type Medium = 'UPI' | 'CARD' | 'CASH' | 'BANK_TRANSFER';
+
 /**
- * Left column of the "Payment & routing" paygrid (the SummarySection renders the
- * right column). Purely presentational — every setter below is the exact same
- * handler as before, so the pending/paid mapping that feeds debtors, creditors
- * and bills payable/receivable is unchanged. Partial stays a SINGLE payment.
+ * Payment. Purely presentational — every setter below is the exact same handler
+ * as before, so the pending/paid mapping that feeds debtors, creditors and bills
+ * payable/receivable is unchanged.
+ *
+ * PARTIAL is shown as two legs. The saved record still holds ONE paid leg
+ * (medium + amount) and the balance as pending on credit — so leg 2 is limited
+ * to Credit until the posting path supports a second paid mode.
  */
 export function PaymentSection(props: PaymentSectionProps) {
   const isSales = props.kind === 'sales';
@@ -43,7 +50,7 @@ export function PaymentSection(props: PaymentSectionProps) {
     if (isSales) props.updateInvoice({ payment_mode: val });
     else props.updateField('paymentMode', val);
   };
-  const setMedium = (val: 'UPI' | 'CARD' | 'CASH' | 'BANK_TRANSFER') => {
+  const setMedium = (val: Medium) => {
     if (isSales) props.updateInvoice({ received_medium: val });
     else props.updateField('paidMedium', val);
   };
@@ -58,73 +65,102 @@ export function PaymentSection(props: PaymentSectionProps) {
 
   const isPartial = paymentMode === 'PARTIAL';
   const isCredit = paymentMode === 'CREDIT';
-  const showMedium = paymentMode === 'ONLINE' || paymentMode === 'PARTIAL';
-  const inrFmt = (n: number) => n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const isOnline = paymentMode === 'ONLINE';
+  const paidWord = isSales ? 'Received' : 'Paid';
 
   return (
-    <div>
-      <div className="f" style={{ marginBottom: 14 }}>
-        <label>Mode <b>*</b></label>
-        <div className="opts">
-          {MODES.map((m) => (
-            <label key={m.v}>
-              <input
-                type="radio"
-                name="dw-mode"
-                checked={paymentMode === m.v}
-                onChange={() => setPaymentMode(m.v)}
-              />
-              {m.label}
-            </label>
-          ))}
-        </div>
+    <div className="space-y-4" data-testid="payment">
+      <div className="yk-paymodes" role="radiogroup" aria-label="Payment mode">
+        {MODES.map((m) => {
+          const on = paymentMode === m.v;
+          return (
+            <button
+              key={m.v}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              className={`yk-paymode ${on ? 'on' : ''}`}
+              onClick={() => setPaymentMode(m.v)}
+            >
+              <m.icon className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="min-w-0">
+                <span className="yk-paymode-l">{m.label}</span>
+                <span className="yk-paymode-s">{m.sub}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {(showMedium || isPartial) && (
-        <div className="payrow">
-          {showMedium && (
-            <div className="f">
-              <label>{isSales ? 'Received via' : 'Paid via'} <b>*</b></label>
-              <select value={receivedMedium} onChange={(e) => setMedium(e.target.value as any)}>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-                <option value="UPI">UPI</option>
-                <option value="CARD">Credit/Debit Card</option>
-                {paymentMode === 'PARTIAL' && <option value="CASH">Cash</option>}
-              </select>
-            </div>
-          )}
-          {isPartial && (
-            <div className="f">
-              <label>{isSales ? 'Amount received' : 'Amount paid'} <b>*</b></label>
-              <input
-                type="number"
-                className="num"
-                value={amountReceived || ''}
-                onChange={(e) => setReceived(Number(e.target.value))}
-                placeholder="0.00"
-              />
-            </div>
-          )}
+      {isOnline && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label={`${paidWord} via`} required htmlFor="dw-pay-medium">
+            <select id="dw-pay-medium" className="yk-in" value={receivedMedium} onChange={(e) => setMedium(e.target.value as Medium)}>
+              <option value="BANK_TRANSFER">Bank transfer</option>
+              <option value="UPI">UPI</option>
+              <option value="CARD">Credit / debit card</option>
+            </select>
+          </Field>
         </div>
       )}
 
-      {(isPartial || isCredit) && (
-        <div className="row">
-          <div className="f c6">
-            <label>Pending amount</label>
-            <input className="num" readOnly value={`₹ ${inrFmt(amountPending)}`} />
+      {isCredit && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Pending">
+            <div className="yk-readout num" data-testid="payment-pending">₹ {inr(amountPending)}</div>
+          </Field>
+          <Field label="Due date" required>
+            <DateChip size="md" label="Due date" value={dueDate} onChange={setDueDate} testId="due-date" />
+          </Field>
+        </div>
+      )}
+
+      {isPartial && (
+        <div className="yk-legs" data-testid="payment-legs">
+          <div className="yk-leg">
+            <span className="yk-leg-n" aria-hidden>1</span>
+            <Field label="Mode" required htmlFor="dw-pay-medium">
+              <select id="dw-pay-medium" className="yk-in" value={receivedMedium} onChange={(e) => setMedium(e.target.value as Medium)}>
+                <option value="CASH">Cash</option>
+                <option value="BANK_TRANSFER">Bank transfer</option>
+                <option value="UPI">UPI</option>
+                <option value="CARD">Credit / debit card</option>
+              </select>
+            </Field>
+            <Field label="Amount" required htmlFor="dw-pay-amt">
+              <input
+                id="dw-pay-amt"
+                type="number"
+                className="yk-in num"
+                value={amountReceived || ''}
+                onChange={(e) => setReceived(Number(e.target.value))}
+              />
+            </Field>
+            <span />
           </div>
-          <div className="f c6">
-            <label>Due date <b>*</b></label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <div className="yk-leg">
+            <span className="yk-leg-n" aria-hidden>2</span>
+            <Field label="Mode" htmlFor="dw-pay-medium-2" hint="A second paid mode needs a posting update — the balance stays on credit for now">
+              <select id="dw-pay-medium-2" className="yk-in" value="CREDIT" onChange={() => { /* credit only for now */ }}>
+                <option value="CREDIT">Credit — pay later</option>
+                <option value="CASH" disabled>Cash</option>
+                <option value="BANK_TRANSFER" disabled>Bank transfer</option>
+                <option value="UPI" disabled>UPI</option>
+                <option value="CARD" disabled>Credit / debit card</option>
+              </select>
+            </Field>
+            <Field label="Amount">
+              <div className="yk-readout num" data-testid="payment-pending">₹ {inr(amountPending)}</div>
+            </Field>
+            <Field label="Due date" required>
+              <DateChip size="md" label="Due date" value={dueDate} onChange={setDueDate} testId="due-date" />
+            </Field>
           </div>
         </div>
       )}
 
       {isCredit && (
-        <div className="note">
-          Nothing {isSales ? 'received' : 'paid'} now. The full invoice total is pending against the due date.
-        </div>
+        <p className="yk-note">Nothing {isSales ? 'received' : 'paid'} now — the full bill is pending against the due date.</p>
       )}
     </div>
   );

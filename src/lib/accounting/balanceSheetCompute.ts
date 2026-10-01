@@ -47,17 +47,23 @@ export function computeBalanceSheet(
   for (const b of balances) {
     if (['revenue', 'expense'].includes(b.nature)) continue;
 
-    if (b.nature === 'liability' || b.nature === 'capital' || LIABILITY_SUBGROUPS.includes(b.account_group)) {
+    if (b.balance_type === 'Cr') {
       liabilities.push({ name: b.account_name, amount: b.balance, group: b.account_group });
-    } else if (b.nature === 'asset' || ASSET_SUBGROUPS.includes(b.account_group)) {
+    } else if (b.balance_type === 'Dr') {
       assets.push({ name: b.account_name, amount: b.balance, group: b.account_group });
     }
   }
 
-  if (netProfit !== 0) {
+  if (netProfit > 0) {
     liabilities.push({
-      name: netProfit > 0 ? 'Net Profit for the Year' : 'Net Loss for the Year',
+      name: 'Net Profit for the Year',
       amount: netProfit,
+      group: 'Reserves & Surplus',
+    });
+  } else if (netProfit < 0) {
+    assets.push({
+      name: 'Net Loss for the Year',
+      amount: Math.abs(netProfit),
       group: 'Reserves & Surplus',
     });
   }
@@ -134,7 +140,7 @@ export function computeScheduleIIIBalanceSheet(
 
   const stBorrowings = g('Short-term Borrowings');
   const tradePayables = g('Trade Payables');
-  const otherCL = g(['Other Current Liabilities', 'Statutory Liabilities', 'GST — Output Tax', 'GST — RCM', 'GST — Advances']);
+  const otherCL = g(['Other Current Liabilities', 'Statutory Liabilities', 'Duties & Taxes', 'GST — Output Tax', 'GST — RCM', 'GST — Advances']);
   const stProvisions = g('Short-term Provisions');
 
   // Accumulated Depreciation/Amortisation are contra-assets (Cr balance).
@@ -152,7 +158,7 @@ export function computeScheduleIIIBalanceSheet(
   const tradeReceivables = g('Trade Receivables');
   const cashEquiv = g(['Cash & Cash Equivalents', 'Bank Balances', 'Cash Equivalents']);
   const stLoans = g('Short-term Loans & Advances');
-  const otherCA = g(['Other Current Assets', 'GST — Input Tax Credit', 'GST — Refund', 'GST — Reconciliation', 'GST — Legacy']);
+  const otherCA = g(['Other Current Assets', 'Duties & Taxes', 'GST — Input Tax Credit', 'GST — Refund', 'GST — Reconciliation', 'GST — Legacy']);
   const cInvestments = g('Current Investments');
 
   const equityAndLiabilities: ScheduleIIISection[] = [

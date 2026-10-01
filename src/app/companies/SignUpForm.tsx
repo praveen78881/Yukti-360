@@ -146,14 +146,14 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         {/* Branding hero panel */}
         <div className="hero p-8 sm:p-10 flex flex-col justify-between gap-10 overflow-hidden">
           <div className="absolute -bottom-20 -right-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none" />
-          <div className="absolute top-8 right-10 w-28 h-28 rounded-full bg-[#5B9BFF]/15 blur-2xl pointer-events-none" />
+          <div className="absolute top-8 right-10 w-28 h-28 rounded-full bg-[#6D97CF]/15 blur-2xl pointer-events-none" />
 
           <div className="relative">
             <span className="icon-badge mb-6">
               <Sparkles className="h-5 w-5" />
             </span>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.1]">
-              Welcome to <span className="hero-accent">CA Studio</span>
+              Welcome to <span className="hero-accent">Yukti 360</span>
             </h1>
             <p className="hero-muted text-sm mt-4 leading-relaxed max-w-xs">
               Share a few contact details so we can reach you and activate your personalized accounting workspace.

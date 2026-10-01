@@ -72,13 +72,13 @@ function MdPreview({ content }: { content: string }) {
       .replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;margin:24px 0 10px">$1</h1>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px">$1</code>')
-      .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0">')
+      .replace(/`(.+?)`/g, '<code style="background:#E7F0F9;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px">$1</code>')
+      .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #D4E2F0;margin:16px 0">')
       .replace(/^- (.+)$/gm, '<li style="margin-left:20px;list-style-type:disc;margin-bottom:2px">$1</li>')
       .replace(/^\d+\. (.+)$/gm, '<li style="margin-left:20px;list-style-type:decimal;margin-bottom:2px">$1</li>')
-      .replace(/\n\n/g, '</p><p style="margin:0 0 12px;line-height:1.7;color:#374151">')
+      .replace(/\n\n/g, '</p><p style="margin:0 0 12px;line-height:1.7;color:#4C5A6A">')
       .replace(/\n/g, '<br/>');
-    return `<p style="margin:0 0 12px;line-height:1.7;color:#374151">${o}</p>`;
+    return `<p style="margin:0 0 12px;line-height:1.7;color:#4C5A6A">${o}</p>`;
   }, [content]);
   return <div style={{ fontFamily: 'Georgia, serif', fontSize: '14px' }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -106,7 +106,7 @@ function A4Page({ children, pageNum, totalPages }: { children: React.ReactNode; 
           bottom: 28,
           right: 36,
           fontSize: 10,
-          color: '#9ca3af',
+          color: '#8496A7',
           fontFamily: 'system-ui',
           userSelect: 'none',
         }}
@@ -193,7 +193,7 @@ export default function FoldersPage() {
   /* ── No file selected ── */
   if (!fileId || !file) {
     return (
-      <div className="-m-4 sm:-m-6 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 56px)', background: '#e8eaed' }}>
+      <div className="-m-4 sm:-m-6 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 56px)', background: '#E7F0F9' }}>
         <div className="text-center">
           <FolderOpen className="h-14 w-14 text-gray-300 mx-auto mb-4" />
           <p className="text-sm font-medium text-gray-500 mb-1">No file open</p>
@@ -209,7 +209,7 @@ export default function FoldersPage() {
   const isEditable = file.type !== 'csv';
 
   return (
-    <div className="flex flex-col -m-4 sm:-m-6" style={{ minHeight: 'calc(100vh - 56px)', background: '#e8eaed' }}>
+    <div className="flex flex-col -m-4 sm:-m-6" style={{ minHeight: 'calc(100vh - 56px)', background: '#E7F0F9' }}>
       {/* Toolbar bar — slim, above the A4 canvas */}
       <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200 shrink-0">
         <FileText className="h-4 w-4 text-gray-400 shrink-0" />
@@ -282,7 +282,7 @@ export default function FoldersPage() {
                     fontFamily: file.type === 'json' ? 'monospace' : 'Georgia, serif',
                     fontSize: file.type === 'json' ? 13 : 14,
                     lineHeight: 1.75,
-                    color: '#1f2937',
+                    color: '#14191F',
                     background: 'transparent',
                     padding: 0,
                   }}
@@ -291,7 +291,7 @@ export default function FoldersPage() {
                 /* overflow pages: read-only display */
                 <pre style={{
                   fontFamily: file.type === 'json' ? 'monospace' : 'Georgia, serif',
-                  fontSize: 14, lineHeight: 1.75, color: '#1f2937',
+                  fontSize: 14, lineHeight: 1.75, color: '#14191F',
                   whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0,
                 }}>
                   {chunk}

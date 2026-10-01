@@ -254,7 +254,7 @@ export default function InventoryPage() {
       {/* ── Issue to Production Modal ── */}
       {showIssueModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+          <div className="ca-modal-panel w-full max-w-md rounded-2xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
               <span className="text-sm font-semibold text-gray-800">Issue to Production</span>
               <button onClick={() => setShowIssueModal(false)} className="rounded-md p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700">

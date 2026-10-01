@@ -1,0 +1,263 @@
+/* ============================================================================
+   YUKTI THEME — the navy design system, applied to every Yukti ITR form.
+
+   PRESENTATION ONLY. Loaded by each form's index.html straight AFTER its own
+   styles.css, so every rule here simply out-ranks the original by order.
+   No JavaScript, no markup and no class names change. To revert a form,
+   delete its one <link href="../yukti-theme.css"> line.
+
+   The forms' own variables (--maroon, --ink, --red …) are re-pointed first,
+   so inline styles the JS writes (var(--red), var(--closed) …) follow along.
+   Then each surface is restyled deliberately, because the original used one
+   maroon for three different jobs — action, decoration and error — and the
+   design system keeps those apart:
+     navy        = act, or "you are here"          (buttons, focus, current section)
+     bad/warn/ok = status only                     (validation rows, over-limit fields)
+     ink/sand    = everything decorative           (section headers, totals, bands)
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Mulish:ital,wght@0,400..800;1,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  /* ── the palette, by name ── */
+  --yk-navy:#17457F; --yk-navy-2:#0F3162; --yk-navy-soft:#DFEAF9;
+  --yk-ink:#14191F; --yk-ink-2:#4C5A6A; --yk-ink-3:#8496A7;
+  --yk-cream-2:#F5FAFE; --yk-cream:#E7F0F9; --yk-sand:#D4E2F0; --yk-sand-2:#B7CCE0;
+  --yk-slate:#3C5E86; --yk-ring:#BDD3E8;
+  --yk-ok:#2F7D5A;  --yk-ok-soft:#DCEFE7;
+  --yk-warn:#B26B15; --yk-warn-soft:#F8E9D6;
+  --yk-bad:#B23B33;  --yk-bad-soft:#F9E1DF;
+  --yk-ground:linear-gradient(158deg,#DCE9F7 0%,#EDF4FB 38%,#F3F8FC 64%,#F7F4EC 100%);
+  --yk-rest:0 1px 2px rgba(24,44,70,.05),0 10px 24px -16px rgba(24,44,70,.32);
+  --yk-lift:0 2px 4px rgba(24,44,70,.06),0 26px 48px -24px rgba(24,44,70,.42);
+  --yk-glow:0 8px 20px -10px rgba(23,69,127,.55);
+  --yk-display:'Oswald','Mulish',ui-sans-serif,system-ui,sans-serif;
+  --yk-read:'Mulish',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --yk-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Consolas,monospace;
+  --yk-t:160ms;
+
+  /* ── the form's own variables, re-pointed ── */
+  --maroon:var(--yk-navy); --maroon-d:var(--yk-navy-2); --maroon-w:var(--yk-navy-soft);
+  --white:#FFFFFF; --bone:var(--yk-cream-2); --rule:var(--yk-sand); --rule-2:var(--yk-cream);
+  --ink:var(--yk-ink); --ink-2:var(--yk-ink-2); --ink-3:var(--yk-ink-3);
+  --red:var(--yk-bad); --green:var(--yk-ok); --green-w:var(--yk-ok-soft);
+  --sienna:var(--yk-warn); --sienna-w:var(--yk-warn-soft);
+  --field:var(--yk-cream-2); --field-b:var(--yk-sand); --closed:var(--yk-cream);
+  --serif:var(--yk-read); --sans:var(--yk-read); --mono:var(--yk-mono);
+  color-scheme:light;
+}
+
+/* ── ground: never flat white; the warm far corner is deliberate ── */
+html{background:var(--yk-ground) fixed}
+body{background:var(--yk-ground) fixed;color:var(--yk-ink);font:14px/1.5 var(--yk-read);
+  font-variant-numeric:tabular-nums}
+.wrap{background:transparent}
+:focus-visible{outline:2px solid var(--yk-navy);outline-offset:2px}
+::selection{background:var(--yk-navy-soft);color:var(--yk-navy-2)}
+input[type=checkbox],input[type=radio]{accent-color:var(--yk-navy)}
+*{scrollbar-color:var(--yk-sand-2) transparent;scrollbar-width:thin}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--yk-sand-2);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+
+/* ════════════════════════════ MASTHEAD ════════════════════════════
+   A filled navy surface — white text on it, and the one action button
+   inverts to white so navy never sits on navy. */
+.top{background:linear-gradient(158deg,var(--yk-navy) 0%,var(--yk-navy-2) 100%);
+  border-bottom:0;box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 10px 28px -18px rgba(10,31,62,.6);gap:22px}
+.top .b{font:600 19px/1 var(--yk-display);letter-spacing:.08em;text-transform:uppercase}
+.top .b em{font:400 12.5px/1 var(--yk-read);letter-spacing:0;text-transform:none;opacity:.72}
+.top .frm{font:500 12.5px/1 var(--yk-mono);letter-spacing:.02em;padding:5px 11px;border-radius:999px;
+  background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.top .y{font:500 12px/1 var(--yk-mono);opacity:.8}
+
+/* secondary on navy: translucent white, same chamfer as primary */
+.tbtn{height:30px;padding:0 18px;border:0;border-radius:0;background:rgba(255,255,255,.13);color:#fff;
+  font:600 11.5px/1 var(--yk-display);letter-spacing:.1em;text-transform:uppercase;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  transition:background-color var(--yk-t) ease,transform var(--yk-t) ease}
+.tbtn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+.tbtn:active{transform:none}
+/* primary on navy: white fill, navy text, glow drawn with drop-shadow so it
+   follows the cut edge */
+.tbtn.solid{background:#fff;color:var(--yk-navy-2);font-weight:700;
+  filter:drop-shadow(0 6px 14px rgba(7,22,44,.45))}
+.tbtn.solid:hover{background:var(--yk-navy-soft)}
+
+/* ════════════════════════════ SECTIONS RAIL ════════════════════════════
+   Frosted, floating pills — never a ruled list. The current section is a
+   navy gradient pill with a glow. */
+.rail{background:linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(240,246,252,.93) 100%);
+  -webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);
+  border-right:0;box-shadow:inset -1px 0 0 rgba(255,255,255,.9),1px 0 0 rgba(212,226,240,.55),10px 0 30px -18px rgba(24,44,70,.35);
+  padding:12px 0 22px}
+:root.rail-off .rail{box-shadow:none}
+.rail h2{font:600 10.5px/1 var(--yk-display);letter-spacing:.16em;text-transform:uppercase;color:var(--yk-ink-3);
+  padding:6px 22px 10px}
+.nv{width:calc(100% - 20px);margin:1px 10px;padding:8px 12px;border-left:0;border-radius:10px;
+  transition:background-color var(--yk-t) ease,color var(--yk-t) ease}
+.nv:hover{background:rgba(231,240,249,.9)}
+.nv .t{font:700 13px/1.25 var(--yk-read);color:var(--yk-ink)}
+.nv .s{font:400 11px/1.3 var(--yk-read);color:var(--yk-ink-3)}
+.nv .s.done{color:var(--yk-ok);font-weight:600}
+.nv .s.bad{color:var(--yk-bad);font-weight:700}
+.nv.on{background:linear-gradient(158deg,var(--yk-navy) 0%,var(--yk-navy-2) 100%);box-shadow:var(--yk-glow)}
+.nv.on .t{color:#fff}
+.nv.on .s{color:rgba(255,255,255,.74)}
+.nv.on .s.done{color:#BFE6D3}
+.nv.on .s.bad{color:#FFD3CF}
+
+/* ════════════════════════════ THE SHEET ════════════════════════════ */
+.sheet{padding:20px 22px 72px}
+
+/* a section is a white panel: 14px, hairline, resting shadow. Its header is a
+   light strip, not a filled bar — decoration never gets the action colour. */
+section{background:#fff;border:1px solid var(--yk-sand);border-radius:14px;box-shadow:var(--yk-rest);margin:0 0 14px}
+.bar{background:linear-gradient(180deg,#FFFFFF 0%,var(--yk-cream-2) 100%);color:var(--yk-ink);padding:11px 15px;gap:12px;
+  transition:background-color var(--yk-t) ease}
+.bar:hover{background:var(--yk-cream-2)}
+section:has(> .body.open) > .bar{box-shadow:inset 0 -1px 0 var(--yk-cream)}
+.bar .cv{width:22px;height:22px;border:0;border-radius:7px;background:var(--yk-navy-soft);color:var(--yk-navy);
+  font:600 13px/22px var(--yk-mono)}
+.bar .t{font:600 14px/1.2 var(--yk-display);letter-spacing:.05em;text-transform:uppercase;color:var(--yk-ink)}
+/* the original's `.r` row class also landed on this subtitle and underlined it */
+.bar .r{border-bottom:0;min-height:0;padding:0;opacity:1;color:var(--yk-ink-3);font:400 11.5px/1.3 var(--yk-read)}
+.bar .v{font:600 12.5px/1 var(--yk-mono);color:var(--yk-ink-2)}
+
+/* rows */
+.r{border-bottom:1px solid var(--yk-cream);padding:0 15px;transition:background-color var(--yk-t) ease}
+.r:hover{background:rgba(245,250,254,.8)}
+.r.sub{background:var(--yk-cream-2);min-height:30px}
+.r.sub .l{font:600 10.5px/1.2 var(--yk-display);letter-spacing:.14em;text-transform:uppercase;color:var(--yk-ink-2)}
+.r.tot{background:var(--yk-cream-2);border-top:1.5px solid var(--yk-sand-2);border-bottom:1px solid var(--yk-sand)}
+.r.tot .l,.r.tot .v{font-weight:800;color:var(--yk-ink)}
+.r.grand{background:#EEF4FB;border-top:2px solid var(--yk-slate);border-bottom:1px solid var(--yk-sand)}
+.r.grand .l,.r.grand .v{font-weight:800;color:var(--yk-ink)}
+.r.closed{background:var(--yk-cream);opacity:.8}
+.l{font-size:14px;color:var(--yk-ink-2)}
+.l.req{color:var(--yk-bad);font-weight:700}
+.l .hint{color:var(--yk-ink-3);font-size:11.5px}
+/* schema references and codes are transcribed, so they line up in mono */
+.ref{font:500 10.5px/1.2 var(--yk-mono);color:var(--yk-ink-3);
+  /* long schema tags (OrgFirmInfo…) ran under the field in a fixed 52px column:
+     size to content instead, right-aligned so every code hugs its field */
+  width:auto;min-width:52px;max-width:108px;text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd2{font:600 9.5px/1.2 var(--yk-display);letter-spacing:.14em;text-transform:uppercase;color:var(--yk-ink-2)}
+
+/* ════════════════════════════ FIELDS ════════════════════════════
+   Rest in a pale well with a 1.5px sand border; on focus turn white with a
+   slate-blue border and a 3px soft ring. */
+.f{height:29px;padding:0 9px;border:1.5px solid var(--yk-sand);border-radius:8px;background:var(--yk-cream-2);
+  color:var(--yk-ink);font:400 13.5px/1 var(--yk-read);
+  transition:background-color var(--yk-t) ease,border-color var(--yk-t) ease,box-shadow var(--yk-t) ease}
+.f:hover{border-color:var(--yk-sand-2)}
+.f:focus{background:#fff;border-color:var(--yk-slate);box-shadow:0 0 0 3px rgba(23,69,127,.12);outline:none}
+.f.n{font:500 13px/1 var(--yk-mono);text-align:right}
+input.f[type=date],input.f[type=month]{font:500 12.5px/1 var(--yk-mono)}
+.f.over{background:var(--yk-warn-soft);border-color:#E3B87C;color:#8A530F}
+.f[disabled]{background:var(--yk-cream);border-color:var(--yk-sand);color:var(--yk-ink-3)}
+.f::placeholder{color:var(--yk-ink-3)}
+.gt .f{height:27px}
+
+/* computed figures: ink, mono — money is coloured only when its sign matters */
+.c{font:600 13px/1.2 var(--yk-mono);color:var(--yk-ink);white-space:nowrap}
+.c.zero{color:var(--yk-ink-3);font-weight:400}
+.c.neg{color:var(--yk-bad)}
+.dt{font:400 10.5px/1.2 var(--yk-mono);color:var(--yk-ink-3)}
+
+/* ════════════════════════════ CARDS & BLOCKS ════════════════════════════ */
+.card,.blk{border:1px solid var(--yk-sand);border-radius:12px;margin:9px 15px}
+.card .ch,.blk .bh{background:var(--yk-cream-2)}
+.card .ch{padding:9px 13px;transition:background-color var(--yk-t) ease}
+.card .ch:hover{background:var(--yk-cream)}
+.card.on .ch{background:var(--yk-navy-soft);border-bottom:1px solid var(--yk-sand)}
+.card .ch .t,.blk .bh .t{font:600 12.5px/1.25 var(--yk-display);letter-spacing:.07em;text-transform:uppercase;color:var(--yk-ink)}
+.card .ch .st,.blk .bh .s{font:400 11.5px/1.2 var(--yk-read);color:var(--yk-ink-3)}
+.card.on .ch .st{color:var(--yk-navy-2);font:600 11.5px/1.2 var(--yk-mono)}
+/* the switch is a control: sand-2 at rest, navy when on */
+.card .ch .sw{background:var(--yk-sand-2);transition:background-color var(--yk-t) ease}
+.card.on .ch .sw{background:var(--yk-navy)}
+.card .ch .sw::after{box-shadow:0 1px 2px rgba(24,44,70,.25);transition:left var(--yk-t) ease}
+.blk .bh{border-bottom:1px solid var(--yk-sand)}
+.blk .bhx:hover{background:var(--yk-cream)}
+.blk .cv2,.cv3{border:0;border-radius:6px;background:var(--yk-navy-soft);color:var(--yk-navy);font-family:var(--yk-mono)}
+.blk .blkdel{border-radius:8px;transition:background-color var(--yk-t) ease,color var(--yk-t) ease}
+.blk .blkdel:hover,.gt .x button:hover{background:var(--yk-bad-soft);color:var(--yk-bad)}
+
+/* ════════════════════════════ TABLES ════════════════════════════
+   cream-2 header in 9.5px Oswald caps, hairline rows, money in mono, totals
+   above a heavier rule. */
+.gt th{font:600 9.5px/1.2 var(--yk-display);letter-spacing:.14em;text-transform:uppercase;color:var(--yk-ink-2);
+  background:var(--yk-cream-2);border-bottom:1px solid var(--yk-sand);padding:8px 8px}
+.gt th.req{color:var(--yk-bad)}
+.gt td{border-bottom:1px solid var(--yk-cream)}
+.gt tbody tr:hover td{background:rgba(245,250,254,.8)}
+.gt td.num{font-family:var(--yk-mono)}
+.gt tfoot td{background:var(--yk-cream-2);border-top:1.5px solid var(--yk-sand-2);border-bottom:1px solid var(--yk-sand);
+  font:700 13px/1.2 var(--yk-mono);color:var(--yk-ink)}
+.gt tfoot td.l{font-family:var(--yk-read)}
+.gt .x button{border-radius:7px;transition:background-color var(--yk-t) ease,color var(--yk-t) ease}
+
+/* "+ Add" — a secondary action: soft navy, small chamfer */
+.add{height:29px;margin:6px 15px 2px;padding:0 18px;border:0;border-radius:0;background:var(--yk-navy-soft);color:var(--yk-navy-2);
+  font:600 11px/1 var(--yk-display);letter-spacing:.1em;text-transform:uppercase;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  transition:background-color var(--yk-t) ease,color var(--yk-t) ease,transform var(--yk-t) ease}
+.add:hover{background:var(--yk-navy);color:#fff;transform:translateY(-1px)}
+.emp{color:var(--yk-ink-3)}
+
+/* ════════════════════════════ NOTES & CHECKS ════════════════════════════
+   Status colours carry status only. */
+.note{border-left:0;border-radius:10px;background:var(--yk-cream-2);color:var(--yk-ink-2);
+  box-shadow:inset 3px 0 0 var(--yk-sand-2);padding:10px 14px;margin:10px 15px;font-size:12.5px;max-width:72ch}
+.note.form{background:#EEF4FB;color:var(--yk-ink-2);box-shadow:inset 3px 0 0 var(--yk-slate)}
+.note.warn{background:var(--yk-warn-soft);color:#6E420D;box-shadow:inset 3px 0 0 var(--yk-warn)}
+.note.stop{background:var(--yk-bad-soft);color:#7A2923;box-shadow:inset 3px 0 0 var(--yk-bad)}
+.note b{color:var(--yk-ink);font-weight:700}
+.note.warn b{color:#6E420D} .note.stop b{color:#7A2923}
+
+.cks{border:1px solid var(--yk-sand);border-radius:12px;margin:10px 15px 4px}
+.ck{border-bottom:1px solid var(--yk-cream);padding:9px 13px;font-size:12.5px;color:var(--yk-ink-2)}
+.ck b{color:var(--yk-ink);font-weight:700}
+.ck.err{border-left:0;box-shadow:inset 3px 0 0 var(--yk-bad);background:#FCEFEE}
+.ck.err b{color:#8C2E27}
+.ck.warn{border-left:0;box-shadow:inset 3px 0 0 var(--yk-warn);background:#FCF4EA}
+.ck.warn b{color:#8A530F}
+.ck.ok{border-left:0;box-shadow:inset 3px 0 0 var(--yk-ok);background:#EEF7F2}
+.ck.ok b{color:#245F45}
+
+/* ════════════════════════════ CAPITAL-GAINS NESTING ════════════════════════════ */
+.cgband{background:var(--yk-cream);color:var(--yk-ink);border:1px solid var(--yk-sand);border-bottom:0;border-radius:12px 12px 0 0;
+  font:600 13px/1 var(--yk-display);letter-spacing:.06em;text-transform:uppercase;padding:11px 15px}
+.cgsubband{background:var(--yk-cream-2);color:var(--yk-ink-2);border-left:0;box-shadow:inset 3px 0 0 var(--yk-slate);
+  font:600 11px/1 var(--yk-display);letter-spacing:.12em;text-transform:uppercase;padding:9px 15px}
+.cghead{border:1px solid var(--yk-sand);border-top:0}
+.cgh{background:var(--yk-cream-2);border-bottom:1px solid var(--yk-sand);padding:10px 15px;transition:background-color var(--yk-t) ease}
+.cgh:hover{background:var(--yk-cream)}
+.cght{font:700 13.5px/1.25 var(--yk-read);color:var(--yk-ink)}
+.cghv{font:600 13.5px/1 var(--yk-mono);color:var(--yk-ink)}
+.sub2{border:1px solid var(--yk-cream);border-radius:10px;margin:7px 15px}
+.s2h{background:#fff;transition:background-color var(--yk-t) ease}
+.s2h:hover{background:var(--yk-cream-2)}
+.sub2.on .s2h{background:var(--yk-navy-soft);border-bottom:1px solid var(--yk-cream)}
+.s2ref{font:500 10.5px/1 var(--yk-mono);color:var(--yk-ink-3)}
+.s2t{font-size:13px;color:var(--yk-ink)}
+.s2v{color:var(--yk-ink-3)}
+.sub2.on .s2v{color:var(--yk-navy-2);font-family:var(--yk-mono)}
+
+/* ════════════════════════════ THE TOTALS BAND ════════════════════════════
+   A filled navy surface: labels in small Oswald caps, figures in mono. */
+.band{background:linear-gradient(158deg,var(--yk-navy-2) 0%,var(--yk-navy) 100%);border-top:0;
+  box-shadow:0 -10px 28px -18px rgba(10,31,62,.55)}
+.m{border-right:1px solid rgba(255,255,255,.16)}
+.m span{font:600 9.5px/1.2 var(--yk-display);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:3px}
+.m b{font:600 16px/1.1 var(--yk-mono)}
+.m.pay b{color:#F6D4A6}
+.m.ref b{color:#A8E6C9}
+.st{font:400 11.5px/1.35 var(--yk-read);color:rgba(255,255,255,.84)}
+.st a{color:#F6D4A6}
+
+/* ════════════════════════════ MOTION ════════════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}

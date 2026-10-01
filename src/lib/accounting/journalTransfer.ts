@@ -3,8 +3,12 @@
 //   { schema:'vaarta_journal_import_v2', company_name, exported_at, count,
 //     entries:[ { entry_date, voucher_type, voucher_number, narration,
 //                 lines:[ { account_name, account_group, nature, debit, credit } ] } ] }
-// Used by BOTH the Journal page (import + export into the current company) and the
-// Companies page (import a whole company from the same file).
+// Used by the Companies page: right-click a company → Export company writes this
+// file; New Company → Import reads it back into a new company.
+//
+// ORDER is part of the contract: files are written in `orderForTransfer` order
+// (the Journal page's display order) and imports create entries in that same
+// order, so an exported company re-imports in exactly the same sequence.
 
 export const JOURNAL_SCHEMA = 'vaarta_journal_import_v2';
 const JOURNAL_SCHEMA_LEGACY = 'vaarta_journal_import_v1';
@@ -44,9 +48,24 @@ interface SourceEntry {
 
 const num = (v: unknown): number => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
+/**
+ * Canonical transfer order — the order the Journal page shows: entry date
+ * ascending (compared the same way listJournalEntries sorts), and entries on the
+ * same date kept in the order given. The tie-break is the explicit original
+ * position, so the result never depends on the engine's sort stability.
+ * Export writes files in this order and import creates entries in it, which is
+ * what makes export → import reproduce the same sequence.
+ */
+export function orderForTransfer<T extends { entry_date: string }>(entries: readonly T[]): T[] {
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .sort((a, b) => a.entry.entry_date.localeCompare(b.entry.entry_date) || a.index - b.index)
+    .map((x) => x.entry);
+}
+
 /** Build the v2 export payload from stored entries (drops app-internal fields). */
 export function buildJournalPayload(companyName: string, entries: SourceEntry[], exportedAt = new Date().toISOString()): JournalPayload {
-  const out: TransferEntry[] = entries.map((e) => ({
+  const out: TransferEntry[] = orderForTransfer(entries).map((e) => ({
     entry_date: e.entry_date,
     voucher_type: e.voucher_type,
     voucher_number: e.voucher_number ?? null,

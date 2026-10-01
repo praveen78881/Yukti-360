@@ -25,7 +25,15 @@ const LOCK_SVG = (
   </svg>
 );
 
-export function ExportButtons({
+/** Downloads are switched off app-wide (user request, 2026-09-27: "remove the
+ *  downloads button all over"). Every page keeps passing its props, so nothing
+ *  else changes. The full implementation is kept below as ExportButtonsFull —
+ *  to bring downloads back, export it under the name ExportButtons again. */
+export function ExportButtons(_props: ExportButtonsProps) {
+  return null;
+}
+
+export function ExportButtonsFull({
   title, companyName, entityType, dateRange,
   columns, data, pdfOrientation, includeSignatureBlock,
   locked = false, onPdf,

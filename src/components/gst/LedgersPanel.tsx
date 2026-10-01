@@ -341,19 +341,19 @@ export function LedgersPanel() {
 
 /* ---------- scoped CSS (ported from ledgers.html; prefixed to avoid global collisions) ---------- */
 const LEDGER_CSS = `
-.ledgers-root{--l-blue:#0b5394;--l-blue-deep:#083b6f;--l-blue-mid:#1a73c9;--l-blue-pale:#eaf2fb;--l-blue-line:#c9dcf1;--l-ink:#15243a;--l-muted:#5a6b82;--l-green:#178a3a;--l-red:#c0392b;color:var(--l-ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.ledgers-root{--l-blue:#17457F;--l-blue-deep:#0F3162;--l-blue-mid:#2A5C9C;--l-blue-pale:#DFEAF9;--l-blue-line:#D4E2F0;--l-ink:#14191F;--l-muted:#4C5A6A;--l-green:#2F7D5A;--l-red:#B23B33;color:var(--l-ink);font:14px/1.5 'Mulish',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .ledgers-root *{box-sizing:border-box}
 .ledgers-root .l-topbar{background:linear-gradient(180deg,var(--l-blue-deep),var(--l-blue));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 20px;border-radius:12px;box-shadow:0 2px 10px rgba(8,59,111,.2)}
-.ledgers-root .l-topbar h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.3px}
+.ledgers-root .l-topbar h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.045em;font-family:'Oswald',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase}
 .ledgers-root .l-gstin{font-size:12px;opacity:.85;margin-top:1px;letter-spacing:.5px}
 .ledgers-root .l-tright{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .ledgers-root .l-range{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#fff;opacity:.95}
 .ledgers-root .l-range input{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;border-radius:7px;padding:5px 8px;font-size:12.5px}
 .ledgers-root .l-range input::-webkit-calendar-picker-indicator{filter:invert(1)}
-.ledgers-root .l-hint{margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px 14px;font-size:12.5px}
+.ledgers-root .l-hint{margin-top:10px;background:#F8E9D6;border:1px solid #F0D4AE;color:#8A530F;border-radius:10px;padding:10px 14px;font-size:12.5px}
 .ledgers-root .l-conn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-size:12.5px}
-.ledgers-root .l-dot{width:9px;height:9px;border-radius:50%;background:#e8710a;box-shadow:0 0 0 3px rgba(232,113,10,.25)}
-.ledgers-root .l-dot.on{background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.3)}
+.ledgers-root .l-dot{width:9px;height:9px;border-radius:50%;background:#B26B15;box-shadow:0 0 0 3px rgba(178,107,21,.25)}
+.ledgers-root .l-dot.on{background:#2F7D5A;box-shadow:0 0 0 3px rgba(47,125,90,.3)}
 .ledgers-root .l-update{background:#fff;color:var(--l-blue);border:none;border-radius:8px;padding:8px 20px;font-size:13.5px;font-weight:650;cursor:pointer;letter-spacing:.3px}
 .ledgers-root .l-update:hover{background:var(--l-blue-pale)}
 .ledgers-root .l-update:disabled{opacity:.5;cursor:not-allowed}
@@ -364,7 +364,7 @@ const LEDGER_CSS = `
 .ledgers-root .l-balrow{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 0 4px}
 @media(max-width:900px){.ledgers-root .l-balrow{grid-template-columns:1fr}}
 .ledgers-root .balcard{border:1px solid var(--l-blue-line);border-radius:12px;overflow:hidden;background:#fff}
-.ledgers-root .balcard .bhead{background:var(--l-blue);color:#fff;padding:10px 16px;font-size:13.5px;font-weight:650;display:flex;justify-content:space-between;align-items:center}
+.ledgers-root .balcard .bhead{background:var(--l-blue);color:#fff;padding:10px 16px;font-size:13.5px;font-weight:600;font-family:'Oswald',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
 .ledgers-root .balcard .bhead .ason{font-size:11px;font-weight:400;opacity:.85}
 .ledgers-root .balcard table{width:100%;border-collapse:collapse;font-size:13px}
 .ledgers-root .balcard th{background:var(--l-blue-pale);color:var(--l-blue-deep);font-weight:650;padding:7px 10px;border:1px solid var(--l-blue-line);font-size:12px}
@@ -374,19 +374,19 @@ const LEDGER_CSS = `
 .ledgers-root .l-screen{margin:14px 0}
 .ledgers-root .l-panel{border:1px solid var(--l-blue-line);border-radius:12px;overflow:hidden;background:#fff}
 .ledgers-root .l-phead{background:linear-gradient(180deg,var(--l-blue),var(--l-blue-mid));color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.ledgers-root .l-phead h2{margin:0;font-size:15px;font-weight:650;letter-spacing:.3px}
+.ledgers-root .l-phead h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.045em;font-family:'Oswald',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase}
 .ledgers-root .l-metatxt{font-size:11.5px;opacity:.9}
 .ledgers-root .l-tablewrap{overflow-x:auto;background:#fff}
 .ledgers-root table.ledger{border-collapse:collapse;width:100%;font-size:12.6px;min-width:1150px}
 .ledgers-root table.ledger th{background:var(--l-blue-pale);color:var(--l-blue-deep);border:1px solid var(--l-blue-line);padding:7px 8px;font-weight:650;text-align:center;font-size:11.8px}
 .ledgers-root table.ledger td{border:1px solid var(--l-blue-line);padding:6px 8px;vertical-align:middle;background:#fff}
-.ledgers-root table.ledger tr:nth-child(even) td{background:#f7fafd}
+.ledgers-root table.ledger tr:nth-child(even) td{background:#F5FAFE}
 .ledgers-root td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ledgers-root td.ctr{text-align:center;white-space:nowrap}
 .ledgers-root td.desc{min-width:180px}
 .ledgers-root .badge{display:inline-block;border-radius:5px;padding:1px 9px;font-size:11px;font-weight:700}
-.ledgers-root .badge.dr{background:#fdecea;color:var(--l-red)}
-.ledgers-root .badge.cr{background:#e8f6ec;color:var(--l-green)}
+.ledgers-root .badge.dr{background:#F9E1DF;color:var(--l-red)}
+.ledgers-root .badge.cr{background:#DCEFE7;color:var(--l-green)}
 .ledgers-root tr.balrowline td{background:var(--l-blue-pale)!important;font-weight:700;color:var(--l-blue-deep)}
 .ledgers-root tr.mhead td{background:var(--l-blue)!important;color:#fff;font-weight:650;font-size:12.5px;letter-spacing:.4px}
 .ledgers-root .time{color:var(--l-muted);font-size:10.5px;display:block}

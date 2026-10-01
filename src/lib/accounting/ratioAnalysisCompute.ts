@@ -183,3 +183,60 @@ export function computeRatioAnalysis(
     },
   };
 }
+
+/* ── Component make-up (display aid for the Ratio Analysis pop-ups) ──────────
+   Lists, per ratio component, the accounts computeRatioAnalysis sums — the SAME
+   account-group sets and the SAME sign rules (|balance| for position figures,
+   credit − debit for income, debit − credit for costs). It is purely additive:
+   computeRatioAnalysis does not call it and no ratio depends on it. */
+
+export interface RatioComponentLine {
+  account: string;
+  group: string;
+  amount: number;
+}
+
+export type RatioComponentKey =
+  | 'currentAssets' | 'currentLiabilities' | 'inventory' | 'cashAndBank'
+  | 'tradeReceivables' | 'tradePayables' | 'shareholdersEquity' | 'longTermDebt'
+  | 'nonCurrentAssets' | 'accumulatedDepreciation'
+  | 'revenue' | 'cogs' | 'operatingExpenses' | 'interestExpense';
+
+/** Must match the non-current list used for totalAssets inside computeRatioAnalysis. */
+const NON_CURRENT_ASSET_SUBGROUPS = [
+  'Tangible Fixed Assets', 'Capital Work in Progress', 'Intangible Assets',
+  'Non-current Investments', 'Long-term Loans & Advances', 'Other Non-current Assets',
+  'Deferred Tax Asset',
+];
+
+export function computeRatioComponentLines(
+  entries: JournalEntry[],
+): Record<RatioComponentKey, RatioComponentLine[]> {
+  const balances = computeAllBalances(entries);
+  const pick = (subGroups: string[], amountOf: (b: AccountBalance) => number) => {
+    const set = new Set(subGroups);
+    return balances
+      .filter(b => set.has(b.account_group))
+      .map(b => ({ account: b.account_name, group: b.account_group, amount: amountOf(b) }));
+  };
+  const position = (subGroups: string[]) => pick(subGroups, b => Math.abs(b.balance));
+  const credit = (subGroups: string[]) => pick(subGroups, b => b.total_credit - b.total_debit);
+  const debit = (subGroups: string[]) => pick(subGroups, b => b.total_debit - b.total_credit);
+
+  return {
+    currentAssets: position(CURRENT_ASSET_SUBGROUPS),
+    currentLiabilities: position(CURRENT_LIABILITY_SUBGROUPS),
+    inventory: position(['Inventories']),
+    cashAndBank: position(['Cash & Cash Equivalents', 'Bank Balances', 'Cash Equivalents']),
+    tradeReceivables: position(['Trade Receivables']),
+    tradePayables: position(['Trade Payables']),
+    shareholdersEquity: position(EQUITY_SUBGROUPS),
+    longTermDebt: position(LONG_TERM_DEBT_SUBGROUPS),
+    nonCurrentAssets: position(NON_CURRENT_ASSET_SUBGROUPS),
+    accumulatedDepreciation: position(['Accumulated Depreciation', 'Accumulated Amortisation']),
+    revenue: credit([...TRADING_CREDIT_SUBGROUPS, ...PNL_INCOME_SUBGROUPS]),
+    cogs: debit(TRADING_DEBIT_SUBGROUPS),
+    operatingExpenses: debit(PNL_EXPENSE_SUBGROUPS),
+    interestExpense: debit(['Finance Costs']),
+  };
+}

@@ -56,14 +56,16 @@ export default function PartnersCapitalPage() {
       b.account_name.toLowerCase().includes('drawing')
     ), [balances]);
 
+  // Kept above the loading return so the hook runs on every render (Rules of Hooks).
+  // Detect partner admission/retirement
+  const partnerChanges = useMemo(() => detectPartnerChanges(entries, fromDate, toDate), [entries, fromDate, toDate]);
+
   if (companyLoading || !company) {
     return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
 
-  // Detect partner admission/retirement
-  const partnerChanges = useMemo(() => detectPartnerChanges(entries, fromDate, toDate), [entries, fromDate, toDate]);
 
   // Build T-format data for each partner
   const allPartnerAccounts = method === 'fixed'

@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useCompany } from '@/hooks/useCompany';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useComputedData } from '@/hooks/useComputedData';
+import { computeCashBook, type CashBookRow } from '@/lib/accounting/cashBookCompute';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CashBookFormat } from '@/components/formats/CashBookFormat';
 import { DateRangeFilter } from '@/components/export/DateRangeFilter';
@@ -32,7 +32,13 @@ export default function CashBookPage() {
     enabled: !!companyId,
   });
 
-  const computed = useComputedData(entries);
+  // Computed here rather than via useComputedData so multi-account rows carry
+  // per-account detail (one line per account). Same function, same entries,
+  // same type — every balance and total is identical.
+  const cashBook = useMemo(
+    () => computeCashBook(entries, cbType, { withDetails: true }),
+    [entries, cbType],
+  );
 
   const allRange = useMemo(() => {
     if (!companyId) return null;
@@ -60,21 +66,18 @@ export default function CashBookPage() {
   }
 
   const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
-  const cashBook = computed.getCashBook(cbType);
 
+  // Downloads keep the one-line particulars/L.F. strings; the per-account detail
+  // is screen-only, so it is stripped here to keep export rows exactly as before.
+  const exportRow = ({ details: _details, detailsReconcile: _reconcile, ...row }: CashBookRow, side: string) => ({
+    ...row,
+    side,
+    // Include JE code inside the Date column for downloads.
+    date: `${String(row.date ?? '')} (${String(row.entry_code ?? '')})`,
+  });
   const exportData = [
-    ...cashBook.receipts.map((r: Record<string, unknown>) => ({
-      ...r,
-      side: 'Receipt',
-      // Include JE code inside the Date column for downloads.
-      date: `${String((r as any).date ?? '')} (${String((r as any).entry_code ?? '')})`,
-    })),
-    ...cashBook.payments.map((p: Record<string, unknown>) => ({
-      ...p,
-      side: 'Payment',
-      // Include JE code inside the Date column for downloads.
-      date: `${String((p as any).date ?? '')} (${String((p as any).entry_code ?? '')})`,
-    })),
+    ...cashBook.receipts.map((r) => exportRow(r, 'Receipt')),
+    ...cashBook.payments.map((p) => exportRow(p, 'Payment')),
   ];
 
   const exportColumns = [

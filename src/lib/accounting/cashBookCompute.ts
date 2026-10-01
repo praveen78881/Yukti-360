@@ -1,5 +1,19 @@
 import type { JournalEntry } from './computeEngine';
 
+/** One contra-account line of a multi-account entry, in the entry's line order.
+ *  Lets the Cash Book show each account on its own line with its own L.F. and
+ *  amount instead of comma lists. */
+export interface CashBookDetailLine {
+  account: string;
+  lf: string;
+  /** The journal line's own amount (always ≥ 0) and the side it sits on. */
+  amount: number;
+  side: 'Dr' | 'Cr';
+  /** `amount` signed relative to this cash-book row: + on the usual contra side
+   *  (Cr for a receipt, Dr for a payment), − on the other. */
+  signed: number;
+}
+
 export interface CashBookRow {
   date: string;
   entry_code: string;
@@ -10,6 +24,13 @@ export interface CashBookRow {
   bankAmount: number;
   discountAmount?: number;
   isContra: boolean;
+  /** Per-account lines — only when computeCashBook is asked `withDetails` and the
+   *  row names more than one account. Presentation only: balances never read it. */
+  details?: CashBookDetailLine[];
+  /** True when the signed `details` add up to the row's posted amount, i.e. they
+   *  are a breakdown of it. False for entries that post to both sides of the book
+   *  (the lines then describe the whole entry, not this side). */
+  detailsReconcile?: boolean;
 }
 
 function isCashLine(line: { account_name: string; account_group: string }) {
@@ -30,7 +51,11 @@ function isBankLine(line: { account_name: string; account_group: string }) {
 
 export function computeCashBook(
   entries: JournalEntry[],
-  type: 'single' | 'double' | 'triple'
+  type: 'single' | 'double' | 'triple',
+  /** `withDetails` adds per-account `details` to multi-account rows. Off by
+   *  default so every other consumer (e.g. the assistant's tool output) gets
+   *  exactly the rows it always did. */
+  opts: { withDetails?: boolean } = {},
 ): {
   receipts: CashBookRow[];
   payments: CashBookRow[];
@@ -135,6 +160,28 @@ export function computeCashBook(
       }
     }
 
+    // Per-account lines for multi-account rows (contra rows keep their single
+    // opposite-ledger line). `asReceipt` flips which journal side is "usual".
+    const detailsFor = (asReceipt: boolean): Pick<CashBookRow, 'details' | 'detailsReconcile'> => {
+      if (!opts.withDetails || isContra || otherLines.length < 2) return {};
+      const usual: 'Dr' | 'Cr' = asReceipt ? 'Cr' : 'Dr';
+      const details = otherLines.map<CashBookDetailLine>((l) => {
+        const net = (l.debit || 0) - (l.credit || 0);
+        const side: 'Dr' | 'Cr' = net >= 0 ? 'Dr' : 'Cr';
+        const amount = Math.abs(net);
+        return {
+          account: l.account_name,
+          lf: String(folioMap.get(l.account_name) ?? ''),
+          amount,
+          side,
+          signed: side === usual ? amount : -amount,
+        };
+      });
+      const posted = asReceipt ? cashDebit + bankDebit : cashCredit + bankCredit;
+      const sum = details.reduce((s, d) => s + d.signed, 0);
+      return { details, detailsReconcile: Math.abs(sum - posted) < 0.005 };
+    };
+
     // Check for discount
     let discountAllowed = 0, discountReceived = 0;
     if (type === 'triple') {
@@ -158,6 +205,7 @@ export function computeCashBook(
         bankAmount: type === 'double' || type === 'triple' ? bankDebit : 0,
         discountAmount: type === 'triple' ? discountReceived : undefined,
         isContra,
+        ...detailsFor(true),
       });
       cashBalance += cashDebit;
       bankBalance += bankDebit;
@@ -175,6 +223,7 @@ export function computeCashBook(
         bankAmount: type === 'double' || type === 'triple' ? bankCredit : 0,
         discountAmount: type === 'triple' ? discountAllowed : undefined,
         isContra,
+        ...detailsFor(false),
       });
       cashBalance -= cashCredit;
       bankBalance -= bankCredit;

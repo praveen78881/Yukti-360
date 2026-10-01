@@ -56,12 +56,7 @@ export default function CashFlowPage() {
   );
   const bankLedger = useMemo(() => (bankView ? computeLedger(entries, bankView) : []), [entries, bankView]);
 
-  if (companyLoading || !company) {
-    return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
-  }
-
-  const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
-
+  // Kept above the loading return so the hook runs on every render (Rules of Hooks).
   const as3Rows = useMemo(() => {
     const r: Parameters<typeof CashFlowAs3Format>[0]['rows'] = [];
     if (format === 'direct') {
@@ -108,6 +103,13 @@ export default function CashFlowPage() {
     r.push({ label: 'CASH & CASH EQUIVALENTS — CLOSING BALANCE', total: cashFlow.closingCash, isBold: true });
     return r;
   }, [cashFlow, format, profitLoss.netProfit]);
+
+  if (companyLoading || !company) {
+    return <div className="flex items-center justify-center py-16"><div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+  }
+
+  const entityLabel = ENTITY_TYPES[company.entity_type as EntityType]?.label || company.entity_type;
+
 
   // Export reflects what's on screen: the per-account ledger when a bank is selected, else the AS-3 statement.
   const exportColumns = bankView

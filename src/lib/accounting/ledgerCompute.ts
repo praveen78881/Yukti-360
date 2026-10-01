@@ -1,5 +1,12 @@
 import type { JournalEntry } from './computeEngine';
 
+/** One contra journal line of a ledger posting (the other side of the entry). */
+export interface LedgerContraLine {
+  account: string;
+  debit: number;
+  credit: number;
+}
+
 export interface LedgerRow {
   date: string;
   entry_id: string;
@@ -10,6 +17,19 @@ export interface LedgerRow {
   credit: number;
   running_balance: number;
   balance_type: 'Dr' | 'Cr';
+  /**
+   * Every contra line of the entry, in entry line order — lets a view list the
+   * other accounts line by line instead of the comma-joined `particulars`.
+   * Additive: `particulars` and every figure above are unchanged.
+   */
+  contra?: LedgerContraLine[];
+  /**
+   * True when the contra lines are an exact split of this posting: this line is
+   * alone on its side and every contra line sits on the opposite side, so their
+   * amounts add up to this row's debit/credit. False means a "Sundries" posting
+   * (contra lines on both sides) — the contra amounts are detail only.
+   */
+  contra_is_split?: boolean;
 }
 
 export function computeLedger(
@@ -33,13 +53,23 @@ export function computeLedger(
     if (matchingLines.length === 0) continue;
 
     for (const line of matchingLines) {
-      const otherAccounts = entry.lines
-        .filter(l => {
-          if (isAllSales) return l.account_group !== 'Revenue from Operations';
-          if (isAllPurchases) return l.account_group !== 'Purchases of Stock-in-Trade';
-          return l.account_name !== accountName;
-        })
-        .map(l => l.account_name);
+      const contraLines = entry.lines.filter(l => {
+        if (isAllSales) return l.account_group !== 'Revenue from Operations';
+        if (isAllPurchases) return l.account_group !== 'Purchases of Stock-in-Trade';
+        return l.account_name !== accountName;
+      });
+      const otherAccounts = contraLines.map(l => l.account_name);
+
+      const isDebitSide = (line.debit || 0) > 0;
+      const posted = isDebitSide ? (line.debit || 0) : (line.credit || 0);
+      const onOppositeSide = (l: { debit?: number; credit?: number }) =>
+        isDebitSide ? (l.credit || 0) > 0 && !((l.debit || 0) > 0) : (l.debit || 0) > 0 && !((l.credit || 0) > 0);
+      const oppositeSum = contraLines.reduce((s, l) => s + (isDebitSide ? (l.credit || 0) : (l.debit || 0)), 0);
+      const isZeroLine = (l: { debit?: number; credit?: number }) => !(l.debit || 0) && !(l.credit || 0);
+      const contraIsSplit =
+        contraLines.length > 0 &&
+        contraLines.every(l => isZeroLine(l) || onOppositeSide(l)) &&
+        Math.abs(oppositeSum - posted) < 0.005;
 
       let particulars = otherAccounts.length === 1
         ? otherAccounts[0]
@@ -63,6 +93,8 @@ export function computeLedger(
         credit: line.credit || 0,
         running_balance: Math.abs(diff),
         balance_type: diff >= 0 ? 'Dr' : 'Cr',
+        contra: contraLines.map(l => ({ account: l.account_name, debit: l.debit || 0, credit: l.credit || 0 })),
+        contra_is_split: contraIsSplit,
       });
     }
   }

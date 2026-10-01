@@ -1,102 +1,104 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyPage, registerPrefetchRoutes } from '@/lib/routePrefetch';
 
 // Layouts
-const CompanyLayout = lazy(() => import('@/app/company/[id]/layout').then(m => ({ default: m.default })));
+const CompanyLayout = lazyPage(() => import('@/app/company/[id]/layout').then(m => ({ default: m.default })));
 
 // Top-level pages
-const AuthPage = lazy(() => import('@/app/auth/page').then(m => ({ default: m.default })));
-const CompaniesPage = lazy(() => import('@/app/companies/page').then(m => ({ default: m.default })));
-const CreateCompanyPage = lazy(() => import('@/app/companies/create/page').then(m => ({ default: m.default })));
-const MigrateLedgerNamesPage = lazy(() => import('@/app/dev/migrate-ledger-names/page').then(m => ({ default: m.default })));
-const CoaAuditPage = lazy(() => import('./app/dev/coa-audit/page').then(m => ({ default: m.default })));
-const NotFoundPage = lazy(() => import('@/app/not-found').then(m => ({ default: m.default })));
+const AuthPage = lazyPage(() => import('@/app/auth/page').then(m => ({ default: m.default })));
+const CompaniesPage = lazyPage(() => import('@/app/companies/page').then(m => ({ default: m.default })));
+const CreateCompanyPage = lazyPage(() => import('@/app/companies/create/page').then(m => ({ default: m.default })));
+const MigrateLedgerNamesPage = lazyPage(() => import('@/app/dev/migrate-ledger-names/page').then(m => ({ default: m.default })));
+const CoaAuditPage = lazyPage(() => import('./app/dev/coa-audit/page').then(m => ({ default: m.default })));
+const AvatarPlaygroundPage = lazyPage(() => import('@/app/dev/avatar/page').then(m => ({ default: m.default })));
+const NotFoundPage = lazyPage(() => import('@/app/not-found').then(m => ({ default: m.default })));
 
 // Company pages
-const CompanyOverviewPage = lazy(() => import('@/app/company/[id]/page').then(m => ({ default: m.default })));
-const JournalPage = lazy(() => import('@/app/company/[id]/journal/page').then(m => ({ default: m.default })));
-const CashBookPage = lazy(() => import('@/app/company/[id]/cash-book/page').then(m => ({ default: m.default })));
+const CompanyOverviewPage = lazyPage(() => import('@/app/company/[id]/page').then(m => ({ default: m.default })));
+const JournalPage = lazyPage(() => import('@/app/company/[id]/journal/page').then(m => ({ default: m.default })));
+const CashBookPage = lazyPage(() => import('@/app/company/[id]/cash-book/page').then(m => ({ default: m.default })));
 
-const TrialBalancePage = lazy(() => import('@/app/company/[id]/trial-balance/page').then(m => ({ default: m.default })));
-const TradingAccountPage = lazy(() => import('@/app/company/[id]/trading-account/page').then(m => ({ default: m.default })));
-const ProfitLossPage = lazy(() => import('@/app/company/[id]/profit-loss/page').then(m => ({ default: m.default })));
-const PLAppropriationPage = lazy(() => import('@/app/company/[id]/pl-appropriation/page').then(m => ({ default: m.default })));
-const BalanceSheetPage = lazy(() => import('@/app/company/[id]/balance-sheet/page').then(m => ({ default: m.default })));
-const CashFlowPage = lazy(() => import('@/app/company/[id]/cash-flow/page').then(m => ({ default: m.default })));
-const FundsFlowPage = lazy(() => import('@/app/company/[id]/funds-flow/page').then(m => ({ default: m.default })));
-const IncomeExpenditurePage = lazy(() => import('@/app/company/[id]/income-expenditure/page').then(m => ({ default: m.default })));
-const ReceiptsPaymentsPage = lazy(() => import('@/app/company/[id]/receipts-payments/page').then(m => ({ default: m.default })));
-const LedgerPage = lazy(() => import('@/app/company/[id]/ledger/page').then(m => ({ default: m.default })));
-const PurchaseRegisterPage = lazy(() => import('@/app/company/[id]/purchase-register/page').then(m => ({ default: m.default })));
-const SalesRegisterPage = lazy(() => import('@/app/company/[id]/sales-register/page').then(m => ({ default: m.default })));
-const PurchaseReturnsPage = lazy(() => import('@/app/company/[id]/purchase-returns/page').then(m => ({ default: m.default })));
-const SalesReturnsPage = lazy(() => import('@/app/company/[id]/sales-returns/page').then(m => ({ default: m.default })));
-const BillsReceivablePage = lazy(() => import('@/app/company/[id]/bills-receivable/page').then(m => ({ default: m.default })));
-const BillsPayablePage = lazy(() => import('@/app/company/[id]/bills-payable/page').then(m => ({ default: m.default })));
-const DebtorsPage = lazy(() => import('@/app/company/[id]/debtors/page').then(m => ({ default: m.default })));
-const CreditorsPage = lazy(() => import('@/app/company/[id]/creditors/page').then(m => ({ default: m.default })));
-const PartnersCapitalPage = lazy(() => import('@/app/company/[id]/partners-capital/page').then(m => ({ default: m.default })));
-const RevaluationPage = lazy(() => import('@/app/company/[id]/revaluation/page').then(m => ({ default: m.default })));
-const RealisationPage = lazy(() => import('@/app/company/[id]/realisation/page').then(m => ({ default: m.default })));
-const ShareCapitalPage = lazy(() => import('@/app/company/[id]/share-capital/page').then(m => ({ default: m.default })));
-const DebenturesPage = lazy(() => import('@/app/company/[id]/debentures/page').then(m => ({ default: m.default })));
-const KartaCapitalPage = lazy(() => import('@/app/company/[id]/karta-capital/page').then(m => ({ default: m.default })));
-const FundAccountsPage = lazy(() => import('@/app/company/[id]/fund-accounts/page').then(m => ({ default: m.default })));
-const IncompleteRecordsPage = lazy(() => import('@/app/company/[id]/incomplete-records/page').then(m => ({ default: m.default })));
-const MemberRegisterPage = lazy(() => import('@/app/company/[id]/member-register/page').then(m => ({ default: m.default })));
-const FixedAssetsPage = lazy(() => import('@/app/company/[id]/fixed-assets/page').then(m => ({ default: m.default })));
-const InvestmentsPage = lazy(() => import('@/app/company/[id]/investments/page').then(m => ({ default: m.default })));
-const LoansPage = lazy(() => import('@/app/company/[id]/loans/page').then(m => ({ default: m.default })));
-const DepreciationPage = lazy(() => import('@/app/company/[id]/depreciation/page').then(m => ({ default: m.default })));
-const GstPage = lazy(() => import('@/app/company/[id]/gst/page').then(m => ({ default: m.default })));
-const Gstr1Page = lazy(() => import('@/app/company/[id]/gst/gstr1/page').then(m => ({ default: m.default })));
-const Gstr3bPage = lazy(() => import('@/app/company/[id]/gst/gstr3b/page').then(m => ({ default: m.default })));
-const ItcRegisterPage = lazy(() => import('@/app/company/[id]/gst/itc-register/page').then(m => ({ default: m.default })));
-const LedgersPage = lazy(() => import('@/app/company/[id]/gst/ledgers/page').then(m => ({ default: m.default })));
-const EwayBillPage = lazy(() => import('@/app/company/[id]/gst/eway-bill/page').then(m => ({ default: m.default })));
-const GstBooksBridgePage = lazy(() => import('@/app/company/[id]/gst/books-bridge/page').then(m => ({ default: m.default })));
-const GstSearchPage = lazy(() => import('@/app/company/[id]/gst/search/page').then(m => ({ default: m.default })));
-const EInvoicingPage = lazy(() => import('@/app/company/[id]/gst/e-invoicing/page').then(m => ({ default: m.default })));
-const Gstr9Page = lazy(() => import('@/app/company/[id]/gst/annuals/page').then(m => ({ default: m.default })));
-const Gstr2aPage = lazy(() => import('@/app/company/[id]/gst/gstr2a/page').then(m => ({ default: m.default })));
-const Gstr2bPage = lazy(() => import('@/app/company/[id]/gst/gstr2b/page').then(m => ({ default: m.default })));
-const Gstr1AnnualPage = lazy(() => import('@/app/company/[id]/gst/gstr1-annual/page').then(m => ({ default: m.default })));
-const IncomeTaxPage = lazy(() => import('@/app/company/[id]/income-tax/page').then(m => ({ default: m.default })));
-const TdsRegisterPage = lazy(() => import('@/app/company/[id]/tds-register/page').then(m => ({ default: m.default })));
-const TcsRegisterPage = lazy(() => import('@/app/company/[id]/tcs-register/page').then(m => ({ default: m.default })));
-const AdvanceTaxPage = lazy(() => import('@/app/company/[id]/advance-tax/page').then(m => ({ default: m.default })));
-const DeferredTaxPage = lazy(() => import('@/app/company/[id]/deferred-tax/page').then(m => ({ default: m.default })));
-const BrsPage = lazy(() => import('@/app/company/[id]/brs/page').then(m => ({ default: m.default })));
-const AuditPage = lazy(() => import('@/app/company/[id]/audit/page').then(m => ({ default: m.default })));
-const FcraPage = lazy(() => import('@/app/company/[id]/fcra/page').then(m => ({ default: m.default })));
-const ApplicationCheckPage = lazy(() => import('@/app/company/[id]/application-check/page').then(m => ({ default: m.default })));
-const Form10bPage = lazy(() => import('@/app/company/[id]/form-10b/page').then(m => ({ default: m.default })));
-const LlpFormsPage = lazy(() => import('@/app/company/[id]/llp-forms/page').then(m => ({ default: m.default })));
-const SegmentReportingPage = lazy(() => import('@/app/company/[id]/segment-reporting/page').then(m => ({ default: m.default })));
-const RelatedPartyPage = lazy(() => import('@/app/company/[id]/related-party/page').then(m => ({ default: m.default })));
-const AccountingPoliciesPage = lazy(() => import('@/app/company/[id]/accounting-policies/page').then(m => ({ default: m.default })));
-const AsChecklistPage = lazy(() => import('@/app/company/[id]/as-checklist/page').then(m => ({ default: m.default })));
-const ContingentLiabilitiesPage = lazy(() => import('@/app/company/[id]/contingent-liabilities/page').then(m => ({ default: m.default })));
-const DirectorsReportPage = lazy(() => import('@/app/company/[id]/directors-report/page').then(m => ({ default: m.default })));
-const CAROPage = lazy(() => import('@/app/company/[id]/caro/page').then(m => ({ default: m.default })));
-const CostRecordsPage = lazy(() => import('@/app/company/[id]/cost-records/page').then(m => ({ default: m.default })));
-const FormNPage = lazy(() => import('@/app/company/[id]/form-n/page').then(m => ({ default: m.default })));
-const InventoryPage = lazy(() => import('@/app/company/[id]/inventory/page').then(m => ({ default: m.default })));
+const TrialBalancePage = lazyPage(() => import('@/app/company/[id]/trial-balance/page').then(m => ({ default: m.default })));
+const TradingAccountPage = lazyPage(() => import('@/app/company/[id]/trading-account/page').then(m => ({ default: m.default })));
+const ProfitLossPage = lazyPage(() => import('@/app/company/[id]/profit-loss/page').then(m => ({ default: m.default })));
+const PLAppropriationPage = lazyPage(() => import('@/app/company/[id]/pl-appropriation/page').then(m => ({ default: m.default })));
+const BalanceSheetPage = lazyPage(() => import('@/app/company/[id]/balance-sheet/page').then(m => ({ default: m.default })));
+const CashFlowPage = lazyPage(() => import('@/app/company/[id]/cash-flow/page').then(m => ({ default: m.default })));
+const FundsFlowPage = lazyPage(() => import('@/app/company/[id]/funds-flow/page').then(m => ({ default: m.default })));
+const IncomeExpenditurePage = lazyPage(() => import('@/app/company/[id]/income-expenditure/page').then(m => ({ default: m.default })));
+const ReceiptsPaymentsPage = lazyPage(() => import('@/app/company/[id]/receipts-payments/page').then(m => ({ default: m.default })));
+const LedgerPage = lazyPage(() => import('@/app/company/[id]/ledger/page').then(m => ({ default: m.default })));
+const PurchaseRegisterPage = lazyPage(() => import('@/app/company/[id]/purchase-register/page').then(m => ({ default: m.default })));
+const SalesRegisterPage = lazyPage(() => import('@/app/company/[id]/sales-register/page').then(m => ({ default: m.default })));
+const PurchaseReturnsPage = lazyPage(() => import('@/app/company/[id]/purchase-returns/page').then(m => ({ default: m.default })));
+const SalesReturnsPage = lazyPage(() => import('@/app/company/[id]/sales-returns/page').then(m => ({ default: m.default })));
+const BillsReceivablePage = lazyPage(() => import('@/app/company/[id]/bills-receivable/page').then(m => ({ default: m.default })));
+const BillsPayablePage = lazyPage(() => import('@/app/company/[id]/bills-payable/page').then(m => ({ default: m.default })));
+const DebtorsPage = lazyPage(() => import('@/app/company/[id]/debtors/page').then(m => ({ default: m.default })));
+const CreditorsPage = lazyPage(() => import('@/app/company/[id]/creditors/page').then(m => ({ default: m.default })));
+const PartnersCapitalPage = lazyPage(() => import('@/app/company/[id]/partners-capital/page').then(m => ({ default: m.default })));
+const RevaluationPage = lazyPage(() => import('@/app/company/[id]/revaluation/page').then(m => ({ default: m.default })));
+const RealisationPage = lazyPage(() => import('@/app/company/[id]/realisation/page').then(m => ({ default: m.default })));
+const ShareCapitalPage = lazyPage(() => import('@/app/company/[id]/share-capital/page').then(m => ({ default: m.default })));
+const DebenturesPage = lazyPage(() => import('@/app/company/[id]/debentures/page').then(m => ({ default: m.default })));
+const KartaCapitalPage = lazyPage(() => import('@/app/company/[id]/karta-capital/page').then(m => ({ default: m.default })));
+const FundAccountsPage = lazyPage(() => import('@/app/company/[id]/fund-accounts/page').then(m => ({ default: m.default })));
+const IncompleteRecordsPage = lazyPage(() => import('@/app/company/[id]/incomplete-records/page').then(m => ({ default: m.default })));
+const MemberRegisterPage = lazyPage(() => import('@/app/company/[id]/member-register/page').then(m => ({ default: m.default })));
+const FixedAssetsPage = lazyPage(() => import('@/app/company/[id]/fixed-assets/page').then(m => ({ default: m.default })));
+const InvestmentsPage = lazyPage(() => import('@/app/company/[id]/investments/page').then(m => ({ default: m.default })));
+const LoansPage = lazyPage(() => import('@/app/company/[id]/loans/page').then(m => ({ default: m.default })));
+const DepreciationPage = lazyPage(() => import('@/app/company/[id]/depreciation/page').then(m => ({ default: m.default })));
+const GstPage = lazyPage(() => import('@/app/company/[id]/gst/page').then(m => ({ default: m.default })));
+const Gstr1Page = lazyPage(() => import('@/app/company/[id]/gst/gstr1/page').then(m => ({ default: m.default })));
+const Gstr3bPage = lazyPage(() => import('@/app/company/[id]/gst/gstr3b/page').then(m => ({ default: m.default })));
+const ItcRegisterPage = lazyPage(() => import('@/app/company/[id]/gst/itc-register/page').then(m => ({ default: m.default })));
+const LedgersPage = lazyPage(() => import('@/app/company/[id]/gst/ledgers/page').then(m => ({ default: m.default })));
+const EwayBillPage = lazyPage(() => import('@/app/company/[id]/gst/eway-bill/page').then(m => ({ default: m.default })));
+const GstBooksBridgePage = lazyPage(() => import('@/app/company/[id]/gst/books-bridge/page').then(m => ({ default: m.default })));
+const GstSearchPage = lazyPage(() => import('@/app/company/[id]/gst/search/page').then(m => ({ default: m.default })));
+const EInvoicingPage = lazyPage(() => import('@/app/company/[id]/gst/e-invoicing/page').then(m => ({ default: m.default })));
+const Gstr9Page = lazyPage(() => import('@/app/company/[id]/gst/annuals/page').then(m => ({ default: m.default })));
+const Gstr2aPage = lazyPage(() => import('@/app/company/[id]/gst/gstr2a/page').then(m => ({ default: m.default })));
+const Gstr2bPage = lazyPage(() => import('@/app/company/[id]/gst/gstr2b/page').then(m => ({ default: m.default })));
+const Gstr1AnnualPage = lazyPage(() => import('@/app/company/[id]/gst/gstr1-annual/page').then(m => ({ default: m.default })));
+const IncomeTaxPage = lazyPage(() => import('@/app/company/[id]/income-tax/page').then(m => ({ default: m.default })));
+const TdsRegisterPage = lazyPage(() => import('@/app/company/[id]/tds-register/page').then(m => ({ default: m.default })));
+const TcsRegisterPage = lazyPage(() => import('@/app/company/[id]/tcs-register/page').then(m => ({ default: m.default })));
+const AdvanceTaxPage = lazyPage(() => import('@/app/company/[id]/advance-tax/page').then(m => ({ default: m.default })));
+const DeferredTaxPage = lazyPage(() => import('@/app/company/[id]/deferred-tax/page').then(m => ({ default: m.default })));
+const BrsPage = lazyPage(() => import('@/app/company/[id]/brs/page').then(m => ({ default: m.default })));
+const AuditPage = lazyPage(() => import('@/app/company/[id]/audit/page').then(m => ({ default: m.default })));
+const FcraPage = lazyPage(() => import('@/app/company/[id]/fcra/page').then(m => ({ default: m.default })));
+const ApplicationCheckPage = lazyPage(() => import('@/app/company/[id]/application-check/page').then(m => ({ default: m.default })));
+const Form10bPage = lazyPage(() => import('@/app/company/[id]/form-10b/page').then(m => ({ default: m.default })));
+const LlpFormsPage = lazyPage(() => import('@/app/company/[id]/llp-forms/page').then(m => ({ default: m.default })));
+const SegmentReportingPage = lazyPage(() => import('@/app/company/[id]/segment-reporting/page').then(m => ({ default: m.default })));
+const RelatedPartyPage = lazyPage(() => import('@/app/company/[id]/related-party/page').then(m => ({ default: m.default })));
+const AccountingPoliciesPage = lazyPage(() => import('@/app/company/[id]/accounting-policies/page').then(m => ({ default: m.default })));
+const AsChecklistPage = lazyPage(() => import('@/app/company/[id]/as-checklist/page').then(m => ({ default: m.default })));
+const ContingentLiabilitiesPage = lazyPage(() => import('@/app/company/[id]/contingent-liabilities/page').then(m => ({ default: m.default })));
+const DirectorsReportPage = lazyPage(() => import('@/app/company/[id]/directors-report/page').then(m => ({ default: m.default })));
+const CAROPage = lazyPage(() => import('@/app/company/[id]/caro/page').then(m => ({ default: m.default })));
+const CostRecordsPage = lazyPage(() => import('@/app/company/[id]/cost-records/page').then(m => ({ default: m.default })));
+const FormNPage = lazyPage(() => import('@/app/company/[id]/form-n/page').then(m => ({ default: m.default })));
+const InventoryPage = lazyPage(() => import('@/app/company/[id]/inventory/page').then(m => ({ default: m.default })));
 
-const RatioAnalysisPage = lazy(() => import('@/app/company/[id]/ratio-analysis/page').then(m => ({ default: m.default })));
-const BSNotesPage = lazy(() => import('@/app/company/[id]/bs-notes/page').then(m => ({ default: m.default })));
+const RatioAnalysisPage = lazyPage(() => import('@/app/company/[id]/ratio-analysis/page').then(m => ({ default: m.default })));
+const BSNotesPage = lazyPage(() => import('@/app/company/[id]/bs-notes/page').then(m => ({ default: m.default })));
 
-const BinCardPage = lazy(() => import('@/app/company/[id]/inventory/bin-card/page').then(m => ({ default: m.default })));
-const StoresLedgerPage = lazy(() => import('@/app/company/[id]/inventory/stores-ledger/page').then(m => ({ default: m.default })));
-const CostSheetPage = lazy(() => import('@/app/company/[id]/inventory/cost-sheet/page').then(m => ({ default: m.default })));
-const PayrollPage = lazy(() => import('@/app/company/[id]/payroll/page').then(m => ({ default: m.default })));
-const FoldersPage = lazy(() => import('@/app/company/[id]/folders/page').then(m => ({ default: m.default })));
-const BulkWorkspacePage = lazy(() => import('@/app/company/[id]/bulk-workspace/page').then(m => ({ default: m.default })));
-const BankImportPage = lazy(() => import('@/app/company/[id]/bank-import/page').then(m => ({ default: m.default })));
-const TallyViewerPage = lazy(() => import('@/app/company/[id]/tally/page').then(m => ({ default: m.default })));
-const ErpBridgePage = lazy(() => import('@/app/company/[id]/erp-bridge/page').then(m => ({ default: m.default })));
-const BankAccountsPage = lazy(() => import('@/app/company/[id]/bank-accounts/page').then(m => ({ default: m.default })));
-const SettingsPage = lazy(() => import('@/app/company/[id]/settings/page').then(m => ({ default: m.default })));
+const BinCardPage = lazyPage(() => import('@/app/company/[id]/inventory/bin-card/page').then(m => ({ default: m.default })));
+const StoresLedgerPage = lazyPage(() => import('@/app/company/[id]/inventory/stores-ledger/page').then(m => ({ default: m.default })));
+const CostSheetPage = lazyPage(() => import('@/app/company/[id]/inventory/cost-sheet/page').then(m => ({ default: m.default })));
+const PayrollPage = lazyPage(() => import('@/app/company/[id]/payroll/page').then(m => ({ default: m.default })));
+const FoldersPage = lazyPage(() => import('@/app/company/[id]/folders/page').then(m => ({ default: m.default })));
+const BulkWorkspacePage = lazyPage(() => import('@/app/company/[id]/bulk-workspace/page').then(m => ({ default: m.default })));
+const BankImportPage = lazyPage(() => import('@/app/company/[id]/bank-import/page').then(m => ({ default: m.default })));
+const TallyViewerPage = lazyPage(() => import('@/app/company/[id]/tally/page').then(m => ({ default: m.default })));
+const ErpBridgePage = lazyPage(() => import('@/app/company/[id]/erp-bridge/page').then(m => ({ default: m.default })));
+const BankAccountsPage = lazyPage(() => import('@/app/company/[id]/bank-accounts/page').then(m => ({ default: m.default })));
+const SettingsPage = lazyPage(() => import('@/app/company/[id]/settings/page').then(m => ({ default: m.default })));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -120,6 +122,7 @@ export const router = createBrowserRouter([
   { path: '/companies/create', element: <Suspense fallback={<PageLoader />}><CreateCompanyPage /></Suspense> },
   { path: '/dev/migrate-ledger-names', element: <Suspense fallback={<PageLoader />}><MigrateLedgerNamesPage /></Suspense> },
   { path: '/dev/coa-audit', element: <Suspense fallback={<PageLoader />}><CoaAuditPage /></Suspense> },
+  { path: '/dev/avatar', element: <Suspense fallback={<PageLoader />}><AvatarPlaygroundPage /></Suspense> },
   {
     path: '/company/:id',
     element: <Suspense fallback={<PageLoader />}><CompanyLayout /></Suspense>,
@@ -213,3 +216,6 @@ export const router = createBrowserRouter([
   },
   { path: '*', element: <Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense> },
 ]);
+
+// Lets nav links prefetch a page on hover/focus (src/lib/routePrefetch.ts).
+registerPrefetchRoutes(router.routes);

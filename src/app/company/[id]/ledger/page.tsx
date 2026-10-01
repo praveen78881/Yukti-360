@@ -17,6 +17,8 @@ import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
 import { ENTITY_TYPES } from '@/lib/constants/entityTypes';
 import { computeAllBalances } from '@/lib/accounting/computeEngine';
 import { computeLedger, computeLedgerTFormat } from '@/lib/accounting/ledgerCompute';
+import type { LedgerRow } from '@/lib/accounting/ledgerCompute';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { AccountBalance } from '@/lib/accounting/computeEngine';
 import type { EntityType } from '@/types/company';
 import { listJournalEntries, deleteJournalEntry, updateAccountGroupInAllEntries, updateJournalEntry } from '@/lib/offlineDb';
@@ -46,7 +48,7 @@ function EditGroupDialog({ accountName, currentGroup, companyId, onClose }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Edit Account Group</p>
@@ -114,7 +116,7 @@ function MoveTxDialog({ entryId, fromAccount, companyId, onClose }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Move Transaction</p>
@@ -171,7 +173,7 @@ function RenameAccountDialog({ accountName, companyId, onClose }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rename Account</p>
@@ -218,7 +220,7 @@ function BulkMoveTxDialog({ count, fromAccount, companyId, onMove, onClose }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+      <div className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Move {count} Transactions</p>
@@ -253,8 +255,40 @@ type TRow = {
   date: string;
   particulars: string;
   jf: string;
+  /** Ledger folio of the contra account on this line ('' for b/d, c/d, totals, Sundries). */
+  lf?: string;
   amount: number | '';
   _rowClass?: string;
+  /** Next row belongs to the same posting — TAccountFormat drops the rule between them. */
+  _joinNext?: boolean;
+  /** Full account name for the tooltip of a clipped line. */
+  _title?: string;
+  /** Contra detail line of a "Sundries" posting — subdued, amount shown beside the name. */
+  _detail?: boolean;
+  /** Sundries breakdown figure, shown in the J.F.+Amount inner column (subdued). */
+  _innerAmount?: string;
+};
+
+/**
+ * One visual line of a running-balance ledger row. A posting with several
+ * contra accounts becomes several lines — one account per line, its L.F. and
+ * amount on the same line — instead of a comma-joined "Sundries (a, b, …)".
+ *  - single:   one contra account (or none) — the row exactly as before.
+ *  - split:    the contra lines add up to this posting (this account alone on
+ *              its side), so each line carries its share in the Dr/Cr column.
+ *  - sundries: contra lines on both sides — the "Sundries" line carries this
+ *              account's posting; the detail lines below list every contra
+ *              line with its own amount beside the name, subdued, so the Dr/Cr
+ *              columns still hold only this ledger's postings.
+ */
+type RunLine = {
+  kind: 'single' | 'split' | 'sundries' | 'detail';
+  name: string;
+  lf: string;
+  debit: number;
+  credit: number;
+  showBalance: boolean;
+  detail?: { amount: number; side: 'Dr' | 'Cr' };
 };
 
 export default function LedgerPage() {
@@ -303,6 +337,15 @@ export default function LedgerPage() {
     () => [...balances].sort((a, b) => a.account_name.localeCompare(b.account_name)),
     [balances]
   );
+
+  // Ledger folio (L.F.) of each account — numbered exactly as the Journal's LF
+  // column numbers it (every account in the entries in view, default sort; see
+  // JournalFormat), so an account carries the same L.F. on both screens.
+  const folioMap = useMemo(() => {
+    const names = new Set<string>();
+    for (const e of entries) for (const l of e.lines) names.add(l.account_name);
+    return new Map([...names].sort().map((n, i) => [n, i + 1] as const));
+  }, [entries]);
 
   const allRange = useMemo(() => {
     if (!companyId) return null;
@@ -391,9 +434,51 @@ export default function LedgerPage() {
       if (opening > 0) leftMonth.push({ date: openingDate, particulars: 'To Balance b/d', jf: '', amount: opening });
       else if (opening < 0) rightMonth.push({ date: openingDate, particulars: 'By Balance b/d', jf: '', amount: Math.abs(opening) });
 
-      // 2) Month transactions
-      monthDebits.forEach((r) => leftMonth.push({ date: r.date, particulars: `To ${r.particulars}`, jf: r.entry_code, amount: r.debit || '' }));
-      monthCredits.forEach((r) => rightMonth.push({ date: r.date, particulars: `By ${r.particulars}`, jf: r.entry_code, amount: r.credit || '' }));
+      // 2) Month transactions. A posting with several contra accounts is listed
+      //    one account per line (see RunLine for the split / sundries rule)
+      //    instead of one clipped "To Sundries (a, b, …)" line. Month totals
+      //    below still come from the postings themselves, so no figure moves.
+      const lfFor = (account: string) => {
+        const f = folioMap.get(account);
+        return f != null ? String(f) : '';
+      };
+      const expand = (r: LedgerRow, side: 'Dr' | 'Cr'): TRow[] => {
+        const prefix = side === 'Dr' ? 'To' : 'By';
+        const posted = side === 'Dr' ? r.debit : r.credit;
+        const contra = r.contra ?? [];
+        const pseudo = selectedAccount === 'All Sales Accounts' || selectedAccount === 'All Purchase Accounts';
+        if (contra.length < 2 || pseudo) {
+          const lf = contra.length === 1 && !pseudo ? lfFor(contra[0].account) : '';
+          return [{ date: r.date, particulars: `${prefix} ${r.particulars}`, jf: r.entry_code, lf, amount: posted || '' }];
+        }
+        if (r.contra_is_split) {
+          return contra.map((c, k) => ({
+            date: k === 0 ? r.date : '',
+            particulars: `${prefix} ${c.account}`,
+            jf: k === 0 ? r.entry_code : '',
+            lf: lfFor(c.account),
+            amount: (side === 'Dr' ? c.credit : c.debit) || '',
+            _joinNext: k < contra.length - 1,
+            _title: c.account,
+          }));
+        }
+        return [
+          { date: r.date, particulars: `${prefix} Sundries`, jf: r.entry_code, lf: '', amount: posted || '', _joinNext: true },
+          ...contra.map((c, k): TRow => ({
+            date: '',
+            particulars: c.account,
+            jf: '',
+            lf: lfFor(c.account),
+            amount: '',
+            _detail: true,
+            _title: c.account,
+            _innerAmount: `${formatIndianCurrency(c.debit || c.credit)} ${c.debit ? 'Dr' : 'Cr'}`,
+            _joinNext: k < contra.length - 1,
+          })),
+        ];
+      };
+      monthDebits.forEach((r) => leftMonth.push(...expand(r, 'Dr')));
+      monthCredits.forEach((r) => rightMonth.push(...expand(r, 'Cr')));
 
       // Keep both sides row-aligned before c/d line
       const maxRows = Math.max(leftMonth.length, rightMonth.length);
@@ -433,7 +518,7 @@ export default function LedgerPage() {
     }
 
     return { leftData: leftAll, rightData: rightAll };
-  }, [selectedAccount, fromDate, toDate, ledgerRows, tFormat]);
+  }, [selectedAccount, fromDate, toDate, ledgerRows, tFormat, folioMap]);
 
   // Keep selectedAccount and viewMode in sync with URL if user edits it directly.
   useEffect(() => {
@@ -656,6 +741,49 @@ export default function LedgerPage() {
     );
   }
 
+  // Display lines of one running-balance row — see RunLine for the three layouts.
+  const lfOf = (account: string) => {
+    const f = folioMap.get(account);
+    return f != null ? String(f) : '';
+  };
+  const isPseudoLedger = selectedAccount === 'All Sales Accounts' || selectedAccount === 'All Purchase Accounts';
+  const runningLines = (r: LedgerRow): RunLine[] => {
+    const contra = r.contra ?? [];
+    if (contra.length < 2 || isPseudoLedger) {
+      return [{
+        kind: 'single',
+        name: r.particulars,
+        lf: contra.length === 1 ? lfOf(contra[0].account) : '',
+        debit: r.debit,
+        credit: r.credit,
+        showBalance: true,
+      }];
+    }
+    if (r.contra_is_split) {
+      const isDr = r.debit > 0;
+      return contra.map((c, k): RunLine => ({
+        kind: 'split',
+        name: c.account,
+        lf: lfOf(c.account),
+        debit: isDr ? c.credit : 0,
+        credit: isDr ? 0 : c.debit,
+        showBalance: k === contra.length - 1,
+      }));
+    }
+    return [
+      { kind: 'sundries', name: 'Sundries', lf: '', debit: r.debit, credit: r.credit, showBalance: true },
+      ...contra.map((c): RunLine => ({
+        kind: 'detail',
+        name: c.account,
+        lf: lfOf(c.account),
+        debit: 0,
+        credit: 0,
+        showBalance: false,
+        detail: { amount: c.debit || c.credit, side: c.debit ? 'Dr' : 'Cr' },
+      })),
+    ];
+  };
+
   const runningColumns = [
     { header: 'Date', key: 'date' },
     { header: 'Particulars', key: 'particulars' },
@@ -752,16 +880,18 @@ export default function LedgerPage() {
             leftLabel="Dr."
             rightLabel="Cr."
             leftColumns={[
-              { header: 'Date', key: 'date', width: 'w-[20%]' },
-              { header: 'Particulars', key: 'particulars', width: 'w-[42%]' },
-              { header: 'J.F.', key: 'jf', width: 'w-[13%]' },
-              { header: 'Amount (₹)', key: 'amount', align: 'right', width: 'w-[25%]' },
+              { header: 'Date', key: 'date', width: 'w-[17%]' },
+              { header: 'Particulars', key: 'particulars', width: 'w-[39%]' },
+              { header: 'L.F.', key: 'lf', align: 'center', width: 'w-[8%]', compact: true },
+              { header: 'J.F.', key: 'jf', width: 'w-[13%]', inner: true },
+              { header: 'Amount (₹)', key: 'amount', align: 'right', width: 'w-[23%]' },
             ]}
             rightColumns={[
-              { header: 'Date', key: 'date', width: 'w-[20%]' },
-              { header: 'Particulars', key: 'particulars', width: 'w-[42%]' },
-              { header: 'J.F.', key: 'jf', width: 'w-[13%]' },
-              { header: 'Amount (₹)', key: 'amount', align: 'right', width: 'w-[25%]' },
+              { header: 'Date', key: 'date', width: 'w-[17%]' },
+              { header: 'Particulars', key: 'particulars', width: 'w-[39%]' },
+              { header: 'L.F.', key: 'lf', align: 'center', width: 'w-[8%]', compact: true },
+              { header: 'J.F.', key: 'jf', width: 'w-[13%]', inner: true },
+              { header: 'Amount (₹)', key: 'amount', align: 'right', width: 'w-[23%]' },
             ]}
             leftData={monthlyT.leftData}
             rightData={monthlyT.rightData}
@@ -830,71 +960,104 @@ export default function LedgerPage() {
                     )}
                     <th className="px-2 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
                     <th className="px-2 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Particulars</th>
+                    <th className="px-2 py-2 text-center text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap w-12">L.F.</th>
                     <th className="px-2 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Voucher No.</th>
                     <th className="px-2 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Debit (₹)</th>
                     <th className="px-2 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Credit (₹)</th>
                     <th className="px-2 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Balance (₹)</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {ledgerRows.length === 0 ? (
-                    <tr><td colSpan={selectedTxIds.size > 0 ? 7 : 6} className="px-4 py-10 text-center text-[11px] text-gray-400">No transactions found for this account.</td></tr>
-                  ) : (
-                    ledgerRows.map((r, i) => {
-                      const isSelected = selectedTxIds.has(r.entry_id);
-                      return (
-                        <tr
-                          key={i}
-                          className={`border-b border-gray-100 hover:bg-blue-50/30 cursor-pointer transition-colors ${isSelected ? 'bg-blue-100/60' : i % 2 === 1 ? 'bg-gray-50/30' : ''}`}
-                          onClick={(e) => {
-                            if (selectedTxIds.size > 0) {
-                              if (e.shiftKey && lastSelectedIdxRef.current !== null) {
-                                const lo = Math.min(lastSelectedIdxRef.current, i);
-                                const hi = Math.max(lastSelectedIdxRef.current, i);
-                                setSelectedTxIds(prev => {
-                                  const n = new Set(prev);
-                                  for (let j = lo; j <= hi; j++) n.add(ledgerRows[j].entry_id);
-                                  return n;
-                                });
-                              } else {
-                                setSelectedTxIds(prev => { const n = new Set(prev); if (n.has(r.entry_id)) n.delete(r.entry_id); else n.add(r.entry_id); return n; });
-                                lastSelectedIdxRef.current = i;
-                              }
-                            } else {
-                              handleEditTx(r.entry_id);
-                            }
-                          }}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            setTxCtxMenu({ x: e.clientX, y: e.clientY, entryId: r.entry_id, entryCode: r.entry_code });
-                          }}
-                        >
-                          {selectedTxIds.size > 0 && (
-                            <td className="px-2 py-1.5" onClick={e => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => setSelectedTxIds(prev => { const n = new Set(prev); if (n.has(r.entry_id)) n.delete(r.entry_id); else n.add(r.entry_id); return n; })}
-                                className="h-3.5 w-3.5"
-                              />
-                            </td>
-                          )}
-                          <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap">{r.date}</td>
-                          <td className="px-2 py-1.5 text-gray-700 font-medium">{r.particulars}</td>
-                          <td className="px-2 py-1.5 text-gray-500 font-mono whitespace-nowrap">{r.entry_code || `UN${String(i + 1).padStart(5, '0')}`}</td>
-                          <td className="px-2 py-1.5 text-right font-mono tabular-nums text-dr whitespace-nowrap">{r.debit > 0 ? formatIndianCurrency(r.debit) : ''}</td>
-                          <td className="px-2 py-1.5 text-right font-mono tabular-nums text-cr whitespace-nowrap">{r.credit > 0 ? formatIndianCurrency(r.credit) : ''}</td>
-                          <td className={`px-2 py-1.5 text-right font-mono tabular-nums font-semibold whitespace-nowrap ${r.balance_type === 'Dr' ? 'text-dr' : 'text-cr'}`}>
-                            {formatIndianCurrency(r.running_balance)} <span className="text-[10px] text-gray-400">{r.balance_type}</span>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
+                {ledgerRows.length === 0 ? (
+                  <tbody>
+                    <tr><td colSpan={selectedTxIds.size > 0 ? 8 : 7} className="px-4 py-10 text-center text-[11px] text-gray-400">No transactions found for this account.</td></tr>
+                  </tbody>
+                ) : (
+                  ledgerRows.map((r, i) => {
+                    const isSelected = selectedTxIds.has(r.entry_id);
+                    const lines = runningLines(r);
+                    const tone = isSelected ? 'bg-blue-100/60' : i % 2 === 1 ? 'bg-gray-50/30' : '';
+                    const onRowClick = (e: ReactMouseEvent) => {
+                      if (selectedTxIds.size > 0) {
+                        if (e.shiftKey && lastSelectedIdxRef.current !== null) {
+                          const lo = Math.min(lastSelectedIdxRef.current, i);
+                          const hi = Math.max(lastSelectedIdxRef.current, i);
+                          setSelectedTxIds(prev => {
+                            const n = new Set(prev);
+                            for (let j = lo; j <= hi; j++) n.add(ledgerRows[j].entry_id);
+                            return n;
+                          });
+                        } else {
+                          setSelectedTxIds(prev => { const n = new Set(prev); if (n.has(r.entry_id)) n.delete(r.entry_id); else n.add(r.entry_id); return n; });
+                          lastSelectedIdxRef.current = i;
+                        }
+                      } else {
+                        handleEditTx(r.entry_id);
+                      }
+                    };
+                    const onRowContextMenu = (e: ReactMouseEvent) => {
+                      e.preventDefault();
+                      setTxCtxMenu({ x: e.clientX, y: e.clientY, entryId: r.entry_id, entryCode: r.entry_code });
+                    };
+                    // One <tbody> per posting: its lines hover, select and click as one row.
+                    return (
+                      <tbody key={i} className="group/entry">
+                        {lines.map((ln, k) => {
+                          const first = k === 0;
+                          const last = k === lines.length - 1;
+                          // Lines of one posting sit close together; the posting keeps
+                          // the usual padding at its top and bottom edges.
+                          const py = `${first ? 'pt-1.5' : 'pt-0.5'} ${last ? 'pb-1.5' : 'pb-0.5'}`;
+                          return (
+                            <tr
+                              key={k}
+                              className={`${last ? 'border-b border-gray-100' : ''} group-hover/entry:bg-blue-50/30 cursor-pointer transition-colors ${tone}`}
+                              onClick={onRowClick}
+                              onContextMenu={onRowContextMenu}
+                            >
+                              {selectedTxIds.size > 0 && (
+                                first ? (
+                                  <td className={`px-2 ${py}`} onClick={e => e.stopPropagation()}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => setSelectedTxIds(prev => { const n = new Set(prev); if (n.has(r.entry_id)) n.delete(r.entry_id); else n.add(r.entry_id); return n; })}
+                                      className="h-3.5 w-3.5"
+                                    />
+                                  </td>
+                                ) : <td className={`px-2 ${py}`} />
+                              )}
+                              <td className={`px-2 ${py} text-gray-600 whitespace-nowrap align-top`}>{first ? r.date : ''}</td>
+                              {ln.kind === 'detail' ? (
+                                <td className={`pl-5 pr-2 ${py} text-gray-500 align-top`}>
+                                  <div className="flex items-baseline gap-3">
+                                    <span className="flex-1 min-w-0">{ln.name}</span>
+                                    {ln.detail && (
+                                      <span className="shrink-0 font-mono tabular-nums text-[10.5px] text-gray-400 whitespace-nowrap">
+                                        {formatIndianCurrency(ln.detail.amount)} {ln.detail.side}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                              ) : (
+                                <td className={`px-2 ${py} text-gray-700 font-medium align-top`}>{ln.name}</td>
+                              )}
+                              <td className={`px-2 ${py} text-center font-mono tabular-nums text-gray-400 whitespace-nowrap align-top`}>{ln.lf}</td>
+                              <td className={`px-2 ${py} text-gray-500 font-mono whitespace-nowrap align-top`}>{first ? (r.entry_code || `UN${String(i + 1).padStart(5, '0')}`) : ''}</td>
+                              <td className={`px-2 ${py} text-right font-mono tabular-nums text-dr whitespace-nowrap align-top`}>{ln.debit > 0 ? formatIndianCurrency(ln.debit) : ''}</td>
+                              <td className={`px-2 ${py} text-right font-mono tabular-nums text-cr whitespace-nowrap align-top`}>{ln.credit > 0 ? formatIndianCurrency(ln.credit) : ''}</td>
+                              <td className={`px-2 ${py} text-right font-mono tabular-nums font-semibold whitespace-nowrap align-top ${r.balance_type === 'Dr' ? 'text-dr' : 'text-cr'}`}>
+                                {ln.showBalance && <>{formatIndianCurrency(r.running_balance)} <span className="text-[10px] text-gray-400">{r.balance_type}</span></>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    );
+                  })
+                )}
                 <tfoot>
                   <tr className="bg-gray-50 border-t-2 border-gray-300">
-                    <td colSpan={selectedTxIds.size > 0 ? 4 : 3} className="px-2 py-2 font-bold text-[11px] text-gray-800">Total</td>
+                    <td colSpan={selectedTxIds.size > 0 ? 5 : 4} className="px-2 py-2 font-bold text-[11px] text-gray-800">Total</td>
                     <td className="px-2 py-2 text-right font-mono font-bold text-[11px] text-dr">{formatIndianCurrency(totalDebit)}</td>
                     <td className="px-2 py-2 text-right font-mono font-bold text-[11px] text-cr">{formatIndianCurrency(totalCredit)}</td>
                     <td className="px-2 py-2" />

@@ -35,14 +35,28 @@ export function OriginalInvoiceSection(props: OriginalInvoiceSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [otherReason, setOtherReason] = useState('');
 
-  if (props.kind === 'sales') {
-    const { invoice, updateInvoice, existingInvoices, selectOriginalInvoice, invalidFields } = props;
+  // Hooks run unconditionally (Rules of Hooks): one memo per document kind, each
+  // an empty list when its kind is not the one on screen. The results are exactly
+  // what the per-branch memos produced before.
+  const salesList = props.kind === 'sales' ? props.existingInvoices : null;
+  const purchaseList = props.kind === 'purchase' ? props.existingPurchases : null;
+  const filteredSales = useMemo<InvoiceV2[]>(() => {
+    if (!salesList) return [];
+    if (!searchTerm.trim()) return salesList.slice(0, 10);
+    const term = searchTerm.toLowerCase();
+    return salesList.filter((inv) => inv.invoice_no.toLowerCase().includes(term) || inv.buyer_name.toLowerCase().includes(term)).slice(0, 10);
+  }, [salesList, searchTerm]);
+  const filteredPurchases = useMemo<PurchaseInvoice[]>(() => {
+    if (!purchaseList) return [];
+    if (!searchTerm.trim()) return purchaseList.slice(0, 10);
+    const term = searchTerm.toLowerCase();
+    return purchaseList.filter((inv) => inv.invoice_no.toLowerCase().includes(term) || inv.vendor_name.toLowerCase().includes(term)).slice(0, 10);
+  }, [purchaseList, searchTerm]);
 
-    const filtered = useMemo(() => {
-      if (!searchTerm.trim()) return existingInvoices.slice(0, 10);
-      const term = searchTerm.toLowerCase();
-      return existingInvoices.filter((inv) => inv.invoice_no.toLowerCase().includes(term) || inv.buyer_name.toLowerCase().includes(term)).slice(0, 10);
-    }, [existingInvoices, searchTerm]);
+  if (props.kind === 'sales') {
+    const { invoice, updateInvoice, selectOriginalInvoice, invalidFields } = props;
+
+    const filtered = filteredSales;
 
     const cdnReason = invoice.cdn_reason || 'SALES_RETURN';
     const invalidNo = invalidFields?.includes('original_invoice_no');
@@ -113,13 +127,9 @@ export function OriginalInvoiceSection(props: OriginalInvoiceSectionProps) {
   }
 
   // Purchase returns
-  const { fields, updateField, existingPurchases, selectOriginalPurchase, invalidFields } = props;
+  const { fields, updateField, selectOriginalPurchase, invalidFields } = props;
 
-  const filtered = useMemo(() => {
-    if (!searchTerm.trim()) return existingPurchases.slice(0, 10);
-    const term = searchTerm.toLowerCase();
-    return existingPurchases.filter((inv) => inv.invoice_no.toLowerCase().includes(term) || inv.vendor_name.toLowerCase().includes(term)).slice(0, 10);
-  }, [existingPurchases, searchTerm]);
+  const filtered = filteredPurchases;
 
   const invalidNo = invalidFields?.includes('origInvNo');
   const invalidDate = invalidFields?.includes('origInvDate');

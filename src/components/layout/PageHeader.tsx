@@ -8,13 +8,20 @@ interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
+/* Page title: 23px Oswald caps at .03em — the widest type on the screen and
+   therefore the tightest tracking. The sentence under it is capped at ~72
+   characters so it never runs the width of a wide table. */
 export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-3 gap-4">
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-gray-900 leading-tight">{title}</h1>
+    <div className="flex items-start justify-between mb-4 gap-5">
+      <div className="min-w-0">
+        <h1 className="font-display text-[23px] font-semibold uppercase tracking-[0.03em] text-[var(--ink)] leading-[1.15]">
+          {title}
+        </h1>
         {description && (
-          <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+          <p className="mt-1 max-w-[72ch] text-[11.5px] leading-relaxed text-[var(--ink-3)]">
+            {description}
+          </p>
         )}
       </div>
       {children && (

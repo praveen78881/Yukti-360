@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YUKTI Tax Compliance — ITR-2, A.Y. 2026-27</title>
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="../yukti-theme.css"></head><body>
+
+<header class="top">
+  <div class="b">YUKTI<em>Tax Compliance</em></div>
+  <div class="frm">ITR-2</div>
+  <div class="y">A.Y. 2026-27</div>
+  <div class="sp"></div>
+  <button class="tbtn" id="b_open">Open file</button>
+  <button class="tbtn" id="b_save">Save file</button>
+  <button class="tbtn solid" id="b_json">Export return</button>
+</header>
+
+<nav class="rail"><h2>SECTIONS</h2><div id="nav"></div></nav>
+<main class="wrap" id="wrap"><div class="sheet" id="sheet"></div></main>
+
+<footer class="band">
+  <div class="m"><span>Gross total income</span><b id="s_gti">—</b></div>
+  <div class="m"><span>Total income</span><b id="s_ti">—</b></div>
+  <div class="m"><span>Tax and cess</span><b id="s_tax">—</b></div>
+  <div class="m" id="s_bw"><span id="s_bl">Balance payable</span><b id="s_b">—</b></div>
+  <div class="gap"></div>
+  <div class="st" id="s_st"></div>
+</footer>
+
+<input type="file" id="filepick" accept=".json,.yukti" hidden>
+<script src="src/00_form.js"></script>
+<script src="src/10_state.js"></script>
+<script src="src/15_tables.js"></script>
+<script src="src/20_shared.js"></script>
+<script src="src/30_sec_salary.js"></script>
+<script src="src/30_sec_houseproperty.js"></script>
+<script src="src/30_sec_capitalgains.js"></script>
+<script src="src/30_sec_othersources.js"></script>
+<script src="src/30_sec_deductions.js"></script>
+<script src="src/30_sec_setoff.js"></script>
+<script src="src/30_sec_taxespaid.js"></script>
+<script src="src/30_sec_specialrates.js"></script>
+<script src="src/30_sec_tax.js"></script>
+<script src="src/30_sec_exempt.js"></script>
+<script src="src/30_sec_otherschedules.js"></script>
+<script src="src/30_sec_foreign.js"></script>
+<script src="src/30_sec_assets.js"></script>
+<script src="src/60_rules.js"></script>
+<script src="src/30_sec_personal.js"></script>
+<script src="src/30_sec_return.js"></script>
+<script src="src/30_sec_bank.js"></script>
+<script src="src/70_export.js"></script>
+<script src="src/80_io.js"></script>
+<script src="src/90_wiring.js"></script>
+<script src="src/99_rail_toggle.js"></script></body></html>

@@ -1,5 +1,12 @@
+/* Sales item rows. Every cell writes through the existing updateItem / addItem /
+   removeItem handlers and the existing recalculation effect computes the taxable
+   value, tax and line total — nothing here calculates money. "GST applicable"
+   maps onto the existing supply_nature: on = TAXABLE; off = Exempt / Nil-rated /
+   Non-GST (the same three the previous "Nature" column offered). */
+import { Trash2 } from 'lucide-react';
 import type { InvoiceV2Draft, LineItem } from '@/lib/accounting/gstInvoices';
-import { GST_RATES, UQC_OPTIONS, isCessApplicable, getCessInfo } from '@/lib/accounting/gstInvoices';
+import { GST_RATES, UQC_OPTIONS, isCessApplicable, getCessInfo, createEmptyLineItem } from '@/lib/accounting/gstInvoices';
+import { Switch, inr } from '../ui';
 
 interface LineItemsSectionProps {
   invoice: InvoiceV2Draft;
@@ -8,161 +15,168 @@ interface LineItemsSectionProps {
   removeItem: (index: number) => void;
 }
 
-function inr(n: number): string {
-  return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+const NON_TAXABLE: Array<{ v: LineItem['supply_nature']; label: string }> = [
+  { v: 'EXEMPT', label: 'Exempt' },
+  { v: 'NIL_RATED', label: 'Nil-rated' },
+  { v: 'NON_GST', label: 'Non-GST' },
+];
 
-export function LineItemsSection({ invoice, updateItem, addItem, removeItem }: LineItemsSectionProps) {
+export function LineItemsSection({ invoice, updateItem, removeItem }: LineItemsSectionProps) {
+  const bos = invoice.doc_type === 'BILL_OF_SUPPLY';
   return (
-    <section className="dw-section">
-      <div className="shead"><h2 className="dw-h">Line items</h2></div>
-      <div className="tw">
-        <table className="lines" style={{ minWidth: 920 }}>
-          <thead>
-            <tr>
-              <th style={{ width: 28 }}></th>
-              <th style={{ minWidth: 220 }}>Description *</th>
-              <th style={{ width: 100 }}>HSN *</th>
-              <th style={{ width: 84 }}>UQC</th>
-              <th className="r" style={{ width: 76 }}>Qty</th>
-              <th className="r" style={{ width: 104 }}>Rate</th>
-              <th className="r" style={{ width: 76 }}>Disc %</th>
-              <th style={{ width: 108 }}>Nature</th>
-              <th style={{ width: 92 }}>GST %</th>
-              <th className="r" style={{ width: 100 }}>Tax</th>
-              <th className="r" style={{ width: 110 }}>Total</th>
-              <th style={{ width: 34 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.items.map((item, idx) => {
-              const tax = item.cgst + item.sgst + item.igst + item.cess;
-              return (
-                <tr key={idx}>
-                  <td className="idx">{idx + 1}</td>
-                  <td>
-                    <input
-                      value={item.description}
-                      onChange={(e) => updateItem(idx, { description: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      className="mono"
-                      value={item.hsn}
-                      onChange={(e) => {
-                        const hsn = e.target.value;
-                        const updates: Partial<LineItem> = { hsn };
-                        if (isCessApplicable(hsn)) {
-                          const cess = getCessInfo(hsn);
-                          if (cess) {
-                            updates.cess_rate = cess.cessRate;
-                            updates.cess_specific_rate = cess.specificPerTon || 0;
-                          }
-                        } else {
-                          updates.cess_rate = 0;
-                          updates.cess_specific_rate = 0;
-                        }
-                        updateItem(idx, updates);
-                      }}
-                      placeholder="HSN"
-                    />
-                  </td>
-                  <td>
-                    {/* SAC (99xxxx) has no unit — pipeline forces uqc NA / qty 0; mirror that here (display-only). */}
-                    {/^99/.test((item.hsn || '').replace(/\D/g, '')) ? (
-                      <select value="NA" disabled title="Services (SAC 99xxxx) carry no unit of measure">
-                        <option value="NA">NA</option>
-                      </select>
-                    ) : (
-                      <select
-                        value={item.uqc || 'NOS'}
-                        onChange={(e) => updateItem(idx, { uqc: e.target.value })}
-                      >
-                        {UQC_OPTIONS.map((u) => (
-                          <option key={u} value={u}>{u}</option>
-                        ))}
-                      </select>
-                    )}
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      className="num"
-                      value={item.qty || ''}
-                      onChange={(e) => updateItem(idx, { qty: Number(e.target.value) || 0 })}
-                      min={0}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      className="num"
-                      value={item.rate || ''}
-                      onChange={(e) => updateItem(idx, { rate: Number(e.target.value) || 0 })}
-                      min={0}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      className="num"
-                      value={item.qty * item.rate > 0
-                        ? Math.round((item.discount / (item.qty * item.rate)) * 10000) / 100 || ''
-                        : ''}
-                      onChange={(e) => {
-                        const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
-                        updateItem(idx, { discount: Math.round(item.qty * item.rate * pct) / 100 });
-                      }}
-                      min={0}
-                      max={100}
-                      step={0.01}
-                    />
-                  </td>
-                  <td>
-                    {/* supply_nature — default TAXABLE (= current). Non-taxable natures feed the NIL table. */}
+    <div className="yk-lines" data-testid="sales-items">
+      <div className="yk-lines-scroll">
+        <div className="yk-lines-grid sales" role="table" aria-label="Items">
+          <div className="yk-lines-head" role="row">
+            <span role="columnheader" className="c">#</span>
+            <span role="columnheader">Item / service</span>
+            <span role="columnheader">HSN / SAC</span>
+            <span role="columnheader">Unit</span>
+            <span role="columnheader" className="r">Qty</span>
+            <span role="columnheader" className="r">Rate</span>
+            <span role="columnheader" className="r">Disc %</span>
+            <span role="columnheader">GST</span>
+            <span role="columnheader" className="r">Taxable</span>
+            <span role="columnheader" className="r">Tax</span>
+            <span role="columnheader" className="r">Total</span>
+            <span role="columnheader" aria-label="Remove" />
+          </div>
+          {invoice.items.map((item, idx) => {
+            const tax = item.cgst + item.sgst + item.igst + item.cess;
+            const isSac = /^99/.test((item.hsn || '').replace(/\D/g, ''));
+            const taxable = item.supply_nature === 'TAXABLE';
+            return (
+              <div className="yk-lines-row" role="row" key={idx} data-testid={`sales-item-${idx}`}>
+                <span className="yk-cell c idx">{idx + 1}</span>
+                <input
+                  aria-label={`Item ${idx + 1} name`}
+                  className="yk-in sm"
+                  value={item.description}
+                  onChange={(e) => updateItem(idx, { description: e.target.value })}
+                />
+                <input
+                  aria-label={`Item ${idx + 1} HSN or SAC`}
+                  className="yk-in sm mono"
+                  value={item.hsn}
+                  onChange={(e) => {
+                    const hsn = e.target.value;
+                    const updates: Partial<LineItem> = { hsn };
+                    if (isCessApplicable(hsn)) {
+                      const cess = getCessInfo(hsn);
+                      if (cess) {
+                        updates.cess_rate = cess.cessRate;
+                        updates.cess_specific_rate = cess.specificPerTon || 0;
+                      }
+                    } else {
+                      updates.cess_rate = 0;
+                      updates.cess_specific_rate = 0;
+                    }
+                    updateItem(idx, updates);
+                  }}
+                />
+                {/* SAC (99xxxx) has no unit — the pipeline forces NA / qty 0; mirrored here (display only). */}
+                {isSac ? (
+                  <select aria-label={`Item ${idx + 1} unit`} className="yk-in sm" value="NA" disabled title="Services (SAC 99xxxx) carry no unit of measure">
+                    <option value="NA">NA</option>
+                  </select>
+                ) : (
+                  <select
+                    aria-label={`Item ${idx + 1} unit`}
+                    className="yk-in sm"
+                    value={item.uqc || 'NOS'}
+                    onChange={(e) => updateItem(idx, { uqc: e.target.value })}
+                  >
+                    {UQC_OPTIONS.map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                )}
+                <input
+                  aria-label={`Item ${idx + 1} quantity`}
+                  type="number"
+                  className="yk-in sm num"
+                  value={item.qty || ''}
+                  onChange={(e) => updateItem(idx, { qty: Number(e.target.value) || 0 })}
+                  min={0}
+                />
+                <input
+                  aria-label={`Item ${idx + 1} rate`}
+                  type="number"
+                  className="yk-in sm num"
+                  value={item.rate || ''}
+                  onChange={(e) => updateItem(idx, { rate: Number(e.target.value) || 0 })}
+                  min={0}
+                />
+                <input
+                  aria-label={`Item ${idx + 1} discount percent`}
+                  type="number"
+                  className="yk-in sm num"
+                  value={item.qty * item.rate > 0
+                    ? Math.round((item.discount / (item.qty * item.rate)) * 10000) / 100 || ''
+                    : ''}
+                  onChange={(e) => {
+                    const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                    updateItem(idx, { discount: Math.round(item.qty * item.rate * pct) / 100 });
+                  }}
+                  min={0}
+                  max={100}
+                  step={0.01}
+                />
+                <div className="yk-gstcell">
+                  <Switch
+                    checked={taxable}
+                    disabled={bos}
+                    onChange={(v) => updateItem(idx, { supply_nature: v ? 'TAXABLE' : 'EXEMPT' })}
+                    label={`GST applicable on item ${idx + 1}`}
+                    testId={`sales-gst-applicable-${idx}`}
+                  />
+                  {taxable ? (
                     <select
-                      value={item.supply_nature}
-                      onChange={(e) => updateItem(idx, { supply_nature: e.target.value as LineItem['supply_nature'] })}
-                    >
-                      <option value="TAXABLE">Taxable</option>
-                      <option value="NIL_RATED">Nil-rated</option>
-                      <option value="EXEMPT">Exempt</option>
-                      <option value="NON_GST">Non-GST</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select
+                      aria-label={`Item ${idx + 1} GST rate`}
+                      className="yk-in sm"
                       value={item.gst_rate}
                       onChange={(e) => updateItem(idx, { gst_rate: Number(e.target.value) })}
-                      disabled={invoice.doc_type === 'BILL_OF_SUPPLY' || item.supply_nature !== 'TAXABLE'}
+                      disabled={bos}
                     >
                       {GST_RATES.map((r) => (
                         <option key={r} value={r}>{r}%</option>
                       ))}
                     </select>
-                  </td>
-                  <td className="calc">{inr(tax)}</td>
-                  <td className="calc strong">{inr(item.line_total)}</td>
-                  <td className="c">
-                    {invoice.items.length > 1 && (
-                      <button
-                        type="button"
-                        className="x"
-                        onClick={() => removeItem(idx)}
-                        title="Remove item"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  ) : (
+                    <select
+                      aria-label={`Item ${idx + 1} supply without GST`}
+                      className="yk-in sm"
+                      value={item.supply_nature}
+                      disabled={bos}
+                      onChange={(e) => updateItem(idx, { supply_nature: e.target.value as LineItem['supply_nature'] })}
+                    >
+                      {NON_TAXABLE.map((n) => <option key={n.v} value={n.v}>{n.label}</option>)}
+                      {!NON_TAXABLE.some((n) => n.v === item.supply_nature) && (
+                        <option value={item.supply_nature}>{String(item.supply_nature).replace(/_/g, ' ').toLowerCase()}</option>
+                      )}
+                    </select>
+                  )}
+                </div>
+                <span className="yk-cell num">{inr(item.taxable_value)}</span>
+                <span className="yk-cell num muted">{inr(tax)}</span>
+                <span className="yk-cell num strong">{inr(item.line_total)}</span>
+                <span className="yk-cell c">
+                  {/* Deleting the only row leaves one empty row (reset through the same updateItem). */}
+                  <button
+                    type="button"
+                    className="yk-icon-btn danger"
+                    onClick={() => (invoice.items.length > 1 ? removeItem(idx) : updateItem(idx, createEmptyLineItem(1)))}
+                    title="Remove item"
+                    aria-label={`Remove item ${idx + 1}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <button type="button" className="addln" onClick={addItem}>+ Add item</button>
-    </section>
+    </div>
   );
 }

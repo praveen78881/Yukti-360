@@ -6,7 +6,10 @@
  * via the read_excel tool across the conversation.
  */
 
-import * as XLSX from 'xlsx';
+// SheetJS (~430 kB) is loaded only when a file is actually parsed — this module is
+// reached from the always-mounted assistant panel, so a static import put xlsx on
+// every company page's critical path.
+type XlsxModule = typeof import('xlsx');
 
 export interface ExcelSheet {
   name: string;
@@ -34,11 +37,12 @@ export function parseExcelFile(file: File, companyId?: string): Promise<ExcelWor
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = e.target?.result;
         if (!data) throw new Error('Empty file');
 
+        const XLSX: XlsxModule = await import('xlsx');
         const wb = XLSX.read(data, { type: 'array', cellDates: true });
 
         const sheets: ExcelSheet[] = wb.SheetNames.map((name) => {

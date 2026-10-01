@@ -1,15 +1,185 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap');
+/* ═══ THREE FACES, THREE JOBS ═══
+   Oswald      → LABELS  (headings, buttons, table headers, eyebrows, badges)
+   Mulish      → READ    (body, form values, table cells)
+   Inter       → FIGURES (money, PAN, GSTIN, CIN, dates, codes) — plain,
+                 undesigned numerals; tabular so columns line up and Indian
+                 comma grouping (₹10,00,000.00) sits evenly. The user chose
+                 Inter over a monospace face (2026-09-27). */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Mulish:ital,wght@0,400..800;1,400..700&family=Inter:wght@400..700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE REMAP
+   Every page in this app writes raw Tailwind colours (bg-gray-50,
+   text-blue-700, border-emerald-200 …). Rather than rewrite 191 files, the
+   built-in scales themselves are re-pointed at the CA palette. One action
+   colour (navy), one ink ramp, one soft ground, three status colours.
+   ══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* ── Faces ── */
+  --font-sans: 'Mulish', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* `font-mono` is what every page already uses for figures, so re-pointing it
+     at Inter switches all amounts/PAN/GSTIN/dates at once. Real code blocks
+     keep a true monospace via --font-code. */
+  --font-mono: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-display: 'Oswald', 'Mulish', ui-sans-serif, system-ui, sans-serif;
+
+  /* ── INK / GROUND ── gray, slate, zinc, neutral and stone all collapse onto
+        the one blue-grey ink ramp so nothing drifts warm or green. ── */
+  --color-gray-50:  #F5FAFE;  /* cream-2  — table headers, field wells */
+  --color-gray-100: #E7F0F9;  /* cream    — soft separators, quiet fills */
+  --color-gray-200: #D4E2F0;  /* sand     — hairlines and borders */
+  --color-gray-300: #B7CCE0;  /* sand-2   — heavier rules, scrollbar thumbs */
+  --color-gray-400: #8496A7;  /* ink-3    — captions, hints, placeholders */
+  --color-gray-500: #6C7E90;
+  --color-gray-600: #4C5A6A;  /* ink-2    — body text */
+  --color-gray-700: #3B4856;
+  --color-gray-800: #273240;
+  --color-gray-900: #14191F;  /* ink      — headings and figures */
+  --color-gray-950: #0B0F14;
+
+  --color-slate-50:  #F5FAFE; --color-slate-100: #E7F0F9; --color-slate-200: #D4E2F0;
+  --color-slate-300: #B7CCE0; --color-slate-400: #8496A7; --color-slate-500: #6C7E90;
+  --color-slate-600: #4C5A6A; --color-slate-700: #3B4856; --color-slate-800: #273240;
+  --color-slate-900: #14191F; --color-slate-950: #0B0F14;
+
+  --color-zinc-50:  #F5FAFE; --color-zinc-100: #E7F0F9; --color-zinc-200: #D4E2F0;
+  --color-zinc-300: #B7CCE0; --color-zinc-400: #8496A7; --color-zinc-500: #6C7E90;
+  --color-zinc-600: #4C5A6A; --color-zinc-700: #3B4856; --color-zinc-800: #273240;
+  --color-zinc-900: #14191F; --color-zinc-950: #0B0F14;
+
+  --color-neutral-50:  #F5FAFE; --color-neutral-100: #E7F0F9; --color-neutral-200: #D4E2F0;
+  --color-neutral-300: #B7CCE0; --color-neutral-400: #8496A7; --color-neutral-500: #6C7E90;
+  --color-neutral-600: #4C5A6A; --color-neutral-700: #3B4856; --color-neutral-800: #273240;
+  --color-neutral-900: #14191F; --color-neutral-950: #0B0F14;
+
+  --color-stone-50:  #F5FAFE; --color-stone-100: #E7F0F9; --color-stone-200: #D4E2F0;
+  --color-stone-300: #B7CCE0; --color-stone-400: #8496A7; --color-stone-500: #6C7E90;
+  --color-stone-600: #4C5A6A; --color-stone-700: #3B4856; --color-stone-800: #273240;
+  --color-stone-900: #14191F; --color-stone-950: #0B0F14;
+
+  /* ── NAVY ── the ONLY action colour. blue-600 is navy, blue-700 is pressed. ── */
+  --color-blue-50:  #EFF6FE;
+  --color-blue-100: #DFEAF9;  /* navy-soft — selected rows, chips, hovers */
+  --color-blue-200: #C6D9F1;
+  --color-blue-300: #9DBCE3;
+  --color-blue-400: #6D97CF;
+  --color-blue-500: #2A5C9C;
+  --color-blue-600: #17457F;  /* navy */
+  --color-blue-700: #0F3162;  /* navy-2 — pressed / hover */
+  --color-blue-800: #0C2850;
+  --color-blue-900: #0A1F3E;
+  --color-blue-950: #07162C;
+
+  /* indigo + sky fold into navy — nothing decorative gets its own hue */
+  --color-indigo-50:  #EFF6FE; --color-indigo-100: #DFEAF9; --color-indigo-200: #C6D9F1;
+  --color-indigo-300: #9DBCE3; --color-indigo-400: #6D97CF; --color-indigo-500: #2A5C9C;
+  --color-indigo-600: #17457F; --color-indigo-700: #0F3162; --color-indigo-800: #0C2850;
+  --color-indigo-900: #0A1F3E; --color-indigo-950: #07162C;
+
+  --color-sky-50:  #EFF6FE; --color-sky-100: #DFEAF9; --color-sky-200: #C6D9F1;
+  --color-sky-300: #9DBCE3; --color-sky-400: #6D97CF; --color-sky-500: #3C5E86;
+  --color-sky-600: #17457F; --color-sky-700: #0F3162; --color-sky-800: #0C2850;
+  --color-sky-900: #0A1F3E; --color-sky-950: #07162C;
+
+  /* ── SLATE-BLUE ── the quiet secondary (icons at rest, categorical chips).
+        violet, purple, fuchsia and cyan all resolve here so the screen keeps
+        exactly one loud colour. ── */
+  --color-violet-50:  #F1F6FB; --color-violet-100: #E1EBF5; --color-violet-200: #CBDCEC;
+  --color-violet-300: #A9C2DA; --color-violet-400: #7698BC; --color-violet-500: #4E709A;
+  --color-violet-600: #3C5E86; --color-violet-700: #2F4B6D; --color-violet-800: #263C58;
+  --color-violet-900: #1E3045; --color-violet-950: #141F2D;
+
+  --color-purple-50:  #F1F6FB; --color-purple-100: #E1EBF5; --color-purple-200: #CBDCEC;
+  --color-purple-300: #A9C2DA; --color-purple-400: #7698BC; --color-purple-500: #4E709A;
+  --color-purple-600: #3C5E86; --color-purple-700: #2F4B6D; --color-purple-800: #263C58;
+  --color-purple-900: #1E3045; --color-purple-950: #141F2D;
+
+  --color-fuchsia-50:  #F1F6FB; --color-fuchsia-100: #E1EBF5; --color-fuchsia-200: #CBDCEC;
+  --color-fuchsia-300: #A9C2DA; --color-fuchsia-400: #7698BC; --color-fuchsia-500: #4E709A;
+  --color-fuchsia-600: #3C5E86; --color-fuchsia-700: #2F4B6D; --color-fuchsia-800: #263C58;
+  --color-fuchsia-900: #1E3045; --color-fuchsia-950: #141F2D;
+
+  --color-cyan-50:  #F1F6FB; --color-cyan-100: #E1EBF5; --color-cyan-200: #CBDCEC;
+  --color-cyan-300: #A9C2DA; --color-cyan-400: #7698BC; --color-cyan-500: #4E709A;
+  --color-cyan-600: #3C5E86; --color-cyan-700: #2F4B6D; --color-cyan-800: #263C58;
+  --color-cyan-900: #1E3045; --color-cyan-950: #141F2D;
+
+  /* ── OK ── #2F7D5A on #DCEFE7 — positive figures, healthy status ── */
+  --color-emerald-50:  #EDF7F2; --color-emerald-100: #DCEFE7; --color-emerald-200: #BBDFCE;
+  --color-emerald-300: #8FC7AC; --color-emerald-400: #5AA381; --color-emerald-500: #3A8C67;
+  --color-emerald-600: #2F7D5A; --color-emerald-700: #26664A; --color-emerald-800: #1E523B;
+  --color-emerald-900: #17402E; --color-emerald-950: #0E2A1E;
+
+  --color-green-50:  #EDF7F2; --color-green-100: #DCEFE7; --color-green-200: #BBDFCE;
+  --color-green-300: #8FC7AC; --color-green-400: #5AA381; --color-green-500: #3A8C67;
+  --color-green-600: #2F7D5A; --color-green-700: #26664A; --color-green-800: #1E523B;
+  --color-green-900: #17402E; --color-green-950: #0E2A1E;
+
+  --color-teal-50:  #EDF7F2; --color-teal-100: #DCEFE7; --color-teal-200: #BBDFCE;
+  --color-teal-300: #8FC7AC; --color-teal-400: #5AA381; --color-teal-500: #3A8C67;
+  --color-teal-600: #2F7D5A; --color-teal-700: #26664A; --color-teal-800: #1E523B;
+  --color-teal-900: #17402E; --color-teal-950: #0E2A1E;
+
+  --color-lime-50:  #EDF7F2; --color-lime-100: #DCEFE7; --color-lime-200: #BBDFCE;
+  --color-lime-300: #8FC7AC; --color-lime-400: #5AA381; --color-lime-500: #3A8C67;
+  --color-lime-600: #2F7D5A; --color-lime-700: #26664A; --color-lime-800: #1E523B;
+  --color-lime-900: #17402E; --color-lime-950: #0E2A1E;
+
+  /* ── WARN ── #B26B15 on #F8E9D6 — unsaved, offline, pending ── */
+  --color-amber-50:  #FDF6EC; --color-amber-100: #F8E9D6; --color-amber-200: #F0D4AE;
+  --color-amber-300: #E3B87C; --color-amber-400: #D0964A; --color-amber-500: #BE7C24;
+  --color-amber-600: #B26B15; --color-amber-700: #915612; --color-amber-800: #74450F;
+  --color-amber-900: #5C370C; --color-amber-950: #3D2408;
+
+  --color-orange-50:  #FDF6EC; --color-orange-100: #F8E9D6; --color-orange-200: #F0D4AE;
+  --color-orange-300: #E3B87C; --color-orange-400: #D0964A; --color-orange-500: #BE7C24;
+  --color-orange-600: #B26B15; --color-orange-700: #915612; --color-orange-800: #74450F;
+  --color-orange-900: #5C370C; --color-orange-950: #3D2408;
+
+  --color-yellow-50:  #FDF6EC; --color-yellow-100: #F8E9D6; --color-yellow-200: #F0D4AE;
+  --color-yellow-300: #E3B87C; --color-yellow-400: #D0964A; --color-yellow-500: #BE7C24;
+  --color-yellow-600: #B26B15; --color-yellow-700: #915612; --color-yellow-800: #74450F;
+  --color-yellow-900: #5C370C; --color-yellow-950: #3D2408;
+
+  /* ── BAD ── #B23B33 on #F9E1DF — negative figures, destructive, errors ── */
+  --color-red-50:  #FDF0EF; --color-red-100: #F9E1DF; --color-red-200: #F2C4C0;
+  --color-red-300: #E59E98; --color-red-400: #D2726A; --color-red-500: #BE4E45;
+  --color-red-600: #B23B33; --color-red-700: #93302A; --color-red-800: #762722;
+  --color-red-900: #5E1F1B; --color-red-950: #3E1412;
+
+  --color-rose-50:  #FDF0EF; --color-rose-100: #F9E1DF; --color-rose-200: #F2C4C0;
+  --color-rose-300: #E59E98; --color-rose-400: #D2726A; --color-rose-500: #BE4E45;
+  --color-rose-600: #B23B33; --color-rose-700: #93302A; --color-rose-800: #762722;
+  --color-rose-900: #5E1F1B; --color-rose-950: #3E1412;
+
+  --color-pink-50:  #FDF0EF; --color-pink-100: #F9E1DF; --color-pink-200: #F2C4C0;
+  --color-pink-300: #E59E98; --color-pink-400: #D2726A; --color-pink-500: #BE4E45;
+  --color-pink-600: #B23B33; --color-pink-700: #93302A; --color-pink-800: #762722;
+  --color-pink-900: #5E1F1B; --color-pink-950: #3E1412;
+
+  /* ── TWO SHADOWS, BOTH COOL-TINTED. There is no third. ── */
+  --shadow-2xs: 0 1px 2px rgba(24, 44, 70, 0.05);
+  --shadow-xs:  0 1px 2px rgba(24, 44, 70, 0.05);
+  --shadow-sm:  0 1px 2px rgba(24, 44, 70, 0.05), 0 10px 24px -16px rgba(24, 44, 70, 0.32);
+  --shadow-md:  0 1px 2px rgba(24, 44, 70, 0.05), 0 10px 24px -16px rgba(24, 44, 70, 0.32);
+  --shadow-lg:  0 2px 4px rgba(24, 44, 70, 0.06), 0 26px 48px -24px rgba(24, 44, 70, 0.42);
+  --shadow-xl:  0 2px 4px rgba(24, 44, 70, 0.06), 0 26px 48px -24px rgba(24, 44, 70, 0.42);
+  --shadow-2xl: 0 2px 4px rgba(24, 44, 70, 0.06), 0 26px 48px -24px rgba(24, 44, 70, 0.42);
+
+  /* ── Motion: short, and always explaining something ── */
+  --ease-reveal: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-layout: cubic-bezier(0.3, 0.9, 0.3, 1);
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,7 +209,25 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* EduMon hero palette */
+  /* named CA tokens, usable as bg-navy / text-ink-2 / border-sand … */
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-navy-soft: var(--navy-soft);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-cream: var(--cream);
+  --color-cream-2: var(--cream-2);
+  --color-sand: var(--sand);
+  --color-sand-2: var(--sand-2);
+  --color-slate-blue: var(--slate-blue);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  /* legacy hero tokens (kept so existing markup keeps resolving) */
   --color-hero: var(--hero);
   --color-hero-2: var(--hero-2);
   --color-hero-foreground: var(--hero-foreground);
@@ -48,294 +236,957 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-2xl: calc(var(--radius) + 5px);
+  --radius-3xl: calc(var(--radius) + 6px);
+  --radius-4xl: calc(var(--radius) + 8px);
 }
 
 :root {
-  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  /* Softer, rounder corners across the app (EduMon look) */
-  --radius: 0.75rem;
-  /* LIGHT THEME ONLY */
-  --background: #FAFBFC;
-  --foreground: #0F172A;
+  color-scheme: light;
+
+  /* ── The palette, by name ── */
+  --navy:       #17457F;
+  --navy-2:     #0F3162;
+  --navy-soft:  #DFEAF9;
+  --ink:        #14191F;
+  --ink-2:      #4C5A6A;
+  --ink-3:      #8496A7;
+  --card-solid: #FFFFFF;
+  --cream-2:    #F5FAFE;
+  --cream:      #E7F0F9;
+  --sand:       #D4E2F0;
+  --sand-2:     #B7CCE0;
+  --slate-blue: #3C5E86;
+  --ring-soft:  #BDD3E8;
+  --ok:        #2F7D5A;  --ok-soft:   #DCEFE7;
+  --warn:      #B26B15;  --warn-soft: #F8E9D6;
+  --bad:       #B23B33;  --bad-soft:  #F9E1DF;
+
+  /* Panels 14px · fields/tiles/pills 9–12px · chips 999px */
+  --radius: 0.625rem;   /* 10px — fields, icon tiles, nav pills */
+  --radius-panel: 14px;
+
+  /* ── The ground. Never flat white. The warm cream in the far corner is
+        deliberate — it stops the screen going cold and clinical. ── */
+  --page-ground: linear-gradient(158deg, #DCE9F7 0%, #EDF4FB 38%, #F3F8FC 64%, #F7F4EC 100%);
+
+  /* ── Two shadows, both cool-tinted, wide and faint ── */
+  --shadow-rest: 0 1px 2px rgba(24, 44, 70, 0.05), 0 10px 24px -16px rgba(24, 44, 70, 0.32);
+  --shadow-lift: 0 2px 4px rgba(24, 44, 70, 0.06), 0 26px 48px -24px rgba(24, 44, 70, 0.42);
+  --shadow-navy: 0 8px 20px -10px rgba(23, 69, 127, 0.55);
+  /* legacy aliases — every existing `var(--shadow-float)` resolves correctly */
+  --shadow-float: var(--shadow-rest);
+  --shadow-float-lg: var(--shadow-lift);
+
+  /* ── Motion ── */
+  --t-state: 160ms;
+  --t-reveal: 270ms;
+  --t-layout: 280ms;
+
+  /* ── shadcn semantic tokens, pointed at the CA palette ── */
+  --background: #EDF4FB;
+  --foreground: var(--ink);
   --card: #FFFFFF;
-  --card-foreground: #111827;
+  --card-foreground: var(--ink);
   --popover: #FFFFFF;
-  --popover-foreground: #111827;
-  --primary: #2563EB;
+  --popover-foreground: var(--ink);
+  --primary: var(--navy);
   --primary-foreground: #FFFFFF;
-  /* EduMon deep-teal hero (dark sections / heroes) */
-  --hero: #0B2A33;
-  --hero-2: #0F3A45;
-  --hero-foreground: #FFFFFF;
-  --hero-muted: #9FB7BE;
-  /* Soft floating-card shadow */
-  --shadow-float: 0 18px 40px -18px rgba(8, 40, 48, 0.20);
-  --shadow-float-lg: 0 28px 60px -22px rgba(8, 40, 48, 0.28);
-  --secondary: #F9FAFB;
-  --secondary-foreground: #111827;
-  --muted: #F9FAFB;
-  --muted-foreground: #6B7280;
-  --accent: #F3F4F6;
-  --accent-foreground: #111827;
-  --destructive: #DC2626;
-  --border: #E5E7EB;
-  --input: #E5E7EB;
-  --ring: #2563EB;
-  --chart-1: #2563EB;
-  --chart-2: #16A34A;
-  --chart-3: #D97706;
-  --chart-4: #7C3AED;
-  --chart-5: #DC2626;
-  --sidebar: #F9FAFB;
-  --sidebar-foreground: #111827;
-  --sidebar-primary: #2563EB;
+  --secondary: var(--cream-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--cream-2);
+  --muted-foreground: var(--ink-3);
+  --accent: var(--navy-soft);
+  --accent-foreground: var(--navy-2);
+  --destructive: var(--bad);
+  --border: var(--sand);
+  --input: var(--sand);
+  --ring: var(--navy);
+  --chart-1: var(--navy);
+  --chart-2: var(--slate-blue);
+  --chart-3: var(--ok);
+  --chart-4: var(--warn);
+  --chart-5: var(--bad);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: var(--ink-2);
+  --sidebar-primary: var(--navy);
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EFF6FF;
-  --sidebar-accent-foreground: #2563EB;
-  --sidebar-border: #E5E7EB;
-  --sidebar-ring: #2563EB;
+  --sidebar-accent: var(--navy-soft);
+  --sidebar-accent-foreground: var(--navy);
+  --sidebar-border: var(--sand);
+  --sidebar-ring: var(--navy);
+
+  /* Legacy "hero" surfaces now read as deep navy instead of teal */
+  --hero: #0F3162;
+  --hero-2: #17457F;
+  --hero-foreground: #FFFFFF;
+  --hero-muted: #B7CCE0;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
+
+  html { background: var(--page-ground) fixed; }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: var(--page-ground) fixed;
+    background-color: #EDF4FB;
     font-family: var(--font-sans);
-    font-variant-numeric: tabular-nums;
     font-size: 14px;
+    font-weight: 400;
     line-height: 1.5;
+    font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  /* Bolder, tighter headings — EduMon display style */
-  h1, h2, h3 {
-    letter-spacing: -0.018em;
-    font-weight: 700;
+
+  /* ── THE DISCIPLINE THAT MAKES IT COHERE ──
+     The smaller the label, the wider its tracking. A 9.5px header is spaced
+     roughly twice as wide as a 23px title. ── */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1.18;
   }
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  h1 { font-size: 23px; letter-spacing: 0.03em; }
+  h2 { font-size: 16px; letter-spacing: 0.045em; }
+  h3 { font-size: 14px; letter-spacing: 0.05em; }
+  h4 { font-size: 12.5px; letter-spacing: 0.07em; }
+  h5 { font-size: 11px; letter-spacing: 0.12em; }
+  h6 { font-size: 10.5px; letter-spacing: 0.16em; }
+
+  /* Navy means "act" — links carry it, nothing decorative does. */
+  a { color: inherit; }
+
+  /* A visible navy focus ring on every interactive element. */
+  :where(a, button, [role="button"], [role="tab"], [role="option"], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+  }
+
+  /* Fields rest in a pale well; on focus they turn white with a slate-blue
+     border and a 3px soft ring. Page-level utilities still win over this. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-family: var(--font-sans);
+    background-color: var(--cream-2);
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius);
+    color: var(--ink);
+    transition: background-color var(--t-state) ease, border-color var(--t-state) ease,
+                box-shadow var(--t-state) ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    background-color: #FFFFFF;
+    border-color: var(--slate-blue);
+    box-shadow: 0 0 0 3px rgba(23, 69, 127, 0.12);
+  }
+  input::placeholder, textarea::placeholder { color: var(--ink-3); }
+  input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"] {
+    border-color: var(--bad);
+    box-shadow: 0 0 0 3px rgba(178, 59, 51, 0.14);
+  }
+
+  /* Anything that must LINE UP or be transcribed. Tabular figures always. */
+  input[type="number"], input[type="date"], input[type="month"], input[type="time"] {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95em;
+  }
+
+  code, kbd, pre, samp { font-family: var(--font-code); font-variant-numeric: tabular-nums; }
+
+  /* Hit targets ≥ 32px for real controls (icon-only buttons opt out with
+     their own explicit size utilities, which win). */
+  :where(button, [role="button"]) { min-height: 0; }
+
+  /* Scrollbar — sand-2 thumb, nothing grey */
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sand-2);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--slate-blue); background-clip: padding-box; }
+  * { scrollbar-color: var(--sand-2) transparent; scrollbar-width: thin; }
+
+  ::selection { background: var(--navy-soft); color: var(--navy-2); }
 }
 
-/* ── Table ── */
-table { border-collapse: collapse; width: 100%; }
+/* ══════════════════════════════════════════════════════════════════════════
+   ICONS — Lucide at stroke 1.7, slate-blue at rest, navy when active.
+   (CSS wins over the library's stroke-width attribute, so every icon in the
+   app thins out at once without touching a single call site.)
+   ══════════════════════════════════════════════════════════════════════════ */
+svg.lucide { stroke-width: 1.7; }
 
-/* ── Accounting table system ── */
-.acc-table { @apply w-full text-sm; }
-.acc-table thead tr { @apply border-b border-gray-200 bg-gray-50; }
-.acc-table thead th {
-  @apply px-3 py-2.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider;
+/* ══════════════════════════════════════════════════════════════════════════
+   THE SIGNATURE: a chamfer
+   Parallelogram, cut top-left and bottom-right. ONLY on primary/secondary
+   buttons and step badges. Never on panels, inputs or chips — the restraint
+   is what keeps it a signature.
+   ══════════════════════════════════════════════════════════════════════════ */
+.chamfer      { clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); border-radius: 0; }
+.chamfer-sm   { clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); border-radius: 0; }
+.chamfer-hero { clip-path: polygon(22px 0, 100% 0, calc(100% - 22px) 100%, 0 100%); border-radius: 0; }
+
+/* Page-level primary buttons written as raw `bg-blue-600 / bg-blue-700`
+   markup pick up the signature automatically. clip-path would cut a
+   box-shadow, so the navy glow is drawn with drop-shadow instead. */
+button[class*="bg-blue-6"], button[class*="bg-blue-7"],
+button[class*="from-blue-6"], button[class*="from-blue-7"],
+a[class*="bg-blue-6"][class*="px-"], a[class*="from-blue-6"][class*="px-"],
+button[class*="bg-primary"], .btn-primary {
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  filter: drop-shadow(0 6px 14px rgba(23, 69, 127, 0.38));
+  padding-left: max(1.1rem, 12px);
+  padding-right: max(1.1rem, 12px);
 }
-.acc-table thead th.r { text-align: right; }
-.acc-table thead th.c { text-align: center; }
-.acc-table tbody tr { @apply border-b border-gray-100 hover:bg-blue-50/30 transition-colors; }
-.acc-table tbody td { @apply px-3 py-2.5 text-gray-700; }
-.acc-table tbody td.r { text-align: right; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
-.acc-table tbody td.c { text-align: center; }
-.acc-table tfoot tr { @apply border-t-2 border-gray-300 bg-gray-50; }
-.acc-table tfoot td { @apply px-3 py-2.5 font-semibold text-gray-900; font-family: var(--font-sans); }
-.acc-table tfoot td.r { text-align: right; }
+/* Lift 1–2px on hover; nothing scales — this overrides any page-level
+   `hover:scale-*` on a primary action. */
+button[class*="bg-blue-6"]:hover, button[class*="bg-blue-7"]:hover,
+button[class*="from-blue-6"]:hover, button[class*="from-blue-7"]:hover,
+a[class*="bg-blue-6"][class*="px-"]:hover, a[class*="from-blue-6"][class*="px-"]:hover,
+button[class*="bg-primary"]:hover, .btn-primary:hover {
+  transform: translateY(-1px);
+}
 
-/* ── Amount formatting ── */
-.amount {
-  text-align: right;
-  font-family: var(--font-sans);
+/* …but not when the "button" is really a tile, card or full-width surface */
+button[class*="bg-blue-6"][class*="rounded-full"],
+button[class*="bg-blue-6"][class*="w-full"],
+button[class*="bg-blue-6"][class*="absolute"],
+button[class*="bg-blue-6"][class*="h-full"],
+button[class*="from-blue-6"][class*="rounded-full"],
+button[class*="from-blue-6"][class*="w-full"],
+button[class*="from-blue-6"][class*="absolute"],
+button[class*="from-blue-6"][class*="h-full"] {
+  clip-path: none;
+  filter: none;
+  box-shadow: var(--shadow-navy);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LABELS — Oswald, uppercase, weight 600
+   ══════════════════════════════════════════════════════════════════════════ */
+[data-slot="button"],
+[data-slot="badge"],
+[data-slot="tabs-trigger"],
+.btn-pill, .btn-pill-primary, .btn-pill-outline, .btn-pill-dark,
+.label-caps, .eyebrow, .section-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.eyebrow, .section-eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.label-caps {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FIGURES — Inter, tabular, never wrapping
+   ══════════════════════════════════════════════════════════════════════════ */
+.num, .mono, .amount, .acc-table td.r, .acc-table tfoot td.r,
+.text-dr, .text-cr, .text-bal {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  white-space: nowrap;
+}
+.amount { text-align: right; }
+
+/* Identifiers (PAN, GSTIN, CIN) render in mono inside a navy-soft pill */
+.code-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--navy-soft);
+  color: var(--navy-2);
   white-space: nowrap;
 }
 
-/* ── Dr / Cr color utilities ── */
-.text-dr  { color: #DC2626; }
-.text-cr  { color: #059669; }
-.text-bal { color: #0F172A; font-weight: 600; }
+/* ══════════════════════════════════════════════════════════════════════════
+   SURFACES — solid · frosted · washed
+   ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Page card (EduMon floating card) ── */
-.page-card {
-  @apply bg-white border border-gray-100 rounded-2xl overflow-hidden;
-  box-shadow: var(--shadow-float);
+/* washed: the diagonal ice gradient with a radial white bloom behind
+   whatever is central — for large, otherwise-empty areas. */
+.app-surface {
+  background-color: transparent;
+  background-image:
+    radial-gradient(900px 520px at 50% 6%, rgba(255, 255, 255, 0.72), transparent 62%),
+    var(--page-ground);
+  background-attachment: fixed;
 }
 
-/* ── Stat card (floating, hover-lift) ── */
+/* frosted: white-to-ice gradient at 92–95% opacity over a backdrop blur.
+   Edges are drawn with light, not lines — a hairline inside the shadow and a
+   long soft falloff, never a hard border. */
+.frost, .side-surface {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 246, 252, 0.93) 100%);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  border: 0 !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.9),
+    1px 0 0 rgba(212, 226, 240, 0.55),
+    10px 0 30px -18px rgba(24, 44, 70, 0.35);
+}
+.frost-top {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 246, 252, 0.92) 100%);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 0 rgba(212, 226, 240, 0.6),
+    0 10px 28px -20px rgba(24, 44, 70, 0.42);
+}
+
+/* Long lists fade at their ends with a mask rather than being sliced. */
+.list-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+/* ── Panels ── white, 14px radius, hairline border, resting shadow.
+      Panels never nest. ── */
+.panel, .page-card, .soft-panel {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-rest);
+  overflow: hidden;
+}
+.soft-panel { padding: 15px; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--cream);
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--cream-2) 100%);
+}
+.panel-head > h1, .panel-head > h2, .panel-head > h3, .panel-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.panel-body { padding: 14px 15px; }
+
+/* ── Cards / stat tiles ── lift 1–2px on hover; nothing scales ── */
 .stat-card {
-  @apply bg-white border border-gray-100 rounded-2xl p-4 transition-all;
-  box-shadow: var(--shadow-float);
+  @apply bg-white p-4;
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-rest);
+  transition: box-shadow var(--t-state) ease, transform var(--t-state) ease;
 }
-.stat-card:hover { box-shadow: var(--shadow-float-lg); transform: translateY(-2px); }
+.stat-card:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
 
-/* ── Premium stat card (official dashboard look) ── */
 .stat-premium {
-  @apply relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all;
-  box-shadow: var(--shadow-float);
+  @apply relative overflow-hidden bg-white p-4;
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-rest);
+  transition: box-shadow var(--t-state) ease, transform var(--t-state) ease;
 }
-.stat-premium:hover { box-shadow: var(--shadow-float-lg); transform: translateY(-3px); }
-/* soft diagonal wash driven by the per-card --accent */
+.stat-premium:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
 .stat-premium::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #2563EB) 12%, transparent) 0%, transparent 58%);
+  background: linear-gradient(158deg, rgba(223, 234, 249, 0.55) 0%, transparent 58%);
   pointer-events: none;
 }
-/* faint gridline motif in the corner */
 .stat-premium::after {
   content: '';
-  position: absolute; right: -20%; bottom: -30%;
-  width: 70%; height: 70%;
+  position: absolute; right: -18%; bottom: -28%;
+  width: 62%; height: 62%;
   border-radius: 9999px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent, #2563EB) 10%, transparent) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
   pointer-events: none;
 }
 .stat-premium > * { position: relative; }
 .stat-premium-icon {
-  @apply inline-flex items-center justify-center rounded-xl text-white mb-3 shrink-0;
-  width: 2.75rem; height: 2.75rem;
-  background: linear-gradient(135deg, var(--accent, #2563EB), color-mix(in srgb, var(--accent, #2563EB) 65%, black));
-  box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--accent, #2563EB) 60%, transparent);
+  @apply inline-flex items-center justify-center text-white mb-3 shrink-0;
+  width: 2.375rem; height: 2.375rem;
+  border-radius: 11px;
+  background: linear-gradient(158deg, var(--navy) 0%, var(--navy-2) 100%);
+  box-shadow: var(--shadow-navy);
+}
+/* stat figure — 21px, mono, tabular */
+.stat-figure {
+  font-family: var(--font-mono);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* ── EduMon deep-teal hero section ── */
-.hero {
-  position: relative;
-  color: var(--hero-foreground);
-  background:
-    radial-gradient(120% 120% at 85% -10%, color-mix(in srgb, var(--primary) 26%, transparent) 0%, transparent 45%),
-    linear-gradient(135deg, var(--hero) 0%, var(--hero-2) 100%);
-  border-radius: 1.5rem;
-  overflow: hidden;
-}
-.hero-muted { color: var(--hero-muted); }
-/* "Creating" — accent highlight inside hero headings */
-.hero-accent { color: #5B9BFF; }
-
-/* ── Blue circular icon badge (the floating-card icon in the reference) ── */
-.icon-badge {
-  @apply inline-flex items-center justify-center rounded-full text-white shrink-0;
-  background: var(--primary);
-  width: 2.75rem;
-  height: 2.75rem;
-  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary) 60%, transparent);
-}
-.icon-badge-sm { width: 2rem; height: 2rem; }
-
-/* ── Pill buttons (fully rounded — EduMon CTA style) ── */
-.btn-pill,
-.btn-pill-primary,
-.btn-pill-outline,
-.btn-pill-dark {
-  @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-sm transition-all px-5 h-10 whitespace-nowrap;
-}
-.btn-pill-primary {
-  @apply text-white;
-  background: var(--primary);
-  box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--primary) 70%, transparent);
-}
-.btn-pill-primary:hover { background: color-mix(in srgb, var(--primary) 90%, black); }
-.btn-pill-outline {
-  @apply border;
-  border-color: color-mix(in srgb, currentColor 35%, transparent);
-  background: transparent;
-}
-.btn-pill-outline:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
-/* Dark pill for light navbars (the "Login / Register" button) */
-.btn-pill-dark {
-  @apply text-white;
-  background: var(--hero);
-}
-.btn-pill-dark:hover { background: var(--hero-2); }
-
-/* ── Two-column T-format equal split ── */
-.t-split { display: grid; grid-template-columns: 1fr 1fr; }
-.t-split > div:first-child { border-right: 1px solid #E5E7EB; }
-
-/* ── Statement section heading ── */
-.stmt-heading {
-  @apply px-3 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 border-b border-gray-100;
-}
-.stmt-row { @apply flex items-center justify-between px-3 py-2 border-b border-gray-100 text-sm; }
-.stmt-row:last-child { @apply border-b-0; }
-.stmt-total { @apply flex items-center justify-between px-3 py-2.5 font-semibold text-gray-900 border-t-2 border-gray-300 bg-gray-50 text-sm; }
-.stmt-indent { padding-left: 1.5rem; }
-.stmt-indent2 { padding-left: 3rem; }
-
-/* ── Register row striping ── */
-.reg-row-even { @apply bg-white; }
-.reg-row-odd  { @apply bg-gray-50/50; }
-
-/* ── Balance tally banner ── */
-.tally-ok  { @apply px-4 py-2 rounded-lg text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 mb-4; }
-.tally-err { @apply px-4 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200 mb-4; }
-
-/* ── Voucher type badge colors ── */
-.vtype-JRN { @apply bg-gray-100 text-gray-600; }
-.vtype-SLS { @apply bg-emerald-50 text-emerald-700; }
-.vtype-PUR { @apply bg-blue-50 text-blue-700; }
-.vtype-RCT { @apply bg-teal-50 text-teal-700; }
-.vtype-PMT { @apply bg-red-50 text-red-700; }
-.vtype-CNT { @apply bg-amber-50 text-amber-700; }
-.vtype-DN  { @apply bg-orange-50 text-orange-700; }
-.vtype-CN  { @apply bg-purple-50 text-purple-700; }
-.vtype-PAY { @apply bg-indigo-50 text-indigo-700; }
-
-/* ── App surface: a soft, light wash so blank areas never read as empty ── */
-/* Subtle blue + teal corner glows over the base background — the same light,
-   "trending" feel is reused on every top-level screen (auth → dashboard). */
-.app-surface {
-  background-color: var(--background);
-  background-image:
-    radial-gradient(1200px 620px at 100% -6%, rgba(37, 99, 235, 0.07), transparent 58%),
-    radial-gradient(920px 540px at -8% 112%, rgba(13, 148, 136, 0.06), transparent 55%);
-  background-attachment: fixed;
-}
-
-/* ── Sidebar surface — faintly tinted, never flat white ── */
-.side-surface {
-  background-image: linear-gradient(180deg, #FFFFFF 0%, #F5F8FC 100%);
-}
-
-/* ── Brand mark (the "CA" logo chip) ── */
-.brand-mark {
-  @apply inline-flex items-center justify-center rounded-xl text-white font-extrabold shrink-0 tracking-tight;
-  background: linear-gradient(135deg, var(--primary) 0%, #1E40AF 100%);
-  box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--primary) 70%, transparent);
-}
-
-/* ── Small uppercase section label ── */
-.section-eyebrow {
-  @apply text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400;
-}
-
-/* ── Quick-action tile (dashboard shortcuts) — per-tile accent via --tile ── */
+/* ── Quick-action tiles ── */
 .quick-tile {
-  @apply relative flex items-center gap-3 overflow-hidden rounded-2xl border border-gray-100 bg-white p-3.5 transition-all;
-  box-shadow: var(--shadow-float);
+  @apply relative flex items-center gap-3 overflow-hidden bg-white p-3.5;
+  border: 1px solid var(--sand);
+  border-radius: 12px;
+  box-shadow: var(--shadow-rest);
+  transition: box-shadow var(--t-state) ease, transform var(--t-state) ease, border-color var(--t-state) ease;
 }
-.quick-tile:hover { box-shadow: var(--shadow-float-lg); transform: translateY(-2px); }
+.quick-tile:hover {
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-2px);
+  border-color: var(--sand-2);
+}
 .quick-tile::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--tile, #2563EB) 8%, transparent) 0%, transparent 62%);
+  background: linear-gradient(158deg, rgba(223, 234, 249, 0.5) 0%, transparent 62%);
   pointer-events: none;
 }
 .quick-tile > * { position: relative; }
 .quick-tile-icon {
-  @apply inline-flex h-10 w-10 items-center justify-center rounded-xl shrink-0;
-  background: color-mix(in srgb, var(--tile, #2563EB) 13%, white);
-  color: var(--tile, #2563EB);
+  @apply inline-flex h-9 w-9 items-center justify-center shrink-0;
+  border-radius: 10px;
+  background: var(--navy-soft);
+  color: var(--navy);
 }
-.quick-tile-arrow { @apply ml-auto h-4 w-4 text-gray-300 transition-all; }
-.quick-tile:hover .quick-tile-arrow { color: var(--tile, #2563EB); transform: translateX(2px); }
+.quick-tile-arrow { @apply ml-auto h-4 w-4 transition-all; color: var(--sand-2); }
+.quick-tile:hover .quick-tile-arrow { color: var(--navy); transform: translateX(2px); }
 
-/* ── Soft info panel (getting-started / helper cards) ── */
-.soft-panel {
-  @apply relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5;
-  box-shadow: var(--shadow-float);
+/* ── Hero / dark section — deep navy, never teal ── */
+.hero {
+  position: relative;
+  color: var(--hero-foreground);
+  background:
+    radial-gradient(120% 120% at 85% -10%, rgba(60, 94, 134, 0.45) 0%, transparent 48%),
+    linear-gradient(158deg, var(--navy-2) 0%, var(--navy) 100%);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
 }
+.hero-muted { color: var(--hero-muted); }
+.hero-accent { color: #9DBCE3; }
+.hero h1, .hero h2, .hero h3, .hero h4 { color: #FFFFFF; }
+/* Navy on navy would vanish — on a filled navy surface the action inverts to
+   white, which is still the one action colour, just reversed. */
+.hero .btn-pill-primary,
+.hero button[class*="bg-blue-6"],
+.hero button[class*="bg-blue-7"],
+.hero button[class*="from-blue-6"],
+.hero button[class*="from-blue-7"],
+.hero .btn-primary,
+.hero [data-slot="button"][data-variant="default"] {
+  background: #FFFFFF;
+  color: var(--navy-2);
+  filter: drop-shadow(0 8px 18px rgba(7, 22, 44, 0.5));
+}
+.hero .btn-pill-primary:hover,
+.hero button[class*="bg-blue-6"]:hover,
+.hero button[class*="from-blue-6"]:hover,
+.hero .btn-primary:hover,
+.hero [data-slot="button"][data-variant="default"]:hover {
+  background: var(--navy-soft);
+  color: var(--navy-2);
+}
+
+/* ── Icon tiles ── 9–12px radius, slate-blue at rest, navy when active ── */
+.icon-badge {
+  @apply inline-flex items-center justify-center text-white shrink-0;
+  border-radius: 11px;
+  background: linear-gradient(158deg, var(--navy) 0%, var(--navy-2) 100%);
+  width: 2.375rem;
+  height: 2.375rem;
+  box-shadow: var(--shadow-navy);
+}
+.icon-badge-sm { width: 1.875rem; height: 1.875rem; border-radius: 9px; }
+
+/* ── Brand mark ── */
+.brand-mark {
+  @apply inline-flex items-center justify-center text-white shrink-0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: 10px;
+  background: linear-gradient(158deg, var(--navy) 0%, var(--navy-2) 100%);
+  box-shadow: var(--shadow-navy);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BUTTONS — pills kept for compatibility, chamfer carries the primary action
+   ══════════════════════════════════════════════════════════════════════════ */
+.btn-pill,
+.btn-pill-primary,
+.btn-pill-outline,
+.btn-pill-dark {
+  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap;
+  height: 2.25rem;
+  padding: 0 1.25rem;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  border-radius: 999px;
+  transition: background-color var(--t-state) ease, color var(--t-state) ease,
+              transform var(--t-state) ease, filter var(--t-state) ease;
+}
+.btn-pill-primary {
+  @apply text-white;
+  background: var(--navy);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  border-radius: 0;
+  padding: 0 1.6rem;
+  filter: drop-shadow(0 8px 18px rgba(23, 69, 127, 0.42));
+}
+.btn-pill-primary:hover { background: var(--navy-2); transform: translateY(-1px); }
+.btn-pill-primary:active { background: var(--navy-2); transform: translateY(0); }
+.btn-pill-outline {
+  border: 1.5px solid var(--sand);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--navy);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  border-radius: 0;
+  padding: 0 1.6rem;
+}
+.btn-pill-outline:hover { background: #FFFFFF; border-color: var(--sand-2); }
+.btn-pill-dark {
+  @apply text-white;
+  background: var(--navy-2);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  border-radius: 0;
+  padding: 0 1.6rem;
+}
+.btn-pill-dark:hover { background: var(--navy); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TABLES — cream-2 header in 9.5px Oswald caps, hairline rows, mono money
+   ══════════════════════════════════════════════════════════════════════════ */
+table { border-collapse: collapse; width: 100%; }
+
+/* Colour is deliberately NOT set here: a header row on a filled navy surface
+   must keep its own white text. */
+th {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.acc-table { @apply w-full; font-size: 12.5px; }
+.acc-table thead tr { background: var(--cream-2); border-bottom: 1px solid var(--sand); }
+.acc-table thead th {
+  padding: 8px 14px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.acc-table thead th.r { text-align: right; }
+.acc-table thead th.c { text-align: center; }
+.acc-table tbody tr {
+  border-bottom: 1px solid var(--cream);
+  transition: background-color var(--t-state) ease;
+}
+.acc-table tbody tr:hover { background: var(--cream-2); }
+.acc-table tbody td { padding: 8px 14px; color: var(--ink-2); }
+.acc-table tbody td.r {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.acc-table tbody td.c { text-align: center; }
+.acc-table tfoot tr { border-top: 1.5px solid var(--sand-2); background: var(--cream-2); }
+.acc-table tfoot td {
+  padding: 9px 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.acc-table tfoot td.r {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Money is coloured only when its sign matters. */
+.text-dr  { color: var(--bad); }
+.text-cr  { color: var(--ok); }
+.text-bal { color: var(--ink); font-weight: 600; }
+
+/* ── Register row striping ── */
+.reg-row-even { background: #FFFFFF; }
+.reg-row-odd  { background: color-mix(in srgb, var(--cream-2) 70%, #FFFFFF); }
+
+/* ── Statement sections ── */
+.stmt-heading {
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--cream-2);
+  border-bottom: 1px solid var(--cream);
+}
+.stmt-row {
+  @apply flex items-center justify-between;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--cream);
+  font-size: 13px;
+}
+.stmt-row:last-child { border-bottom: 0; }
+.stmt-total {
+  @apply flex items-center justify-between;
+  padding: 9px 14px;
+  font-weight: 700;
+  color: var(--ink);
+  border-top: 1.5px solid var(--sand-2);
+  background: var(--cream-2);
+  font-size: 13px;
+}
+.stmt-total, .stmt-row { font-variant-numeric: tabular-nums; }
+.stmt-indent { padding-left: 1.75rem; }
+.stmt-indent2 { padding-left: 3.25rem; }
+
+/* ── Two-column T-format ── */
+.t-split { display: grid; grid-template-columns: 1fr 1fr; }
+.t-split > div:first-child { border-right: 1px solid var(--sand); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STATUS — the soft/solid pair of each colour. Status never navigates.
+   ══════════════════════════════════════════════════════════════════════════ */
+.chip, .status-ok, .status-warn, .status-bad, .status-idle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status-ok   { background: var(--ok-soft);   color: #245F45; }
+.status-warn { background: var(--warn-soft); color: #8A530F; }
+.status-bad  { background: var(--bad-soft);  color: #8C2E27; }
+.status-idle { background: var(--cream);     color: var(--ink-2); }
+
+.tally-ok {
+  @apply mb-4;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ok-soft);
+  color: #245F45;
+  border: 1px solid #BBDFCE;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tally-err {
+  @apply mb-4;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bad-soft);
+  color: #8C2E27;
+  border: 1px solid #F2C4C0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Voucher-type badges — quiet, separated by lightness not hue ── */
+.vtype-JRN, .vtype-SLS, .vtype-PUR, .vtype-RCT, .vtype-PMT,
+.vtype-CNT, .vtype-DN, .vtype-CN, .vtype-PAY {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+.vtype-JRN { background: var(--cream);      color: var(--ink-2); }
+.vtype-SLS { background: var(--ok-soft);    color: #245F45; }
+.vtype-PUR { background: var(--navy-soft);  color: var(--navy-2); }
+.vtype-RCT { background: var(--ok-soft);    color: #245F45; }
+.vtype-PMT { background: var(--bad-soft);   color: #8C2E27; }
+.vtype-CNT { background: var(--warn-soft);  color: #8A530F; }
+.vtype-DN  { background: var(--warn-soft);  color: #8A530F; }
+.vtype-CN  { background: #E1EBF5;           color: #2F4B6D; }
+.vtype-PAY { background: var(--navy-soft);  color: var(--navy-2); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODALS — almost every overlay in this app is hand-rolled markup rather than
+   the Dialog primitive, so the language is applied to the pattern itself:
+   a navy-tinted blurred veil, and a panel at 14px with a 3px navy strip
+   across its top edge and the lifted shadow.
+   ══════════════════════════════════════════════════════════════════════════ */
+[class*="fixed"][class*="inset-0"][class*="bg-black/"] {
+  background-color: rgba(10, 31, 62, 0.42);
+}
+[class*="fixed"][class*="inset-0"][class*="bg-black/20"] { background-color: rgba(10, 31, 62, 0.20); }
+[class*="fixed"][class*="inset-0"][class*="bg-black/30"] { background-color: rgba(10, 31, 62, 0.32); }
+
+/* Blur only real modal veils — the low-opacity click-catchers behind menus
+   must leave the page behind them readable. */
+[class*="fixed"][class*="inset-0"][class*="bg-black/"][class*="items-center"] {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+/* The panel is marked with a real class on each modal. A [class*=…] substring in
+   the PARENT position (the old `[overlay] > [class*="bg-white"]` form) made every
+   class change re-check that element's whole subtree: ~35 ms per change on a big
+   table page. Same declarations, same elements. */
+.ca-modal-panel {
+  border-radius: 14px;
+  border: 1px solid var(--sand);
+  box-shadow: var(--shadow-lift);
+  background-image: linear-gradient(to bottom, var(--navy) 0px, var(--navy) 3px, transparent 3px);
+  animation: ca-rise var(--t-layout) var(--ease-reveal) both;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAVIGATION — floating cards and pills, never a ruled list
+   ══════════════════════════════════════════════════════════════════════════ */
+.nav-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  transition: background-color var(--t-state) ease, color var(--t-state) ease,
+              transform var(--t-state) ease;
+}
+.nav-pill:hover { background: rgba(231, 240, 249, 0.85); color: var(--ink); }
+.nav-pill-active {
+  background: linear-gradient(158deg, var(--navy) 0%, var(--navy-2) 100%);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-navy);
+}
+.nav-pill-active:hover { color: #FFFFFF; }
+/* the dot on a thin guide line that marks where you are */
+.nav-guide { position: relative; }
+.nav-guide::before {
+  content: '';
+  position: absolute;
+  left: 3px; top: 4px; bottom: 4px;
+  width: 1px;
+  background: var(--cream);
+}
+.nav-pill-active::before {
+  content: '';
+  position: absolute;
+  left: -7px; top: 50%;
+  width: 5px; height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--navy);
+  box-shadow: 0 0 0 3px rgba(23, 69, 127, 0.16);
+}
+.nav-group-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: var(--cream);
+  color: var(--slate-blue);
+  flex-shrink: 0;
+  transition: background-color var(--t-state) ease, color var(--t-state) ease;
+}
+.nav-group-row[data-active="true"] .nav-group-tile { background: var(--navy-soft); color: var(--navy); }
+
+/* ── Open panel: group headings are rounded rows led by an icon tile, with a
+      chevron that flips when open; opening one pushes what is below it
+      (grid-rows reveal) rather than covering it. Items stay text only. ── */
+.nav-group-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  text-align: left;
+  transition: background-color var(--t-state) ease, color var(--t-state) ease;
+}
+.nav-group-row:hover { background: rgba(231, 240, 249, 0.85); color: var(--ink); }
+.nav-group-row[aria-expanded="true"] { color: var(--navy); }
+.nav-group-row[data-active="true"] { color: var(--navy); }
+
+/* Top-level links (Dashboard, Ledger, Settings) wear the same tile + caps label
+   as the group rows, so the first column of the panel reads as one list. */
+.nav-top {
+  min-height: 40px;
+  padding: 5px 10px;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.nav-pill-active .nav-group-tile { background: rgba(255, 255, 255, 0.16); color: #FFFFFF; }
+.nav-heading-static {
+  padding: 6px 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.nav-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--t-reveal) var(--ease-reveal);
+}
+.nav-collapse[data-open="true"] { grid-template-rows: 1fr; }
+.nav-collapse > div { overflow: hidden; min-height: 0; }
+
+/* Items hang off a thin guide line under the heading; the current page's
+   pill carries a dot that sits exactly on that line. */
+/* margin-left puts the guide line under the centre of the 30px group tile;
+   padding-left lines item text up with the heading text after the tile. */
+.nav-items { position: relative; margin: 1px 0 6px 25px; padding-left: 15px; }
+.nav-items::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 1px;
+  background: var(--sand);
+}
+.nav-items .nav-pill { padding: 6px 10px; font-size: 13px; }
+.nav-items .nav-pill-active::before { left: -17px; }
+nav .nav-pill + .nav-pill { margin-top: 1px; }
+
+/* Small square icon button inside the panel (e.g. "New file") */
+.rail-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--slate-blue);
+  transition: background-color var(--t-state) ease, color var(--t-state) ease;
+}
+.rail-btn:hover { background: rgba(231, 240, 249, 0.95); color: var(--navy); }
+
+/* ── The bookmark ──────────────────────────────────────────────────────────
+   The one control for the desktop nav. It rides the panel's right edge (its
+   left is set inline to the panel width and animates with it): arrow left =
+   close; closed, it is the only thing left of the nav, arrow right = open. */
+.nav-bookmark {
+  position: absolute;
+  top: 50%;
+  z-index: 30;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid var(--sand);
+  border-left: 0;
+  border-radius: 0 11px 11px 0;
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--cream-2) 100%);
+  color: var(--navy);
+  box-shadow: 4px 2px 12px -6px rgba(24, 44, 70, 0.38);
+  cursor: pointer;
+}
+.nav-bookmark:hover {
+  width: 26px;
+  background: #FFFFFF;
+  box-shadow: 6px 3px 16px -6px rgba(24, 44, 70, 0.45);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOTION — short, and always explaining something
+   ══════════════════════════════════════════════════════════════════════════ */
+@keyframes ca-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes ca-modal-rise {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes ca-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+.screen-enter { animation: ca-rise 420ms var(--ease-reveal) both; }
+.reveal { animation: ca-rise var(--t-reveal) var(--ease-reveal) both; }
+.field-error { animation: ca-shake 240ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DENSITY
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1180px) { .t-split { grid-template-columns: 1fr; } .t-split > div:first-child { border-right: 0; border-bottom: 1px solid var(--sand); } }
+
+/* Prose capped at ~72 characters */
+.prose-cap { max-width: 72ch; }
 
 /* -- Number Input Spin Buttons Removal -- */
 input[type="number"]::-webkit-inner-spin-button,

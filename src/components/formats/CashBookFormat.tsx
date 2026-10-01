@@ -1,7 +1,8 @@
 'use client';
 
-import { formatIndianCurrency } from '@/lib/utils/currencyFormat';
-import type { CashBookRow } from '@/lib/accounting/cashBookCompute';
+import type { ReactNode } from 'react';
+import { formatIndianCurrency, formatIndianNumber } from '@/lib/utils/currencyFormat';
+import type { CashBookDetailLine, CashBookRow } from '@/lib/accounting/cashBookCompute';
 
 interface CashBookFormatProps {
   type: 'single' | 'double' | 'triple';
@@ -36,7 +37,13 @@ type CellModel = {
   cash?: number;
   bank?: number;
   tint?: string;
+  /** Multi-account entry: one line per account (see detailRows). */
+  details?: CashBookDetailLine[];
+  detailsReconcile?: boolean;
 };
+
+/** Physical lines a model occupies: 1, or one per account + the posted line. */
+const lineCount = (m: CellModel) => (m.details && m.details.length > 1 ? m.details.length + 1 : 1);
 
 export function CashBookFormat({
   type,
@@ -113,19 +120,23 @@ export function CashBookFormat({
   // ---- Cell renderers ------------------------------------------------------------
   // `isPayment` decides whether this group sits on the credit (right) side, which
   // gets a heavier divider so the T-account split reads clearly.
-  const sideCells = (m: CellModel, isPayment: boolean) => {
+  // `span` > 1 only when the OTHER side of this row is a multi-account entry: this
+  // side's single line then spans all of that block's sub-rows and sits at the top.
+  const sideCells = (m: CellModel, isPayment: boolean, span = 1) => {
     const divider = isPayment ? 'border-l-2 border-gray-300' : '';
     const tint = m.tint || '';
+    const rs = span > 1 ? span : undefined;
+    const top = span > 1 ? 'align-top' : '';
 
     if (m.empty) {
       return (
         <>
-          <td className={`${dateWidth} ${cellPad} ${tint} ${divider}`}>&nbsp;</td>
-          <td className={`${particularsWidth} ${cellPad} ${tint}`}>&nbsp;</td>
-          <td className={`${lfWidth} ${cellPad} ${tint}`}>&nbsp;</td>
-          {type === 'triple' && <td className={`${discountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
-          <td className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>
-          {(type === 'double' || type === 'triple') && <td className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
+          <td rowSpan={rs} className={`${dateWidth} ${cellPad} ${tint} ${divider}`}>&nbsp;</td>
+          <td rowSpan={rs} className={`${particularsWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          <td rowSpan={rs} className={`${lfWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          {type === 'triple' && <td rowSpan={rs} className={`${discountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
+          <td rowSpan={rs} className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>
+          {(type === 'double' || type === 'triple') && <td rowSpan={rs} className={`${amountWidth} ${cellPad} ${tint}`}>&nbsp;</td>}
         </>
       );
     }
@@ -149,42 +160,150 @@ export function CashBookFormat({
 
     return (
       <>
+        {dateCell(m, divider, rs)}
         <td
-          className={`${dateWidth} ${cellPad} ${smallText} text-gray-500 whitespace-nowrap align-top ${tint} ${divider}`}
-        >
-          {m.date ? <div>{m.date}</div> : null}
-          {m.entryCode ? (
-            <div className="mt-1 text-[10px] font-mono font-semibold text-blue-600">{m.entryCode}</div>
-          ) : null}
-        </td>
-        <td
+          rowSpan={rs}
           className={`${particularsWidth} ${cellPad} align-top break-words ${m.bold ? 'font-medium' : ''} ${tint}`}
           title={m.particulars}
         >
           {m.particulars ?? ''}
         </td>
-        <td className={`${lfWidth} ${cellPad} ${smallText} text-center text-gray-400 ${tint}`}>{m.lf || ''}</td>
+        <td rowSpan={rs} className={`${lfWidth} ${cellPad} ${smallText} text-center text-gray-400 ${top} ${tint}`}>{m.lf || ''}</td>
         {type === 'triple' && (
           <td
-            className={`${discountWidth} ${cellPad} ${smallText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+            rowSpan={rs}
+            className={`${discountWidth} ${cellPad} ${smallText} text-right font-mono tabular-nums whitespace-nowrap ${top} ${tint}`}
           >
             {discStr}
           </td>
         )}
         <td
-          className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+          rowSpan={rs}
+          className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${top} ${tint}`}
         >
           {cashStr}
         </td>
         {(type === 'double' || type === 'triple') && (
           <td
-            className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${tint}`}
+            rowSpan={rs}
+            className={`${amountWidth} ${cellPad} ${amountText} text-right font-mono tabular-nums whitespace-nowrap ${top} ${tint}`}
           >
             {bankStr}
           </td>
         )}
       </>
     );
+  };
+
+  // Date + JE code: shared by single-line rows and multi-account blocks.
+  function dateCell(m: CellModel, divider: string, rowSpan?: number) {
+    return (
+      <td
+        rowSpan={rowSpan}
+        className={`${dateWidth} ${cellPad} ${smallText} text-gray-500 whitespace-nowrap align-top ${m.tint || ''} ${divider}`}
+      >
+        {m.date ? <div>{m.date}</div> : null}
+        {m.entryCode ? (
+          <div className="mt-1 text-[10px] font-mono font-semibold text-blue-600">{m.entryCode}</div>
+        ) : null}
+      </td>
+    );
+  }
+
+  // A multi-account entry: one sub-row per account — the account, its L.F. and
+  // its amount on the SAME line — then the posted cash/bank figure on a closing
+  // line. Sub-rows are real <tr>s (built by the caller), so line N of every
+  // column shares a baseline even when a long account name wraps.
+  //   · Lines that ADD UP to the posted figure are a breakdown: amounts signed
+  //     against this side (parentheses = the unusual side), closed by a sum line.
+  //   · Lines that DON'T (an entry posting to both sides of the book) describe
+  //     the whole entry: each shows its own amount with its Dr/Cr side, subdued,
+  //     and the closing line is labelled Received / Paid so it never reads as
+  //     their sum.
+  // Returns the cells for each of the block's L sub-rows (null = covered by a
+  // row-span from above).
+  const detailRows = (m: CellModel, isPayment: boolean, L: number): ReactNode[] => {
+    const lines = m.details ?? [];
+    const n = lines.length + 1; // + the posted line
+    const divider = isPayment ? 'border-l-2 border-gray-300' : '';
+    const reconcile = !!m.detailsReconcile;
+    // Detail amounts go in the column the entry actually posted to.
+    const col: 'cash' | 'bank' = (m.bank || 0) > 0 && !((m.cash || 0) > 0) ? 'bank' : 'cash';
+    const hasBank = type === 'double' || type === 'triple';
+
+    const padX = type === 'triple' ? 'px-1' : 'px-2';
+    const pad = (i: number) =>
+      `${padX} ${i === 0 ? (type === 'triple' ? 'pt-1' : 'pt-1.5') : 'pt-[2px]'} ${
+        i === n - 1 ? (type === 'triple' ? 'pb-1' : 'pb-1.5') : 'pb-[2px]'
+      }`;
+    const amountCls = `${amountWidth} ${amountText} text-right font-mono tabular-nums whitespace-nowrap align-top`;
+
+    const out: ReactNode[] = Array.from({ length: L }, () => null);
+
+    lines.forEach((d, i) => {
+      const amount = reconcile
+        ? d.signed < 0 ? `(${formatIndianNumber(d.amount)})` : formatIndianNumber(d.amount)
+        : formatIndianNumber(d.amount);
+      const tone = reconcile ? 'text-gray-600' : 'text-gray-400';
+      out[i] = (
+        <>
+          {i === 0 && dateCell(m, divider, L)}
+          <td className={`${particularsWidth} ${pad(i)} align-top break-words text-gray-700`}>
+            {reconcile ? (
+              d.account
+            ) : (
+              <span className="flex items-baseline justify-between gap-2">
+                <span className="min-w-0">{d.account}</span>
+                <span className="shrink-0 text-[10px] font-semibold text-gray-400">{d.side}</span>
+              </span>
+            )}
+          </td>
+          <td className={`${lfWidth} ${pad(i)} ${smallText} text-center text-gray-400 align-top`}>{d.lf}</td>
+          {type === 'triple' && <td className={`${discountWidth} ${pad(i)}`} />}
+          <td className={`${amountCls} ${pad(i)} ${tone}`}>{col === 'cash' ? amount : ''}</td>
+          {hasBank && <td className={`${amountCls} ${pad(i)} ${tone}`}>{col === 'bank' ? amount : ''}</td>}
+        </>
+      );
+    });
+
+    // Closing line: the posted figure — the one that feeds balances and totals.
+    const last = n - 1;
+    const posted = (v: number | undefined) => ((v || 0) > 0 ? formatIndianCurrency(v || 0) : '');
+    const rule = 'border-t border-gray-300';
+    out[last] = (
+      <>
+        <td className={`${particularsWidth} ${pad(last)} align-top`}>
+          {!reconcile && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              {isPayment ? 'Paid' : 'Received'}
+            </span>
+          )}
+        </td>
+        <td className={`${lfWidth} ${pad(last)}`} />
+        {type === 'triple' && (
+          <td className={`${discountWidth} ${pad(last)} ${smallText} text-right font-mono tabular-nums whitespace-nowrap align-top`}>
+            {m.disc ? formatIndianCurrency(m.disc) : ''}
+          </td>
+        )}
+        <td className={`${amountCls} ${pad(last)} ${(m.cash || 0) > 0 ? rule : ''}`}>{posted(m.cash)}</td>
+        {hasBank && <td className={`${amountCls} ${pad(last)} ${(m.bank || 0) > 0 ? rule : ''}`}>{posted(m.bank)}</td>}
+      </>
+    );
+
+    // The other side has more lines: one blank block fills the rest.
+    if (n < L) {
+      const rs = L - n;
+      out[n] = (
+        <>
+          <td rowSpan={rs} className={`${particularsWidth}`} />
+          <td rowSpan={rs} className={`${lfWidth}`} />
+          {type === 'triple' && <td rowSpan={rs} className={`${discountWidth}`} />}
+          <td rowSpan={rs} className={`${amountWidth}`} />
+          {hasBank && <td rowSpan={rs} className={`${amountWidth}`} />}
+        </>
+      );
+    }
+    return out;
   };
 
   const headerCells = (isPayment: boolean) => {
@@ -239,7 +358,7 @@ export function CashBookFormat({
 
       {/* Monthly divisions are mandatory (Month/Quarter/Year all show monthly splits) */}
       <div className="overflow-x-auto">
-        <div className="divide-y divide-[#E5E7EB] min-w-[1000px]">
+        <div className="divide-y divide-[#D4E2F0] min-w-[1000px]">
           {(() => {
             let monthOpeningCash = openingCash;
             let monthOpeningBank = openingBank;
@@ -311,6 +430,8 @@ export function CashBookFormat({
                   disc: r.discountAmount,
                   cash: r.cashAmount,
                   bank: r.bankAmount,
+                  details: r.details,
+                  detailsReconcile: r.detailsReconcile,
                 })),
               ];
               const paymentModels: CellModel[] = monthPayments.map<CellModel>((p) => ({
@@ -321,6 +442,8 @@ export function CashBookFormat({
                 disc: p.discountAmount,
                 cash: p.cashAmount,
                 bank: p.bankAmount,
+                details: p.details,
+                detailsReconcile: p.detailsReconcile,
               }));
 
               // Both sides share the same rows; pad the shorter side with blanks so the
@@ -331,12 +454,29 @@ export function CashBookFormat({
               const bodyRows = Array.from({ length: bodyLen }, (_, r) => {
                 const rm = receiptModels[r] ?? { empty: true };
                 const pm = paymentModels[r] ?? { empty: true };
-                return (
-                  <tr key={`b-${r}`} className="border-b border-gray-100">
-                    {sideCells(rm, false)}
-                    {sideCells(pm, true)}
+                // A multi-account entry on either side turns this row into a block of
+                // L sub-rows; the other side's single line spans the whole block.
+                const L = Math.max(lineCount(rm), lineCount(pm));
+                if (L === 1) {
+                  return (
+                    <tr key={`b-${r}`} className="border-b border-gray-100">
+                      {sideCells(rm, false)}
+                      {sideCells(pm, true)}
+                    </tr>
+                  );
+                }
+                const side = (m: CellModel, isPayment: boolean): ReactNode[] =>
+                  lineCount(m) > 1
+                    ? detailRows(m, isPayment, L)
+                    : [sideCells(m, isPayment, L), ...Array.from({ length: L - 1 }, () => null)];
+                const left = side(rm, false);
+                const right = side(pm, true);
+                return Array.from({ length: L }, (_, i) => (
+                  <tr key={`b-${r}-${i}`} className={i === L - 1 ? 'border-b border-gray-100' : ''}>
+                    {left[i]}
+                    {right[i]}
                   </tr>
-                );
+                ));
               });
 
               const block = (

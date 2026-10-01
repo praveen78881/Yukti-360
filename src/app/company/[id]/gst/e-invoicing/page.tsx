@@ -32,7 +32,7 @@ function EInvoicingPageUnlocked() {
     if (!token) { toast.error('Connect the e-Invoice portal in the Generate tab first'); setTab('generate'); return; }
     const reason = window.prompt('Cancellation reason — 1: Duplicate, 2: Data entry mistake', '2');
     if (!reason) return;
-    const r = await sandboxClient.einvCancel(token, rec.irn, reason, 'Cancelled via CA Studio');
+    const r = await sandboxClient.einvCancel(token, rec.irn, reason, 'Cancelled via Yukti 360');
     const env: any = r.data?.data ?? r.data;
     const ok = env?.Status === 1 || env?.Status === '1' || env?.Data?.CancelDate;
     if (r.ok && ok) {

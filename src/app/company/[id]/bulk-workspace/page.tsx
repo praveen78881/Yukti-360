@@ -47,7 +47,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="ca-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -107,7 +107,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
             <div className="flex flex-wrap gap-2">
               <a
                 href="/sample-bank-statement-1.csv"
-                download="CA-Studio-Sample-Bank-Statement.csv"
+                download="Yukti360-Sample-Bank-Statement.csv"
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 font-medium transition-colors shadow-sm"
               >
                 <Download className="h-3.5 w-3.5" />
@@ -115,7 +115,7 @@ function HowToImportModal({ onClose }: { onClose: () => void }) {
               </a>
               <a
                 href="/sample-bank-statement-2.xls"
-                download="CA-Studio-Sample-Bank-Statement.xls"
+                download="Yukti360-Sample-Bank-Statement.xls"
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 font-medium transition-colors shadow-sm"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -338,7 +338,7 @@ export default function BulkWorkspacePage() {
                 <div className="flex flex-wrap gap-2">
                   <a
                     href="/sample-bank-statement-1.csv"
-                    download="CA-Studio-Sample-Bank-Statement.csv"
+                    download="Yukti360-Sample-Bank-Statement.csv"
                     className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 font-medium transition-colors"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -346,7 +346,7 @@ export default function BulkWorkspacePage() {
                   </a>
                   <a
                     href="/sample-bank-statement-2.xls"
-                    download="CA-Studio-Sample-Bank-Statement.xls"
+                    download="Yukti360-Sample-Bank-Statement.xls"
                     className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-100 font-medium transition-colors"
                   >
                     <FileSpreadsheet className="h-3.5 w-3.5" />

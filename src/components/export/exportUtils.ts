@@ -31,7 +31,7 @@ function addCaStudioMark(doc: any) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.5);
     doc.setTextColor(120, 120, 120);
-    doc.text('CA Studio', w - 8, h - 7, { align: 'right' });
+    doc.text('Yukti 360', w - 8, h - 7, { align: 'right' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(5.5);
     doc.setTextColor(150, 150, 150);
