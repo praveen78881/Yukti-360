@@ -3,7 +3,6 @@ import { Building2, Users, Package, Percent, Scale, Wallet, FileText, Plus, X, S
 import type { DocumentWizardProps } from './types';
 import { WIZARD_CONFIG, GSTR1_TABLE_LABELS } from './config';
 import { STATE_CODES, gstinIsValid } from '@/lib/accounting/gstInvoices';
-import { HSN_NOT_GENUINE, firstRejectedHsn } from '@/lib/gst/hsnLookup';
 import { useDocumentState, type PurchaseFields } from './useDocumentState';
 import { useCompany } from '@/hooks/useCompany';
 import { HeaderSection } from './sections/HeaderSection';
@@ -51,8 +50,6 @@ export function DocumentWizard({
   );
   // UI-layer checks, added on top of the state's own validation.
   const [uiInvalid, setUiInvalid] = useState<string[]>([]);
-  // A message from the UI-layer checks (the portal's HSN verdict), for the footer.
-  const [uiError, setUiError] = useState<string | null>(null);
 
   const isEditing = !!(initialInvoice?.id || initialPurchase?.id);
   const invalidFields = [...state.invalidFields, ...uiInvalid.filter((f) => !state.invalidFields.includes(f))];
@@ -68,20 +65,10 @@ export function DocumentWizard({
     return [];
   };
 
-  const handleSave = async () => {
-    setUiError(null);
+  const handleSave = () => {
     const errs = uiChecks();
     setUiInvalid(errs);
     if (errs.length) return;
-    // Every well-formed HSN is confirmed with the GST portal before the save
-    // validation runs, so a code the portal does not know is caught here.
-    const codes = state.kind === 'sales' ? state.invoice.items.map((i) => i.hsn) : [state.fields.itemHsn];
-    const rejected = await firstRejectedHsn(codes);
-    if (rejected) {
-      if (state.kind === 'purchase') setUiInvalid(['itemHsn']);
-      setUiError(`${HSN_NOT_GENUINE} — ${rejected} is not on the GST portal.`);
-      return;
-    }
     const ok = state.save();
     if (ok) {
       onSave();
@@ -270,7 +257,7 @@ export function DocumentWizard({
             <span className="tot"><em>Total</em><b className="num" data-testid="footer-total">₹ {inr(t.total)}</b></span>
           </div>
           <div className="yk-foot-msg" role="status">
-            {uiError ?? (invalidFields.length > 0 ? 'Fill in the highlighted fields' : state.error)}
+            {invalidFields.length > 0 ? 'Fill in the highlighted fields' : state.error}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button type="button" className="yk-btn ghost" onClick={onClose}>Cancel</button>

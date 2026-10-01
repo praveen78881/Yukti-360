@@ -59,3 +59,6 @@ mcp-server/node_modules/
 /.itr-build/
 # Original single-file Yukti bundles (source of truth for the split build)
 /ITR ORIGINAL/
+
+# local dev-server output (started detached from Claude Code)
+dev-server.log

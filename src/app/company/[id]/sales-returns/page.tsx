@@ -8,9 +8,7 @@ import {
   deleteInvoiceV2,
   listInvoicesV2,
   type CdnReason,
-  type InvoiceV2,
 } from '@/lib/accounting/gstInvoices';
-import { getFiling } from '@/lib/gstr1/gstr1Db';
 
 function inr(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -28,7 +26,6 @@ const REASON_LABELS: Record<CdnReason, string> = {
 export default function SalesReturnsPage() {
   const { company, companyId, loading } = useCompany();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editing, setEditing] = useState<InvoiceV2 | null>(null);
   const [tick, setTick] = useState(0);
 
   const creditNotes = useMemo(() => {
@@ -39,22 +36,6 @@ export default function SalesReturnsPage() {
   }, [companyId, tick]);
 
   const totalAmount = creditNotes.reduce((s, r) => s + r.total_amount, 0);
-
-  // A note already on the portal (IRN) or in a filed GSTR-1 can still be
-  // corrected in the books, but the user is told the return will not change.
-  const startEdit = (note: InvoiceV2) => {
-    const notes: string[] = [];
-    if (note.irn) notes.push('an IRN has been generated for it, so the e-invoice on the portal will not change');
-    if (getFiling(companyId || '', note.period)?.filed) notes.push(`GSTR-1 for ${note.period} is marked filed, so the return will not change`);
-    if (notes.length && !window.confirm(`Edit ${note.invoice_no}? Note: ${notes.join('; ')}. Only your books will be updated.`)) return;
-    setEditing(note);
-  };
-
-  const handleDelete = (note: InvoiceV2) => {
-    if (!window.confirm(`Delete credit note ${note.invoice_no}?`)) return;
-    deleteInvoiceV2(note.id);
-    setTick((x) => x + 1);
-  };
 
   if (loading || !company || !companyId) {
     return (
@@ -75,13 +56,11 @@ export default function SalesReturnsPage() {
         </button>
       </PageHeader>
 
-      {(isModalOpen || editing) && (
+      {isModalOpen && (
         <ReturnModal
-          key={editing?.id ?? 'new'}
           companyId={companyId}
           returnType="SALES"
-          initial={editing}
-          onClose={() => { setIsModalOpen(false); setEditing(null); }}
+          onClose={() => setIsModalOpen(false)}
           onSave={() => setTick((x) => x + 1)}
         />
       )}
@@ -111,7 +90,7 @@ export default function SalesReturnsPage() {
                 <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Customer</th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
                 <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Reason</th>
-                <th className="w-24 px-4 py-2.5"></th>
+                <th className="w-12 px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
@@ -123,7 +102,7 @@ export default function SalesReturnsPage() {
                 </tr>
               ) : (
                 creditNotes.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60" onDoubleClick={() => startEdit(r)} title="Double-click to edit">
+                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60">
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.invoice_date}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-gray-800">{r.invoice_no}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.original_invoice_no || '—'}</td>
@@ -131,24 +110,13 @@ export default function SalesReturnsPage() {
                     <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(r.total_amount)}</td>
                     <td className="px-4 py-2.5 text-[11px] text-gray-500">{REASON_LABELS[r.cdn_reason as CdnReason] || r.cdn_reason || '—'}</td>
                     <td className="px-4 py-2.5 text-right">
-                      <span className="inline-flex items-center gap-1.5">
-                        <button
-                          onClick={() => startEdit(r)}
-                          title="Edit"
-                          aria-label={`Edit ${r.invoice_no}`}
-                          className="rounded border border-[var(--sand)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--navy)] hover:bg-[var(--navy-soft)]"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(r)}
-                          title="Delete"
-                          aria-label={`Delete ${r.invoice_no}`}
-                          className="rounded border border-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50"
-                        >
-                          Del
-                        </button>
-                      </span>
+                      <button
+                        onClick={() => { deleteInvoiceV2(r.id); setTick((x) => x + 1); }}
+                        title="Delete"
+                        className="rounded border border-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50"
+                      >
+                        Del
+                      </button>
                     </td>
                   </tr>
                 ))
