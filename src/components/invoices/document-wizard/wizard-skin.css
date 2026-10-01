@@ -335,3 +335,10 @@
 .dw-skin .yk-hsn-menu li[role="option"].on { background: var(--navy-soft); color: var(--navy-2); }
 .dw-skin .yk-hsn-menu li b { font-family: var(--font-mono); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dw-skin .yk-hsn-menu li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the input and its state icon; the portal's "not a valid HSN" verdict sits
+   under them in normal flow, so the row grows rather than clipping it */
+.dw-skin .yk-hsn-in { position: relative; }
+.dw-skin .yk-hsn-msg {
+  display: block; margin-top: 3px;
+  font-size: 10px; font-weight: 600; line-height: 1.15; color: var(--bad);
+}

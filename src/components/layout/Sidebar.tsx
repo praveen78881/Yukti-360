@@ -53,7 +53,7 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
   'SPECIAL ACCOUNTS': Briefcase,
   'TAX & COMPLIANCE': Percent,
   INVENTORY: Package,
-  'BULK WORKFLOW': LayoutGrid,
+  BANKING: Landmark,
   WORKSPACE: FolderOpen,
 };
 function groupIcon(heading: string): LucideIcon {
@@ -253,10 +253,6 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     if (nav.tdsRegister !== 'never' || nav.tcsRegister !== 'never') taxItems.push({ label: 'TDS & TCS', href: `${base}/tds-register`, icon: FileSpreadsheet });
     if (nav.advanceTax) taxItems.push({ label: 'Advance Tax', href: `${base}/advance-tax`, icon: IndianRupee });
     if (nav.deferredTax) taxItems.push({ label: 'Deferred Tax', href: `${base}/deferred-tax`, icon: Clock });
-    // The bank ledgers themselves — listed wherever the bank tools are.
-    if (nav.brs || nav.bankImport) taxItems.push({ label: 'Bank Accounts', href: `${base}/bank-accounts`, icon: Landmark });
-    if (nav.brs) taxItems.push({ label: 'Bank Reconciliation', href: `${base}/brs`, icon: ArrowLeftRight });
-    if (nav.bankImport) taxItems.push({ label: 'Bank Import', href: `${base}/bank-import`, icon: FileUp });
     if (nav.audit !== 'never') taxItems.push({ label: 'Audit', href: `${base}/audit`, icon: ShieldCheck });
     if (taxItems.length > 0) g.push({ heading: 'TAX & COMPLIANCE', items: taxItems });
 
@@ -266,9 +262,13 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
       g.push({ heading: 'INVENTORY', items: [{ label: 'Inventory', href: `${base}/inventory`, icon: Package }] });
     }
 
-    g.push({ heading: 'BULK WORKFLOW', items: [
-      { label: 'Bank Statement Importer', href: `${base}/bulk-workspace`, icon: LayoutGrid },
-    ]});
+    // Banking — the bank ledgers and every tool that works on them.
+    const bankItems: NavItem[] = [];
+    if (nav.brs || nav.bankImport) bankItems.push({ label: 'Bank Accounts', href: `${base}/bank-accounts`, icon: Landmark });
+    if (nav.brs) bankItems.push({ label: 'Bank Reconciliation', href: `${base}/brs`, icon: ArrowLeftRight });
+    if (nav.bankImport) bankItems.push({ label: 'Bank Import', href: `${base}/bank-import`, icon: FileUp });
+    bankItems.push({ label: 'Bank Statement Importer', href: `${base}/bulk-workspace`, icon: LayoutGrid });
+    g.push({ heading: 'BANKING', items: bankItems });
 
     // Integrations — Tally viewer + cross-ERP import & reconciliation. Last of
     // the groups, just above Workspace (the user's chosen position).

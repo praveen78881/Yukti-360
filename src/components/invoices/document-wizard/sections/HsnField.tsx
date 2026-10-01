@@ -1,13 +1,17 @@
 /* One HSN / SAC cell, shared by the sales item rows and the purchase item row.
-   It checks the format as you type (4, 6 or 8 digits) and asks the GST portal
-   for matches: by code once three digits are in, or — while the code is still
-   blank — by the item's description, so a code can be picked rather than
-   remembered. Picking a match also fills an empty description with the
-   portal's wording. The portal is a convenience only: offline, this is a plain
-   validated input. */
+   It checks the format as you type (4, 6 or 8 digits), asks the GST portal for
+   matches — by code once three digits are in, or, while the code is still
+   blank, by the item's description — and, once a code is complete, confirms
+   with the portal that it exists: a well-formed code the portal does not know
+   is flagged "Please enter a valid HSN number". Picking a match also fills an
+   empty description with the portal's wording. The portal is a convenience:
+   offline, this is a plain format-checked input. */
 import { useEffect, useRef, useState } from 'react';
 import { Check, CircleAlert } from 'lucide-react';
-import { hsnSacProblem, searchHsnByCode, searchHsnByDescription, type HsnHit } from '@/lib/gst/hsnLookup';
+import {
+  HSN_NOT_GENUINE, hsnSacProblem, hsnVerdict, isValidHsnSac,
+  searchHsnByCode, searchHsnByDescription, verifyHsn, type HsnHit,
+} from '@/lib/gst/hsnLookup';
 
 interface HsnFieldProps {
   value: string;
@@ -35,6 +39,8 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [matched, setMatched] = useState<string | null>(null);
+  /** The portal's answer for the current code: true, false, or null (could not ask). */
+  const [verdict, setVerdict] = useState<boolean | null | undefined>(undefined);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -43,10 +49,19 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
   const abortRef = useRef<AbortController | null>(null);
   /** The code just picked from the list — not looked up again until it changes. */
   const picked = useRef<string | null>(null);
+  // Set on mount as well as cleared on unmount: in development React mounts,
+  // unmounts and mounts again, and the ref must come back true.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; };
+  }, []);
 
   const digits = value.replace(/\D/g, '');
   const problem = hsnSacProblem(value);
-  const showBad = !!invalid || (touched && problem !== null);
+  // The save path may have asked the portal meanwhile (hsnVerdict), so read both.
+  const notGenuine = problem === null && digits !== '' && (verdict === false || hsnVerdict(digits) === false);
+  const showBad = !!invalid || (touched && problem !== null) || notGenuine;
   const byDescription = digits.length < 3;
 
   // Look things up only while the cell has focus, after a pause in typing.
@@ -69,7 +84,10 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
       setHits(found.slice(0, MAX_HITS));
       setActive(0);
       setOpen(found.length > 0);
-      if (!byDescription) setMatched(found.find((h) => h.code === digits)?.description ?? null);
+      if (!byDescription) {
+        setMatched(found.find((h) => h.code === digits)?.description ?? null);
+        if (isValidHsnSac(digits)) setVerdict(hsnVerdict(digits));
+      }
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [digits, description, focused, byDescription]);
@@ -107,8 +125,17 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
     onChange(h.code);
     if (onSuggestDescription && !(description || '').trim()) onSuggestDescription(tidy(h.description));
     setMatched(h.description);
+    setVerdict(true);
     setOpen(false);
     setTouched(true);
+  };
+
+  // Leaving the cell with a complete code asks the portal whether it exists.
+  const onBlur = () => {
+    setFocused(false);
+    setTouched(true);
+    if (!isValidHsnSac(digits)) return;
+    verifyHsn(digits).then((v) => { if (alive.current) setVerdict(v); });
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -130,8 +157,14 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
     }
   };
 
+  const title = problem && touched ? problem
+    : notGenuine ? HSN_NOT_GENUINE
+    : matched ? tidy(matched)
+    : undefined;
+
   return (
     <div ref={wrapRef} className="yk-hsn">
+      <div className="yk-hsn-in">
       <input
         ref={inputRef}
         aria-label={ariaLabel}
@@ -144,23 +177,25 @@ export function HsnField({ value, onChange, description, onSuggestDescription, i
         aria-expanded={open}
         aria-autocomplete="list"
         aria-invalid={showBad || undefined}
-        title={showBad && problem ? problem : matched ? tidy(matched) : undefined}
+        title={title}
         onChange={(e) => {
           setMatched(null);
+          setVerdict(undefined);
           onChange(e.target.value.replace(/\D/g, '').slice(0, 8));
         }}
         onFocus={() => setFocused(true)}
-        onBlur={() => {
-          setFocused(false);
-          setTouched(true);
-        }}
+        onBlur={onBlur}
         onKeyDown={onKeyDown}
       />
       {showBad ? (
         <CircleAlert className="yk-hsn-bad" aria-hidden />
-      ) : matched ? (
+      ) : matched || verdict === true ? (
         <Check className="yk-hsn-ok" aria-hidden />
       ) : null}
+      </div>
+      {notGenuine && !open && (
+        <span className="yk-hsn-msg" role="alert">{HSN_NOT_GENUINE}</span>
+      )}
       {open && menuPos && hits.length > 0 && (
         <div ref={menuRef} className="yk-hsn-menu" style={{ top: menuPos.top, left: menuPos.left }}>
           {byDescription && <div className="yk-hsn-hint">Matches for “{(description || '').trim()}”</div>}

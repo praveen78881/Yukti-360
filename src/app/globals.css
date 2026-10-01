@@ -1005,25 +1005,6 @@ th {
   box-shadow: var(--shadow-navy);
 }
 .nav-pill-active:hover { color: #FFFFFF; }
-/* the dot on a thin guide line that marks where you are */
-.nav-guide { position: relative; }
-.nav-guide::before {
-  content: '';
-  position: absolute;
-  left: 3px; top: 4px; bottom: 4px;
-  width: 1px;
-  background: var(--cream);
-}
-.nav-pill-active::before {
-  content: '';
-  position: absolute;
-  left: -7px; top: 50%;
-  width: 5px; height: 5px;
-  margin-top: -2.5px;
-  border-radius: 50%;
-  background: var(--navy);
-  box-shadow: 0 0 0 3px rgba(23, 69, 127, 0.16);
-}
 .nav-group-tile {
   display: inline-flex;
   align-items: center;
@@ -1091,18 +1072,10 @@ th {
 
 /* Items hang off a thin guide line under the heading; the current page's
    pill carries a dot that sits exactly on that line. */
-/* margin-left puts the guide line under the centre of the 30px group tile;
-   padding-left lines item text up with the heading text after the tile. */
-.nav-items { position: relative; margin: 1px 0 6px 25px; padding-left: 15px; }
-.nav-items::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 4px; bottom: 4px;
-  width: 1px;
-  background: var(--sand);
-}
+/* Items are indented to line up with the heading text after its 30px tile;
+   the navy pill alone marks the current page (no guide line, no dot). */
+.nav-items { margin: 1px 0 6px 25px; padding-left: 15px; }
 .nav-items .nav-pill { padding: 6px 10px; font-size: 13px; }
-.nav-items .nav-pill-active::before { left: -17px; }
 nav .nav-pill + .nav-pill { margin-top: 1px; }
 
 /* Small square icon button inside the panel (e.g. "New file") */
