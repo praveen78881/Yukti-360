@@ -1,6 +1,6 @@
 import { emitInvoiceDataChanged } from '@/lib/journalSync';
 import { mirrorUpsert, mirrorDelete } from '@/lib/sync/cloudSync';
-import { isValidHsnSac } from '@/lib/gst/hsnLookup';
+import { hsnVerdict, isValidHsnSac } from '@/lib/gst/hsnLookup';
 
 export type SalesBucket = 'B2B' | 'B2CL' | 'B2CS' | 'EXP' | 'CDNR' | 'CDNUR';
 export type PurchaseBucket =
@@ -1172,6 +1172,9 @@ export function validateSalesWizardStep3(inv: InvoiceV2Draft): WizardValidationR
     const hsn = item.hsn?.trim() || '';
     if (!isValidHsnSac(hsn)) {
       return { ok: false, error: `Line ${idx}: HSN / SAC must be 4, 6 or 8 digits` };
+    }
+    if (hsnVerdict(hsn) === false) {
+      return { ok: false, error: `Line ${idx}: please enter a valid HSN number — ${hsn} is not on the GST portal` };
     }
   }
 

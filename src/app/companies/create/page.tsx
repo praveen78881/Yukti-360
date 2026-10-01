@@ -13,12 +13,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { createCompany as createCompanyLocal, createInitialBookPeriod } from '@/lib/offlineDb';
 import { isGstin } from '@/lib/schemas/india';
+import { panProblem } from '@/lib/pan';
 import { isSandboxTestGstin, SANDBOX_TEST_GSTIN } from '@/lib/gst/sandbox/testGstins';
 import { initEntityData } from '@/entities/initEntity';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
 import { INDIAN_STATES } from '@/lib/constants/indianStates';
 import { lookupCompanyByCIN } from '@/lib/mca';
-import { fetchPanRegistry, fetchGstinsByPan, pickBestGstin, gstStateCodeFromName } from '@/lib/company360';
+import { lookupPan, fetchGstinsByPan, pickBestGstin, gstStateCodeFromName } from '@/lib/company360';
 import { sandboxClient } from '@/lib/gst/sandbox/client';
 import { checkMcaQuota, recordMcaFetch, type QuotaCheck } from '@/lib/mcaQuota';
 import { getIcon } from '@/lib/constants/entityIcons';
@@ -236,8 +237,11 @@ export default function CreateCompanyPage() {
     if (key === 'identity') {
       if (!d.name.trim()) e.name = 'Required';
       if (!d.pan) e.pan = 'PAN is required';
-      else if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(d.pan)) e.pan = 'Format is ABCDE1234F';
-      else if (k && PAN_4TH[k] && d.pan[3] !== PAN_4TH[k]![0]) e.pan = `${PAN_4TH[k]![1]} PAN has '${PAN_4TH[k]![0]}' as its 4th letter`;
+      else {
+        // Format, the holder-type letter, and for an entity the name-initial rule.
+        const problem = panProblem(d.pan, { holder: k ? PAN_4TH[k]?.[0] : undefined, entityName: isPersonal ? undefined : d.name });
+        if (problem) e.pan = problem;
+      }
       if (isPersonal) {
         if (!d.dob) e.dob = 'Required';
         else if (d.dob >= todayStr) e.dob = 'Must be in the past';
@@ -396,10 +400,17 @@ export default function CreateCompanyPage() {
     setPanFetching(true);
     try {
       const stateCode = gstStateCodeFromName(data.state);
-      const [reg, gstins] = await Promise.all([
-        fetchPanRegistry(p).catch(() => null),
+      const [found, gstins] = await Promise.all([
+        lookupPan(p).catch(() => ({ kind: 'unknown' as const })),
         stateCode && kind !== 'individual' ? fetchGstinsByPan(p, stateCode).catch(() => []) : Promise.resolve([]),
       ]);
+      if (found.kind === 'invalid') {
+        // The Income-tax registry does not know this PAN: say so and stop here.
+        setErrors((prev) => ({ ...prev, pan: 'Please enter a valid PAN number — it is not in the Income-tax PAN registry' }));
+        toast.error('Please enter a valid PAN number');
+        return;
+      }
+      const reg = found.kind === 'found' ? found.info : null;
       const patch: Partial<WizardData> = {};
       if (reg?.email) patch.email = reg.email;
       if (reg?.mobile && /\d{6,}/.test(reg.mobile)) patch.phone = reg.mobile;

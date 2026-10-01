@@ -96,14 +96,15 @@ export function menuDestinations(nav: EntityConfig['nav'], entityType: string): 
     if (nav.tdsRegister !== 'never' || nav.tcsRegister !== 'never') add(tax, 'TDS & TCS', 'tds-register', 'tds tcs');
     if (nav.advanceTax) add(tax, 'Advance Tax', 'advance-tax');
     if (nav.deferredTax) add(tax, 'Deferred Tax', 'deferred-tax');
-    if (nav.brs || nav.bankImport) add(tax, 'Bank Accounts', 'bank-accounts', 'banks');
-    if (nav.brs) add(tax, 'Bank Reconciliation', 'brs', 'brs');
-    if (nav.bankImport) add(tax, 'Bank Import', 'bank-import', 'statement upload');
     if (nav.audit !== 'never') add(tax, 'Audit', 'audit');
 
     if (nav.inventory !== 'never') add(undefined, 'Inventory', 'inventory', 'stock');
 
-    add('Bulk Workflow', 'Bank Statement Importer', 'bulk-workspace', 'bulk');
+    const bank = 'Banking';
+    if (nav.brs || nav.bankImport) add(bank, 'Bank Accounts', 'bank-accounts', 'banks');
+    if (nav.brs) add(bank, 'Bank Reconciliation', 'brs', 'brs');
+    if (nav.bankImport) add(bank, 'Bank Import', 'bank-import', 'statement upload');
+    add(bank, 'Bank Statement Importer', 'bulk-workspace', 'bulk');
     add('Integrations', 'Tally', 'tally', 'import xml');
     add('Integrations', 'ERP Bridge', 'erp-bridge', 'erp import');
 

@@ -11,6 +11,9 @@ import { LEDGER_GROUPS, getAllDefaultAccounts } from '@/lib/coa';
 import type { PrimaryGroup } from '@/lib/coa';
 import type { CustomAccount } from '@/lib/offlineDb';
 import type { EntityType, EntityDetails } from '@/types/company';
+import { toast } from 'sonner';
+import { panProblem, panHolderLetter } from '@/lib/pan';
+import { lookupPan } from '@/lib/company360';
 import { 
   Settings, 
   Calendar, 
@@ -409,12 +412,29 @@ export default function SettingsPage() {
 
   const handleSaveGeneral = useCallback(async () => {
     if (!companyId || !company) return;
+    // The PAN must be real: structure first, then — where the deployment has
+    // the registry keys — the Income-tax PAN registry.
+    const panClean = pan.trim().toUpperCase();
+    const fail = (message: string) => {
+      toast.error(message);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    };
+    if (panClean) {
+      const personal = company.entity_type === 'individual' || company.entity_type === 'sole_proprietorship';
+      const problem = panProblem(panClean, { holder: panHolderLetter(company.entity_type), entityName: personal ? undefined : companyName });
+      if (problem) return fail(problem);
+      if (panClean !== (company.entity_details?.pan || '').toUpperCase()) {
+        const found = await lookupPan(panClean).catch(() => ({ kind: 'unknown' as const }));
+        if (found.kind === 'invalid') return fail('Please enter a valid PAN number — it is not in the Income-tax PAN registry');
+      }
+    }
     setSaveStatus('saving');
     try {
       const entityDetails: EntityDetails = {
         ...company.entity_details,
         address: address || undefined,
-        pan: pan || undefined,
+        pan: panClean || undefined,
         ...(disclosureLevel ? { disclosureLevel: disclosureLevel as 'I' | 'II' | 'III' | 'IV' } : {}),
         ...(itrForm ? { itrForm } : {}),
       };

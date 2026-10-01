@@ -4,12 +4,17 @@ import { useMemo, useState } from 'react';
 import { useCompany } from '@/hooks/useCompany';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ReturnModal } from '@/components/invoices/ReturnModal';
+import { DocumentWizard } from '@/components/invoices/document-wizard';
+import { INDIAN_STATES_BY_NAME } from '@/lib/constants/indianStates';
 import {
   listPurchaseInvoices,
   listInvoicesV2,
   deleteInvoiceV2,
   deletePurchaseInvoice,
+  getStateCodeFromGSTIN,
   type CdnReason,
+  type InvoiceV2,
+  type PurchaseInvoice,
 } from '@/lib/accounting/gstInvoices';
 
 function inr(n: number): string {
@@ -43,7 +48,17 @@ function parseLegacyReason(purchaseSubType: string | undefined): string {
 export default function PurchaseReturnsPage() {
   const { company, companyId, loading } = useCompany();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // A debit note from the return form edits in that form; a legacy note was
+  // entered in the purchase wizard, so it edits there.
+  const [editingNote, setEditingNote] = useState<InvoiceV2 | null>(null);
+  const [editingLegacy, setEditingLegacy] = useState<PurchaseInvoice | null>(null);
   const [tick, setTick] = useState(0);
+
+  const companyGstin = company?.gst_details?.gstin || '';
+  const companyStateName = company?.entity_details?.state || '';
+  const sellerStateCode = companyGstin
+    ? getStateCodeFromGSTIN(companyGstin)
+    : (companyStateName ? INDIAN_STATES_BY_NAME[companyStateName.toLowerCase()]?.gstCode : null);
 
   // V2 debit notes (new system)
   const v2DebitNotes = useMemo(() => {
@@ -66,6 +81,17 @@ export default function PurchaseReturnsPage() {
   const totalAmount = v2Total + legacyTotal;
   const totalCount = v2DebitNotes.length + legacyDebitNotes.length;
 
+  const deleteNote = (note: InvoiceV2) => {
+    if (!window.confirm(`Delete debit note ${note.invoice_no}?`)) return;
+    deleteInvoiceV2(note.id);
+    setTick((x) => x + 1);
+  };
+  const deleteLegacy = (note: PurchaseInvoice) => {
+    if (!window.confirm(`Delete debit note ${note.invoice_no}?`)) return;
+    deletePurchaseInvoice(note.id);
+    setTick((x) => x + 1);
+  };
+
   if (loading || !company || !companyId) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -73,6 +99,9 @@ export default function PurchaseReturnsPage() {
       </div>
     );
   }
+
+  const editChip = 'rounded border border-[var(--sand)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--navy)] hover:bg-[var(--navy-soft)]';
+  const delChip = 'rounded border border-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50';
 
   return (
     <div className="space-y-4">
@@ -85,11 +114,25 @@ export default function PurchaseReturnsPage() {
         </button>
       </PageHeader>
 
-      {isModalOpen && (
+      {(isModalOpen || editingNote) && (
         <ReturnModal
+          key={editingNote?.id ?? 'new'}
           companyId={companyId}
           returnType="PURCHASE"
-          onClose={() => setIsModalOpen(false)}
+          initial={editingNote}
+          onClose={() => { setIsModalOpen(false); setEditingNote(null); }}
+          onSave={() => setTick((x) => x + 1)}
+        />
+      )}
+
+      {editingLegacy && (
+        <DocumentWizard
+          key={editingLegacy.id}
+          mode="purchase_return"
+          companyId={companyId}
+          sellerStateCode={sellerStateCode || undefined}
+          initialPurchase={editingLegacy}
+          onClose={() => setEditingLegacy(null)}
           onSave={() => setTick((x) => x + 1)}
         />
       )}
@@ -120,12 +163,12 @@ export default function PurchaseReturnsPage() {
                   <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Vendor</th>
                   <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
                   <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Reason</th>
-                  <th className="w-12 px-4 py-2.5"></th>
+                  <th className="w-24 px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {v2DebitNotes.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60">
+                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60" onDoubleClick={() => setEditingNote(r)} title="Double-click to edit">
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.invoice_date}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-gray-800">{r.invoice_no}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.original_invoice_no || '—'}</td>
@@ -135,13 +178,10 @@ export default function PurchaseReturnsPage() {
                       {CDN_REASON_LABELS[r.cdn_reason as CdnReason] || r.cdn_reason || '—'}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <button
-                        onClick={() => { deleteInvoiceV2(r.id); setTick((x) => x + 1); }}
-                        title="Delete"
-                        className="rounded border border-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50"
-                      >
-                        Del
-                      </button>
+                      <span className="inline-flex items-center gap-1.5">
+                        <button onClick={() => setEditingNote(r)} title="Edit" aria-label={`Edit ${r.invoice_no}`} className={editChip}>Edit</button>
+                        <button onClick={() => deleteNote(r)} title="Delete" aria-label={`Delete ${r.invoice_no}`} className={delChip}>Del</button>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -168,12 +208,12 @@ export default function PurchaseReturnsPage() {
                   <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Vendor</th>
                   <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Amount</th>
                   <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Reason</th>
-                  <th className="w-12 px-4 py-2.5"></th>
+                  <th className="w-24 px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {legacyDebitNotes.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60">
+                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50/60" onDoubleClick={() => setEditingLegacy(r)} title="Double-click to edit">
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.invoice_date}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-gray-800">{r.invoice_no}</td>
                     <td className="px-4 py-2.5 font-mono text-[11px] text-gray-600">{r.original_invoice_no || '—'}</td>
@@ -181,13 +221,10 @@ export default function PurchaseReturnsPage() {
                     <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-gray-900">{inr(r.total)}</td>
                     <td className="px-4 py-2.5 text-[11px] text-gray-500">{parseLegacyReason(r.purchase_sub_type)}</td>
                     <td className="px-4 py-2.5 text-right">
-                      <button
-                        onClick={() => { deletePurchaseInvoice(r.id); setTick((x) => x + 1); }}
-                        title="Delete"
-                        className="rounded border border-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50"
-                      >
-                        Del
-                      </button>
+                      <span className="inline-flex items-center gap-1.5">
+                        <button onClick={() => setEditingLegacy(r)} title="Edit" aria-label={`Edit ${r.invoice_no}`} className={editChip}>Edit</button>
+                        <button onClick={() => deleteLegacy(r)} title="Delete" aria-label={`Delete ${r.invoice_no}`} className={delChip}>Del</button>
+                      </span>
                     </td>
                   </tr>
                 ))}

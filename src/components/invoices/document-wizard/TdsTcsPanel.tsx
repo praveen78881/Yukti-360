@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Landmark, ReceiptIndianRupee, Info, RotateCcw } from 'lucide-react';
 import { TDS_SECTIONS, TCS_SECTIONS, panFromGstin, type WithholdingSection } from './tdsTcs';
 import { Field, Switch, inr } from './ui';
+import { panProblem } from '@/lib/pan';
 
 type Side = 'purchase' | 'sales';
 
@@ -124,10 +125,11 @@ function HalfCard({
       {state.on && (
         <div className="yk-wh-body">
           <div className="grid grid-cols-2 gap-3">
-            <Field label={panLabel} htmlFor={`${id}-pan`} hint={!pan ? noPanHint : undefined}>
+            <Field label={panLabel} htmlFor={`${id}-pan`} hint={!pan ? noPanHint : undefined} error={pan.length === 10 ? panProblem(pan) : null}>
               <input
                 id={`${id}-pan`}
-                className="yk-in mono uppercase"
+                className={`yk-in mono uppercase ${pan.length === 10 && panProblem(pan) ? 'bad' : ''}`}
+                aria-invalid={(pan.length === 10 && !!panProblem(pan)) || undefined}
                 value={pan}
                 maxLength={10}
                 onChange={(e) => { const v = e.target.value.toUpperCase(); set((h) => ({ ...h, pan: v })); }}

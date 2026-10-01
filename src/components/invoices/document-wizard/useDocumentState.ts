@@ -36,7 +36,7 @@ import {
 } from '@/lib/accounting/gstInvoices';
 import { createSalesJournalEntry, createPurchaseJournalEntry } from '@/lib/accounting/invoiceJournalSync';
 import { listJournalEntries, deleteJournalEntry } from '@/lib/offlineDb';
-import { isValidHsnSac } from '@/lib/gst/hsnLookup';
+import { hsnVerdict, isValidHsnSac } from '@/lib/gst/hsnLookup';
 
 interface UseSalesDocumentState {
   kind: 'sales';
@@ -759,7 +759,7 @@ function usePurchaseState(
     }
     if (taxableVal <= 0) errors.push('taxable');
     // HSN / SAC is optional on a purchase, but must be a real code when given.
-    if (fields.itemHsn.trim() && !isValidHsnSac(fields.itemHsn)) errors.push('itemHsn');
+    if (fields.itemHsn.trim() && (!isValidHsnSac(fields.itemHsn) || hsnVerdict(fields.itemHsn) === false)) errors.push('itemHsn');
 
     if (errors.length > 0) {
       setInvalidFields(errors);

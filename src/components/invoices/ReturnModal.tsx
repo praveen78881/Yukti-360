@@ -1,10 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Search, X } from 'lucide-react';
+import { useCompany } from '@/hooks/useCompany';
+import { INDIAN_STATES_BY_NAME } from '@/lib/constants/indianStates';
+import { DocumentWizard } from '@/components/invoices/document-wizard';
 import {
   listInvoicesV2,
   listPurchaseInvoices,
   createInvoiceV2,
+  updateInvoiceV2,
+  getStateCodeFromGSTIN,
   createReturnFromInvoiceV2,
   createReturnFromPurchaseInvoiceLegacy,
   type InvoiceV2,
@@ -13,6 +19,10 @@ import {
   type ReturnItemInput,
 } from '@/lib/accounting/gstInvoices';
 import { createReturnJournalEntry } from '@/lib/accounting/invoiceJournalSync';
+import { listJournalEntries, deleteJournalEntry } from '@/lib/offlineDb';
+
+/** Voucher types a return note posts under — an edit replaces only these. */
+const RETURN_VOUCHER_TYPES = new Set<string>(['SR', 'PR', 'CN', 'DN']);
 
 function inr(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -78,34 +88,85 @@ function buildReturnItems(source: SourceInvoice): ReturnItem[] {
   }];
 }
 
+/** How a source invoice reads in the search: its number, party, date and amount —
+ *  and for a purchase, the vendor's own invoice number too. */
+function describeSource(s: SourceInvoice): { party: string; total: number; extra: string } {
+  if (s.kind === 'v2') return { party: s.data.buyer_name, total: s.data.total_amount, extra: '' };
+  return { party: s.data.vendor_name, total: s.data.total, extra: s.data.vendor_invoice_no || '' };
+}
+
+/** Every word typed must appear somewhere in what the invoice reads as. */
+function sourceMatches(s: SourceInvoice, q: string): boolean {
+  const d = describeSource(s);
+  const hay = `${s.data.invoice_no} ${d.extra} ${d.party} ${s.data.invoice_date} ${d.total} ${inr(d.total)}`.toLowerCase();
+  return q.split(/\s+/).every((w) => hay.includes(w));
+}
+
+function listSources(companyId: string, returnType: 'SALES' | 'PURCHASE'): SourceInvoice[] {
+  if (returnType === 'SALES') {
+    return listInvoicesV2(companyId)
+      .filter((inv) => inv.doc_type === 'TAX_INVOICE' || inv.doc_type === 'BILL_OF_SUPPLY')
+      .map((inv) => ({ kind: 'v2' as const, data: inv }));
+  }
+  // Purchase: V1 non-return purchase invoices
+  return listPurchaseInvoices(companyId)
+    .filter((inv) => inv.bucket !== 'CDNR')
+    .map((inv) => ({ kind: 'v1' as const, data: inv }));
+}
+
+/** The return quantities an existing note stands for, laid over the original's rows. */
+function itemsFromNote(rows: ReturnItem[], note: InvoiceV2, source: SourceInvoice): ReturnItem[] {
+  if (source.kind === 'v1') {
+    // One synthesised row: the note's share of the original's taxable value.
+    const base = source.data.taxable_value || 0;
+    const share = base > 0 ? Math.min(1, note.total_taxable / base) : 1;
+    return rows.map((r) => ({ ...r, returnQty: Math.round(r.origQty * share * 10000) / 10000 }));
+  }
+  // Each note line was copied from an original line — match it back by what was copied.
+  const left = [...note.items];
+  return rows.map((r) => {
+    const orig = source.data.items[r.itemIndex];
+    const i = left.findIndex((n) => n.description === orig.description && n.hsn === orig.hsn && n.rate === orig.rate);
+    if (i < 0) return { ...r, returnQty: 0 };
+    const [n] = left.splice(i, 1);
+    return { ...r, returnQty: Math.min(n.qty, r.origQty) };
+  });
+}
+
 interface ReturnModalProps {
   companyId: string;
   returnType: 'SALES' | 'PURCHASE';
+  /** An existing note to edit: its original is pre-selected, its quantities
+   *  read back, and saving keeps its number and replaces its ledger posting. */
+  initial?: InvoiceV2 | null;
   onClose: () => void;
   onSave: () => void;
 }
 
-export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnModalProps) {
+export function ReturnModal({ companyId, returnType, initial, onClose, onSave }: ReturnModalProps) {
   const today = new Date().toISOString().slice(0, 10);
 
-  const sourceInvoices = useMemo((): SourceInvoice[] => {
-    if (returnType === 'SALES') {
-      return listInvoicesV2(companyId)
-        .filter((inv) => inv.doc_type === 'TAX_INVOICE' || inv.doc_type === 'BILL_OF_SUPPLY')
-        .map((inv) => ({ kind: 'v2' as const, data: inv }));
-    }
-    // Purchase: show V1 non-return purchase invoices
-    return listPurchaseInvoices(companyId)
-      .filter((inv) => inv.bucket !== 'CDNR')
-      .map((inv) => ({ kind: 'v1' as const, data: inv }));
-  }, [companyId, returnType]);
+  const { company } = useCompany();
+  const companyGstin = company?.gst_details?.gstin || '';
+  const companyStateName = company?.entity_details?.state || '';
+  const sellerStateCode = companyGstin
+    ? getStateCodeFromGSTIN(companyGstin)
+    : (companyStateName ? INDIAN_STATES_BY_NAME[companyStateName.toLowerCase()]?.gstCode : null);
+  // Bumped when an invoice is created from inside the form, so the list refreshes.
+  const [tick, setTick] = useState(0);
 
-  const [selectedId, setSelectedId] = useState('');
-  const [returnItems, setReturnItems] = useState<ReturnItem[]>([]);
-  const [returnDate, setReturnDate] = useState(today);
-  const [reason, setReason] = useState<CdnReason>(
-    returnType === 'SALES' ? 'SALES_RETURN' : 'SALES_RETURN'
+  const sourceInvoices = useMemo(() => listSources(companyId, returnType), [companyId, returnType, tick]);
+
+  const initialSource = useMemo(
+    () => (initial ? sourceInvoices.find((s) => s.data.invoice_no === initial.original_invoice_no) ?? null : null),
+    [initial, sourceInvoices],
   );
+  const [selectedId, setSelectedId] = useState(initialSource?.data.id ?? '');
+  const [returnItems, setReturnItems] = useState<ReturnItem[]>(() =>
+    initial && initialSource ? itemsFromNote(buildReturnItems(initialSource), initial, initialSource) : [],
+  );
+  const [returnDate, setReturnDate] = useState(initial?.invoice_date ?? today);
+  const [reason, setReason] = useState<CdnReason>(initial?.cdn_reason ?? 'SALES_RETURN');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -114,12 +175,49 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
     [sourceInvoices, selectedId]
   );
 
-  function handleSelectInvoice(id: string) {
-    setSelectedId(id);
+  // The original is found by typing — its number, the vendor's or customer's
+  // name, the date or the amount — not picked from a list of everything.
+  const [query, setQuery] = useState(initialSource?.data.invoice_no ?? '');
+  const [listOpen, setListOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const q = query.trim().toLowerCase();
+  const matches = useMemo(
+    () => (q ? sourceInvoices.filter((s) => sourceMatches(s, q)).slice(0, 8) : []),
+    [sourceInvoices, q],
+  );
+
+  function selectSource(source: SourceInvoice) {
+    setSelectedId(source.data.id);
+    setQuery(source.data.invoice_no);
+    setListOpen(false);
     setError('');
-    const source = sourceInvoices.find((s) => s.data.id === id);
-    if (source) setReturnItems(buildReturnItems(source));
-    else setReturnItems([]);
+    setReturnItems(buildReturnItems(source));
+  }
+
+  function clearSelection() {
+    setSelectedId('');
+    setQuery('');
+    setReturnItems([]);
+    setListOpen(false);
+  }
+
+  // The results close on a click outside the search.
+  useEffect(() => {
+    if (!listOpen) return;
+    const onDown = (e: MouseEvent) => { if (!searchRef.current?.contains(e.target as Node)) setListOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [listOpen]);
+
+  // An invoice created from inside the form becomes the one to return against.
+  function onInvoiceCreated() {
+    setTick((t) => t + 1);
+    const newest = listSources(companyId, returnType)
+      .reduce<SourceInvoice | null>((best, s) => (!best || s.data.created_at > best.data.created_at ? s : best), null);
+    if (newest) selectSource(newest);
   }
 
   function updateReturnQty(idx: number, rawValue: string) {
@@ -155,7 +253,7 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
   }
 
   async function handleSave() {
-    if (!selectedSource) { setError('Please select an invoice.'); return; }
+    if (!selectedSource) { setError('Find and choose the original invoice first.'); return; }
     const hasItems = returnItems.some((r) => r.returnQty > 0);
     if (!hasItems) { setError('Enter a return quantity for at least one item.'); return; }
     if (!returnDate) { setError('Return date is required.'); return; }
@@ -191,8 +289,19 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
         );
       }
 
-      const savedInvoice = createInvoiceV2(companyId, draft);
-      createReturnJournalEntry(companyId, savedInvoice);
+      if (initial) {
+        // Keep the note's number; replace what it posted (the return voucher
+        // carrying that number), then post the edited note afresh.
+        const updated = updateInvoiceV2(initial.id, { ...draft, invoice_no: initial.invoice_no });
+        if (!updated) throw new Error('This note is no longer in the register.');
+        listJournalEntries(companyId)
+          .filter((e) => e.voucher_number === initial.invoice_no && RETURN_VOUCHER_TYPES.has(e.voucher_type))
+          .forEach((e) => deleteJournalEntry(e.id));
+        createReturnJournalEntry(companyId, updated);
+      } else {
+        const savedInvoice = createInvoiceV2(companyId, draft);
+        createReturnJournalEntry(companyId, savedInvoice);
+      }
       onSave();
       onClose();
     } catch (e) {
@@ -203,7 +312,8 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
   }
 
   const reasonOptions = returnType === 'SALES' ? CDN_REASON_OPTIONS : PURCHASE_REASON_OPTIONS;
-  const title = returnType === 'SALES' ? 'New Sales Return (Credit Note)' : 'New Purchase Return (Debit Note)';
+  const noun = returnType === 'SALES' ? 'Sales Return (Credit Note)' : 'Purchase Return (Debit Note)';
+  const title = initial ? `Edit ${initial.invoice_no} · ${noun}` : `New ${noun}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -220,31 +330,86 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
-          {/* Invoice selection */}
-          <div>
+          {/* Original invoice — found by typing; its details show once chosen */}
+          <div ref={searchRef} className="relative">
             <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-gray-400">
-              Select Original Invoice
+              Original Invoice
             </label>
-            <select
-              value={selectedId}
-              onChange={(e) => handleSelectInvoice(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">— Choose invoice —</option>
-              {sourceInvoices.map((s) => {
-                const inv = s.data;
-                const party = s.kind === 'v2' ? (inv as InvoiceV2).buyer_name : (inv as PurchaseInvoice).vendor_name;
-                const total = s.kind === 'v2' ? (inv as InvoiceV2).total_amount : (inv as PurchaseInvoice).total;
-                return (
-                  <option key={inv.id} value={inv.id}>
-                    {inv.invoice_no} · {inv.invoice_date} · {party} · ₹{inr(total)}
-                  </option>
-                );
-              })}
-            </select>
-            {sourceInvoices.length === 0 && (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-3)]" aria-hidden />
+              <input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setActiveIdx(0);
+                  setListOpen(true);
+                  if (selectedId) { setSelectedId(''); setReturnItems([]); }
+                }}
+                onFocus={() => { if (!selectedId) setListOpen(true); }}
+                onKeyDown={(e) => {
+                  if (!listOpen || matches.length === 0) return;
+                  if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => (i + 1) % matches.length); }
+                  else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => (i - 1 + matches.length) % matches.length); }
+                  else if (e.key === 'Enter') { e.preventDefault(); selectSource(matches[activeIdx]); }
+                  else if (e.key === 'Escape') { e.stopPropagation(); setListOpen(false); }
+                }}
+                placeholder={returnType === 'SALES' ? 'Invoice number, customer, date or amount…' : 'Invoice number, vendor, date or amount…'}
+                aria-label="Find the original invoice"
+                role="combobox"
+                aria-expanded={listOpen && matches.length > 0}
+                aria-autocomplete="list"
+                autoComplete="off"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-9 text-sm text-gray-800 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              {(query || selectedId) && (
+                <button type="button" onClick={clearSelection} aria-label="Clear" title="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {listOpen && !selectedId && q && matches.length > 0 && (
+              <ul role="listbox" aria-label="Matching invoices" className="absolute left-0 right-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-xl border border-[var(--sand)] bg-white p-1 shadow-[var(--shadow-lift)]">
+                {matches.map((s, i) => {
+                  const d = describeSource(s);
+                  return (
+                    <li
+                      key={s.data.id}
+                      role="option"
+                      aria-selected={i === activeIdx}
+                      onMouseDown={(e) => { e.preventDefault(); selectSource(s); }}
+                      onMouseEnter={() => setActiveIdx(i)}
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs ${i === activeIdx ? 'bg-[var(--navy-soft)] text-[var(--navy-2)]' : 'text-gray-700'}`}
+                    >
+                      <span className="font-mono font-semibold">{s.data.invoice_no}</span>
+                      {d.extra && <span className="font-mono text-gray-500">({d.extra})</span>}
+                      <span className="truncate">{d.party}</span>
+                      <span className="ml-auto shrink-0 text-gray-500">{s.data.invoice_date}</span>
+                      <span className="shrink-0 font-mono font-semibold">₹{inr(d.total)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {q && !selectedId && matches.length === 0 && (
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-[var(--sand-2)] bg-[var(--cream-2)] px-4 py-3 text-[12px] text-[var(--ink-2)]">
+                <span>No {returnType === 'SALES' ? 'sales' : 'purchase'} invoice matches &ldquo;{query.trim()}&rdquo;.</span>
+                <button type="button" onClick={() => setWizardOpen(true)} className="btn-pill-primary !h-8 !text-[11px]">
+                  <Plus className="h-3.5 w-3.5" /> Create new {returnType === 'SALES' ? 'invoice' : 'purchase'}
+                </button>
+              </div>
+            )}
+            {!q && !selectedId && (
+              <p className="mt-1 text-[11px] text-gray-400">
+                {sourceInvoices.length === 0
+                  ? `No ${returnType === 'SALES' ? 'sales invoices' : 'purchase invoices'} yet — type its number and create it from here.`
+                  : 'Start typing to find the invoice this return is against.'}
+              </p>
+            )}
+            {initial && !initialSource && (
               <p className="mt-1 text-[11px] text-amber-600">
-                No {returnType === 'SALES' ? 'sales invoices' : 'purchase invoices'} found. Create some first.
+                The original invoice {initial.original_invoice_no || ''} is no longer in the register — find the invoice this note was issued against.
               </p>
             )}
           </div>
@@ -439,10 +604,20 @@ export function ReturnModal({ companyId, returnType, onClose, onSave }: ReturnMo
             disabled={saving || !selectedId}
             className="h-9 rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? 'Creating…' : returnType === 'SALES' ? 'Create Credit Note' : 'Create Debit Note'}
+            {saving ? 'Saving…' : initial ? 'Update' : returnType === 'SALES' ? 'Create Credit Note' : 'Create Debit Note'}
           </button>
         </div>
       </div>
+
+      {wizardOpen && (
+        <DocumentWizard
+          mode={returnType === 'SALES' ? 'sales_invoice' : 'purchase_invoice'}
+          companyId={companyId}
+          sellerStateCode={sellerStateCode || undefined}
+          onClose={() => setWizardOpen(false)}
+          onSave={onInvoiceCreated}
+        />
+      )}
     </div>
   );
 }

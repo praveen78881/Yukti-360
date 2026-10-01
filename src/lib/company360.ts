@@ -95,11 +95,8 @@ export function gstStateCodeFromName(stateName?: string): string | undefined {
   return INDIAN_STATES.find(x => x.name.toLowerCase() === s)?.gstCode;
 }
 
-/** Step 2 — ITD PAN registry: name + category + email + mobile + address. */
-export async function fetchPanRegistry(pan: string): Promise<PanRegistryInfo | null> {
-  const r = await sandboxClient.panSearch(pan.trim().toUpperCase(), 'live');
-  if (!r.ok) return null;
-  const d: any = (r.data as any)?.data;
+function parsePanRegistry(payload: unknown): PanRegistryInfo | null {
+  const d: any = (payload as any)?.data;
   if (!d || typeof d !== 'object' || !d.pan) return null;
   const addr = d.address || {};
   return {
@@ -114,8 +111,35 @@ export async function fetchPanRegistry(pan: string): Promise<PanRegistryInfo | n
     city: addr.city || undefined,
     state: addr.state || undefined,
     pincode: addr.pincode ? String(addr.pincode) : undefined,
-    raw: r.data,
+    raw: payload,
   };
+}
+
+/** Step 2 — ITD PAN registry: name + category + email + mobile + address. */
+export async function fetchPanRegistry(pan: string): Promise<PanRegistryInfo | null> {
+  const r = await sandboxClient.panSearch(pan.trim().toUpperCase(), 'live');
+  if (!r.ok) return null;
+  return parsePanRegistry(r.data);
+}
+
+/** The registry's verdict on a PAN: found (with its record); invalid — the
+ *  registry answered and does not know it, or marks it deleted / deactivated;
+ *  or unknown — no keys configured, the service down, or offline, so nothing
+ *  can be concluded and the structural checks alone apply. */
+export type PanLookup =
+  | { kind: 'found'; info: PanRegistryInfo }
+  | { kind: 'invalid' }
+  | { kind: 'unknown' };
+
+export async function lookupPan(pan: string): Promise<PanLookup> {
+  const r = await sandboxClient.panSearch(pan.trim().toUpperCase(), 'live');
+  const info = r.ok ? parsePanRegistry(r.data) : null;
+  if (info) {
+    return /invalid|fake|deleted|deactivated/i.test(info.status || '') ? { kind: 'invalid' } : { kind: 'found', info };
+  }
+  // A plain 4xx (not auth, not rate-limited) with no record: the registry does not know it.
+  const refused = !r.ok && r.status >= 400 && r.status < 500 && ![401, 403, 429].includes(r.status);
+  return refused ? { kind: 'invalid' } : { kind: 'unknown' };
 }
 
 /** Parse one raw GST registration record (from gstin search OR a by-PAN row). */
