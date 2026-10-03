@@ -194,9 +194,12 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     // Both Professional and Business now see the full (unlocked) menu.
     const g: NavGroup[] = [];
 
+    // Core — the books themselves: journal, cash book and the ledger (the
+    // ledger moved in here from its own row, user request 2026-10-01).
     g.push({ heading: 'CORE', items: [
       ...(nav.journal ? [{ label: 'Journal', href: `${base}/journal`, icon: BookOpen }] : []),
       ...(nav.cashBook ? [{ label: 'Cash Book', href: `${base}/cash-book`, icon: Wallet }] : []),
+      ...(nav.ledger ? [{ label: 'Ledger', href: `${base}/ledger`, icon: ScrollText }] : []),
     ]});
 
     const registerItems: NavItem[] = [];
@@ -208,11 +211,7 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     if (nav.billsPayable) registerItems.push({ label: 'Bills Payable', href: `${base}/bills-payable`, icon: FileText });
     if (registerItems.length > 0) g.push({ heading: 'REGISTERS', items: registerItems });
 
-    // Ledger is one standalone link (user request, 2026-09-27) — Debtors and
-    // Creditors are no longer listed; their pages still exist at their URLs.
-    if (nav.ledger) g.push({ heading: 'LEDGER', standalone: true, items: [
-      { label: 'Ledger', href: `${base}/ledger`, icon: ScrollText },
-    ] });
+    // Debtors and Creditors are not listed; their pages still exist at their URLs.
 
     const fsItems: NavItem[] = [];
     if (nav.trialBalance) fsItems.push({ label: 'Trial Balance', href: `${base}/trial-balance`, icon: Scale });
@@ -573,8 +572,9 @@ function CtxItem({ label, onClick, danger }: { label: string; onClick: () => voi
 /** A menu label with its shortcut letter marked — the first letter, weighted
     by tier: the plain key heaviest, then Ctrl + key, then Shift + key. */
 function MnemonicLabel({ text, m }: { text: string; m?: Mnemonic }) {
-  const i = text.search(/[a-z]/i);
-  if (!m || i < 0 || text[i].toLowerCase() !== m.letter) return <>{text}</>;
+  if (!m) return <>{text}</>;
+  const i = m.at;
+  if (i < 0 || i >= text.length || text[i].toLowerCase() !== m.letter) return <>{text}</>;
   return (
     <>
       {text.slice(0, i)}

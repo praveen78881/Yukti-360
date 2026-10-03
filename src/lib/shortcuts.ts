@@ -59,6 +59,7 @@ export function menuDestinations(nav: EntityConfig['nav'], entityType: string): 
   } else {
     if (nav.journal) add('Core', 'Journal', 'journal', 'entries vouchers day book');
     if (nav.cashBook) add('Core', 'Cash Book', 'cash-book');
+    if (nav.ledger) add('Core', 'Ledger', 'ledger', 'accounts ledgers');
 
     const reg = 'Registers';
     if (nav.purchaseRegister !== 'never') add(reg, 'Purchase Register', 'purchase-register', 'purchases');
@@ -67,8 +68,6 @@ export function menuDestinations(nav: EntityConfig['nav'], entityType: string): 
     if (nav.salesReturns !== 'never') add(reg, 'Sales Returns', 'sales-returns', 'credit notes');
     if (nav.billsReceivable) add(reg, 'Bills Receivable', 'bills-receivable');
     if (nav.billsPayable) add(reg, 'Bills Payable', 'bills-payable');
-
-    if (nav.ledger) add(undefined, 'Ledger', 'ledger', 'accounts ledgers');
 
     const fs = 'Financial Statements';
     if (nav.trialBalance) add(fs, 'Trial Balance', 'trial-balance', 'tb');
@@ -145,12 +144,17 @@ export function searchDestinations(list: Destination[], query: string): Destinat
 export type MnemonicTier = 0 | 1 | 2;
 
 export interface Mnemonic {
-  /** Lower-case: the first letter of the menu label. */
+  /** Lower-case: the label letter the key is built on. Usually the first
+   *  letter; a later letter from the same label when the first is already
+   *  taken three times over (every Banking row starts with B), so the row
+   *  still gets a key. */
   letter: string;
   /** 0 = the letter alone, 1 = Ctrl (⌘ on a Mac) + letter, 2 = Shift + letter. */
   tier: MnemonicTier;
   /** As printed on this keyboard — for key caps and aria-keyshortcuts. */
   keys: readonly string[];
+  /** Index in the label of the letter the key is built on — the one to mark. */
+  at: number;
 }
 
 /** Letters free to take Ctrl + letter. The rest belong to the browser or to
@@ -162,28 +166,80 @@ export interface Mnemonic {
 const CTRL_TIER_LETTERS = new Set(['b', 'd', 'e', 'i', 'm', 'p', 'q', 's']);
 const CTRL_LABEL = IS_MAC ? '⌘' : 'Ctrl';
 
-/** The key for each page, by path: the first page on a letter (in menu order)
- *  gets the letter itself, the second Ctrl + letter — or Shift + letter when
- *  the browser owns that Ctrl key — and the third Shift + letter. A fourth
- *  page on the same letter has no key; Go to still finds it. */
+/** The letters to try for a page whose first letter is already taken three
+ *  times over: the initial of each word first (Bank "Reconciliation" → R), then
+ *  the remaining letters, the words after the first before the first word's own.
+ *  The first letter is skipped — it is the one that ran out — and each letter is
+ *  offered once. */
+function altLetters(label: string): { letter: string; at: number }[] {
+  const out: { letter: string; at: number }[] = [];
+  const seen = new Set<string>();
+  const first = label.match(/[a-z]/i);
+  if (first) seen.add(first[0].toLowerCase());
+  const firstStart = first?.index ?? 0;
+  const firstWordLen = label.slice(firstStart).match(/^[A-Za-z]+/)?.[0].length ?? 1;
+  const firstWordEnd = firstStart + firstWordLen;
+  const take = (ch: string, at: number) => {
+    const l = ch.toLowerCase();
+    if (!/[a-z]/.test(l) || seen.has(l)) return;
+    seen.add(l);
+    out.push({ letter: l, at });
+  };
+  // Word initials, in order (the first word's is the exhausted letter, skipped).
+  const wordRe = /[A-Za-z]+/g;
+  let w: RegExpExecArray | null;
+  while ((w = wordRe.exec(label))) take(w[0][0], w.index);
+  // Then the rest: the words after the first, then within the first word.
+  for (let i = firstWordEnd; i < label.length; i++) take(label[i], i);
+  for (let i = firstStart; i < firstWordEnd; i++) take(label[i], i);
+  return out;
+}
+
+/** The key for each page, by path. Pass 1 — the first letter of the label, in
+ *  menu order: the first page on a letter gets the letter itself, the second
+ *  Ctrl + letter (or Shift + letter when the browser owns that Ctrl key), the
+ *  third Shift + letter. Pass 2 — a page whose first letter is already used up
+ *  three times borrows another letter from its own label, so crowded initials
+ *  (B for every Banking row; T for Trial Balance / Trading / TDS & TCS) still
+ *  get a key. A page with no free letter at all has none; Go to still finds it. */
 export function assignMnemonics(list: Destination[]): Map<string, Mnemonic> {
   const next = new Map<string, number>(); // letter → the tier the next page on it gets
   const out = new Map<string, Mnemonic>();
+
+  /** Claim the next free tier for a letter, or null when 0/1/2 are all taken. */
+  const claim = (letter: string): MnemonicTier | null => {
+    let tier = next.get(letter) ?? 0;
+    if (tier === 1 && !CTRL_TIER_LETTERS.has(letter)) tier = 2;
+    if (tier > 2) return null;
+    next.set(letter, tier + 1);
+    return tier as MnemonicTier;
+  };
+  const keysFor = (letter: string, tier: MnemonicTier): string[] => {
+    const cap = letter.toUpperCase();
+    return tier === 0 ? [cap] : tier === 1 ? [CTRL_LABEL, cap] : ['Shift', cap];
+  };
+
+  // Pass 1 — the first letter of every label.
+  const pending: Destination[] = [];
   for (const d of list) {
     const first = d.label.match(/[a-z]/i);
     if (!first) continue;
     const letter = first[0].toLowerCase();
-    let tier = next.get(letter) ?? 0;
-    if (tier === 1 && !CTRL_TIER_LETTERS.has(letter)) tier = 2;
-    next.set(letter, tier + 1);
-    if (tier > 2) continue;
-    const cap = letter.toUpperCase();
-    out.set(d.path, {
-      letter,
-      tier: tier as MnemonicTier,
-      keys: tier === 0 ? [cap] : tier === 1 ? [CTRL_LABEL, cap] : ['Shift', cap],
-    });
+    const tier = claim(letter);
+    if (tier === null) { pending.push(d); continue; }
+    out.set(d.path, { letter, tier, keys: keysFor(letter, tier), at: first.index ?? 0 });
   }
+
+  // Pass 2 — first letter ran out: borrow another letter from the same label.
+  for (const d of pending) {
+    for (const cand of altLetters(d.label)) {
+      const tier = claim(cand.letter);
+      if (tier === null) continue;
+      out.set(d.path, { letter: cand.letter, tier, keys: keysFor(cand.letter, tier), at: cand.at });
+      break;
+    }
+  }
+
   return out;
 }
 
