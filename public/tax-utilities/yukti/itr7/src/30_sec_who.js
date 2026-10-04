@@ -1,5 +1,5 @@
 /* =====================================================================
-   ITR-7 · Section "who" — Who is filing (Part A - General · PI · Audit)
+   ITR-7 · Section "who" — General (Part A - General · PI · Audit)
    Books: books/ITR-7/PI.md (PartA_GEN1) · books/ITR-7/Audit.md (PartA_GEN2)
    Sheets owned: PI (rows 6-146) + Audit (rows 12-68). section_map.json maps
    BOTH the PI sheet (→ PartA_GEN1) and the Audit sheet (→ PartA_GEN2) to this
@@ -942,7 +942,7 @@ function chkWho(){
 }
 
 /* ---- register (overrides the boot stub) --------------------------- */
-reg({id:"who", t:"Who is filing", ref:"Part A - General · PI · Audit",
+reg({id:"who", t:"Assessee Information", ref:"Part A - General · PI · Audit",
      f:secWho,
      s:()=>{const W=S.who||{};const STLAB={"4":"Local Authority","5":"AOP/BOI","6":"AJP","7":"Company"};
        return st0(W.pan)?st0(W.pan).toUpperCase()+" · "+(STLAB[st0(W.status)]||"")+" · "+st0(W.retfurn):"Name, PAN, status, registration";},

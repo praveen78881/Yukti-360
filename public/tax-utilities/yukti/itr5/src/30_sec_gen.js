@@ -893,5 +893,5 @@ function seedGen(){
   return st0(P.pan)?st0(P.pan).toUpperCase()+(P.name?" · "+st0(P.name):""):"Name, PAN, status, address, audit";
 }
 
-reg({id:"gen", t:"Who is filing and filing status", ref:"Part A - General · General(2)",
+reg({id:"gen", t:"Assessee Information", ref:"Part A - General · General(2)",
      f:secGen, s:seedGen, eng:engGen, exp:expGen, imp:impGen, chk:chkGen, order:5, corder:5});

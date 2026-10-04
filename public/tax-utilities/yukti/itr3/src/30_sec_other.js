@@ -164,7 +164,7 @@ function secOther(){
     const on = oth_s5a();
     let inner;
     if(!on){
-      inner = note('Opens when "Are you governed by the Portuguese Civil Code under section 5A?" is answered Yes in <b>Who is filing</b> (Part A General). When No, Schedule 5A must not be filed (rule A14 equivalent).');
+      inner = note('Opens when "Are you governed by the Portuguese Civil Code under section 5A?" is answered Yes in <b>Assessee Information</b> (Part A General). When No, Schedule 5A must not be filed (rule A14 equivalent).');
     } else {
       let b = "";
       b += row("Name of the Spouse", inp("other.s5a.name",{max:125}), {req:1, ref:"[D4]"});

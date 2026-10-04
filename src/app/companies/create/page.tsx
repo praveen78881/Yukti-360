@@ -8,7 +8,7 @@
    before — createCompany → createInitialBookPeriod → initEntityData — so every
    module downstream reads it unchanged. Presentational pieces live in ./ui.
    ──────────────────────────────────────────────────────────────────────────── */
-import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { createCompany as createCompanyLocal, createInitialBookPeriod } from '@/lib/offlineDb';
@@ -22,14 +22,14 @@ import { lookupCompanyByCIN } from '@/lib/mca';
 import { lookupPan, fetchGstinsByPan, pickBestGstin, gstStateCodeFromName } from '@/lib/company360';
 import { sandboxClient } from '@/lib/gst/sandbox/client';
 import { checkMcaQuota, recordMcaFetch, type QuotaCheck } from '@/lib/mcaQuota';
-import { getIcon } from '@/lib/constants/entityIcons';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { formsForEntity, ITR_META, type ItrKey } from '@/app/company/[id]/income-tax/lib/itrForms';
 import {
   ArrowLeft, ArrowRight, Check, Plus, Trash2, Building2, Search, Loader2, Clock, Sparkles,
   CheckCircle2, UserRound, CalendarDays, Fingerprint, Phone, Mail, MapPin, Landmark, Percent,
   Receipt, Store, Users, ClipboardCheck, Wallet, TrendingUp, BookOpen, HeartHandshake,
   ShoppingBag, Factory, Wrench, Briefcase, Shapes, Layers, KeyRound, Hash, ScrollText,
-  Pencil, Unlock, Scale, CreditCard, type LucideIcon,
+  Pencil, Unlock, Scale, CreditCard, X, type LucideIcon,
 } from 'lucide-react';
 import {
   Field, TextInput, inp, inpErr, mono, toUpper, digitsOnly, QuestionRow, YesNo, Segmented,
@@ -62,6 +62,15 @@ const ENTITY_GROUPS: { title: string; keys: string[] }[] = [
   { title: 'Companies', keys: ['pvt_ltd', 'opc', 'public_ltd', 'section8'] },
   { title: 'Trusts & societies', keys: ['trust', 'society', 'cooperative'] },
 ];
+
+/* The 4th letter of a PAN by legal form — shown beside each option, as the
+   portal's own entity picker does. */
+const PAN_LETTER: Record<EntityType, string> = {
+  individual: 'P', sole_proprietorship: 'P', huf: 'H',
+  partnership: 'F', llp: 'F', aop_boi: 'A',
+  pvt_ltd: 'C', opc: 'C', public_ltd: 'C', section8: 'C',
+  trust: 'T', society: 'A', cooperative: 'A',
+};
 
 type StepKey = 'entity' | 'identity' | 'business' | 'partners' | 'contact' | 'tax' | 'review';
 function stepsFor(kind: Kind | null): StepKey[] {
@@ -313,7 +322,7 @@ export default function CreateCompanyPage() {
   const goBack = () => { setErrors({}); setStepIdx((s) => Math.max(s - 1, 0)); scrollTop(); };
   const goToStep = (i: number) => { if (i < stepIdx) { setErrors({}); setStepIdx(i); scrollTop(); } };
 
-  // Picking the entity is a single choice, so it advances by itself.
+  // Picking the entity marks the choice; Proceed moves on, as in the portal's own flow.
   const pickEntity = (key: string) => {
     if (LOCKED_ENTITY_TYPES.has(key)) { setLockedClicked(lockedClicked === key ? null : key); return; }
     setLockedClicked(null);
@@ -324,8 +333,6 @@ export default function CreateCompanyPage() {
       itrForm: forms.length > 1 && data.entity_type === key ? data.itrForm : '',
     });
     setErrors({});
-    setStepIdx(1);
-    scrollTop();
   };
 
   // ─── Silent MCA auto-fill from CIN (no button / no result card) ─────────────
@@ -508,7 +515,7 @@ export default function CreateCompanyPage() {
     : 'Name';
 
   const head: Record<StepKey, { icon: LucideIcon; title: string; sub: string }> = {
-    entity: { icon: Layers, title: 'Who is this for?', sub: 'Pick the legal form — every question after this adapts to it.' },
+    entity: { icon: Layers, title: 'Select entity type', sub: 'Choose the legal structure of the business. It sets the return you file and the registers you get.' },
     identity: kind === 'company'
       ? { icon: Building2, title: 'The company', sub: 'Enter the CIN and the rest fills in from MCA.' }
       : kind === 'proprietor'
@@ -524,58 +531,24 @@ export default function CreateCompanyPage() {
   };
   const H = head[currentKey];
 
+  /* A word from Aleza on each step, in her own voice. */
+  const NOTE: Record<StepKey, string> = {
+    entity: 'New company, there. Start with the legal structure — it decides your ITR form and which registers I open.',
+    identity: personal
+      ? 'Now, who files this return? The name exactly as on the PAN card — I check the PAN against it.'
+      : 'Identity and registration next. What is the name going on the letterhead? Add the CIN and I will read the state, the year and the class straight off it.',
+    business: 'What does the business do, and since when? The trade name is what goes on the invoices.',
+    partners: 'Each partner, with capital and profit share — I keep the capital accounts from here on.',
+    contact: 'Where do letters and notices go? The address prints on every report and challan.',
+    tax: 'Only what applies: the return you file, GST if registered, TDS or TCS if you withhold.',
+    review: 'One look over everything — then I open the books.',
+  };
+
   const partnerPsr = data.partners.reduce((s, p) => s + (Number(p.profitSharingRatio) || 0), 0);
 
   return (
     <div className="min-h-screen app-surface">
       <main className="mx-auto w-full max-w-[780px] px-5 pb-20 pt-6 sm:pt-8">
-
-        {/* ── The one navigation control, plus where you are ── */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          {stepIdx === 0 ? (
-            <Link to="/companies" className="inline-flex h-9 items-center gap-1.5 rounded-full border-[1.5px] border-[var(--sand)] bg-white/80 pl-3 pr-4 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-2)] transition-colors duration-[160ms] hover:border-[var(--sand-2)] hover:text-[var(--navy)]">
-              <ArrowLeft className="h-3.5 w-3.5" /> Companies
-            </Link>
-          ) : (
-            <button type="button" onClick={goBack} className="inline-flex h-9 items-center gap-1.5 rounded-full border-[1.5px] border-[var(--sand)] bg-white/80 pl-3 pr-4 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-2)] transition-colors duration-[160ms] hover:border-[var(--sand-2)] hover:text-[var(--navy)]">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </button>
-          )}
-          <span className="font-mono text-[11.5px] text-[var(--ink-3)]">{stepIdx + 1} / {steps.length}</span>
-        </div>
-
-        {/* ── Progress ── */}
-        <ol className="mb-4 flex items-center" aria-label="Progress">
-          {steps.map((s, i) => {
-            const done = i < stepIdx;
-            const active = i === stepIdx;
-            return (
-              <Fragment key={s}>
-                <li>
-                  <button type="button" onClick={() => goToStep(i)} disabled={!done}
-                    className={`group flex items-center gap-2 ${done ? 'cursor-pointer' : 'cursor-default'}`}
-                    aria-current={active ? 'step' : undefined}>
-                    {/* Done fills solid navy; the current step is a navy ring with a
-                        soft halo; steps ahead are open circles. */}
-                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full font-display text-[12px] font-semibold transition-[background-color,border-color,color,box-shadow] duration-[200ms] ${
-                      done ? 'bg-[var(--navy)] text-white shadow-[var(--shadow-navy)] group-hover:bg-[var(--navy-2)]'
-                      : active ? 'border-2 border-[var(--navy)] bg-white text-[var(--navy)] shadow-[0_0_0_4px_rgba(23,69,127,0.14)]'
-                      : 'border-[1.5px] border-[var(--sand-2)] bg-white text-[var(--ink-3)]'
-                    }`}>
-                      {i + 1}
-                    </span>
-                    <span className={`hidden font-display text-[10.5px] font-semibold uppercase tracking-[0.14em] sm:inline ${
-                      active ? 'text-[var(--ink)]' : done ? 'text-[var(--navy)]' : 'text-[var(--ink-3)]'
-                    }`}>{STEP_LABEL[s]}</span>
-                  </button>
-                </li>
-                {i < steps.length - 1 && (
-                  <li aria-hidden className={`mx-2 h-[3px] min-w-[14px] flex-1 rounded-full transition-colors duration-[270ms] ${i < stepIdx ? 'bg-[var(--navy)]' : 'bg-[var(--sand-2)]'}`} />
-                )}
-              </Fragment>
-            );
-          })}
-        </ol>
 
         {/* ── The step ── */}
         <form
@@ -584,53 +557,63 @@ export default function CreateCompanyPage() {
           onSubmit={(e) => { e.preventDefault(); if (currentKey === 'review') handleSave(); else goNext(); }}
           className="panel screen-enter"
         >
-          <div className="flex items-center gap-3.5 px-5 pb-4 pt-5 sm:px-6">
-            <span className="icon-badge"><H.icon className="h-[18px] w-[18px]" /></span>
-            <div className="min-w-0">
-              <h1 className="!text-[18px] !tracking-[0.045em]">{H.title}</h1>
-              <p className="mt-0.5 text-[12.5px] text-[var(--ink-3)]">{H.sub}</p>
+          {/* Header band: the brand mark, the portal eyebrow and the step's title;
+              the step counter and a close back to Companies on the right. */}
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--sand)] bg-[linear-gradient(180deg,#F7FBFE_0%,#E9F1F9_100%)] px-5 pb-4 pt-5 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3.5">
+              <BrandLogo variant="mark" height={44} className="shrink-0" />
+              <div className="min-w-0">
+                <p className="eyebrow">Company creation portal</p>
+                <h1 className="mt-1 !text-[22px] !tracking-[0.04em]">{H.title}</h1>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="btn-pill-outline !h-7 !px-3 !text-[10px] !tracking-[0.16em]" aria-live="polite">
+                Step {String(stepIdx + 1).padStart(2, '0')} of {String(steps.length).padStart(2, '0')}
+              </span>
+              <Link to="/companies" aria-label="Close" title="Back to Companies" className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] text-[var(--ink-3)] transition-colors duration-[160ms] hover:bg-white hover:text-[var(--ink)]">
+                <X className="h-4 w-4" />
+              </Link>
             </div>
           </div>
 
-          <div className="space-y-6 px-5 pb-6 sm:px-6">
+          <div className="space-y-5 px-5 pb-6 pt-5 sm:px-6">
+            {/* The step in one line, then a word from Aleza */}
+            <p className="text-[13px] text-[var(--ink-2)]">{H.sub}</p>
+            <div className="flex items-start gap-3.5 rounded-r-[12px] border-l-[3px] border-[var(--navy)] bg-[var(--cream-2)] px-4 py-3.5">
+              <span aria-hidden className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(158deg,var(--navy),var(--navy-2))] text-white shadow-[var(--shadow-navy)]">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">{NOTE[currentKey]}</p>
+            </div>
 
             {/* ═════════ ENTITY ═════════ */}
             {currentKey === 'entity' && (
               <>
-                {ENTITY_GROUPS.map((g) => {
-                  const keys = g.keys.filter((k) => k in ENTITY_TYPES && !HIDDEN_ENTITY_TYPES.has(k));
-                  if (keys.length === 0) return null;
-                  return (
-                    <Group key={g.title} title={g.title}>
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        {keys.map((key) => {
-                          const config = ENTITY_TYPES[key as EntityType];
-                          const Icon = getIcon(config.icon);
-                          const active = data.entity_type === key;
-                          return (
-                            <button key={key} type="button" onClick={() => pickEntity(key)}
-                              className={`group flex items-center gap-3 rounded-[12px] border p-3 text-left transition-[background-color,border-color,box-shadow,transform] duration-[160ms] ${
-                                active
-                                  ? 'border-[var(--navy)] bg-[var(--navy-soft)]/60 shadow-[0_0_0_3px_rgba(23,69,127,0.10)]'
-                                  : 'border-[var(--sand)] bg-white hover:-translate-y-px hover:border-[var(--sand-2)] hover:shadow-[var(--shadow-rest)]'
-                              }`}>
-                              <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-[160ms] ${
-                                active ? 'bg-[linear-gradient(158deg,var(--navy),var(--navy-2))] text-white' : 'bg-[var(--navy-soft)] text-[var(--navy)]'
-                              }`}>
-                                <Icon className="h-4 w-4" />
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block text-[14px] font-bold text-[var(--ink)] leading-tight">{config.shortLabel}</span>
-                                <span className="mt-0.5 block truncate text-[11.5px] text-[var(--ink-3)]">{config.label}</span>
-                              </span>
-                              <span className="code-pill !px-2 !py-0 !text-[10px]">{config.itrForm}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </Group>
-                  );
-                })}
+                {/* One row per legal form, as a radio list — pick one, then Proceed. */}
+                <div role="radiogroup" aria-label="Legal form" className="max-h-[48vh] space-y-2.5 overflow-y-auto pr-1">
+                  {ENTITY_GROUPS.flatMap((g) => g.keys).filter((k) => k in ENTITY_TYPES && !HIDDEN_ENTITY_TYPES.has(k)).map((key) => {
+                    const config = ENTITY_TYPES[key as EntityType];
+                    const active = data.entity_type === key;
+                    return (
+                      <button key={key} type="button" role="radio" aria-checked={active} onClick={() => pickEntity(key)}
+                        className={`flex w-full items-center gap-3.5 rounded-[10px] border px-4 py-3 text-left transition-[background-color,border-color,box-shadow] duration-[160ms] ${
+                          active
+                            ? 'border-[var(--navy)] bg-[var(--navy-soft)]/70 shadow-[0_0_0_3px_rgba(23,69,127,0.12)]'
+                            : 'border-[var(--sand)] bg-[var(--cream-2)]/60 hover:border-[var(--navy)] hover:bg-[var(--navy-soft)]/40'
+                        }`}>
+                        <span aria-hidden className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] bg-white ${active ? 'border-[var(--navy)]' : 'border-[var(--sand-2)]'}`}>
+                          {active && <span className="h-2.5 w-2.5 rounded-full bg-[var(--navy)]" />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[14px] font-bold leading-tight text-[var(--ink)]">{config.label}</span>
+                          <span className="mt-0.5 block text-[12px] text-[var(--ink-3)]">Files {config.itrForm} · PAN 4th character {PAN_LETTER[key as EntityType]}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.entity_type && <p className="text-[12px] font-semibold text-[var(--bad)]">{errors.entity_type}</p>}
                 {lockedClicked && (
                   <div className="status-warn !normal-case !tracking-normal !text-[12px] !font-sans !py-2 !px-4">
                     <Unlock className="h-3.5 w-3.5" />
@@ -1093,25 +1076,63 @@ export default function CreateCompanyPage() {
             })()}
           </div>
 
-          {/* ── Footer action (the entity step advances on pick) ── */}
-          {currentKey !== 'entity' && (
-            <div className="flex items-center justify-between gap-3 border-t border-[var(--cream)] bg-[var(--cream-2)]/70 px-5 py-3.5 sm:px-6">
-              <p className="hidden text-[11.5px] text-[var(--ink-3)] sm:block">
-                Press <kbd className="rounded border border-[var(--sand)] bg-white px-1 py-px font-mono text-[10.5px]">Enter</kbd> to continue
-              </p>
-              {currentKey === 'review' ? (
-                <button type="submit" disabled={saving}
-                  className="btn-pill-primary ml-auto disabled:cursor-wait disabled:!bg-[var(--sand)] disabled:!text-[var(--ink-3)] disabled:[filter:none]">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {saving ? 'Creating…' : 'Create'}
-                </button>
-              ) : (
-                <button type="submit" className="btn-pill-primary ml-auto">
-                  Continue <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          )}
+          {/* ── Progress: numbered dots on one line at the foot of the card. A
+              completed step is a filled navy dot, the current one a navy ring,
+              and the line fills navy from the first dot up to the current one. ── */}
+          <ol className="relative mx-5 mb-4 mt-2 flex items-center justify-between sm:mx-6" aria-label="Progress">
+            <li aria-hidden className="absolute left-3 right-3 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-[var(--sand)]" />
+            <li
+              aria-hidden
+              className="absolute left-3 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-[var(--navy)] transition-[width] duration-[270ms]"
+              style={{ width: `calc((100% - 1.5rem) * ${stepIdx / Math.max(1, steps.length - 1)})` }}
+            />
+            {steps.map((s, i) => {
+              const done = i < stepIdx;
+              const active = i === stepIdx;
+              return (
+                <li key={s} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(i)}
+                    disabled={!done}
+                    title={STEP_LABEL[s]}
+                    aria-label={`Step ${i + 1}: ${STEP_LABEL[s]}`}
+                    aria-current={active ? 'step' : undefined}
+                    className={`flex h-6 w-6 items-center justify-center rounded-full font-mono text-[10.5px] font-semibold transition-[background-color,border-color,color,box-shadow] duration-[200ms] ${
+                      done ? 'cursor-pointer bg-[var(--navy)] text-white hover:bg-[var(--navy-2)]'
+                      : active ? 'border-2 border-[var(--navy)] bg-white text-[var(--navy)] shadow-[0_0_0_4px_rgba(23,69,127,0.14)]'
+                      : 'cursor-default border-[1.5px] border-[var(--sand-2)] bg-white text-[var(--ink-3)]'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          {/* ── Footer: Back on the left (from step 2), Proceed / Create on the right ── */}
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--cream)] bg-[var(--cream-2)]/70 px-5 py-3.5 sm:px-6">
+            {stepIdx > 0 ? (
+              <button type="button" onClick={goBack} className="inline-flex h-9 items-center gap-1.5 rounded-full border-[1.5px] border-[var(--sand)] bg-white/80 pl-3 pr-4 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-2)] transition-colors duration-[160ms] hover:border-[var(--sand-2)] hover:text-[var(--navy)]">
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </button>
+            ) : (
+              <span />
+            )}
+            {currentKey === 'review' ? (
+              <button type="submit" disabled={saving}
+                className="btn-pill-primary ml-auto disabled:cursor-wait disabled:!bg-[var(--sand)] disabled:!text-[var(--ink-3)] disabled:[filter:none]">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {saving ? 'Creating…' : 'Create'}
+              </button>
+            ) : (
+              <button type="submit" disabled={currentKey === 'entity' && !data.entity_type}
+                className="btn-pill-primary ml-auto disabled:cursor-not-allowed disabled:!bg-[var(--sand)] disabled:!text-[var(--ink-3)] disabled:[filter:none]">
+                Proceed <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </form>
       </main>
     </div>

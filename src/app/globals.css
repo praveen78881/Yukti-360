@@ -1000,27 +1000,27 @@ th {
 }
 .nav-pill:hover { background: rgba(231, 240, 249, 0.85); color: var(--ink); }
 /* The current page INSIDE a group is a sub-heading, so it is marked quietly —
-   a soft navy tint, navy text and a short navy bar at the left edge — not the
-   full dark-navy fill (that stays for the top-level rows). User request
-   2026-10-03: a sub-heading need not go dark blue. */
+   a soft navy tint with navy text and a navy › — not the full dark-navy fill
+   (that stays for the top-level rows). User request 2026-10-03: a sub-heading
+   need not go dark blue. */
 .nav-pill-active:not(.nav-top) {
   background: var(--navy-soft);
   color: var(--navy);
   font-weight: 700;
   box-shadow: none;
 }
-.nav-pill-active:not(.nav-top)::before {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 15px;
-  border-radius: 999px;
-  background: var(--navy);
-}
 .nav-pill-active:not(.nav-top):hover { background: var(--navy-soft); color: var(--navy); }
+
+/* The › bullet before every item inside a group marks it as a sub-point: quiet
+   by default, ink on hover, navy on the current page. (User request 2026-10-03.) */
+.nav-sub-mark {
+  color: var(--ink-3);
+  opacity: 0.6;
+  margin-right: -4px;
+  transition: color var(--t-state) ease, opacity var(--t-state) ease;
+}
+.nav-pill:hover .nav-sub-mark { color: var(--ink-2); opacity: 1; }
+.nav-pill-active:not(.nav-top) .nav-sub-mark { color: var(--navy); opacity: 1; }
 .nav-group-tile {
   display: inline-flex;
   align-items: center;

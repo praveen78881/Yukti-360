@@ -177,7 +177,7 @@ function secFa(){
   const C=S.C.fa||{fsi:[],trRows:[],paidTot:0,reliefTot:0,dtaa:0,notDtaa:0};
 
   if(!faOn())
-    return note("<b>Not applicable.</b> Schedules FSI, TR and FA are available only when the body is <b>resident</b> (FA is not applicable for NRI). Set residential status to Resident under <i>Who is filing</i> to enter foreign income, tax relief and foreign assets.","form");
+    return note("<b>Not applicable.</b> Schedules FSI, TR and FA are available only when the body is <b>resident</b> (FA is not applicable for NRI). Set residential status to Resident under <i>Assessee Information</i> to enter foreign income, tax relief and foreign assets.","form");
 
   let H="";
 

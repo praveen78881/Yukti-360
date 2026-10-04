@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { lazyPage, registerPrefetchRoutes } from '@/lib/routePrefetch';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { hasLocalSignIn } from '@/lib/authGate';
 
 // Layouts
 const CompanyLayout = lazyPage(() => import('@/app/company/[id]/layout').then(m => ({ default: m.default })));
@@ -106,26 +108,49 @@ const PageLoader = () => (
   </div>
 );
 
+/** Gate an in-app route behind the login screen. With Supabase configured the
+ *  real session decides; offline, the flag the login screen sets stands in.
+ *  Not signed in — including a deep link straight to a page — bounces to /auth. */
+function RequireAuth({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<'checking' | 'in' | 'out'>(
+    () => (isSupabaseConfigured ? 'checking' : hasLocalSignIn() ? 'in' : 'out'),
+  );
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => { if (active) setState(data.session ? 'in' : 'out'); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (active) setState(session ? 'in' : 'out'); });
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, []);
+
+  if (state === 'checking') return <PageLoader />;
+  if (state === 'out') return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
+
+/** A lazy page wrapped in Suspense and the login gate. */
+const guarded = (page: ReactNode) => (
+  <RequireAuth><Suspense fallback={<PageLoader />}>{page}</Suspense></RequireAuth>
+);
+
 export const router = createBrowserRouter([
-  // ── LOGIN SUSPENDED (temporarily hidden, NOT deleted) ─────────────────────────
-  // The auth/login + profile-picker screens are turned off for now. The app opens
-  // straight on /companies, and any navigation to /auth (e.g. the sidebar "Sign Out"
-  // button) is bounced into the app instead of showing the login screen.
-  //
-  // TO RESTORE LOGIN: change the index redirect below back to "/auth", and swap the
-  // /auth route back to the original line kept commented right under it.
+  // ── LOGIN ACTIVE ──────────────────────────────────────────────────────────────
+  // The app opens on the login screen. Every in-app route is wrapped in
+  // RequireAuth (via `guarded`), so a visitor who has not signed in — or who types
+  // a deep link to any page — is bounced to /auth. "/" points at /companies, which
+  // is itself guarded, so a fresh visit lands on the login screen. With Supabase
+  // configured the real session gates; offline the login screen sets a local flag.
   { index: true, element: <Navigate to="/companies" replace /> },
-  { path: '/auth', element: <Navigate to="/companies" replace /> },
-  // Original login route — uncomment to bring the login page back:
-  // { path: '/auth', element: <Suspense fallback={<PageLoader />}><AuthPage /></Suspense> },
-  { path: '/companies', element: <Suspense fallback={<PageLoader />}><CompaniesPage /></Suspense> },
-  { path: '/companies/create', element: <Suspense fallback={<PageLoader />}><CreateCompanyPage /></Suspense> },
+  { path: '/auth', element: <Suspense fallback={<PageLoader />}><AuthPage /></Suspense> },
+  { path: '/companies', element: guarded(<CompaniesPage />) },
+  { path: '/companies/create', element: guarded(<CreateCompanyPage />) },
   { path: '/dev/migrate-ledger-names', element: <Suspense fallback={<PageLoader />}><MigrateLedgerNamesPage /></Suspense> },
   { path: '/dev/coa-audit', element: <Suspense fallback={<PageLoader />}><CoaAuditPage /></Suspense> },
   { path: '/dev/avatar', element: <Suspense fallback={<PageLoader />}><AvatarPlaygroundPage /></Suspense> },
   {
     path: '/company/:id',
-    element: <Suspense fallback={<PageLoader />}><CompanyLayout /></Suspense>,
+    element: guarded(<CompanyLayout />),
     children: [
       { index: true, element: <Suspense fallback={<PageLoader />}><CompanyOverviewPage /></Suspense> },
       { path: 'journal', element: <Suspense fallback={<PageLoader />}><JournalPage /></Suspense> },

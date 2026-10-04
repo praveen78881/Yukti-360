@@ -160,11 +160,11 @@ function secIE(){
   let h="";
 
   h+=note("The Income &amp; Expenditure statement is chosen automatically by the exemption "+
-    "section claimed in <b>Who is filing</b> (Part A - General). Only the statement for the "+
+    "section claimed in <b>Assessee Information</b> (Part A - General). Only the statement for the "+
     "regime you claim is shown; if you claim exemption under section 11 or 10(23C)(iv)-(via) "+
     "no IE statement applies (the application of income is stated in Schedule A instead).");
   h+=row("Exemption section claimed",'<span class="c">'+(esc(ex)||"—")+'</span>',
-    {ref:"A17 ii",hint:"from Who is filing"});
+    {ref:"A17 ii",hint:"from Assessee Information"});
 
   if(A===1){
     /* ---------- Schedule IE-1 ---------- */
@@ -235,7 +235,7 @@ function secIE(){
   } else {
     h+=note("No Income &amp; Expenditure statement applies to the exemption section currently "+
       "claimed. Choose a section 10(21)/10(23A)/10(24)/10(23C)(iiiab-iiiae)/… regime in "+
-      "<b>Who is filing</b> to open the matching IE-1/2/3/4 statement.","warn");
+      "<b>Assessee Information</b> to open the matching IE-1/2/3/4 statement.","warn");
   }
   return h;
 }

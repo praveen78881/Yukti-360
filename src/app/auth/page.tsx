@@ -1,9 +1,13 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Building2, Briefcase, Check, ArrowRight, ArrowLeft, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { Building2, Briefcase, Check, X, ArrowRight, ArrowLeft, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { syncOnSignIn } from '@/lib/sync/cloudSync';
+import {
+  markSignedIn, checkPassword, isValidEmail,
+  hasLocalAccount, saveLocalCredential, verifyLocalCredential, clearLocalCredential,
+} from '@/lib/authGate';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 
 // Access mode is chosen here and persisted; the sidebar reads it (no selector there).
@@ -34,8 +38,6 @@ const BUSINESS_FEATURES = [
   'Bank Statement Importer',
   'Cash Flow Statement',
 ];
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -72,11 +74,11 @@ export default function AuthPage() {
     setStep('profile');
   }, []);
 
-  // Detect a sign-in that completes via a browser redirect — Google OAuth and the
-  // email-confirmation link both return to /auth and exchange the URL `?code=`
-  // for a session ASYNCHRONOUSLY. A one-shot getSession() on mount races that
-  // exchange and misses it, stranding the user back on the auth page; listening to
-  // onAuthStateChange catches the session the moment the exchange finishes.
+  // Detect a sign-in that completes via a browser redirect — Google OAuth returns
+  // to /auth and exchanges the URL `?code=` for a session ASYNCHRONOUSLY. A
+  // one-shot getSession() on mount races that exchange and misses it, stranding
+  // the user back on the auth page; listening to onAuthStateChange catches the
+  // session the moment the exchange finishes.
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
     supabase.auth.getSession().then(({ data }) => { if (data.session) enterProfile(); });
@@ -86,36 +88,36 @@ export default function AuthPage() {
     return () => sub.subscription.unsubscribe();
   }, [enterProfile]);
 
-  // Email sign-in / sign-up — every required field must be filled before continuing.
+  // Email + password sign-in / sign-up. The password is one the user creates
+  // here (not their email account's password) and must meet the rules below.
   const handleSignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'signup' && !name.trim()) return toast.error('Please enter your full name.');
     if (!email.trim()) return toast.error('Please enter your email.');
-    if (!EMAIL_RE.test(email.trim())) return toast.error('Please enter a valid email address.');
+    if (!isValidEmail(email)) return toast.error('Please enter a valid email address.');
     if (!password) return toast.error('Please enter your password.');
     if (mode === 'signup') {
-      if (password.length < 6) return toast.error('Password must be at least 6 characters.');
+      if (!checkPassword(password).ok) {
+        return toast.error('Password needs 8+ characters with an uppercase letter, a number and a special character.');
+      }
       if (!confirm) return toast.error('Please confirm your password.');
       if (password !== confirm) return toast.error('Passwords do not match.');
     }
 
-    // Real auth when Supabase is configured; otherwise offline pass-through.
+    const em = email.trim();
+
+    // Real email auth when Supabase is configured; otherwise a local account.
     if (isSupabaseConfigured && supabase) {
       setBusy(true);
       try {
-        const creds = { email: email.trim(), password };
+        const creds = { email: em, password };
         const { data, error } =
           mode === 'signup'
-            ? await supabase.auth.signUp({
-                ...creds,
-                // If email confirmation is ON, the link must return to /auth so the
-                // listener above can pick up the session and enter the app.
-                options: { emailRedirectTo: `${window.location.origin}/auth` },
-              })
+            ? await supabase.auth.signUp({ ...creds, options: { emailRedirectTo: `${window.location.origin}/auth` } })
             : await supabase.auth.signInWithPassword(creds);
         if (error) { toast.error(error.message); return; }
-        // Sign-up with email confirmation ON returns no session until the user
-        // clicks the link — don't fake entry; send them back to sign in.
+        // If email confirmation is ON, sign-up returns no session until the link
+        // is clicked — don't fake entry; send them back to sign in.
         if (mode === 'signup' && !data.session) {
           toast.success('Account created — check your email to confirm, then sign in.');
           setMode('login');
@@ -129,8 +131,42 @@ export default function AuthPage() {
       return;
     }
 
-    toast.success(mode === 'login' ? 'Signed in' : 'Account created');
-    setStep('profile');
+    // Offline: the account is created and checked on this device.
+    setBusy(true);
+    try {
+      if (mode === 'signup') {
+        await saveLocalCredential(em, password);
+        toast.success('Account created');
+        await enterProfile();
+      } else {
+        if (!hasLocalAccount()) {
+          toast.error('No account found on this device — please sign up first.');
+          setMode('signup');
+          return;
+        }
+        if (!(await verifyLocalCredential(em, password))) {
+          toast.error('Incorrect email or password.');
+          return;
+        }
+        toast.success('Signed in');
+        await enterProfile();
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Offline password reset: clear the stored account and start a fresh sign-up.
+  const handleForgot = () => {
+    if (isSupabaseConfigured) {
+      toast.info('Use "Continue with Google", or reset from the link sent to your email.');
+      return;
+    }
+    clearLocalCredential();
+    setMode('signup');
+    setPassword('');
+    setConfirm('');
+    toast.info('Create a new password to continue.');
   };
 
   const signInWithGoogle = async () => {
@@ -150,6 +186,7 @@ export default function AuthPage() {
 
   const selectProfile = (m: AccessMode) => {
     try { localStorage.setItem(ACCESS_MODE_KEY, m); } catch { /* ignore */ }
+    markSignedIn(); // the login gate's offline marker (RequireAuth checks it)
     toast.success(`Continuing as ${m === 'professional' ? 'Professional' : 'Business'}`);
     navigate('/companies');
   };
@@ -185,13 +222,14 @@ export default function AuthPage() {
 
   // ── Step 1: sign in / sign up (split card) ─────────────────────────────────
   const inp = "w-full h-11 pl-11 pr-4 text-sm bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 transition-colors";
+  const pc = checkPassword(password);
 
   return (
     <div className="min-h-screen app-surface flex items-center justify-center p-4">
       <div className="w-full max-w-4xl grid md:grid-cols-2 rounded-3xl bg-white overflow-hidden border border-gray-100 shadow-[0_28px_60px_-22px_rgba(8,40,48,0.28)]">
 
         {/* ── Left: WELCOME panel (same deep-teal hero as the in-app dashboard) ── */}
-        <div className="hero relative hidden md:flex flex-col justify-center p-10 text-white overflow-hidden !rounded-none">
+        <div className="hero relative hidden md:flex flex-col justify-center px-10 py-16 text-white overflow-hidden !rounded-none">
           {/* soft rings */}
           <div className="pointer-events-none absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-white/5" />
           <div className="pointer-events-none absolute -top-12 -right-10 h-48 w-48 rounded-full border border-white/10" />
@@ -205,20 +243,25 @@ export default function AuthPage() {
               <BrandLogo height={34} />
             </span>
             <h2 className="text-4xl font-extrabold tracking-tight leading-none">WELCOME</h2>
-            <p className="mt-5 max-w-xs text-sm leading-relaxed hero-muted">
-              Your complete accounting workspace — ledgers, GST, financial statements and Tally import, all in one place.
-            </p>
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.14em] hero-muted">All in one place</p>
+            <ul className="mt-3.5 space-y-2.5">
+              {['Auditing', 'Accounting', 'GST', 'ITR filing', 'TDS & TCS'].map((item) => (
+                <li key={item} className="flex items-center gap-2.5 text-[15px] font-semibold text-white">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
         {/* ── Right: form ── */}
-        <div className="p-8 sm:p-10">
+        <div className="px-8 py-12 sm:px-10 sm:py-14">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">
             {mode === 'login' ? 'Sign in' : 'Create account'}
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            {mode === 'login' ? 'Welcome back — please enter your details.' : 'Fill in all details to create your account.'}
-          </p>
 
           <form onSubmit={handleSignSubmit} className="mt-6 space-y-3.5">
             {mode === 'signup' && (
@@ -228,22 +271,32 @@ export default function AuthPage() {
               </div>
             )}
             <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input className={inp} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input className={inp} type="email" autoComplete="email" value={email}
+                onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
             </div>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input className={`${inp} pr-16`} type={showPwd ? 'text' : 'password'} value={password}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
               <button type="button" onClick={() => setShowPwd((s) => !s)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700">
                 {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />} {showPwd ? 'HIDE' : 'SHOW'}
               </button>
             </div>
+            {mode === 'signup' && password.length > 0 && (
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-1 px-1 pt-0.5">
+                <PwdRule ok={pc.length}>8+ characters</PwdRule>
+                <PwdRule ok={pc.upper}>Uppercase letter</PwdRule>
+                <PwdRule ok={pc.number}>Number</PwdRule>
+                <PwdRule ok={pc.special}>Special character</PwdRule>
+              </ul>
+            )}
             {mode === 'signup' && (
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input className={inp} type={showPwd ? 'text' : 'password'} value={confirm}
+                <input className={inp} type={showPwd ? 'text' : 'password'} value={confirm} autoComplete="new-password"
                   onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" required />
               </div>
             )}
@@ -255,7 +308,7 @@ export default function AuthPage() {
                     className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                   Remember me
                 </label>
-                <button type="button" onClick={() => toast.info('Password reset is not available in offline mode.')}
+                <button type="button" onClick={handleForgot}
                   className="font-bold text-blue-600 hover:text-blue-700">Forgot Password?</button>
               </div>
             )}
@@ -291,6 +344,16 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** One password requirement, ticked green when met. */
+function PwdRule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <li className={`flex items-center gap-1.5 text-[11px] font-medium ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+      {ok ? <Check className="h-3 w-3 shrink-0" /> : <X className="h-3 w-3 shrink-0" />}
+      {children}
+    </li>
   );
 }
 

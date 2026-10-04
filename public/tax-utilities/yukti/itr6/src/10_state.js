@@ -1004,7 +1004,7 @@ const SKEL=
    so a real section overrides its placeholder. Titles/refs and order from
    books/ITR-6/structure.md (the company return). */
 [
- ["who","Who is filing","Part A - General"],
+ ["who","Assessee Information","Part A - General"],
  ["gen","Company particulars","General2 · Nature of business"],
  ["accounts","Audited accounts","BS · Mfg/Trading · P&L · Ind-AS · OI · QD · OL"],
  ["bp","Business and profession","BP · DPM/DOA · DEP/DCG · ESR · ICDS"],

@@ -1,5 +1,5 @@
 /* =====================================================================
-   ITR-1 · Section "who" — Who is filing (Personal information)
+   ITR-1 · Section "who" — General (Personal information)
    Books: books/ITR-1/schema_tree.md §1 CreationInfo · §2 Form_ITR1 ·
    §3 PersonalInfo · sections.md S1 · enums.json (StateCode, EmployerCategory,
    SecondaryAdd) · skeleton.json.
@@ -404,7 +404,7 @@ function chkWho(){
 }
 
 /* ---- register (overrides the boot stub) --------------------------- */
-reg({id:"who", t:"Who is filing", ref:"PersonalInfo · CreationInfo · Form_ITR1",
+reg({id:"who", t:"Assessee Information", ref:"PersonalInfo · CreationInfo · Form_ITR1",
      f:secWho,
      s:()=>{const W=S.who||{};return st0(W.pan)?st0(W.pan).toUpperCase()+
        (st0(W.last)?" · "+[st0(W.first),st0(W.last)].filter(Boolean).join(" "):""):

@@ -9,7 +9,7 @@
    so a real section overrides its placeholder. Ids/titles/refs from
    books/ITR-4/structure.md. */
 [
- ["who","Who is filing","Part A - General"],
+ ["who","Assessee Information","Part A - General"],
  ["ret","Return and regime","Filing status"],
  ["inc","Income","Part B - GTI · BP · 44AD/44ADA/44AE"],
  ["hp","House property","Schedule HP"],

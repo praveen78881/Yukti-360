@@ -27,7 +27,7 @@ function secOther(){
   const PT=S.C.pti,ES=S.C.esop,FA5=S.C.s5a;let h="";
   /* 5A */
   h+=card("sch5a","Schedule 5A — Apportionment of income between spouses governed by the Portuguese Civil Code",(S.pi.s5a==="Yes"?RS(FA5.tot.spouse):""),
-    (S.pi.s5a!=="Yes"?note("Opens when 'governed by the Portuguese Civil Code' is Yes in Who is filing."):
+    (S.pi.s5a!=="Yes"?note("Opens when 'governed by the Portuguese Civil Code' is Yes in Assessee Information."):
     (row("Name of the spouse",inp("sch5a2.name"),{req:1})+row("PAN of the spouse",inp("sch5a2.pan",{max:10}),{req:1})+row("Aadhaar of the spouse",inp("sch5a2.aadhaar",{max:12}))+
      '<div class="full"><table class="gt" style="min-width:900px"><thead><tr><th class="l">Head of income (i)</th><th style="width:170px">Receipts under the head (ii)</th><th style="width:170px">Apportioned to the spouse (iii)</th><th style="width:150px">TDS on (ii) (iv)</th><th style="width:170px">TDS apportioned to spouse (v)</th></tr></thead><tbody>'+
      [["hp","House property"],["cg","Capital gains"],["os","Other sources"]].map(([k,l])=>'<tr><td class="l">'+l+'</td><td>'+inp("sch5a2.h."+k+".inc",{n:1})+'</td><td>'+inp("sch5a2.h."+k+".spouse",{n:1})+'</td><td>'+inp("sch5a2.h."+k+".tds",{n:1})+'</td><td>'+inp("sch5a2.h."+k+".tdsSp",{n:1})+'</td></tr>').join("")+

@@ -16,10 +16,11 @@ import {
   FileCheck, FileSignature, PieChart, Link2, CheckSquare, Package,
   Settings, Sparkles, FolderOpen, File, FileCode, FilePlus, FileUp,
   Trash2, Pencil, Check, X, LayoutGrid, Search, LogOut, type LucideIcon,
-  ChevronDown, ChevronsLeft, ChevronsRight, ChevronsUpDown, LayoutDashboard,
+  ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown, LayoutDashboard,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { clearLocalDataOnSignOut } from '@/lib/sync/cloudSync';
+import { clearSignedIn } from '@/lib/authGate';
 import { ENTITY_TYPES, type EntityType } from '@/lib/constants/entityTypes';
 import { BrandLogo } from './BrandLogo';
 import { prefetchRoute } from '@/lib/routePrefetch';
@@ -387,6 +388,7 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     return (
       <Link key={item.href} to={item.href} onClick={onClick} onMouseEnter={() => prefetchRoute(item.href)} onFocus={() => prefetchRoute(item.href)} className={`nav-pill ${top ? 'nav-top' : ''} ${active ? 'nav-pill-active' : ''}`} title={m ? `Shortcut: ${m.keys.join(' ')}` : undefined}>
         {top && <span className="nav-group-tile"><Icon className="h-[15px] w-[15px]" /></span>}
+        {!top && <ChevronRight className="nav-sub-mark h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
         <span className="truncate"><MnemonicLabel text={item.label} m={m} /></span>
         {m && <kbd className="mn-key">{m.keys.join(' ')}</kbd>}
       </Link>
@@ -536,18 +538,22 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
             <span><MnemonicLabel text="Settings" m={settingsM} /></span>
             {settingsM && <kbd className="mn-key">{settingsM.keys.join(' ')}</kbd>}
           </Link>
-          {/* SIGN OUT SUSPENDED while login is disabled. With no login screen this
-              button only wipes local data and bounces back to /companies, so it is
-              force-hidden even if Supabase is later configured.
-              TO RESTORE: change `false &&` back to `isSupabaseConfigured &&`. */}
-          {false && isSupabaseConfigured && (
-            <button
-              onClick={async () => { try { await supabase?.auth.signOut(); } catch { /* ignore */ } clearLocalDataOnSignOut(); navigate('/auth'); }}
-              className="w-full nav-pill hover:bg-[var(--bad-soft)] hover:text-[var(--bad)]"
-            >
-              <span>Sign Out</span>
-            </button>
-          )}
+          {/* Sign out → back to the login screen. With Supabase it ends the session
+              and clears the local cloud cache; offline it only forgets the sign-in
+              (the local books are the only copy, so they are left untouched). */}
+          <button
+            onClick={async () => {
+              clearSignedIn();
+              if (isSupabaseConfigured && supabase) {
+                try { await supabase.auth.signOut(); } catch { /* ignore */ }
+                clearLocalDataOnSignOut();
+              }
+              navigate('/auth');
+            }}
+            className="w-full nav-pill hover:bg-[var(--bad-soft)] hover:text-[var(--bad)]"
+          >
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 

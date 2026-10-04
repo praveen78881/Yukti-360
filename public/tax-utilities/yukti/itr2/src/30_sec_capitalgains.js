@@ -713,7 +713,7 @@ function secCG(){
   h+=note("Six parts. <b>A</b> and <b>B</b> hold the gains, head by head. <b>C</b> is the summary. "+
     "<b>D</b> proves every exemption. <b>E</b> sets losses against gains. <b>F</b> is when each gain arose.");
   if(!G.nri)h+=note("Heads A3(ii), A4, A5, A9, B5 to B8 and B12 are for non-residents and are hidden. "+
-    "They appear when residential status is set to non-resident in <b>Who is filing</b>.");
+    "They appear when residential status is set to non-resident in <b>Assessee Information</b>.");
   h+='<div class="cgband">A · Short-term capital gains</div>';
   h+='<div class="cghead on"><div class="cghb open">'+partA()+'</div></div>';
   h+='<div class="cgband">B · Long-term capital gains</div>';

@@ -38,7 +38,7 @@ window.FORM={id:"ITR-5",name:"ITR-5",ay:"2026-27",sw:"SW10000001",due:"2026-08-3
    Single source of truth for SCREEN_ORDER (08_registry) and for the Phase-2
    placeholder registrations (90_wiring). {id, t: title, ref: schedule hint}. */
 const SECTIONS=[
- {id:"gen",     t:"Who is filing and filing status",        ref:"Part A - General · General(2)"},
+ {id:"gen",     t:"Assessee Information",        ref:"Part A - General · General(2)"},
  {id:"bs",      t:"Balance sheet",                          ref:"Part A - BS"},
  {id:"pl",      t:"Manufacturing / Trading / P&L",          ref:"Mfg · Trading · Part A - P&L"},
  {id:"oi",      t:"Other information and quantitative details", ref:"Part A - OI · QD"},

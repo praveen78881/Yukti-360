@@ -220,7 +220,7 @@ const SKEL=
    books/ITR-1/sections.md + section_map.json (the SAHAJ resident-individual
    return). Every section is present, each a "being built" placeholder body. */
 [
- ["who","Who is filing — Personal information","PersonalInfo · CreationInfo · Form_ITR1"],
+ ["who","Assessee Information — Personal information","PersonalInfo · CreationInfo · Form_ITR1"],
  ["ret","Filing status & tax regime","FilingStatus (+ PartA_139_8A · PartB-ATI when 139(8A))"],
  ["sal","Salary income","ITR1_IncomeDeductions (salary) · ScheduleEA10_13A"],
  ["hp","Income from house property","ITR1_IncomeDeductions.PropertyDetails[]"],

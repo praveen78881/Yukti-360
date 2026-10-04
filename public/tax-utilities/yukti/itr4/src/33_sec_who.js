@@ -53,5 +53,5 @@ function chkWho(){
 /* =====================================================================
    REGISTER — five screen sections. eng on inc(20)+tax(80); exp/imp on inc.
    ===================================================================== */
-reg({id:"who", t:"Who is filing", ref:"Part A - General", f:secWho,
+reg({id:"who", t:"Assessee Information", ref:"Part A - General", f:secWho,
   s:()=>st0(S.pi.last)?(st0(S.pi.pan)?S.pi.pan:S.pi.last):"", chk:chkWho, order:8});

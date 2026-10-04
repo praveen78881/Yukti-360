@@ -1,5 +1,5 @@
 /* =====================================================================
-   ITR-6 · Section "who" — Who is filing (Part A - General)
+   ITR-6 · Section "who" — General (Part A - General)
    Book: books/ITR-6/PART_A_GENERAL.md  (built from the ITR-6 company sheet)
    Schema block OWNED (export + import): PartA_GEN1 only.
    Compute order: 5 (identity face; runs before every income head).
@@ -626,7 +626,7 @@ function chkWho(){
 }
 
 /* ---- register (overrides the boot stub) --------------------------- */
-reg({id:"who", t:"Who is filing", ref:"Part A - General",
+reg({id:"who", t:"Assessee Information", ref:"Part A - General",
      f:secWho,
      s:()=>{const P=S.pi||{}; return st0(P.pan)?st0(P.pan).toUpperCase()+((P.domestic||"Y")==="N"?" · foreign":"")+(P.status==="7"?" · private":P.status==="6"?" · public":""):"Name, PAN, status, address";},
      eng:engWho, exp:expWho, imp:impWho, chk:chkWho, order:5});

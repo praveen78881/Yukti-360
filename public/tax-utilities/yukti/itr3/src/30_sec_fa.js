@@ -102,7 +102,7 @@ function secFa(){
   const C=S.C.fa||{fsi:[],trRows:[],paidTot:0,reliefTot:0,dtaa:0,notDtaa:0};
 
   if(res==="NRI")
-    return note("<b>Not applicable.</b> Schedules FSI, TR and FA are not applicable when the residential status is Non-Resident (NRI). Set residential status to Resident under <i>Who is filing</i> to fill foreign income, tax relief and foreign assets.","form");
+    return note("<b>Not applicable.</b> Schedules FSI, TR and FA are not applicable when the residential status is Non-Resident (NRI). Set residential status to Resident under <i>Assessee Information</i> to fill foreign income, tax relief and foreign assets.","form");
 
   let H="";
 

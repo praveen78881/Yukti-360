@@ -21,6 +21,7 @@ import { loadSnapshot, saveSnapshot } from '../lib/itrPersistence';
 import { prefillFromCompany } from '../lib/itrPrefill';
 import { isReady, readState, writeState } from '../lib/itrBridge';
 import { ItrTabs } from './ItrTabs';
+import { EFilingModal } from './EFilingModal';
 
 const AUTOSAVE_MS = 1500;
 const BOOT_POLL_MS = 150;
@@ -42,6 +43,7 @@ export function ItrFrame({ companyId, company, itrKey, forms, onSelect }: Props)
   const booted = useRef(false);
   const [height, setHeight] = useState(MIN_HEIGHT);
   const [flash, setFlash] = useState<string | null>(null);
+  const [eFileOpen, setEFileOpen] = useState(false);
 
   /* ---- fill the remaining viewport height, and keep filling it ---- */
   useLayoutEffect(() => {
@@ -108,6 +110,17 @@ export function ItrFrame({ companyId, company, itrKey, forms, onSelect }: Props)
       doc.addEventListener('input', onEdit, true);
       doc.addEventListener('change', onEdit, true);
       doc.addEventListener('click', onEdit, true);   // grid +Add / delete rows
+
+      // "Export return" (#b_json) exports the JSON itself; right after, offer to
+      // continue to the Income Tax e-Filing portal. Listen in the CAPTURE phase
+      // on the document so this fires even though the form has its own handler
+      // on the same button (which may stopPropagation or pop a validation alert
+      // first). The small delay lets any such alert be dismissed before our
+      // modal appears.
+      doc.addEventListener('click', (e) => {
+        const t = e.target as HTMLElement | null;
+        if (t && t.closest('#b_json')) window.setTimeout(() => setEFileOpen(true), 200);
+      }, true);
     }, BOOT_POLL_MS);
   }, [companyId, company, itrKey, flush, say]);
 
@@ -136,6 +149,7 @@ export function ItrFrame({ companyId, company, itrKey, forms, onSelect }: Props)
           {flash}
         </div>
       )}
+      <EFilingModal open={eFileOpen} onClose={() => setEFileOpen(false)} formLabel={ITR_META[itrKey].label} />
     </div>
   );
 }

@@ -7,7 +7,7 @@
    later with the same id; 90_wiring resolves each id to the LAST registration,
    so a real section overrides its placeholder. */
 [
- ["who","Who is filing","Part A - General"],
+ ["who","Assessee Information","Part A - General"],
  ["ret","Return and regime","Part A - General"],
  ["bpa","Business — Part A accounts","BS · P&L · Trading · Mfg · OI · QD · GST"],
  ["bp","Business — BP & depreciation","BP · DPM/DOA · DEP/DCG · ESR · UD · ICDS"],

@@ -30,7 +30,7 @@ function compute(){
    7 · THE SIXTEEN SECTIONS
    ================================================================== */
 const SECS=[
- {id:"who",t:"Who is filing",ref:"Part A",f:secWho,
+ {id:"who",t:"Assessee Information",ref:"Part A",f:secWho,
   s:()=>st0(S.pi.pan)?st0(S.pi.pan).toUpperCase():"Name, PAN, status, residence, address"},
  {id:"ret",t:"Return and regime",ref:"Part A",f:secRet,
   s:()=>(isNew()?"New regime":"Old regime")+(D(S.fs.filed)?" · filed "+DISP(D(S.fs.filed)):"")},

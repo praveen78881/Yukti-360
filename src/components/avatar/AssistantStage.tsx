@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { useCompany } from '@/hooks/useCompany';
+import { getUserFirstName } from '@/lib/userIdentity';
 import { projectorBus, type ProjectionRequest } from '@/lib/carp/tools/projector';
+import { CompanyDashboard } from '@/components/dashboard/CompanyDashboard';
 import { AssistantAvatar } from './AssistantAvatar';
 import { Hologram, HoloStyles, ProjectorBeam, type HoloSlide } from './Hologram';
 import { captureCompanyRoute } from './reportCapture';
@@ -8,17 +10,75 @@ import { useAssistantChat, type ThreadMessage } from './useAssistantChat';
 import type { AssistantAvatarHandle } from './types';
 
 /* ── The dashboard assistant ───────────────────────────────────────────────
-   The orb IS the assistant. Click it to talk; the ask-bar appears beneath it
-   and slips away again after 30s if left empty. The conversation stays on
-   screen and is remembered per company. When the assistant decides to show a
-   report, it projects it from its visor as a hologram — captured on the fly,
-   never stored, and deleted the moment the projection closes. */
+   The orb IS the assistant. On arrival it appears large in the centre, greets
+   the signed-in person by name, then glides down to its resting dock in the
+   bottom-right corner — leaving the rest of the dashboard free canvas. Click
+   it to talk; the ask-bar rises above it and slips away again after 30s if
+   left empty. The conversation stays on screen and is remembered per company.
+   When the assistant projects a report, it beams it from its visor as a
+   hologram onto the free centre — captured on the fly, never stored, and
+   deleted the moment the projection closes. */
 
 const IDLE_MS = 30_000;
+/** The whole centre → corner glide. */
+const TRAVEL_MS = 1500;
+/** Keep the orb centre-stage at least this long so the greeting lands. */
+const MIN_CENTER_MS = 2600;
+/** Dock anyway after this, in case the scene never reports ready (no WebGL). */
+const FALLBACK_DOCK_MS = 6500;
 const EASE_LAYOUT = 'cubic-bezier(.3,.9,.3,1)';
+const EASE_TRAVEL = 'cubic-bezier(.45,.05,.2,1)';
+
+/** The small resting size, matching the CSS clamp used for the dock. */
+function smallSize(): number {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  return Math.round(Math.max(148, Math.min(vw * 0.15, 188)));
+}
+
+interface Geo { W: number; H: number; S: number; big: number; bigLeft: number; bigTop: number; smallLeft: number; smallTop: number }
+
+function computeGeo(W: number, H: number): Geo {
+  const S = smallSize();
+  const big = Math.round(Math.max(S, Math.min(H * 0.86, W * 0.9, 600)));
+  return {
+    W, H, S, big,
+    bigLeft: Math.round((W - big) / 2),
+    bigTop: Math.round((H - big) / 2),
+    smallLeft: Math.round(W - S),
+    smallTop: Math.round(H - S),
+  };
+}
+
+/** A warm, time-aware greeting addressed to the signed-in person. */
+function buildGreeting(first: string) {
+  const h = new Date().getHours();
+  const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  const who = first ? `, ${first}` : '';
+  return {
+    title: `Good ${part}${who}!`,
+    sub: 'I’m right here whenever you need a hand with these books.',
+    speech: first
+      ? `Good ${part}, ${first}. I’m right here whenever you need a hand.`
+      : `Good ${part}. I’m right here whenever you need a hand.`,
+  };
+}
 
 const CSS = `
-.yk-ask{width:min(640px,100%);display:flex;align-items:center;gap:8px;padding:7px 7px 7px 16px;border-radius:14px;
+.yk-stage{position:relative;height:100%;width:100%;min-height:360px}
+/* the free centre — empty canvas for the dashboard, and where reports project */
+.yk-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:4px 4px 0;pointer-events:none;z-index:2}
+.yk-holo-wrap{pointer-events:auto;width:min(1040px,100%);height:min(64vh,620px)}
+/* the orb itself — a fixed-size canvas that glides via transform only, so the
+   WebGL surface never resizes mid-flight (which clipped it against R3F's
+   overflow:hidden wrapper). It only ever scales down, so it stays crisp. */
+.yk-orb{position:absolute;left:0;top:0;z-index:6;cursor:pointer;transform-origin:0 0;will-change:transform;
+  filter:drop-shadow(0 20px 30px -20px rgba(24,44,70,.55))}
+/* the ask-bar / conversation, stacked above the docked orb */
+.yk-dock{position:absolute;right:0;z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:10px;max-width:min(360px,calc(100% - 4px));
+  opacity:0;transform:translateY(8px);transition:opacity 320ms ease,transform 320ms ease;pointer-events:none}
+.yk-dock.is-on{opacity:1;transform:none}
+.yk-dock.is-on>*{pointer-events:auto}
+.yk-ask{width:min(340px,86vw);display:flex;align-items:center;gap:8px;padding:7px 7px 7px 16px;border-radius:14px;
   background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(240,246,252,.62));
   border:1px solid rgba(255,255,255,.9);box-shadow:0 2px 4px rgba(24,44,70,.06),0 26px 48px -24px rgba(24,44,70,.42),inset 0 1px 0 rgba(255,255,255,.9);
   backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);
@@ -26,14 +86,27 @@ const CSS = `
 .yk-ask.yk-ask-out{animation:yk-ask-out 280ms cubic-bezier(.2,.8,.3,1) both}
 .yk-ask input{flex:1;min-width:0;height:38px;border:0!important;background:transparent!important;box-shadow:none!important;padding:0;font-size:14px;color:var(--ink)}
 .yk-ask input:focus{outline:none}
-.yk-ask-send{height:38px;padding:0 22px;flex-shrink:0;background:var(--navy);color:#fff;font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+.yk-ask-send{height:38px;padding:0 20px;flex-shrink:0;background:var(--navy);color:#fff;font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
   clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);filter:drop-shadow(0 6px 14px rgba(23,69,127,.38));transition:background-color 160ms ease,transform 160ms ease}
 .yk-ask-send:hover:not(:disabled){background:var(--navy-2);transform:translateY(-1px)}
 .yk-ask-send:disabled{background:var(--sand);color:var(--ink-3);filter:none}
-.yk-hint{font-family:var(--font-display);font-weight:600;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);animation:yk-hint-in 600ms 1.4s ease both}
+/* arrival greeting — a speech bubble that points down toward the orb */
+.yk-bubble{max-width:300px;padding:12px 32px 13px 15px;border-radius:16px 16px 4px 16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(240,246,252,.86));
+  border:1px solid rgba(255,255,255,.95);box-shadow:0 2px 4px rgba(24,44,70,.06),0 26px 48px -24px rgba(24,44,70,.42),inset 0 1px 0 rgba(255,255,255,.9);
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);
+  animation:yk-bubble-in 360ms cubic-bezier(.2,.8,.3,1) both}
+.yk-bubble.yk-bubble-out{animation:yk-ask-out 280ms cubic-bezier(.2,.8,.3,1) both}
+.yk-greet-center{position:absolute;z-index:7}
+.yk-bubble-title{font-weight:700;font-size:15px;line-height:1.25;color:var(--ink)}
+.yk-bubble-sub{margin-top:3px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+.yk-bubble-x{position:absolute;top:7px;right:8px;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:7px;color:var(--ink-3);transition:background-color 150ms ease,color 150ms ease}
+.yk-bubble-x:hover{background:var(--navy-soft);color:var(--navy)}
+.yk-hint{font-family:var(--font-display);font-weight:600;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);padding:2px 6px;animation:yk-hint-in 500ms ease both}
 .yk-thread{display:flex;flex-direction:column;min-height:0;border-radius:14px;
   background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(245,250,254,.6));border:1px solid rgba(255,255,255,.85);
-  box-shadow:0 1px 2px rgba(24,44,70,.05),0 10px 24px -16px rgba(24,44,70,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  box-shadow:0 1px 2px rgba(24,44,70,.05),0 18px 36px -20px rgba(24,44,70,.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.yk-thread-dock{width:min(340px,86vw);max-height:min(50vh,440px)}
 .yk-thread-list{flex:1;min-height:0;overflow-y:auto;padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px;
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 100%)}
 .yk-msg{max-width:88%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;animation:yk-msg-in 260ms cubic-bezier(.2,.8,.3,1) both}
@@ -48,10 +121,11 @@ const CSS = `
 .yk-tool-btn:hover{color:var(--navy);border-color:var(--sand-2)}
 @keyframes yk-ask-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes yk-ask-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px)}}
+@keyframes yk-bubble-in{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes yk-hint-in{from{opacity:0}to{opacity:1}}
 @keyframes yk-msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes yk-dot{0%,80%,100%{opacity:.35;transform:none}40%{opacity:1;transform:translateY(-2px)}}
-@media (prefers-reduced-motion: reduce){.yk-ask,.yk-ask-out,.yk-hint,.yk-msg,.yk-dots i{animation:none!important}}
+@media (prefers-reduced-motion: reduce){.yk-ask,.yk-ask-out,.yk-bubble,.yk-hint,.yk-msg,.yk-dots i{animation:none!important}}
 `;
 
 export function AssistantStage() {
@@ -61,6 +135,97 @@ export function AssistantStage() {
   const avatarBoxRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const chat = useAssistantChat(companyId, company, avatar);
+
+  // voice preference, read live in the greeting without re-triggering it
+  const voiceRef = useRef(chat.voice);
+  voiceRef.current = chat.voice;
+
+  /* ── stage geometry: centre (big) and corner (small) ── */
+  const [geo, setGeo] = useState<Geo | null>(null);
+  useLayoutEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) setGeo(computeGeo(r.width, r.height));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => setReduceMotion(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  /* ── the arrival sequence: centre → greet → dock ── */
+  const [phase, setPhase] = useState<'intro' | 'docked'>('intro');
+  const [greet, setGreet] = useState<{ open: boolean; title: string; sub: string }>({ open: false, title: '', sub: '' });
+  const [greetLeaving, setGreetLeaving] = useState(false);
+  const sceneReady = useRef(false);
+  const pendingGreet = useRef<string | null>(null);
+  const docked = useRef(false);
+  const fallbackTimer = useRef<number | undefined>(undefined);
+  const holdTimer = useRef<number | undefined>(undefined);
+
+  const dock = useCallback(() => {
+    if (docked.current) return;
+    docked.current = true;
+    window.clearTimeout(fallbackTimer.current);
+    window.clearTimeout(holdTimer.current);
+    setPhase('docked');
+    setGreetLeaving(true);
+    window.setTimeout(() => { setGreet((g) => ({ ...g, open: false })); setGreetLeaving(false); }, 300);
+  }, []);
+
+  /** Say the greeting aloud (if voice is on) with the matching face, then settle. */
+  const speakGreeting = useCallback(async (speech: string) => {
+    const a = avatar.current;
+    if (!a) return;
+    a.setExpression('greeting');
+    try {
+      await a.speak(speech, { synth: voiceRef.current });
+    } finally {
+      if (avatar.current === a && !a.speaking && a.expression === 'greeting') a.setExpression('neutral');
+    }
+  }, []);
+
+  /** Greet while centred, then dock once the greeting has had its moment. */
+  const runGreeting = useCallback(async (speech: string) => {
+    const started = Date.now();
+    await speakGreeting(speech);
+    const wait = Math.max(0, MIN_CENTER_MS - (Date.now() - started));
+    holdTimer.current = window.setTimeout(dock, wait);
+  }, [speakGreeting, dock]);
+
+  // The scene is live — speak any greeting that was waiting on it.
+  const onAvatarReady = useCallback(() => {
+    sceneReady.current = true;
+    const s = pendingGreet.current;
+    if (s) { pendingGreet.current = null; void runGreeting(s); }
+  }, [runGreeting]);
+
+  // Run the whole sequence on arrival, and again whenever the company changes.
+  useEffect(() => {
+    if (!companyId) return;
+    docked.current = false;
+    setPhase('intro');
+    const { title, sub, speech } = buildGreeting(getUserFirstName());
+    setGreetLeaving(false);
+    setGreet({ open: true, title, sub });
+    if (sceneReady.current) void runGreeting(speech);
+    else pendingGreet.current = speech;
+    fallbackTimer.current = window.setTimeout(dock, FALLBACK_DOCK_MS);
+    return () => { window.clearTimeout(fallbackTimer.current); window.clearTimeout(holdTimer.current); };
+  }, [companyId, runGreeting, dock]);
 
   /* ── ask-bar ── */
   const [askOpen, setAskOpen] = useState(false);
@@ -73,11 +238,15 @@ export function AssistantStage() {
   const touch = () => { lastActivity.current = Date.now(); };
 
   const openAsk = useCallback(() => {
+    // clicking the orb ends the intro: hush the greeting, snap to the dock
+    avatar.current?.stopSpeaking();
+    pendingGreet.current = null;
+    dock();
     setAskLeaving(false);
     setAskOpen(true);
     lastActivity.current = Date.now();
     requestAnimationFrame(() => inputRef.current?.focus());
-  }, []);
+  }, [dock]);
 
   // Empty and untouched for 30s → the bar slips away. Waiting on the AI or
   // listening to a reply counts as activity, so it never vanishes mid-answer.
@@ -162,64 +331,103 @@ export function AssistantStage() {
   }, []);
 
   const hasThread = chat.messages.length > 0 || chat.busy;
+  const intro = phase === 'intro';
+
+  // The canvas is always rendered at the big centred size; translate places it
+  // and scale (≤1) shrinks it into the corner — animated on transform alone.
+  const orbStyle: CSSProperties | undefined = geo
+    ? {
+        width: geo.big,
+        height: geo.big,
+        transform: intro
+          ? `translate(${geo.bigLeft}px, ${geo.bigTop}px)`
+          : `translate(${geo.smallLeft}px, ${geo.smallTop}px) scale(${geo.S / geo.big})`,
+        transition: reduceMotion ? 'none' : `transform ${TRAVEL_MS}ms ${EASE_TRAVEL}`,
+      }
+    : undefined;
 
   return (
-    <div ref={stageRef} className="relative min-h-full flex flex-col xl:flex-row gap-4 xl:gap-5">
+    <div ref={stageRef} className="yk-stage">
       <style>{CSS}</style>
       <HoloStyles />
 
-      <div className="relative flex-1 min-w-0 flex flex-col items-center">
-        {/* the projection pushes the orb down rather than covering it */}
-        <div
-          className="relative w-full max-w-[1040px] z-[2]"
-          style={{ height: projecting ? 'min(58vh, 620px)' : 0, transition: `height 280ms ${EASE_LAYOUT}` }}
-        >
-          {projecting && <Hologram slides={slides} onClose={closeProjection} panelRef={panelRef} />}
-        </div>
+      {/* The business dashboard fills the stage; the orb floats above it. */}
+      <CompanyDashboard />
 
+      {/* The free centre — where reports beam onto, above the dashboard. */}
+      <div className="yk-center">
+        {projecting && (
+          <div className="yk-holo-wrap">
+            <Hologram slides={slides} onClose={closeProjection} panelRef={panelRef} />
+          </div>
+        )}
+      </div>
+
+      {/* The greeting, shown above the big orb while it is centre-stage. */}
+      {geo && intro && greet.open && (
         <div
-          ref={avatarBoxRef}
-          className="relative w-full"
-          style={{ height: projecting ? '24vh' : '70vh', minHeight: projecting ? 150 : 360, transition: `height 280ms ${EASE_LAYOUT}` }}
+          className={`yk-bubble yk-greet-center ${greetLeaving ? 'yk-bubble-out' : ''}`}
+          role="status"
+          style={{
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: Math.round(geo.H - geo.bigTop - geo.big * 0.14),
+            maxWidth: Math.min(320, geo.W - 32),
+          }}
         >
+          <button type="button" className="yk-bubble-x" onClick={dock} aria-label="Dismiss greeting" title="Dismiss">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+          <div className="yk-bubble-title">{greet.title}</div>
+          <div className="yk-bubble-sub">{greet.sub}</div>
+        </div>
+      )}
+
+      {/* The ask-bar / conversation, stacked above the orb's resting dock. */}
+      <div className={`yk-dock ${phase === 'docked' ? 'is-on' : ''}`} style={{ bottom: geo ? geo.S + 14 : 14 }}>
+        {phase === 'docked' && (
+          <>
+            {hasThread && (
+              <Transcript
+                messages={chat.messages}
+                busy={chat.busy}
+                voice={chat.voice}
+                onVoice={chat.setVoice}
+                onClear={chat.clear}
+              />
+            )}
+            {askOpen ? (
+              <form className={`yk-ask ${askLeaving ? 'yk-ask-out' : ''}`} onSubmit={submit}>
+                <input
+                  ref={inputRef}
+                  value={draft}
+                  onChange={(e) => { setDraft(e.target.value); touch(); if (chat.talking) avatar.current?.stopSpeaking(); }}
+                  onFocus={touch}
+                  onKeyDown={touch}
+                  placeholder={chat.busy ? 'Thinking…' : 'Ask about these books…'}
+                  aria-label="Message the assistant"
+                  autoComplete="off"
+                />
+                <button type="submit" className="yk-ask-send" disabled={!draft.trim() || chat.busy}>Send</button>
+              </form>
+            ) : (
+              <span className="yk-hint">{hasThread ? 'Click the orb to reply' : 'Click the orb to talk'}</span>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* The orb — glides from the big centre to the small corner dock. */}
+      {geo && (
+        <div ref={avatarBoxRef} className="yk-orb" style={orbStyle}>
           <AssistantAvatar
             ref={avatar}
-            autoGreet
+            onReady={onAvatarReady}
             label="Yukti 360 assistant"
             onOrbClick={openAsk}
             style={{ width: '100%', height: '100%' }}
           />
         </div>
-
-        <div className="w-full flex justify-center px-2" style={{ minHeight: 54 }}>
-          {askOpen ? (
-            <form className={`yk-ask ${askLeaving ? 'yk-ask-out' : ''}`} onSubmit={submit}>
-              <input
-                ref={inputRef}
-                value={draft}
-                onChange={(e) => { setDraft(e.target.value); touch(); if (chat.talking) avatar.current?.stopSpeaking(); }}
-                onFocus={touch}
-                onKeyDown={touch}
-                placeholder={chat.busy ? 'Thinking…' : 'Ask about these books…'}
-                aria-label="Message the assistant"
-                autoComplete="off"
-              />
-              <button type="submit" className="yk-ask-send" disabled={!draft.trim() || chat.busy}>Send</button>
-            </form>
-          ) : (
-            <span className="yk-hint self-center">{hasThread ? 'Click the orb to reply' : 'Click the orb to talk'}</span>
-          )}
-        </div>
-      </div>
-
-      {hasThread && (
-        <Transcript
-          messages={chat.messages}
-          busy={chat.busy}
-          voice={chat.voice}
-          onVoice={chat.setVoice}
-          onClear={chat.clear}
-        />
       )}
 
       {projecting && <ProjectorBeam stageRef={stageRef} getOrigin={getOrigin} panelRef={panelRef} />}
@@ -247,7 +455,7 @@ function Transcript({
   const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   return (
-    <aside className="yk-thread w-full xl:w-[340px] xl:shrink-0 max-h-[44vh] xl:max-h-none xl:h-[calc(70vh+54px)]" aria-label="Conversation">
+    <aside className="yk-thread yk-thread-dock" aria-label="Conversation">
       <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid rgba(212,226,240,.7)' }}>
         <span className="eyebrow">Conversation</span>
         <div className="ml-auto flex items-center gap-1.5">

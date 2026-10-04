@@ -215,7 +215,7 @@ const SKEL=
    return). `ret` (return & exemption status) is a VIEW of the who/PI sheet,
    not a separate section_map mapping, so it is not a boot stub of its own. */
 [
- ["who","Who is filing","Part A - General · PI · Audit"],
+ ["who","Assessee Information","Part A - General · PI · Audit"],
  ["vc","Voluntary contributions & income","Schedule VC · AI"],
  ["ie","Income & Expenditure statements","Schedule IE-1/2/3/4"],
  ["hp","Income from house property","Schedule HP"],

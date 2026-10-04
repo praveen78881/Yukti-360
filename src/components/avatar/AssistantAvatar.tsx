@@ -40,13 +40,15 @@ export interface AssistantAvatarProps {
   label?: string;
   /** A click that lands on the orb itself (raycast), not the empty canvas around it. */
   onOrbClick?: () => void;
+  /** Fires once when the 3D scene is first live — the moment speech will sync. */
+  onReady?: () => void;
 }
 
 /** How long a greeting holds before settling back to the resting expression. */
 const GREETING_HOLD_MS = 2400;
 
 export const AssistantAvatar = forwardRef<AssistantAvatarHandle, AssistantAvatarProps>(
-  function AssistantAvatar({ expression, autoGreet = false, className, style, label, onOrbClick }, ref) {
+  function AssistantAvatar({ expression, autoGreet = false, className, style, label, onOrbClick, onReady }, ref) {
     const host = useRef<HTMLDivElement>(null);
     const controller = useMemo(() => new AvatarController(), []);
     const [mounted, setMounted] = useState(false);   // scene requested
@@ -122,15 +124,17 @@ export const AssistantAvatar = forwardRef<AssistantAvatarHandle, AssistantAvatar
     }, []);
 
     /* Greet once, when the scene first draws — never again on re-entry, which
-       would feel like being waved at every time you scroll past. */
-    const onReady = useCallback(() => {
+       would feel like being waved at every time you scroll past. The host is
+       told too (onReady), so it can time a spoken greeting to the live scene. */
+    const handleReady = useCallback(() => {
+      onReady?.();
       if (!autoGreet || greeted.current) return;
       greeted.current = true;
       controller.setExpression('greeting');
       window.setTimeout(() => {
         if (controller.expression === 'greeting') controller.setExpression(rest.current);
       }, GREETING_HOLD_MS);
-    }, [autoGreet, controller]);
+    }, [autoGreet, controller, onReady]);
 
     return (
       <div
@@ -142,7 +146,7 @@ export const AssistantAvatar = forwardRef<AssistantAvatarHandle, AssistantAvatar
       >
         {mounted ? (
           <Suspense fallback={<AvatarPlaceholder />}>
-            <AvatarScene controller={controller} active={inView && tabVisible} onReady={onReady} onOrbClick={onOrbClick} />
+            <AvatarScene controller={controller} active={inView && tabVisible} onReady={handleReady} onOrbClick={onOrbClick} />
           </Suspense>
         ) : (
           <AvatarPlaceholder />
