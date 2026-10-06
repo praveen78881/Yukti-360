@@ -29,10 +29,14 @@ const FALLBACK_DOCK_MS = 6500;
 const EASE_LAYOUT = 'cubic-bezier(.3,.9,.3,1)';
 const EASE_TRAVEL = 'cubic-bezier(.45,.05,.2,1)';
 
-/** The small resting size, matching the CSS clamp used for the dock. */
+/** The small resting size. The orb tucks into the bottom-right corner at about
+    a third of its former dock size (the original quarter, grown 15% from that
+    resting size), so it stays a discreet presence rather than dominating the
+    corner. */
 function smallSize(): number {
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
-  return Math.round(Math.max(148, Math.min(vw * 0.15, 188)));
+  const base = Math.max(148, Math.min(vw * 0.15, 188));
+  return Math.round(base * 0.2875 * 1.15);
 }
 
 interface Geo { W: number; H: number; S: number; big: number; bigLeft: number; bigTop: number; smallLeft: number; smallTop: number }
@@ -396,7 +400,7 @@ export function AssistantStage() {
                 onClear={chat.clear}
               />
             )}
-            {askOpen ? (
+            {askOpen && (
               <form className={`yk-ask ${askLeaving ? 'yk-ask-out' : ''}`} onSubmit={submit}>
                 <input
                   ref={inputRef}
@@ -410,8 +414,6 @@ export function AssistantStage() {
                 />
                 <button type="submit" className="yk-ask-send" disabled={!draft.trim() || chat.busy}>Send</button>
               </form>
-            ) : (
-              <span className="yk-hint">{hasThread ? 'Click the orb to reply' : 'Click the orb to talk'}</span>
             )}
           </>
         )}

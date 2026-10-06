@@ -307,6 +307,9 @@ async function computeDigest(compactJson){
 }
 async function exportJSON(){compute();
   const errs=S.C.checks.filter(c=>c.lvl==="err");
+  /* Reveal the red to-fix cues only once the user tries to submit (and only
+     while something is still unfilled); a clean submit clears them back to ink. */
+  document.body.classList.toggle("show-errors", errs.length>0);
   if(errs.length){alert(errs.length+" thing"+(errs.length>1?"s":"")+" still to fix:\n\n"+
     errs.slice(0,8).map(e=>"· "+e.t+" — "+e.m).join("\n")+
     (errs.length>8?"\n\n…and "+(errs.length-8)+" more.":""));return;}

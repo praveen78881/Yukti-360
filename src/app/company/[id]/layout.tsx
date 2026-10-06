@@ -108,9 +108,6 @@ export default function CompanyLayout() {
       <div className="h-screen flex flex-col app-surface overflow-hidden">
         <Header
           onMenuToggle={() => setMobileOpen((o) => !o)}
-          onAlezaToggle={() => setAlezaOpen((o) => !o)}
-          alezaOpen={alezaOpen}
-          onGoTo={() => setGoToOpen(true)}
         />
         <div className="relative flex flex-1 min-h-0 min-w-0">
           {/* Mobile veil */}

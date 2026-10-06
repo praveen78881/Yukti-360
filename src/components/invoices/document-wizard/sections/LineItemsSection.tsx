@@ -6,8 +6,10 @@
 import { Trash2 } from 'lucide-react';
 import type { InvoiceV2Draft, LineItem } from '@/lib/accounting/gstInvoices';
 import { GST_RATES, UQC_OPTIONS, isCessApplicable, getCessInfo, createEmptyLineItem } from '@/lib/accounting/gstInvoices';
+import { useCompany } from '@/hooks/useCompany';
 import { Switch, inr } from '../ui';
 import { HsnField } from './HsnField';
+import { useStockItems, salesUpdatesFromMaster } from '../useStockItems';
 
 interface LineItemsSectionProps {
   invoice: InvoiceV2Draft;
@@ -24,8 +26,13 @@ const NON_TAXABLE: Array<{ v: LineItem['supply_nature']; label: string }> = [
 
 export function LineItemsSection({ invoice, updateItem, removeItem }: LineItemsSectionProps) {
   const bos = invoice.doc_type === 'BILL_OF_SUPPLY';
+  const { companyId } = useCompany();
+  const { names, byName } = useStockItems(companyId);
   return (
     <div className="yk-lines" data-testid="sales-items">
+      <datalist id="yk-stock-items">
+        {names.map((n) => <option key={n} value={n} />)}
+      </datalist>
       <div className="yk-lines-scroll">
         <div className="yk-lines-grid sales" role="table" aria-label="Items">
           <div className="yk-lines-head" role="row">
@@ -52,8 +59,14 @@ export function LineItemsSection({ invoice, updateItem, removeItem }: LineItemsS
                 <input
                   aria-label={`Item ${idx + 1} name`}
                   className="yk-in sm"
+                  list="yk-stock-items"
                   value={item.description}
-                  onChange={(e) => updateItem(idx, { description: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const master = byName.get(v.trim().toLowerCase());
+                    if (master) updateItem(idx, salesUpdatesFromMaster(master));
+                    else updateItem(idx, { description: v });
+                  }}
                 />
                 <HsnField
                   ariaLabel={`Item ${idx + 1} HSN or SAC`}

@@ -7,7 +7,12 @@
    carry an `order`; the `tax` section (order ~90) does the Part B roll-up
    into the footer contract S.C.{gti,ti,tax,int}.
    ===================================================================== */
-const SECS = SCREEN_ORDER.map(id=>_SECREG.filter(r=>r.id===id).pop()).filter(Boolean)
+/* 'who' (Assessee Information / Part A - General) is hidden from the on-screen
+   form: its card and nav entry are dropped here, but it still computes, exports
+   and imports via _SECREG, and is prefilled from the company master. */
+const HIDDEN_SECS = ["who"];
+const SECS = SCREEN_ORDER.filter(id=>!HIDDEN_SECS.includes(id))
+  .map(id=>_SECREG.filter(r=>r.id===id).pop()).filter(Boolean)
   .map(r=>({id:r.id,t:r.t,ref:r.ref,f:r.f,s:r.s||(()=>"")}));
 
 /* compute() — a 2-pass fixpoint over the section engines. Some feeds run
@@ -35,7 +40,10 @@ function compute(){
 function engChecks(){
   let out=[];
   for(const r of _SECREG){ if(r.chk){ try{ const c=r.chk(); if(Array.isArray(c)) out=out.concat(c);}catch(e){} } }
-  return out;
+  /* drop soft-checks for sections hidden from the form (e.g. 'who'): there is no
+     card to resolve them in. The hard export gates (schema audit + department
+     rules) still guard those fields, so filing integrity is unaffected. */
+  return out.filter(c=>!HIDDEN_SECS.includes(c.sec));
 }
 
 function buildReturn(){

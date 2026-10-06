@@ -751,6 +751,7 @@ async function exportJSON(){
   const restore=()=>{if(snap){Object.assign(S,snap);compute();}};
   compute();
   const errs=S.C.checks.filter(c=>c.lvl==="err");
+  document.body.classList.toggle("show-errors", errs.length>0);   /* reveal red to-fix cues only after a submit attempt */
   if(errs.length){restore();alert(errs.length+" thing"+(errs.length>1?"s":"")+" still to fix:\n\n"+
     errs.slice(0,8).map(e=>"· "+e.t+" — "+e.m).join("\n")+
     (errs.length>8?"\n\n…and "+(errs.length-8)+" more.":""));return;}

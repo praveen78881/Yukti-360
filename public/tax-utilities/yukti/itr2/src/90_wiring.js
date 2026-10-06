@@ -20,7 +20,7 @@ function compute(){
   S.C.tax=engTax();S.C.amt=engAMT();S.C.amtc=engAMTC();
   S.C.paid=engTaxesPaid();S.C.fsi=engFSI();S.C.trDTAA=S.C.fsi.dtaaRel;S.C.trNoDTAA=S.C.fsi.noDtaaRel;
   S.C.esop=engESOP();S.C.esopDue=S.C.esop.due;S.C.s5a=eng5A();S.C.al2=engAL();
-  S.C.int=engInt();S.C.checks=engChecks();
+  S.C.int=engInt();S.C.checks=engChecks().filter(c=>!HIDDEN_SECS.includes(c.sec));
 }
 
 
@@ -29,6 +29,7 @@ function compute(){
 /* ==================================================================
    7 · THE SIXTEEN SECTIONS
    ================================================================== */
+const HIDDEN_SECS=["who"];   /* Assessee Information hidden from the form — prefilled from the company master, still computed/exported via _SECREG */
 const SECS=[
  {id:"who",t:"Assessee Information",ref:"Part A",f:secWho,
   s:()=>st0(S.pi.pan)?st0(S.pi.pan).toUpperCase():"Name, PAN, status, residence, address"},
@@ -63,7 +64,7 @@ const SECS=[
   s:()=>S.C.tax.gross?"Tax "+CR(S.C.int.net):"Lines 1 to 17, both parts"},
  {id:"bank",t:"Bank and verification",ref:"Part B-TTI",f:secBank,
   s:()=>S.bank.length?S.bank.length+" account"+(S.bank.length>1?"s":""):"Bank, who signs, export"}
-];
+].filter(s=>!HIDDEN_SECS.includes(s.id));
 /* ==================================================================
    8 · RENDER
    ================================================================== */

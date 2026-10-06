@@ -8,14 +8,15 @@ interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
-/* Page title: 23px Oswald caps at .03em — the widest type on the screen and
-   therefore the tightest tracking. The sentence under it is capped at ~72
-   characters so it never runs the width of a wide table. */
+/* Page title: 27px Playfair Display in mixed case — the premium serif "look"
+   from the reference crop, and the widest type on the screen. The sentence
+   under it is capped at ~72 characters so it never runs the width of a wide
+   table. */
 export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
     <div className="flex items-start justify-between mb-4 gap-5">
       <div className="min-w-0">
-        <h1 className="font-display text-[23px] font-semibold uppercase tracking-[0.03em] text-[var(--ink)] leading-[1.15]">
+        <h1 className="font-serif text-[27px] font-semibold tracking-[0.005em] text-[var(--ink)] leading-[1.15]">
           {title}
         </h1>
         {description && (

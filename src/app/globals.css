@@ -1,14 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/* ═══ THREE FACES, THREE JOBS ═══
-   Oswald      → LABELS  (headings, buttons, table headers, eyebrows, badges)
+/* ═══ FOUR FACES, FOUR JOBS ═══
+   Playfair   → DISPLAY (page titles, sidebar nav labels, the brand wordmark) —
+                a high-contrast premium serif, always MIXED CASE at ≥13px.
+                This is the "look" from the reference crop (2026-10-06).
+   Oswald      → LABELS  (buttons, table headers, eyebrows, badges, small h3–h6)
    Mulish      → READ    (body, form values, table cells)
    Inter       → FIGURES (money, PAN, GSTIN, CIN, dates, codes) — plain,
                  undesigned numerals; tabular so columns line up and Indian
                  comma grouping (₹10,00,000.00) sits evenly. The user chose
                  Inter over a monospace face (2026-09-27). */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Mulish:ital,wght@0,400..800;1,400..700&family=Inter:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..700&family=Oswald:wght@400;500;600;700&family=Mulish:ital,wght@0,400..800;1,400..700&family=Inter:wght@400..700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -28,6 +31,12 @@
   --font-mono: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --font-display: 'Oswald', 'Mulish', ui-sans-serif, system-ui, sans-serif;
+  /* Premium high-contrast serif (Playfair Display) — the "look" from the
+     reference crop. Used for DISPLAY headings in MIXED CASE only: page titles,
+     the sidebar's structural nav labels, the brand wordmark. Never for the
+     small caps utility labels (buttons, badges, eyebrows, table headers) —
+     hairline serifs go spidery and vanish below ~13px. */
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
 
   /* ── INK / GROUND ── gray, slate, zinc, neutral and stone all collapse onto
         the one blue-grey ink ramp so nothing drifts warm or green. ── */
@@ -347,14 +356,25 @@
      The smaller the label, the wider its tracking. A 9.5px header is spaced
      roughly twice as wide as a 23px title. ── */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
     font-weight: 600;
-    text-transform: uppercase;
     color: var(--ink);
     line-height: 1.18;
   }
-  h1 { font-size: 23px; letter-spacing: 0.03em; }
-  h2 { font-size: 16px; letter-spacing: 0.045em; }
+  /* Display headings wear the premium serif (Playfair Display) in mixed case —
+     the "look" from the reference crop. */
+  h1, h2 {
+    font-family: var(--font-serif);
+    letter-spacing: 0.005em;
+    text-transform: none;
+  }
+  /* Smaller headings keep the Oswald caps discipline — hairline serifs go
+     spidery at this size. */
+  h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+  }
+  h1 { font-size: 26px; line-height: 1.14; }
+  h2 { font-size: 18px; }
   h3 { font-size: 14px; letter-spacing: 0.05em; }
   h4 { font-size: 12.5px; letter-spacing: 0.07em; }
   h5 { font-size: 11px; letter-spacing: 0.12em; }
@@ -1044,11 +1064,10 @@ th {
   min-height: 40px;
   padding: 5px 10px;
   border-radius: 10px;
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 12.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 14.5px;
+  letter-spacing: 0.005em;
   color: var(--ink-2);
   text-align: left;
   transition: background-color var(--t-state) ease, color var(--t-state) ease;
@@ -1062,10 +1081,9 @@ th {
 .nav-top {
   min-height: 40px;
   padding: 5px 10px;
-  font-family: var(--font-display);
-  font-size: 12.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  letter-spacing: 0.005em;
 }
 .nav-pill-active .nav-group-tile { background: rgba(255, 255, 255, 0.16); color: #FFFFFF; }
 
@@ -1105,11 +1123,10 @@ th {
 .nav-top.nav-pill-active:hover .mn-key { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.16); color: #FFFFFF; }
 .nav-heading-static {
   padding: 6px 10px;
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
   color: var(--ink-3);
 }
 

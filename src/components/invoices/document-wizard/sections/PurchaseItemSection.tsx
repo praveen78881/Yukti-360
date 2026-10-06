@@ -6,8 +6,10 @@ import { GST_RATES } from '@/lib/accounting/gstInvoices';
 import type { PurchaseFields } from '../useDocumentState';
 import type { DocumentMode, PurchaseTotals } from '../types';
 import { Trash2 } from 'lucide-react';
+import { useCompany } from '@/hooks/useCompany';
 import { Switch, inr } from '../ui';
 import { HsnField } from './HsnField';
+import { useStockItems, purchaseUpdatesFromMaster } from '../useStockItems';
 
 interface PurchaseItemSectionProps {
   fields: PurchaseFields;
@@ -18,6 +20,8 @@ interface PurchaseItemSectionProps {
 }
 
 export function PurchaseItemSection({ fields, updateField, mode, invalidFields, totals }: PurchaseItemSectionProps) {
+  const { companyId } = useCompany();
+  const { names, byName } = useStockItems(companyId);
   const gross = (Number(fields.itemQty || 0) * Number(fields.itemRate || 0));
   const discountPct = Number(fields.itemDiscount || 0);
   const discountAmt = Math.round(gross * discountPct) / 100;
@@ -44,6 +48,9 @@ export function PurchaseItemSection({ fields, updateField, mode, invalidFields, 
 
   return (
     <div className="yk-lines" data-testid="purchase-items">
+      <datalist id="yk-stock-items-purchase">
+        {names.map((n) => <option key={n} value={n} />)}
+      </datalist>
       <div className="yk-lines-scroll">
       <div className={`yk-lines-grid purchase ${showGst ? 'with-gst' : ''}`} role="table" aria-label="Item">
         <div className="yk-lines-head" role="row">
@@ -62,8 +69,20 @@ export function PurchaseItemSection({ fields, updateField, mode, invalidFields, 
           <input
             aria-label="Item or service name"
             className="yk-in sm"
+            list="yk-stock-items-purchase"
             value={fields.itemDescription}
-            onChange={(e) => updateField('itemDescription', e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              const master = byName.get(v.trim().toLowerCase());
+              if (master) {
+                const u = purchaseUpdatesFromMaster(master);
+                updateField('itemDescription', u.itemDescription ?? v);
+                if (u.itemHsn) updateField('itemHsn', u.itemHsn);
+                if (u.gstRate) updateField('gstRate', u.gstRate);
+              } else {
+                updateField('itemDescription', v);
+              }
+            }}
           />
           <HsnField
             ariaLabel="HSN or SAC"

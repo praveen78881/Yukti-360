@@ -6,7 +6,9 @@
    `order`; the `tax` section (order 90) does the Part B roll-up into the
    footer contract S.C.{gti,ti,tax,int}.
    ===================================================================== */
-const SECS = SCREEN_ORDER.map(id=>_SECREG.filter(r=>r.id===id).pop()).filter(Boolean)
+const HIDDEN_SECS = ["who"];   /* Assessee Information hidden from the form — prefilled from the company master, still computed/exported via _SECREG */
+const SECS = SCREEN_ORDER.filter(id=>!HIDDEN_SECS.includes(id))
+  .map(id=>_SECREG.filter(r=>r.id===id).pop()).filter(Boolean)
   .map(r=>({id:r.id,t:r.t,ref:r.ref,f:r.f,s:r.s||(()=>"")}));
 
 function compute(){
@@ -24,7 +26,7 @@ function compute(){
 function engChecks(){
   let out=[];
   for(const r of _SECREG){ if(r.chk){ try{ const c=r.chk(); if(Array.isArray(c)) out=out.concat(c);}catch(e){} } }
-  return out;
+  return out.filter(c=>!HIDDEN_SECS.includes(c.sec));
 }
 
 function buildReturn(){

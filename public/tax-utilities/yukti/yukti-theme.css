@@ -269,3 +269,20 @@ input.f[type=date],input.f[type=month]{font:500 12.5px/1 var(--yk-mono)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* ════════════════════════════ CA WORKSPACE ════════════════════════════
+   Tweaks for experienced CAs, applied to every ITR form:
+   1. Hide the explanatory note boxes (.note) and the per-section to-fix check
+      rows (.cks). Validation still runs — Export Return lists anything
+      outstanding, and the footer / section / nav counts still tally.
+   2. Required labels and to-fix cues rest in ink; they turn red only after a
+      submit attempt leaves something unfilled. Each form's Export Return
+      handler toggles body.show-errors. */
+.note{display:none}
+.cks{display:none}
+.l.req{color:var(--yk-ink)}
+.gt th.req{color:var(--yk-ink)}
+.nv .s.bad{color:var(--yk-ink-3)}
+body.show-errors .l.req{color:var(--yk-bad)}
+body.show-errors .gt th.req{color:var(--yk-bad)}
+body.show-errors .nv .s.bad{color:var(--yk-bad);font-weight:700}

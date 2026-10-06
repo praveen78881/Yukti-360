@@ -259,7 +259,10 @@ export const Sidebar = React.memo(function Sidebar(_props: SidebarProps) {
     // AUDIT & REPORTS section removed
 
     if (nav.inventory !== 'never') {
-      g.push({ heading: 'INVENTORY', items: [{ label: 'Inventory', href: `${base}/inventory`, icon: Package }] });
+      g.push({ heading: 'INVENTORY', items: [
+        { label: 'Inventory', href: `${base}/inventory`, icon: Package },
+        { label: 'Items', href: `${base}/inventory/items`, icon: Package },
+      ] });
     }
 
     // Banking — the bank ledgers and every tool that works on them.

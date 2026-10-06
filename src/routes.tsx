@@ -90,6 +90,7 @@ const InventoryPage = lazyPage(() => import('@/app/company/[id]/inventory/page')
 const RatioAnalysisPage = lazyPage(() => import('@/app/company/[id]/ratio-analysis/page').then(m => ({ default: m.default })));
 const BSNotesPage = lazyPage(() => import('@/app/company/[id]/bs-notes/page').then(m => ({ default: m.default })));
 
+const InventoryItemsPage = lazyPage(() => import('@/app/company/[id]/inventory/items/page').then(m => ({ default: m.default })));
 const BinCardPage = lazyPage(() => import('@/app/company/[id]/inventory/bin-card/page').then(m => ({ default: m.default })));
 const StoresLedgerPage = lazyPage(() => import('@/app/company/[id]/inventory/stores-ledger/page').then(m => ({ default: m.default })));
 const CostSheetPage = lazyPage(() => import('@/app/company/[id]/inventory/cost-sheet/page').then(m => ({ default: m.default })));
@@ -225,6 +226,7 @@ export const router = createBrowserRouter([
       { path: 'cost-records', element: <Suspense fallback={<PageLoader />}><CostRecordsPage /></Suspense> },
       { path: 'form-n', element: <Suspense fallback={<PageLoader />}><FormNPage /></Suspense> },
       { path: 'inventory', element: <Suspense fallback={<PageLoader />}><InventoryPage /></Suspense> },
+      { path: 'inventory/items', element: <Suspense fallback={<PageLoader />}><InventoryItemsPage /></Suspense> },
       { path: 'inventory/bin-card', element: <Suspense fallback={<PageLoader />}><BinCardPage /></Suspense> },
       { path: 'inventory/stores-ledger', element: <Suspense fallback={<PageLoader />}><StoresLedgerPage /></Suspense> },
       { path: 'inventory/cost-sheet', element: <Suspense fallback={<PageLoader />}><CostSheetPage /></Suspense> },
