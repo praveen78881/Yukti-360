@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string;
   readonly VITE_MCA_API_URL?: string;
   readonly VITE_MCA_API_KEY?: string;
+  /** Hosted review build only: '1' seeds the Sagar/Indhic demo companies. */
+  readonly VITE_ALLOW_DEMO_SEED?: string;
 }
 
 interface ImportMeta {
