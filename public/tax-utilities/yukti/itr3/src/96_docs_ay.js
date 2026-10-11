@@ -232,7 +232,10 @@
       ".doc-pop .prev .apply{width:100%;height:34px;border-radius:8px;background:#2F7D5A;color:#fff;font:700 10.5px/1.2 var(--yk-display,sans-serif);letter-spacing:.04em;text-transform:uppercase;border:0;cursor:pointer;margin-bottom:6px}",
       ".doc-pop .prev .apply:hover{background:#246046}",
       ".doc-pop .prev .cancel{width:100%;height:28px;border-radius:7px;background:#fff;color:#8496A7;border:1px solid #E7F0F9;font:600 11px/1 var(--yk-read,sans-serif);cursor:pointer}",
-      ".doc-pop .sep{height:1px;background:#E7F0F9;margin:13px 0 11px}"
+      ".doc-pop .sep{height:1px;background:#E7F0F9;margin:13px 0 11px}",
+      ".doc-pop.drag{outline:2px dashed var(--yk-navy,#17457F);outline-offset:-6px}",
+      ".doc-pop.drag::after{content:'Drop the AIS / 26AS file to import';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;",
+      "background:rgba(245,250,254,.95);border-radius:10px;font:700 12px/1.3 var(--yk-read,sans-serif);color:#17457F;text-align:center;padding:0 24px;pointer-events:none}"
     ].join("");
     (document.head || document.documentElement).appendChild(s);
   }
@@ -333,6 +336,38 @@
 
   /* --------------------------------------------------------- Import docs ---- */
   var importBtn, fileInput, stmtInput, pop, countEl, pending = null;
+
+  /* Read a chosen or dropped statement file → attach it, parse it, and open the
+     review step. Shared by the file picker, drag-and-drop, and the auto-import
+     bridge so every route behaves identically. */
+  function handleStmtFile(f) {
+    if (!f) return;
+    docs().push({ name: f.name, size: f.size, type: f.type || "", added: new Date().toISOString() });
+    updateCount(); notifyHost();
+    if (/\.pdf$/i.test(f.name)) { pending = { pdf: true, name: f.name }; openPop(); renderPop(); return; }
+    var rd = new FileReader();
+    rd.onload = function () { pending = parseStatement(String(rd.result)); pending.name = f.name; openPop(); renderPop(); };
+    rd.onerror = function () { pending = { error: true }; openPop(); renderPop(); };
+    rd.readAsText(f);
+  }
+
+  /* Programmatic import entry point. The host Yukti app (same-origin parent) or
+     a browser helper hands us a statement's already-read text, so the company
+     need not pick the downloaded file by hand. Same pipeline as the picker:
+     record the document, parse it, and open the review step. Returns the number
+     of taxes-paid rows recognised, or -1 on failure. */
+  function ingestStatement(name, text) {
+    try {
+      name = name || "statement";
+      docs().push({ name: name, size: (text || "").length, type: "", added: new Date().toISOString() });
+      updateCount(); notifyHost();
+      if (/\.pdf$/i.test(name)) { pending = { pdf: true, name: name }; openPop(); renderPop(); return 0; }
+      pending = parseStatement(String(text || "")); pending.name = name;
+      openPop(); renderPop();
+      return prefillTotal(pending);
+    } catch (e) { return -1; }
+  }
+
   function buildImport() {
     importBtn = document.getElementById("b_import");
     if (!importBtn || importBtn.getAttribute("data-imp-done")) return;
@@ -362,13 +397,7 @@
     document.body.appendChild(stmtInput);
     stmtInput.addEventListener("change", function (e) {
       var f = e.target.files && e.target.files[0]; if (!f) return;
-      docs().push({ name: f.name, size: f.size, type: f.type || "", added: new Date().toISOString() });
-      updateCount(); notifyHost();
-      if (/\.pdf$/i.test(f.name)) { pending = { pdf: true, name: f.name }; renderPop(); stmtInput.value = ""; return; }
-      var rd = new FileReader();
-      rd.onload = function () { pending = parseStatement(String(rd.result)); renderPop(); };
-      rd.onerror = function () { pending = { error: true }; renderPop(); };
-      rd.readAsText(f); stmtInput.value = "";
+      handleStmtFile(f); stmtInput.value = "";
     });
 
     importBtn.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); togglePop(); });
@@ -383,6 +412,14 @@
   function buildPop() {
     pop = document.createElement("div"); pop.className = "doc-pop"; pop.style.display = "none";
     pop.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+    /* drag-and-drop a downloaded statement straight onto the panel */
+    pop.addEventListener("dragover", function (e) { e.preventDefault(); e.stopPropagation(); pop.classList.add("drag"); });
+    pop.addEventListener("dragleave", function (e) { if (!pop.contains(e.relatedTarget)) pop.classList.remove("drag"); });
+    pop.addEventListener("drop", function (e) {
+      e.preventDefault(); e.stopPropagation(); pop.classList.remove("drag");
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleStmtFile(f);
+    });
     document.body.appendChild(pop);
   }
 
@@ -406,7 +443,7 @@
   function renderPop() {
     if (!pop) return;
     var h = '<h4>Prefill Taxes paid — 26AS / AIS</h4>';
-    h += '<p class="lead">Download your statement from the Income-Tax portal, then import it to auto-fill <b>Taxes paid</b>. <b>Text</b> format imports most accurately.</p>';
+    h += '<p class="lead">Log in on the portal and download — <b>AIS as JSON</b>, <b>Form 26AS as Text</b>. Then import, or drag the file onto this panel, to auto-fill <b>Taxes paid</b>. (TIS and PDF statements attach for record only.)</p>';
     h += '<div class="prow"><button type="button" class="pbtn" data-portal="ais">AIS / TIS &#8599;</button><button type="button" class="pbtn" data-portal="26as">Form 26AS &#8599;</button></div>';
     h += '<button type="button" class="imp-stmt">Import 26AS / AIS file…</button>';
     h += previewHtml();
@@ -459,8 +496,22 @@
 
   /* ------------------------------------------------- init + state re-sync --- */
   function syncAll() { updateTrigger(); if (drPop && drPop.style.display === "block") renderDr(); updateCount(); if (pop && pop.style.display === "block") renderPop(); }
+  /* Expose the auto-import bridge once. The same-origin host app can call
+     frame.contentWindow.__yuktiImportStatement(name, text) directly; a browser
+     helper in another world reaches us by posting a YUKTI_IMPORT_STATEMENT
+     message. Both land in the identical review step. */
+  function wireAutoImport() {
+    try { window.__yuktiImportStatement = ingestStatement; } catch (e) {}
+    window.addEventListener("message", function (ev) {
+      var d = ev && ev.data;
+      if (d && d.type === "YUKTI_IMPORT_STATEMENT" && typeof d.text === "string") {
+        var n = ingestStatement(d.name || "statement", d.text);
+        try { if (ev.source && ev.source.postMessage) ev.source.postMessage({ type: "YUKTI_IMPORT_RESULT", name: d.name || "statement", rows: n }, "*"); } catch (e) {}
+      }
+    });
+  }
   function init() {
-    injectCss(); buildAy(); buildDrPop(); buildImport(); buildPop(); syncAll();
+    injectCss(); buildAy(); buildDrPop(); buildImport(); buildPop(); wireAutoImport(); syncAll();
     var sheet = document.getElementById("sheet");
     if (sheet && window.MutationObserver) {
       var mo = new MutationObserver(function () { clearTimeout(window._aydocsT); window._aydocsT = setTimeout(syncAll, 60); });
