@@ -446,6 +446,19 @@
     h += '<p class="lead">Log in on the portal and download — <b>AIS as JSON</b>, <b>Form 26AS as Text</b>. Then import, or drag the file onto this panel, to auto-fill <b>Taxes paid</b>. (TIS and PDF statements attach for record only.)</p>';
     h += '<div class="prow"><button type="button" class="pbtn" data-portal="ais">AIS / TIS &#8599;</button><button type="button" class="pbtn" data-portal="26as">Form 26AS &#8599;</button></div>';
     h += '<button type="button" class="imp-stmt">Import 26AS / AIS file…</button>';
+    h += '<div class="auto-wrap">'
+      + '<div class="auto-head">Automatic <span>· needs Yukti IT-Portal Helper</span></div>'
+      + '<button type="button" class="auto-fetch">⚡ Auto-fetch AIS + 26AS from portal</button>'
+      + '<div class="auto-mode" style="display:none">'
+        + '<p class="auto-q">When they download, how should Yukti handle them?</p>'
+        + '<div class="auto-opts">'
+          + '<button type="button" class="am am-yes" data-mode="auto">YES — import automatically</button>'
+          + '<button type="button" class="am am-no" data-mode="save">NO — save to a folder</button>'
+          + '<button type="button" class="am am-cancel">CANCEL</button>'
+        + '</div>'
+      + '</div>'
+      + '<p class="auto-status" style="display:none"></p>'
+      + '</div>';
     h += previewHtml();
     h += '<div class="sep"></div>';
     h += '<h4>Supporting documents</h4>';
@@ -467,6 +480,19 @@
     var pbtns = pop.querySelectorAll(".pbtn");
     for (var p = 0; p < pbtns.length; p++) pbtns[p].addEventListener("click", function () { window.open(EFILING_URL, "_blank", "noopener,noreferrer"); });
     pop.querySelector(".imp-stmt").addEventListener("click", function () { stmtInput.click(); });
+    var autoBtn = pop.querySelector(".auto-fetch");
+    if (autoBtn) {
+      updateAutoUi();
+      autoBtn.addEventListener("click", function () {
+        var m = pop.querySelector(".auto-mode"); if (m) m.style.display = (m.style.display === "none" ? "block" : "none");
+      });
+      var ams = pop.querySelectorAll(".am");
+      for (var am = 0; am < ams.length; am++) ams[am].addEventListener("click", function () {
+        var mode = this.getAttribute("data-mode");
+        var mm = pop.querySelector(".auto-mode"); if (mm) mm.style.display = "none";
+        if (mode) startPortalFetch(mode);
+      });
+    }
     var applyBtn = pop.querySelector(".apply");
     if (applyBtn) applyBtn.addEventListener("click", function () {
       var n = applyPrefill(pending); pending = null; updateCount(); notifyHost(); closePop();
@@ -500,18 +526,78 @@
      frame.contentWindow.__yuktiImportStatement(name, text) directly; a browser
      helper in another world reaches us by posting a YUKTI_IMPORT_STATEMENT
      message. Both land in the identical review step. */
+  /* ---- Portal auto-fetch bridge (Yukti IT-Portal Helper extension) --------
+     The extension announces itself (YUKTI_EXT_PRESENT), carries the chosen AY +
+     client PAN to the portal (YUKTI_PORTAL_FETCH), and feeds the downloaded
+     AIS/26AS back through the SAME YUKTI_IMPORT_STATEMENT path used below. */
+  var EXT_PRESENT = false;
+  function getAySel() { var s = st(); return (s && s.aySel) ? s.aySel : deriveAY(range().to); }
+  function getPan() {
+    var s = st() || {};
+    var cands = [s.who && s.who.pan, s.pi && s.pi.pan];
+    for (var i = 0; i < cands.length; i++) { var p = String(cands[i] || "").toUpperCase(); if (/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(p)) return p; }
+    var inp = document.querySelectorAll("input");
+    for (var j = 0; j < inp.length; j++) { var v = String(inp[j].value || "").toUpperCase(); if (/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v)) return v; }
+    return "";
+  }
+  function setAutoStatus(txt, kind) {
+    if (!pop) return; var el = pop.querySelector(".auto-status"); if (!el) return;
+    el.textContent = txt || ""; el.style.display = txt ? "block" : "none";
+    el.className = "auto-status" + (kind ? " " + kind : "");
+  }
+  function updateAutoUi() {
+    if (!pop) return; var head = pop.querySelector(".auto-head span");
+    if (head) head.textContent = EXT_PRESENT ? "· connected" : "· needs Yukti IT-Portal Helper";
+  }
+  function startPortalFetch(mode) {
+    if (!EXT_PRESENT) { setAutoStatus("Extension not detected. Load “Yukti IT-Portal Helper” in your browser, then retry.", "warn"); return; }
+    var pan = getPan(), ay = getAySel();
+    setAutoStatus("Opening the Income-Tax portal… sign in (OTP stays with you). AY " + ay + (pan ? " · PAN " + pan : "") + ".", "ok");
+    try { window.postMessage({ type: "YUKTI_PORTAL_FETCH", pan: pan, ay: ay, want: ["ais", "26as"], mode: mode }, "*"); } catch (e) {}
+  }
+  function injectExtCss() {
+    if (document.getElementById("yk-auto-css")) return;
+    var s = document.createElement("style"); s.id = "yk-auto-css";
+    s.textContent = [
+      ".doc-pop .auto-wrap{margin-top:11px;padding-top:11px;border-top:1px solid #E7F0F9}",
+      ".doc-pop .auto-head{font:700 10px/1 var(--yk-display,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#4C5A6A;margin-bottom:8px}",
+      ".doc-pop .auto-head span{font-weight:600;letter-spacing:0;text-transform:none;color:#8496A7}",
+      ".doc-pop .auto-fetch{width:100%;height:36px;border-radius:8px;border:0;cursor:pointer;background:linear-gradient(90deg,#17457F,#2F6FB3);color:#fff;font:700 11.5px/1 var(--yk-display,sans-serif);letter-spacing:.03em}",
+      ".doc-pop .auto-fetch:hover{filter:brightness(1.07)}",
+      ".doc-pop .auto-mode{margin-top:9px;padding:10px;background:#F5FAFE;border:1px solid #D4E2F0;border-radius:9px}",
+      ".doc-pop .auto-q{margin:0 0 8px;font:600 11.5px/1.4 var(--yk-read,sans-serif);color:#4C5A6A}",
+      ".doc-pop .auto-opts{display:flex;flex-direction:column;gap:6px}",
+      ".doc-pop .am{height:32px;border-radius:7px;border:1px solid #D4E2F0;background:#fff;cursor:pointer;font:700 11px/1 var(--yk-read,sans-serif)}",
+      ".doc-pop .am-yes{color:#2F7D5A;border-color:#BFE0CF}",
+      ".doc-pop .am-yes:hover{background:#EAF6F0}",
+      ".doc-pop .am-no{color:#17457F}",
+      ".doc-pop .am-no:hover{background:#F2F7FD}",
+      ".doc-pop .am-cancel{color:#8496A7}",
+      ".doc-pop .auto-status{margin:9px 2px 0;font:600 11px/1.45 var(--yk-read,sans-serif)}",
+      ".doc-pop .auto-status.ok{color:#2F7D5A}",
+      ".doc-pop .auto-status.warn{color:#9A6B1E}"
+    ].join("");
+    (document.head || document.documentElement).appendChild(s);
+  }
   function wireAutoImport() {
     try { window.__yuktiImportStatement = ingestStatement; } catch (e) {}
     window.addEventListener("message", function (ev) {
       var d = ev && ev.data;
+      if (d && d.type === "YUKTI_EXT_PRESENT") { EXT_PRESENT = true; updateAutoUi(); return; }
+      if (d && d.type === "YUKTI_PORTAL_FETCH_ACK") {
+        if (d.ok) setAutoStatus("Portal opened. Finish sign-in — Yukti imports the files as they download.", "ok");
+        else setAutoStatus(d.message || "Could not start the portal fetch.", "warn");
+        return;
+      }
       if (d && d.type === "YUKTI_IMPORT_STATEMENT" && typeof d.text === "string") {
         var n = ingestStatement(d.name || "statement", d.text);
+        setAutoStatus("Imported " + n + " row" + (n === 1 ? "" : "s") + " from " + (d.name || "statement") + ".", "ok");
         try { if (ev.source && ev.source.postMessage) ev.source.postMessage({ type: "YUKTI_IMPORT_RESULT", name: d.name || "statement", rows: n }, "*"); } catch (e) {}
       }
     });
   }
   function init() {
-    injectCss(); buildAy(); buildDrPop(); buildImport(); buildPop(); wireAutoImport(); syncAll();
+    injectCss(); injectExtCss(); buildAy(); buildDrPop(); buildImport(); buildPop(); wireAutoImport(); syncAll();
     var sheet = document.getElementById("sheet");
     if (sheet && window.MutationObserver) {
       var mo = new MutationObserver(function () { clearTimeout(window._aydocsT); window._aydocsT = setTimeout(syncAll, 60); });

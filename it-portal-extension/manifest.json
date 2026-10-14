@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Yukti IT-Portal Helper",
+  "version": "0.1.0",
+  "description": "Bridges Yukti 360 and the Income-Tax portal: encrypted PAN/password auto-fill, AY selection, and AIS/26AS auto-download back into Yukti.",
+  "minimum_chrome_version": "116",
+
+  "permissions": ["storage", "downloads", "scripting", "activeTab", "tabs"],
+
+  "host_permissions": [
+    "https://eportal.incometax.gov.in/*",
+    "https://*.incometax.gov.in/*",
+    "https://*.tdscpc.gov.in/*",
+    "http://localhost:3000/*",
+    "https://YOUR-YUKTI-PROD-DOMAIN/*"
+  ],
+
+  "action": {
+    "default_title": "Yukti IT-Portal Helper",
+    "default_popup": "popup.html"
+  },
+
+  "background": { "service_worker": "src/background.js" },
+
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:3000/*", "https://YOUR-YUKTI-PROD-DOMAIN/*"],
+      "js": ["src/content-yukti.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://eportal.incometax.gov.in/*",
+        "https://*.incometax.gov.in/*",
+        "https://*.tdscpc.gov.in/*"
+      ],
+      "js": ["src/selectors.js", "src/content-portal.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

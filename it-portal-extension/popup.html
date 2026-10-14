@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yukti IT-Portal Helper</title>
+  <style>
+    :root { --navy:#17457f; --navy-2:#0f315e; --ink:#1f2937; --ink-3:#6b7280;
+            --sand:#e5e7eb; --cream:#f8fafc; --ok:#16794b; --err:#b42318; }
+    * { box-sizing:border-box; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    body { width:340px; margin:0; padding:14px; color:var(--ink); background:#fff; }
+    h1 { font-size:14px; margin:0 0 2px; }
+    .sub { font-size:11px; color:var(--ink-3); margin:0 0 12px; }
+    label { display:block; font-size:11px; font-weight:600; margin:9px 0 3px; }
+    input { width:100%; height:34px; padding:0 10px; border:1.5px solid var(--sand);
+            border-radius:8px; font-size:13px; }
+    input:focus { outline:none; border-color:var(--navy); }
+    button { height:36px; border:0; border-radius:8px; font-size:13px; font-weight:700;
+             cursor:pointer; width:100%; margin-top:10px; }
+    .primary { background:var(--navy); color:#fff; }
+    .primary:hover { background:var(--navy-2); }
+    .ghost { background:#fff; color:var(--ink); border:1.5px solid var(--sand); }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+    .msg { font-size:11.5px; margin-top:10px; min-height:14px; }
+    .msg.ok { color:var(--ok); } .msg.err { color:var(--err); }
+    .hidden { display:none; }
+    .creds { margin-top:12px; border-top:1px solid var(--sand); padding-top:10px; }
+    .cred { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--cream); font-size:12.5px; }
+    .cred .pan { font-weight:700; } .cred .lbl { color:var(--ink-3); font-size:11px; }
+    .cred .del { margin-left:auto; color:var(--err); cursor:pointer; font-size:16px; line-height:1; background:none; width:auto; height:auto; margin:0; }
+    .lock-note { font-size:11px; color:var(--ink-3); margin-top:12px; line-height:1.4; }
+    details { margin-top:12px; } summary { font-size:12px; font-weight:700; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1>Yukti IT-Portal Helper</h1>
+  <p class="sub">Encrypted portal logins · AIS / 26AS auto-fetch</p>
+
+  <!-- First-run: set the master password -->
+  <section id="setup" class="hidden">
+    <label>Create a master password</label>
+    <input id="newMaster" type="password" placeholder="Protects every saved login" autocomplete="new-password" />
+    <input id="newMaster2" type="password" placeholder="Confirm master password" autocomplete="new-password" style="margin-top:8px" />
+    <button class="primary" id="doSetup">Create vault</button>
+    <p class="lock-note">This password unlocks the vault. It is never stored — if you forget it, saved logins can't be recovered (by design).</p>
+  </section>
+
+  <!-- Locked: unlock -->
+  <section id="locked" class="hidden">
+    <label>Master password</label>
+    <input id="master" type="password" placeholder="Unlock your saved logins" autocomplete="current-password" />
+    <button class="primary" id="doUnlock">Unlock</button>
+  </section>
+
+  <!-- Unlocked: manage credentials -->
+  <section id="unlocked" class="hidden">
+    <details>
+      <summary>+ Add / update a client login</summary>
+      <label>Client PAN</label>
+      <input id="pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" />
+      <label>Portal User ID <span style="font-weight:400;color:var(--ink-3)">(blank = same as PAN)</span></label>
+      <input id="userId" placeholder="PAN / Aadhaar / other user ID" />
+      <label>Portal password</label>
+      <input id="pwd" type="password" placeholder="Income-Tax portal password" autocomplete="off" />
+      <label>Label <span style="font-weight:400;color:var(--ink-3)">(optional)</span></label>
+      <input id="label" placeholder="e.g. Sharma & Co" />
+      <button class="primary" id="doSave">Save (encrypted)</button>
+    </details>
+
+    <div class="creds" id="credList"></div>
+    <button class="ghost" id="doLock">Lock vault</button>
+  </section>
+
+  <p class="msg" id="msg"></p>
+
+  <script src="src/vault.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
